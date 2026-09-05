@@ -1,0 +1,1180 @@
+<title>Rugs Zone</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --ink:#14161c; --sub:#6b7280; --line:#e6e8eb;
+    --brand:#c6f24d; --brand-ink:#14200a; --danger:#dc2626; --ok:#16a34a; --warn:#d97706;
+    --pending:#fef3c7; --pending-ink:#92400e; --completed:#dcfce7; --completed-ink:#166534;
+    --sidebar-bg:#0f1115; --sidebar-ink:#cbd5e1; --sidebar-sub:#767c8c; --sidebar-active:#c6f24d;
+    --sidebar-line:#1e212a; --sidebar-hover:rgba(255,255,255,.06);
+    --purple1:#7c3aed; --purple2:#4338ca; --darkcard:#0f1115; --lavender:#7c3aed;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14161c; --card:#1c1f27; --ink:#e8eaee; --sub:#9aa1ad; --line:#2b2f3a;
+      --pending:#3a2f10; --pending-ink:#fbbf24; --completed:#0f2b1a; --completed-ink:#4ade80;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14161c; --card:#1c1f27; --ink:#e8eaee; --sub:#9aa1ad; --line:#2b2f3a;
+    --pending:#3a2f10; --pending-ink:#fbbf24; --completed:#0f2b1a; --completed-ink:#4ade80;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:14px}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:-1px}
+  .btn{background:var(--brand);color:var(--brand-ink);border:none;border-radius:8px;padding:9px 16px;font-size:14px;font-weight:600}
+  .btn:hover{opacity:.9}
+  .btn.secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn.danger{background:var(--danger)}
+  .btn.ghost{background:none;border:1px dashed var(--line);color:var(--sub)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .hidden{display:none!important}
+
+  /* Login */
+  #loginScreen{min-height:100vh;background:var(--darkcard);position:relative;overflow:hidden;display:flex;align-items:center;padding:60px 8vw}
+  #loginScreen::before{content:"";position:absolute;top:-260px;right:-220px;width:640px;height:640px;border-radius:50%;background:radial-gradient(circle,var(--purple1),transparent 68%);opacity:.55;pointer-events:none}
+  #loginScreen::after{content:"";position:absolute;bottom:-260px;left:-240px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,var(--brand),transparent 68%);opacity:.3;pointer-events:none}
+  .login-card{position:relative;z-index:1;width:100%;max-width:440px}
+  .login-logo{width:56px;height:56px;border-radius:14px;background:var(--brand);color:var(--brand-ink);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;margin-bottom:30px}
+  .login-eyebrow{color:var(--brand);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px}
+  .login-card h1{color:#fff;font-size:42px;line-height:1.15;margin:0 0 16px;font-weight:800}
+  .login-card p.sub{color:rgba(255,255,255,.6);font-size:14px;margin:0 0 30px;max-width:420px}
+  .login-card label{font-size:12px;color:rgba(255,255,255,.55);font-weight:600;display:block;margin:16px 0 6px}
+  .login-card input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;padding:13px 14px;border-radius:10px}
+  .login-card input::placeholder{color:rgba(255,255,255,.32)}
+  .login-card input:focus{outline:2px solid var(--brand);outline-offset:-1px}
+  .login-card .btn{width:100%;margin-top:24px;padding:13px}
+  .login-card .btn.ghost{border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7)}
+  #loginError{color:#f87171;font-size:13px;margin-top:10px;min-height:16px}
+
+  /* Demo banner */
+  .demo-banner{position:fixed;top:0;left:0;right:0;z-index:60;background:#fef3c7;color:#92400e;text-align:center;padding:10px;font-size:12px;font-weight:700;line-height:1.4}
+  body.demo-mode #app.active{padding-top:46px}
+
+  /* App shell */
+  #app{display:none;min-height:100vh}
+  #app.active{display:flex}
+  .sidebar{width:230px;flex-shrink:0;background:var(--sidebar-bg);border-right:1px solid var(--sidebar-line);padding:20px 14px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;padding:0 8px 18px;border-bottom:1px solid var(--sidebar-line);margin-bottom:14px;color:#fff}
+  .brand .logo-chip{width:34px;height:34px;border-radius:9px;background:var(--brand);color:var(--brand-ink);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0}
+  .brand small{display:block;font-weight:400;color:var(--sidebar-sub);font-size:11px;margin-top:2px}
+  .nav-section-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--sidebar-sub);font-weight:700;padding:14px 12px 6px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:var(--sidebar-ink);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;background:none;border:none;width:100%;text-align:left}
+  .nav-item:hover{background:var(--sidebar-hover)}
+  .nav-item.active{background:rgba(163,230,53,.12);color:#fff;box-shadow:inset 3px 0 0 var(--sidebar-active)}
+  .soon-badge{margin-left:auto;font-size:9px;background:rgba(255,255,255,.12);color:var(--sidebar-sub);padding:2px 6px;border-radius:99px;font-weight:700;letter-spacing:.02em}
+  .sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid var(--sidebar-line)}
+  .who{font-size:13px;font-weight:600;color:#fff}
+  .who small{display:block;color:var(--sidebar-sub);font-weight:400;font-size:12px}
+
+  main{flex:1;padding:26px 30px;max-width:1200px;min-width:0}
+  .page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .page-head h2{margin:0;font-size:20px}
+  .page-sub{color:var(--sub);font-size:13px;margin:-12px 0 18px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  .tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px}
+  .tab{padding:7px 14px;border-radius:8px;border:none;background:none;color:var(--sub);font-size:13px;font-weight:600}
+  .tab.active{background:var(--brand);color:#fff}
+  .search{flex:1;min-width:180px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:10px 12px;background:var(--bg);color:var(--sub);font-weight:600;font-size:12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .task-text{max-width:340px;white-space:pre-wrap}
+  .badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700}
+  .badge.Pending{background:var(--pending);color:var(--pending-ink)}
+  .badge.Completed{background:var(--completed);color:var(--completed-ink)}
+  .row-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .row-actions button{font-size:12px;padding:6px 10px}
+  .empty{padding:40px;text-align:center;color:var(--sub)}
+  .overdue{color:var(--danger);font-weight:700}
+
+  /* Home dashboard */
+  .eyebrow{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--purple1)}
+  .online-pill{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--ink)}
+  .online-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+  .hero-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:20px}
+  .hero-card{border-radius:16px;padding:26px;color:#fff;position:relative;overflow:hidden}
+  .hero-card.gradient{background:linear-gradient(135deg,var(--purple1),var(--purple2))}
+  .hero-card.dark{background:var(--darkcard);display:flex;flex-direction:column}
+  .hero-card .tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brand);margin-bottom:12px}
+  .hero-card .tag.muted{color:rgba(255,255,255,.55)}
+  .hero-card h2{font-size:24px;margin:0 0 8px;line-height:1.25;position:relative;z-index:1}
+  .hero-card p{opacity:.85;font-size:13px;max-width:440px;margin:0;position:relative;z-index:1}
+  .hero-card .big-n{font-size:40px;font-weight:800;margin:4px 0;color:var(--brand)}
+  .hero-card .big-l{font-size:12px;opacity:.7}
+  .hero-card .pill{display:inline-block;margin-top:auto;padding-top:14px;font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--brand)}
+  .module-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px}
+  .module-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;text-align:left;display:block;width:100%}
+  .module-card:hover{border-color:var(--purple1)}
+  .module-card .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+  .module-badge{font-size:10px;font-weight:800;letter-spacing:.03em;padding:3px 8px;border-radius:99px}
+  .module-badge.live{background:rgba(198,242,77,.35);color:#4d7c0f}
+  .module-badge.soon{background:var(--bg);color:var(--sub);border:1px solid var(--line)}
+  .module-card .mt{font-weight:700;font-size:14px;margin-top:2px}
+  .module-card .mv{font-size:12px;color:var(--sub);margin-top:6px}
+  .icon.lavender{background:rgba(124,58,237,.12);color:var(--lavender)}
+  .banner-live{background:rgba(198,242,77,.18);border:1px solid rgba(198,242,77,.5);color:#4d7c0f;border-radius:12px;padding:12px 16px;font-size:13px;margin-bottom:20px}
+  :root[data-theme="dark"] .banner-live{color:#c6f24d}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .banner-live{color:#c6f24d}}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
+  .stat-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .stat-card .icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:12px}
+  .icon.blue{background:rgba(37,99,235,.12);color:#2563eb}
+  .icon.amber{background:rgba(217,119,6,.14);color:#d97706}
+  .icon.green{background:rgba(22,163,74,.14);color:#16a34a}
+  .icon.red{background:rgba(220,38,38,.12);color:#dc2626}
+  .icon.indigo{background:rgba(79,70,229,.14);color:#4f46e5}
+  .icon.purple{background:rgba(147,51,234,.14);color:#9333ea}
+  .stat-card .n{font-size:28px;font-weight:800;line-height:1;color:var(--ink)}
+  .stat-card .l{font-size:12px;color:var(--sub);font-weight:600;margin-top:8px}
+  .home-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+  .home-grid h3{margin:0 0 10px;font-size:14px}
+  .mini-list{list-style:none;margin:0;padding:0}
+  .mini-list li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .mini-list li:last-child{border-bottom:none}
+  .coming-soon{padding:60px 20px;text-align:center;color:var(--sub);font-size:14px}
+  .coming-soon .big{font-size:38px;margin-bottom:14px}
+  .coming-soon b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px}
+
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .modal{background:var(--card);border-radius:14px;padding:24px;width:100%;max-width:520px;max-height:88vh;overflow:auto}
+  .modal h3{margin:0 0 4px}
+  .modal .sub{color:var(--sub);font-size:12px;margin-bottom:16px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--sub);margin-bottom:5px}
+  .field input,.field select,.field textarea{width:100%}
+  .field textarea{min-height:80px;resize:vertical}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+  .modal-err{color:var(--danger);font-size:12px;margin-top:8px;min-height:14px}
+  .photo-preview{max-width:100%;border-radius:8px;margin-top:8px;display:block}
+  .history-box{background:var(--bg);border-radius:8px;padding:10px;font-size:12px;white-space:pre-wrap;max-height:140px;overflow:auto;margin-top:4px}
+
+  .faq-item{padding:14px;border-bottom:1px solid var(--line)}
+  .faq-item:last-child{border-bottom:none}
+  .faq-q{font-weight:700;font-size:14px;margin-bottom:4px}
+  .faq-a{font-size:13px;color:var(--sub);white-space:pre-wrap}
+  .faq-meta{font-size:11px;color:var(--sub);margin-top:6px}
+
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:10px;font-size:13px;z-index:100;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+  .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (max-width: 820px){
+    #app.active{flex-direction:column}
+    .sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap;overflow-x:auto;padding:10px}
+    .brand{display:none}
+    .nav-section-label{display:none}
+    .sidebar-footer{display:none}
+    main{padding:16px}
+    .home-grid{grid-template-columns:1fr}
+  }
+</style>
+
+<div id="demoBanner" class="demo-banner hidden">👀 Preview Mode — sample data only, nothing here is saved or connected to live records.</div>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">RZ</div>
+    <div class="login-eyebrow">Rugs Zone Workspace</div>
+    <h1>Your whole workday,<br/>in one place.</h1>
+    <p class="sub">Sign in to access the tools and information enabled for your role.</p>
+    <label>Login ID</label>
+    <input id="loginId" autocomplete="username" placeholder="e.g. 1388" />
+    <label>Password</label>
+    <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••" />
+    <button class="btn" id="loginBtn">Sign In</button>
+    <div id="loginError"></div>
+    <button class="btn ghost" id="demoBtn" style="width:100%;margin-top:10px">👀 Preview dashboard (sample data)</button>
+  </div>
+</div>
+
+<div id="app">
+  <div class="sidebar">
+    <div class="brand"><span class="logo-chip">RZ</span><span>Rugs Zone<small>People &amp; Operations</small></span></div>
+    <button class="nav-item active" data-view="home">🏠 Home</button>
+    <button class="nav-item" data-view="tasks">📋 Tasks</button>
+    <button class="nav-item hidden" id="navScore" data-view="score">📊 Score Report</button>
+    <button class="nav-item hidden" id="navAudit" data-view="audit">📜 Audit &amp; Renewal</button>
+    <button class="nav-item" data-view="faq">❓ FAQ</button>
+    <div class="nav-section-label">Coming soon</div>
+    <button class="nav-item" data-view="attendance">🕒 Attendance<span class="soon-badge">Soon</span></button>
+    <button class="nav-item" data-view="salary">💰 Salary<span class="soon-badge">Soon</span></button>
+    <button class="nav-item" data-view="tickets">🎫 Queries / Tickets<span class="soon-badge">Soon</span></button>
+    <div class="nav-section-label" id="adminSectionLabel" style="display:none">Admin</div>
+    <button class="nav-item hidden" id="navAdmin" data-view="admin">🛠️ Admin Control</button>
+    <div class="sidebar-footer">
+      <div class="who" id="whoName">—</div>
+      <button class="btn secondary" id="logoutBtn" style="margin-top:10px;width:100%">Log out</button>
+    </div>
+  </div>
+  <main>
+    <div id="view-home">
+      <div class="eyebrow">Rugs Zone OS</div>
+      <div class="page-head">
+        <h2>Home</h2>
+        <span class="online-pill"><span class="dot"></span>System online</span>
+      </div>
+      <div class="page-sub" style="margin-top:-14px">Your tools, updates, and daily work.</div>
+      <div class="hero-grid">
+        <div class="hero-card gradient">
+          <div class="tag">Good to see you</div>
+          <h2 id="heroGreeting">Hey there, ready for a focused day?</h2>
+          <p>Your workspace only shows the modules and information available for your role.</p>
+        </div>
+        <div class="hero-card dark">
+          <div class="tag muted">My open work</div>
+          <div class="big-n" id="heroOpenWork">0</div>
+          <div class="big-l">pending tasks assigned to you</div>
+          <div class="pill">● LIVE DATA</div>
+        </div>
+      </div>
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Your workspace</h2></div>
+      <div class="page-sub" style="margin-top:-12px">Modules are controlled by your administrator.</div>
+      <div class="module-grid" id="moduleGrid"></div>
+      <div class="home-grid">
+        <div class="card" style="padding:18px"><h3>Upcoming Deadlines</h3><ul class="mini-list" id="homeUpcoming"></ul></div>
+        <div class="card" style="padding:18px"><h3>Audit Alerts</h3><ul class="mini-list" id="homeAuditAlerts"></ul></div>
+      </div>
+    </div>
+
+    <div id="view-tasks" class="hidden">
+      <div class="page-head">
+        <h2>Tasks</h2>
+        <button class="btn hidden" id="newTaskBtn">+ New Task</button>
+      </div>
+      <div class="toolbar">
+        <div class="tabs" id="taskTabs">
+          <button class="tab active" data-tab="mine">My Tasks</button>
+          <button class="tab hidden" data-tab="delegated" id="tabDelegated">Delegated by Me</button>
+          <button class="tab hidden" data-tab="all" id="tabAll">All Tasks</button>
+        </div>
+        <input class="search" id="taskSearch" placeholder="Search task, assignee, ID…" />
+      </div>
+      <div class="card"><div id="taskTableWrap"></div></div>
+    </div>
+
+    <div id="view-score" class="hidden">
+      <div class="page-head"><h2>Score Report</h2></div>
+      <div class="toolbar">
+        <div class="tabs" id="scoreModeTabs">
+          <button class="tab active" data-mode="week">Week</button>
+          <button class="tab" data-mode="range">Date Range</button>
+        </div>
+        <div id="scoreWeekPicker"><input id="scoreWeek" type="week" /></div>
+        <div id="scoreRangePicker" class="hidden" style="display:flex;gap:6px">
+          <input id="scoreFrom" type="date" /><input id="scoreTo" type="date" />
+        </div>
+        <button class="btn secondary" id="scoreGoBtn">Update</button>
+      </div>
+      <div class="card"><div id="scoreTableWrap"></div></div>
+    </div>
+
+    <div id="view-audit" class="hidden">
+      <div class="page-head"><h2>Audit &amp; Renewal Register</h2></div>
+      <div class="card"><div id="auditTableWrap"></div></div>
+    </div>
+
+    <div id="view-faq" class="hidden">
+      <div class="page-head">
+        <h2>FAQ</h2>
+        <button class="btn" id="addFaqBtn">+ Add FAQ</button>
+      </div>
+      <div class="card"><div id="faqListWrap"></div></div>
+    </div>
+
+    <div id="view-attendance" class="hidden">
+      <div class="page-head"><h2>Attendance</h2></div>
+      <div class="card coming-soon"><div class="big">🕒</div><b>Attendance tracking is coming soon</b>This module will appear here once attendance data is connected.</div>
+    </div>
+
+    <div id="view-salary" class="hidden">
+      <div class="page-head"><h2>Salary</h2></div>
+      <div class="card coming-soon"><div class="big">💰</div><b>Salary module is coming soon</b>Payslips and salary details will appear here once this module is built.</div>
+    </div>
+
+    <div id="view-tickets" class="hidden">
+      <div class="page-head"><h2>Queries / Tickets</h2></div>
+      <div class="card coming-soon"><div class="big">🎫</div><b>Query &amp; ticketing module is coming soon</b>Staff will be able to raise and track queries here.</div>
+    </div>
+
+    <div id="view-admin" class="hidden">
+      <div class="hero-card dark" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+          <div>
+            <div class="tag">Control Center</div>
+            <h2>Run the whole workspace</h2>
+            <p>Monitor operations, control roles, and decide which modules every staff member can see.</p>
+          </div>
+          <button class="btn" id="adminRefreshBtn" style="flex-shrink:0">Refresh</button>
+        </div>
+      </div>
+      <div class="banner-live">✅ <b>Live &amp; connected</b> — role and visibility changes below save immediately to the database, no separate migration needed.</div>
+      <div class="stat-grid" id="adminStatGrid"></div>
+      <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Module visibility</h2></div>
+      <div class="page-sub" style="margin-top:-12px">How many staff can currently see each workspace.</div>
+      <div class="module-grid" id="adminModuleGrid"></div>
+      <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Staff access</h2></div>
+      <div class="page-sub" style="margin-top:-12px">Toggle what each person can see and do.</div>
+      <div class="card"><div id="adminTableWrap"></div></div>
+    </div>
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+(function(){
+  "use strict";
+  var SUPABASE_URL = "https://asbgfjngxsabnnzgxugu.supabase.co";
+  var ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzYmdmam5neHNhYm5uemd4dWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTE2NjMsImV4cCI6MjEwMzk2NzY2M30.u7fq2LkYITL1vv2RjZogUTeZGTpwtoDlWpIsYagYxbo";
+  var FN_URL = SUPABASE_URL + "/functions/v1/deleg-api";
+
+  var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tab: "mine", view: "home", demo: false };
+
+  function api(action, payload) {
+    if (state.demo) return demoApi(action, payload || {});
+    var body = Object.assign({ action: action }, payload || {});
+    return fetch(FN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (!r.ok || !j.ok) throw new Error(j.error || ("HTTP " + r.status));
+        return j.data;
+      });
+    });
+  }
+
+  // ---------- Demo (sample data) API shim ----------
+  function demoApi(action, p) {
+    return new Promise(function (resolve) {
+      setTimeout(function () {
+        switch (action) {
+          case "listTasks": resolve(state.tasks.slice()); break;
+          case "getDoers": resolve(state.doers.slice()); break;
+          case "getFaqs": resolve(state.faqs.slice()); break;
+          case "getAudits": resolve(state.audits.slice()); break;
+          case "createTask": {
+            var id = "DEMO" + Math.random().toString(36).slice(2, 7).toUpperCase();
+            state.tasks.unshift({ id: id, assignee: p.assignee, task: p.task, first_date: p.first_date, deadline: p.deadline, status: "Pending", delegated_by: p.delegated_by, ts: new Date().toISOString(), total_rev: 0, history: "" });
+            resolve({ id: id });
+            break;
+          }
+          case "completeTask": {
+            var t = state.tasks.find(function (x) { return x.id === p.id; });
+            if (t) { t.status = "Completed"; t.completed_at = new Date().toISOString(); t.completion_remarks = p.remarks || ""; t.completion_photo_url = p.photoBase64 || "No photo uploaded"; }
+            resolve({ id: p.id, photoUrl: t ? t.completion_photo_url : "" });
+            break;
+          }
+          case "reviseDeadline": {
+            var t2 = state.tasks.find(function (x) { return x.id === p.id; });
+            if (t2) {
+              t2.deadline = p.newDeadline; t2.total_rev = (t2.total_rev || 0) + 1;
+              var stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+              var entry = "[Date: " + stamp + " | Remarks: " + (p.remarks || "") + " | Revised by: " + (p.revisedBy || "") + "]";
+              t2.history = t2.history ? t2.history + "\n" + entry : entry;
+            }
+            resolve({ id: p.id });
+            break;
+          }
+          case "editTask": {
+            var t3 = state.tasks.find(function (x) { return x.id === p.id; });
+            if (t3) {
+              if (p.task !== undefined) t3.task = p.task;
+              if (p.assignee !== undefined) t3.assignee = p.assignee;
+              if (p.deadline !== undefined) t3.deadline = p.deadline;
+              if (p.admin_notes !== undefined) t3.admin_notes = p.admin_notes;
+            }
+            resolve({ id: p.id });
+            break;
+          }
+          case "submitFaq": {
+            var fid = "FAQ" + Math.random().toString(36).slice(2, 6).toUpperCase();
+            state.faqs.unshift({ id: fid, question: p.question, answer: p.answer, author: p.author, created_at: new Date().toISOString() });
+            resolve({ id: fid });
+            break;
+          }
+          case "updateAudit": {
+            var a = state.audits.find(function (x) { return x.sno === p.sno; });
+            if (a) {
+              if (p.valid_from !== undefined) a.valid_from = p.valid_from;
+              if (p.valid_to !== undefined) a.valid_to = p.valid_to;
+              if (p.notes !== undefined) a.notes = p.notes;
+            }
+            resolve({ sno: p.sno });
+            break;
+          }
+          case "updateDoerAccess": {
+            var d = state.doers.find(function (x) { return x.doc_id === p.doc_id; });
+            if (d) { ["can_assign", "can_view_master", "can_view_audit", "is_admin"].forEach(function (k) { if (p[k] !== undefined) d[k] = p[k]; }); }
+            resolve({ doc_id: p.doc_id });
+            break;
+          }
+          default: resolve(null);
+        }
+      }, 250);
+    });
+  }
+
+  function mkTask(task, assignee, delegatedBy, status, deadlineMs, tsMs) {
+    var o = { id: "DEMO" + Math.random().toString(36).slice(2, 7).toUpperCase(), task: task, assignee: assignee, delegated_by: delegatedBy, status: status, deadline: new Date(deadlineMs).toISOString(), first_date: new Date(tsMs).toISOString(), ts: new Date(tsMs).toISOString(), total_rev: 0, history: "" };
+    if (status === "Completed") { o.completed_at = new Date(deadlineMs - 3600000).toISOString(); o.completion_remarks = "Done as requested."; o.completion_photo_url = "No photo uploaded"; }
+    return o;
+  }
+  function demoSeed() {
+    var now = Date.now(), h = 3600000, d = 86400000;
+    var doers = [
+      { doc_id: "demo_admin", name: "Demo Admin", delegation_name: "Demo Admin", department: "Marketing", designation: "Preview Mode", can_assign: true, can_view_master: true, can_view_audit: true, is_admin: true },
+      { doc_id: "anita_sales", name: "Anita Verma", delegation_name: "Anita Verma", department: "Sales", designation: "Sales Executive", can_assign: false, can_view_master: false, can_view_audit: false, is_admin: false },
+      { doc_id: "rohit_prod", name: "Rohit Sharma", delegation_name: "Rohit Sharma", department: "Production", designation: "Production Lead", can_assign: true, can_view_master: false, can_view_audit: false, is_admin: false },
+      { doc_id: "kiran_hr", name: "Kiran Kaur", delegation_name: "Kiran Kaur", department: "HR", designation: "HR Manager", can_assign: true, can_view_master: true, can_view_audit: true, is_admin: false },
+      { doc_id: "suresh_qc", name: "Suresh Yadav", delegation_name: "Suresh Yadav", department: "Quality", designation: "QC Inspector", can_assign: false, can_view_master: false, can_view_audit: false, is_admin: false }
+    ];
+    var tasks = [
+      mkTask("Follow up with buyer on sample approval", "Anita Verma", "Demo Admin", "Pending", now + 2 * h, now - 20 * h),
+      mkTask("Prepare weekly production report", "Rohit Sharma", "Demo Admin", "Completed", now - 5 * h, now - 30 * h),
+      mkTask("Update HR onboarding checklist", "Kiran Kaur", "Demo Admin", "Pending", now - 4 * h, now - 40 * h),
+      mkTask("QC inspection for batch #221", "Suresh Yadav", "Kiran Kaur", "Completed", now - 100 * h, now - 120 * h),
+      mkTask("Send fabric samples to client", "Anita Verma", "Demo Admin", "Pending", now + 26 * h, now - 5 * h),
+      mkTask("Renew forklift maintenance contract", "Rohit Sharma", "Kiran Kaur", "Pending", now + 70 * h, now - 10 * h)
+    ];
+    var audits = [
+      { sno: "1", name: "Fire Safety Certificate", freq: "Annual", valid_from: new Date(now - 300 * d).toISOString(), valid_to: new Date(now + 20 * d).toISOString(), notes: "Renewal in progress" },
+      { sno: "2", name: "ISO 9001 Certification", freq: "3-Yearly", valid_from: new Date(now - 800 * d).toISOString(), valid_to: new Date(now + 300 * d).toISOString(), notes: "" },
+      { sno: "3", name: "Factory License", freq: "Annual", valid_from: new Date(now - 350 * d).toISOString(), valid_to: new Date(now + 10 * d).toISOString(), notes: "Contact local authority" }
+    ];
+    var faqs = [
+      { id: "FAQ1", question: "How do I mark a task complete?", answer: "Open the task and click Complete, add remarks and optionally a photo.", author: "Demo Admin", created_at: new Date(now - 100000000).toISOString() },
+      { id: "FAQ2", question: "Who can assign tasks to me?", answer: "Anyone with assign permission — usually your manager or an admin.", author: "Kiran Kaur", created_at: new Date(now - 200000000).toISOString() }
+    ];
+    return { doers: doers, tasks: tasks, audits: audits, faqs: faqs };
+  }
+
+  function toast(msg, isErr) {
+    var el = document.createElement("div");
+    el.className = "toast";
+    if (isErr) el.style.background = "#dc2626";
+    el.textContent = msg;
+    document.getElementById("toastRoot").appendChild(el);
+    setTimeout(function () { el.remove(); }, 3500);
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    var d = new Date(iso);
+    if (isNaN(d)) return "—";
+    return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }) +
+      " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  }
+  function toDatetimeLocal(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d)) return "";
+    var pad = function (n) { return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+  function isOverdue(t) {
+    return t.status === "Pending" && t.deadline && new Date(t.deadline) < new Date();
+  }
+  function isToday(t) {
+    if (!t.deadline) return false;
+    var d = new Date(t.deadline), now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  }
+  function myKey() {
+    // key used to match "assignee" / "delegated_by" against this user
+    return state.doer.delegation_name || state.doer.name;
+  }
+
+  // ---------- Auth ----------
+  document.getElementById("loginBtn").addEventListener("click", doLogin);
+  document.getElementById("loginPass").addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
+  document.getElementById("loginId").addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
+
+  function doLogin() {
+    var id = document.getElementById("loginId").value.trim();
+    var pass = document.getElementById("loginPass").value.trim();
+    var errEl = document.getElementById("loginError");
+    errEl.textContent = "";
+    if (!id || !pass) { errEl.textContent = "Enter your ID and password."; return; }
+    var btn = document.getElementById("loginBtn");
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Signing in…';
+    api("login", { loginId: id, pass: pass }).then(function (doer) {
+      state.doer = doer;
+      state.demo = false;
+      try { localStorage.setItem("deleg_doer", JSON.stringify(doer)); } catch (e) {}
+      enterApp();
+    }).catch(function (e) {
+      errEl.textContent = e.message || "Login failed";
+    }).finally(function () {
+      btn.disabled = false; btn.textContent = "Sign In";
+    });
+  }
+
+  document.getElementById("demoBtn").addEventListener("click", function () {
+    var seed = demoSeed();
+    state.demo = true;
+    state.doer = seed.doers[0];
+    state.doers = seed.doers;
+    state.tasks = seed.tasks;
+    state.audits = seed.audits;
+    state.faqs = seed.faqs;
+    document.body.classList.add("demo-mode");
+    document.getElementById("demoBanner").classList.remove("hidden");
+    enterApp();
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", function () {
+    state.doer = null;
+    state.demo = false;
+    try { localStorage.removeItem("deleg_doer"); } catch (e) {}
+    document.body.classList.remove("demo-mode");
+    document.getElementById("demoBanner").classList.add("hidden");
+    document.getElementById("app").classList.remove("active");
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("loginId").value = "";
+    document.getElementById("loginPass").value = "";
+  });
+
+  function enterApp() {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("app").classList.add("active");
+    document.getElementById("whoName").innerHTML = esc(state.doer.delegation_name || state.doer.name) + "<small>" + esc(state.doer.designation || "") + "</small>";
+    document.getElementById("newTaskBtn").classList.toggle("hidden", !(state.doer.can_assign || state.doer.is_admin));
+    document.getElementById("tabDelegated").classList.toggle("hidden", !(state.doer.can_assign || state.doer.is_admin));
+    document.getElementById("tabAll").classList.toggle("hidden", !(state.doer.can_view_master || state.doer.is_admin));
+    document.getElementById("navAudit").classList.toggle("hidden", !(state.doer.can_view_audit || state.doer.is_admin));
+    document.getElementById("navScore").classList.toggle("hidden", !(state.doer.can_view_master || state.doer.is_admin));
+    document.getElementById("navAdmin").classList.toggle("hidden", !state.doer.is_admin);
+    document.getElementById("adminSectionLabel").style.display = state.doer.is_admin ? "block" : "none";
+    loadAll();
+  }
+
+  function loadAll() {
+    if (state.demo) {
+      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome();
+      return;
+    }
+    Promise.all([
+      api("listTasks"), api("getDoers"), api("getFaqs")
+    ]).then(function (r) {
+      state.tasks = r[0]; state.doers = r[1]; state.faqs = r[2];
+      renderTasks(); renderFaqs(); renderHome();
+      if (state.doer.is_admin) renderAdmin();
+      if (state.doer.can_view_audit || state.doer.is_admin) {
+        api("getAudits").then(function (a) { state.audits = a; renderAudits(); renderHome(); });
+      }
+    }).catch(function (e) { toast(e.message, true); });
+  }
+
+  // ---------- Nav ----------
+  var ALL_VIEWS = ["home", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "admin"];
+  document.querySelectorAll(".nav-item[data-view]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".nav-item[data-view]").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      state.view = btn.dataset.view;
+      ALL_VIEWS.forEach(function (v) {
+        var el = document.getElementById("view-" + v);
+        if (el) el.classList.toggle("hidden", v !== state.view);
+      });
+      if (state.view === "score") renderScore();
+      if (state.view === "home") renderHome();
+      if (state.view === "admin") renderAdmin();
+    });
+  });
+  document.querySelectorAll("#taskTabs .tab").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll("#taskTabs .tab").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      state.tab = btn.dataset.tab;
+      renderTasks();
+    });
+  });
+  document.getElementById("taskSearch").addEventListener("input", renderTasks);
+
+  // ---------- Home dashboard ----------
+  function renderHome() {
+    var wrap = document.getElementById("statGrid");
+    if (!wrap || !state.doer) return;
+    var myName = state.doer.delegation_name || state.doer.name || "";
+    var heroEl = document.getElementById("heroGreeting");
+    if (heroEl) heroEl.textContent = "Hey " + myName + ", ready for a focused day?";
+    var privileged = state.doer.can_view_master || state.doer.is_admin;
+    var scope = privileged ? state.tasks : state.tasks.filter(function (t) { return (t.assignee || "").toLowerCase() === myKey().toLowerCase(); });
+    var total = scope.length;
+    var pending = scope.filter(function (t) { return t.status === "Pending"; }).length;
+    var completed = scope.filter(function (t) { return t.status === "Completed"; }).length;
+    var overdue = scope.filter(isOverdue).length;
+    var dueToday = scope.filter(function (t) { return t.status === "Pending" && isToday(t); }).length;
+    var canAudit = state.doer.can_view_audit || state.doer.is_admin;
+    var auditSoon = canAudit ? state.audits.filter(function (a) { return a.valid_to && (new Date(a.valid_to) - new Date()) / 86400000 < 45; }).length : 0;
+
+    var tiles = [
+      { n: total, l: privileged ? "Total Tasks" : "My Tasks" },
+      { n: pending, l: "Pending" },
+      { n: completed, l: "Completed" },
+      { n: overdue, l: "Overdue" },
+      { n: dueToday, l: "Due Today" }
+    ];
+    if (canAudit) tiles.push({ n: auditSoon, l: "Audit Alerts" });
+
+    wrap.innerHTML = tiles.map(function (s) {
+      return '<div class="stat-card"><div class="n">' + s.n + '</div><div class="l">' + s.l + '</div></div>';
+    }).join("");
+
+    var heroOpenEl = document.getElementById("heroOpenWork");
+    if (heroOpenEl) heroOpenEl.textContent = pending;
+
+    var mg = document.getElementById("moduleGrid");
+    if (mg) {
+      var modules = [
+        { icon: "✅", name: "Delegation", status: "live" },
+        { icon: "🕒", name: "Attendance", status: "soon" },
+        { icon: "💰", name: "Salary", status: "soon" },
+        { icon: "🎫", name: "Queries / Tickets", status: "soon" }
+      ];
+      if (state.doer.is_admin) modules.push({ icon: "🛠️", name: "Admin Control", status: "live" });
+      mg.innerHTML = modules.map(function (m) {
+        return '<button class="module-card" data-goto="' + (m.name === "Delegation" ? "tasks" : m.name === "Admin Control" ? "admin" : m.name === "Queries / Tickets" ? "tickets" : m.name.toLowerCase()) + '">' +
+          '<div class="top"><div class="icon lavender" style="margin-bottom:0">' + m.icon + '</div><span class="module-badge ' + (m.status === "live" ? "live" : "soon") + '">' + (m.status === "live" ? "Live" : "Coming Soon") + '</span></div>' +
+          '<div class="mt">' + esc(m.name) + '</div>' +
+          '</button>';
+      }).join("");
+      mg.querySelectorAll("[data-goto]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var view = b.dataset.goto;
+          var navBtn = document.querySelector('.nav-item[data-view="' + view + '"]');
+          if (navBtn) navBtn.click();
+        });
+      });
+    }
+
+    var upcoming = scope.filter(function (t) { return t.status === "Pending"; })
+      .sort(function (a, b) { return new Date(a.deadline || 0) - new Date(b.deadline || 0); }).slice(0, 6);
+    var upEl = document.getElementById("homeUpcoming");
+    upEl.innerHTML = upcoming.length ? upcoming.map(function (t) {
+      return "<li><span>" + esc(t.task).slice(0, 50) + (t.task && t.task.length > 50 ? "…" : "") + "</span><span class=\"" + (isOverdue(t) ? "overdue" : "") + "\">" + fmtDate(t.deadline) + "</span></li>";
+    }).join("") : "<li style='color:var(--sub)'>Nothing pending.</li>";
+
+    var alEl = document.getElementById("homeAuditAlerts");
+    if (!canAudit) {
+      alEl.innerHTML = "<li style='color:var(--sub)'>Not visible to your role.</li>";
+    } else {
+      var soonList = state.audits.filter(function (a) { return a.valid_to && (new Date(a.valid_to) - new Date()) / 86400000 < 45; })
+        .sort(function (a, b) { return new Date(a.valid_to) - new Date(b.valid_to); }).slice(0, 6);
+      alEl.innerHTML = soonList.length ? soonList.map(function (a) {
+        return "<li><span>" + esc(a.name) + "</span><span class=\"overdue\">" + fmtDate(a.valid_to) + "</span></li>";
+      }).join("") : "<li style='color:var(--sub)'>Nothing expiring soon.</li>";
+    }
+  }
+
+  // ---------- Tasks ----------
+  function filteredTasks() {
+    var key = myKey().toLowerCase();
+    var list = state.tasks.slice();
+    if (state.tab === "mine") {
+      list = list.filter(function (t) { return (t.assignee || "").toLowerCase() === key; });
+    } else if (state.tab === "delegated") {
+      list = list.filter(function (t) {
+        var by = (t.delegated_by || "").toLowerCase();
+        return by === key || by === (state.doer.name || "").toLowerCase();
+      });
+    } // "all" = no filter
+    var q = document.getElementById("taskSearch").value.trim().toLowerCase();
+    if (q) {
+      list = list.filter(function (t) {
+        return (t.task || "").toLowerCase().indexOf(q) > -1 ||
+          (t.assignee || "").toLowerCase().indexOf(q) > -1 ||
+          (t.id || "").toLowerCase().indexOf(q) > -1 ||
+          (t.delegated_by || "").toLowerCase().indexOf(q) > -1;
+      });
+    }
+    list.sort(function (a, b) {
+      if (a.status !== b.status) return a.status === "Pending" ? -1 : 1;
+      return new Date(b.ts || 0) - new Date(a.ts || 0);
+    });
+    return list;
+  }
+
+  function renderTasks() {
+    var list = filteredTasks();
+    var wrap = document.getElementById("taskTableWrap");
+    if (!list.length) { wrap.innerHTML = '<div class="empty">No tasks here.</div>'; return; }
+    var canManage = state.doer.can_assign || state.doer.is_admin;
+    var rows = list.map(function (t) {
+      var overdue = isOverdue(t);
+      var actions = "";
+      var isMine = (t.assignee || "").toLowerCase() === myKey().toLowerCase();
+      if (t.status === "Pending" && isMine) {
+        actions += '<button class="btn" data-act="complete" data-id="' + esc(t.id) + '">Complete</button>';
+        actions += '<button class="btn secondary" data-act="revise" data-id="' + esc(t.id) + '">Revise</button>';
+      }
+      if (t.status === "Completed") {
+        actions += '<button class="btn secondary" data-act="proof" data-id="' + esc(t.id) + '">View Proof</button>';
+      }
+      if (canManage) {
+        actions += '<button class="btn secondary" data-act="edit" data-id="' + esc(t.id) + '">Edit</button>';
+      }
+      return "<tr>" +
+        '<td class="task-text"><b>' + esc(t.task).slice(0, 140) + (t.task && t.task.length > 140 ? "…" : "") + '</b><div style="color:var(--sub);font-size:11px;margin-top:3px">' + esc(t.id) + "</div></td>" +
+        "<td>" + esc(t.assignee) + "</td>" +
+        "<td>" + esc(t.delegated_by) + "</td>" +
+        '<td class="' + (overdue ? "overdue" : "") + '">' + fmtDate(t.deadline) + (overdue ? " ⚠" : "") + "</td>" +
+        '<td><span class="badge ' + esc(t.status) + '">' + esc(t.status) + "</span></td>" +
+        '<td class="row-actions">' + actions + "</td>" +
+        "</tr>";
+    }).join("");
+    wrap.innerHTML = '<table><thead><tr><th>Task</th><th>Assignee</th><th>Delegated By</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + rows + "</tbody></table>";
+    wrap.querySelectorAll("button[data-act]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.dataset.id, t = state.tasks.find(function (x) { return x.id === id; });
+        if (b.dataset.act === "complete") openCompleteModal(t);
+        if (b.dataset.act === "revise") openReviseModal(t);
+        if (b.dataset.act === "proof") openProofModal(t);
+        if (b.dataset.act === "edit") openEditModal(t);
+      });
+    });
+  }
+
+  // ---------- Modal helper ----------
+  function openModal(html) {
+    var root = document.getElementById("modalRoot");
+    root.innerHTML = '<div class="modal-overlay" id="modalOverlay"><div class="modal">' + html + "</div></div>";
+    document.getElementById("modalOverlay").addEventListener("click", function (e) {
+      if (e.target.id === "modalOverlay") closeModal();
+    });
+  }
+  function closeModal() { document.getElementById("modalRoot").innerHTML = ""; }
+
+  // ---------- New Task ----------
+  document.getElementById("newTaskBtn").addEventListener("click", function () {
+    var opts = state.doers.map(function (d) { return '<option value="' + esc(d.delegation_name) + '">' + esc(d.delegation_name) + "</option>"; }).join("");
+    openModal(
+      '<h3>Assign New Task</h3><div class="sub">Task will appear in the assignee\'s task list immediately.</div>' +
+      '<div class="field"><label>Assign to</label><select id="ntAssignee"><option value="">Select person…</option>' + opts + "</select></div>" +
+      '<div class="field"><label>Task details</label><textarea id="ntTask" placeholder="Describe the task…"></textarea></div>' +
+      '<div class="field"><label>Deadline</label><input id="ntDeadline" type="datetime-local" /></div>' +
+      '<div class="modal-err" id="ntErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="ntCancel">Cancel</button><button class="btn" id="ntSave">Assign Task</button></div>'
+    );
+    document.getElementById("ntCancel").addEventListener("click", closeModal);
+    document.getElementById("ntSave").addEventListener("click", function () {
+      var assignee = document.getElementById("ntAssignee").value;
+      var task = document.getElementById("ntTask").value.trim();
+      var deadline = document.getElementById("ntDeadline").value;
+      var err = document.getElementById("ntErr");
+      if (!assignee || !task || !deadline) { err.textContent = "All fields are required."; return; }
+      var btn = document.getElementById("ntSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Assigning…';
+      api("createTask", {
+        assignee: assignee, task: task, deadline: new Date(deadline).toISOString(),
+        first_date: new Date(deadline).toISOString(), delegated_by: myKey()
+      }).then(function () {
+        toast("Task assigned to " + assignee);
+        closeModal();
+        return api("listTasks").then(function (t) { state.tasks = t; renderTasks(); renderHome(); });
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Assign Task"; });
+    });
+  });
+
+  // ---------- Complete Task ----------
+  function openCompleteModal(t) {
+    openModal(
+      "<h3>Complete Task</h3><div class=\"sub\">" + esc(t.id) + "</div>" +
+      '<div class="field"><label>Task</label><div class="history-box">' + esc(t.task) + "</div></div>" +
+      '<div class="field"><label>Completion remarks</label><textarea id="ctRemarks" placeholder="What was done…"></textarea></div>' +
+      '<div class="field"><label>Photo proof (optional)</label><input id="ctPhoto" type="file" accept="image/*" capture="environment" /><img id="ctPreview" class="photo-preview hidden" /></div>' +
+      '<div class="modal-err" id="ctErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="ctCancel">Cancel</button><button class="btn" id="ctSave">Mark Complete</button></div>'
+    );
+    var photoData = null;
+    document.getElementById("ctCancel").addEventListener("click", closeModal);
+    document.getElementById("ctPhoto").addEventListener("change", function (e) {
+      var f = e.target.files[0];
+      if (!f) return;
+      compressImage(f, function (dataUrl) {
+        photoData = dataUrl;
+        var img = document.getElementById("ctPreview");
+        img.src = dataUrl; img.classList.remove("hidden");
+      });
+    });
+    document.getElementById("ctSave").addEventListener("click", function () {
+      var remarks = document.getElementById("ctRemarks").value.trim();
+      var err = document.getElementById("ctErr");
+      var btn = document.getElementById("ctSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      api("completeTask", { id: t.id, remarks: remarks, photoBase64: photoData, completedBy: myKey() }).then(function () {
+        toast("Task marked complete");
+        closeModal();
+        return api("listTasks").then(function (ts) { state.tasks = ts; renderTasks(); renderHome(); });
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Mark Complete"; });
+    });
+  }
+
+  function compressImage(file, cb) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var img = new Image();
+      img.onload = function () {
+        var maxW = 1280;
+        var scale = Math.min(1, maxW / img.width);
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        cb(canvas.toDataURL("image/jpeg", 0.72));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ---------- Revise ----------
+  function openReviseModal(t) {
+    openModal(
+      "<h3>Revise Deadline</h3><div class=\"sub\">" + esc(t.id) + " — current deadline " + fmtDate(t.deadline) + "</div>" +
+      '<div class="field"><label>Reason for revision</label><textarea id="rvRemarks" placeholder="Why the deadline needs to move…"></textarea></div>' +
+      '<div class="field"><label>New deadline</label><input id="rvDeadline" type="datetime-local" value="' + toDatetimeLocal(t.deadline) + '" /></div>' +
+      '<div class="modal-err" id="rvErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="rvCancel">Cancel</button><button class="btn" id="rvSave">Save Revision</button></div>'
+    );
+    document.getElementById("rvCancel").addEventListener("click", closeModal);
+    document.getElementById("rvSave").addEventListener("click", function () {
+      var remarks = document.getElementById("rvRemarks").value.trim();
+      var newDeadline = document.getElementById("rvDeadline").value;
+      var err = document.getElementById("rvErr");
+      if (!newDeadline) { err.textContent = "Pick a new deadline."; return; }
+      var btn = document.getElementById("rvSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      api("reviseDeadline", { id: t.id, remarks: remarks, newDeadline: new Date(newDeadline).toISOString(), revisedBy: myKey() }).then(function () {
+        toast("Deadline revised");
+        closeModal();
+        return api("listTasks").then(function (ts) { state.tasks = ts; renderTasks(); renderHome(); });
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Save Revision"; });
+    });
+  }
+
+  // ---------- Proof ----------
+  function openProofModal(t) {
+    var photoHtml = (t.completion_photo_url && t.completion_photo_url.indexOf("http") === 0) || (t.completion_photo_url && t.completion_photo_url.indexOf("data:image") === 0)
+      ? '<img class="photo-preview" src="' + esc(t.completion_photo_url) + '" />'
+      : '<div class="sub">No photo uploaded</div>';
+    openModal(
+      "<h3>Completion Proof</h3><div class=\"sub\">" + esc(t.id) + " — completed " + fmtDate(t.completed_at) + "</div>" +
+      '<div class="field"><label>Task</label><div class="history-box">' + esc(t.task) + "</div></div>" +
+      '<div class="field"><label>Remarks</label><div class="history-box">' + esc(t.completion_remarks || "—") + "</div></div>" +
+      (t.history ? '<div class="field"><label>Revision History</label><div class="history-box">' + esc(t.history) + "</div></div>" : "") +
+      '<div class="field"><label>Photo</label>' + photoHtml + "</div>" +
+      '<div class="modal-actions"><button class="btn secondary" id="pfClose">Close</button></div>'
+    );
+    document.getElementById("pfClose").addEventListener("click", closeModal);
+  }
+
+  // ---------- Edit (admin) ----------
+  function openEditModal(t) {
+    var opts = state.doers.map(function (d) {
+      return '<option value="' + esc(d.delegation_name) + '"' + (d.delegation_name === t.assignee ? " selected" : "") + ">" + esc(d.delegation_name) + "</option>";
+    }).join("");
+    openModal(
+      "<h3>Edit Task</h3><div class=\"sub\">" + esc(t.id) + "</div>" +
+      '<div class="field"><label>Assignee</label><select id="edAssignee">' + opts + "</select></div>" +
+      '<div class="field"><label>Task</label><textarea id="edTask">' + esc(t.task) + "</textarea></div>" +
+      '<div class="field"><label>Deadline</label><input id="edDeadline" type="datetime-local" value="' + toDatetimeLocal(t.deadline) + '" /></div>' +
+      '<div class="field"><label>Admin notes</label><textarea id="edNotes">' + esc(t.admin_notes || "") + "</textarea></div>" +
+      '<div class="modal-err" id="edErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="edCancel">Cancel</button><button class="btn" id="edSave">Save Changes</button></div>'
+    );
+    document.getElementById("edCancel").addEventListener("click", closeModal);
+    document.getElementById("edSave").addEventListener("click", function () {
+      var btn = document.getElementById("edSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      api("editTask", {
+        id: t.id,
+        assignee: document.getElementById("edAssignee").value,
+        task: document.getElementById("edTask").value.trim(),
+        deadline: new Date(document.getElementById("edDeadline").value).toISOString(),
+        admin_notes: document.getElementById("edNotes").value.trim()
+      }).then(function () {
+        toast("Task updated");
+        closeModal();
+        return api("listTasks").then(function (ts) { state.tasks = ts; renderTasks(); renderHome(); });
+      }).catch(function (e) {
+        document.getElementById("edErr").textContent = e.message;
+        btn.disabled = false; btn.textContent = "Save Changes";
+      });
+    });
+  }
+
+  // ---------- Audit ----------
+  function renderAudits() {
+    var wrap = document.getElementById("auditTableWrap");
+    if (!state.audits.length) { wrap.innerHTML = '<div class="empty">No audit records.</div>'; return; }
+    var canEdit = state.doer.can_view_audit || state.doer.is_admin;
+    var rows = state.audits.map(function (a) {
+      var soon = a.valid_to && (new Date(a.valid_to) - new Date()) / 86400000 < 45;
+      return "<tr>" +
+        "<td><b>" + esc(a.name) + "</b></td>" +
+        "<td>" + esc(a.freq) + "</td>" +
+        "<td>" + fmtDate(a.valid_from) + "</td>" +
+        '<td class="' + (soon ? "overdue" : "") + '">' + fmtDate(a.valid_to) + "</td>" +
+        "<td>" + esc(a.notes || "—") + "</td>" +
+        (canEdit ? '<td><button class="btn secondary" data-sno="' + esc(a.sno) + '" data-act="editAudit">Update</button></td>' : "") +
+        "</tr>";
+    }).join("");
+    wrap.innerHTML = '<table><thead><tr><th>Audit / Certificate</th><th>Frequency</th><th>Valid From</th><th>Valid To</th><th>Notes</th>' + (canEdit ? "<th></th>" : "") + "</tr></thead><tbody>" + rows + "</tbody></table>";
+    wrap.querySelectorAll('[data-act="editAudit"]').forEach(function (b) {
+      b.addEventListener("click", function () {
+        var a = state.audits.find(function (x) { return x.sno === b.dataset.sno; });
+        openAuditModal(a);
+      });
+    });
+  }
+  function openAuditModal(a) {
+    openModal(
+      "<h3>Update: " + esc(a.name) + "</h3>" +
+      '<div class="field"><label>Valid From</label><input id="auFrom" type="date" value="' + (a.valid_from ? a.valid_from.slice(0, 10) : "") + '" /></div>' +
+      '<div class="field"><label>Valid To (renewal date)</label><input id="auTo" type="date" value="' + (a.valid_to ? a.valid_to.slice(0, 10) : "") + '" /></div>' +
+      '<div class="field"><label>Notes</label><textarea id="auNotes">' + esc(a.notes || "") + "</textarea></div>" +
+      '<div class="modal-err" id="auErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="auCancel">Cancel</button><button class="btn" id="auSave">Save</button></div>'
+    );
+    document.getElementById("auCancel").addEventListener("click", closeModal);
+    document.getElementById("auSave").addEventListener("click", function () {
+      var btn = document.getElementById("auSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      var from = document.getElementById("auFrom").value, to = document.getElementById("auTo").value;
+      api("updateAudit", {
+        sno: a.sno,
+        valid_from: from ? new Date(from).toISOString() : null,
+        valid_to: to ? new Date(to).toISOString() : null,
+        notes: document.getElementById("auNotes").value.trim(),
+        updatedBy: myKey()
+      }).then(function () {
+        toast("Audit record updated");
+        closeModal();
+        return api("getAudits").then(function (aa) { state.audits = aa; renderAudits(); renderHome(); });
+      }).catch(function (e) { document.getElementById("auErr").textContent = e.message; btn.disabled = false; btn.textContent = "Save"; });
+    });
+  }
+
+  // ---------- Admin Control ----------
+  function renderAdmin() {
+    var wrap = document.getElementById("adminTableWrap");
+    if (!wrap || !state.doer || !state.doer.is_admin) return;
+
+    var statWrap = document.getElementById("adminStatGrid");
+    if (statWrap) {
+      var totalStaff = state.doers.length;
+      var admins = state.doers.filter(function (d) { return d.is_admin; }).length;
+      var pendingCt = state.tasks.filter(function (t) { return t.status === "Pending"; }).length;
+      var overdueCt = state.tasks.filter(isOverdue).length;
+      var weekAgo = Date.now() - 7 * 86400000;
+      var completed7 = state.tasks.filter(function (t) { return t.status === "Completed" && t.completed_at && new Date(t.completed_at).getTime() >= weekAgo; }).length;
+      var auditsDue = state.audits.filter(function (a) { return a.valid_to && (new Date(a.valid_to) - new Date()) / 86400000 < 45; }).length;
+      var astats = [
+        { n: totalStaff, l: "Total Staff" },
+        { n: admins, l: "Administrators" },
+        { n: pendingCt, l: "Pending Tasks" },
+        { n: overdueCt, l: "Overdue Tasks" },
+        { n: completed7, l: "Completed · 7 days" },
+        { n: auditsDue, l: "Audits Due · 45 days" }
+      ];
+      statWrap.innerHTML = astats.map(function (s) {
+        return '<div class="stat-card"><div class="n">' + s.n + '</div><div class="l">' + s.l + '</div></div>';
+      }).join("");
+    }
+    var modWrap = document.getElementById("adminModuleGrid");
+    if (modWrap) {
+      var total = state.doers.length || 1;
+      var mods = [
+        { icon: "✅", name: "Delegation", status: "live", visible: total },
+        { icon: "🕒", name: "Attendance", status: "soon", visible: 0 },
+        { icon: "💰", name: "Salary", status: "soon", visible: 0 },
+        { icon: "🎫", name: "Tickets", status: "soon", visible: 0 }
+      ];
+      modWrap.innerHTML = mods.map(function (m) {
+        return '<div class="module-card" style="cursor:default"><div class="top"><div class="icon lavender" style="margin-bottom:0">' + m.icon + '</div><span class="module-badge ' + (m.status === "live" ? "live" : "soon") + '">' + (m.status === "live" ? "Live" : "Coming Soon") + '</span></div>' +
+          '<div class="mt">' + esc(m.name) + '</div>' +
+          '<div class="mv">Visible to <b style="color:var(--ink)">' + m.visible + '</b> / ' + total + ' staff</div>' +
+          '</div>';
+      }).join("");
+    }
+
+    if (!state.doers.length) { wrap.innerHTML = '<div class="empty">No staff records.</div>'; return; }
+    var sorted = state.doers.slice().sort(function (a, b) { return (a.delegation_name || a.name || "").localeCompare(b.delegation_name || b.name || ""); });
+    function cb(d, field) {
+      var isSelfAdmin = d.doc_id === state.doer.doc_id && field === "is_admin";
+      return '<input type="checkbox" data-doc="' + esc(d.doc_id) + '" data-field="' + field + '" ' + (d[field] ? "checked" : "") + (isSelfAdmin ? " disabled title=\"You can't remove your own admin access here\"" : "") + ' />';
+    }
+    var rows = sorted.map(function (d) {
+      return "<tr>" +
+        "<td><b>" + esc(d.delegation_name || d.name) + "</b><div style='color:var(--sub);font-size:11px'>" + esc(d.department || "") + (d.designation ? " · " + esc(d.designation) : "") + "</div></td>" +
+        '<td style="text-align:center">' + cb(d, "can_assign") + "</td>" +
+        '<td style="text-align:center">' + cb(d, "can_view_master") + "</td>" +
+        '<td style="text-align:center">' + cb(d, "can_view_audit") + "</td>" +
+        '<td style="text-align:center">' + cb(d, "is_admin") + "</td>" +
+        "</tr>";
+    }).join("");
+    wrap.innerHTML = '<table><thead><tr><th>Staff</th><th style="text-align:center">Assign Tasks</th><th style="text-align:center">View All Tasks</th><th style="text-align:center">View Audit</th><th style="text-align:center">Admin</th></tr></thead><tbody>' + rows + "</tbody></table>";
+    wrap.querySelectorAll('input[type="checkbox"]').forEach(function (cbEl) {
+      cbEl.addEventListener("change", function () {
+        var docId = cbEl.dataset.doc, field = cbEl.dataset.field, val = cbEl.checked;
+        var d = state.doers.find(function (x) { return x.doc_id === docId; });
+        var payload = { doc_id: docId };
+        payload[field] = val;
+        cbEl.disabled = true;
+        api("updateDoerAccess", payload).then(function () {
+          if (d) d[field] = val;
+          toast("Updated " + (d ? (d.delegation_name || d.name) : docId));
+        }).catch(function (e) {
+          cbEl.checked = !val;
+          toast(e.message, true);
+        }).finally(function () {
+          if (!(docId === state.doer.doc_id && field === "is_admin")) cbEl.disabled = false;
+        });
+      });
+    });
+  }
+  var adminRefreshBtn = document.getElementById("adminRefreshBtn");
+  if (adminRefreshBtn) {
+    adminRefreshBtn.addEventListener("click", function () {
+      adminRefreshBtn.disabled = true; adminRefreshBtn.innerHTML = '<span class="spinner" style="border-color:rgba(0,0,0,.3);border-top-color:var(--brand-ink)"></span>Refreshing…';
+      loadAll();
+      setTimeout(function () { adminRefreshBtn.disabled = false; adminRefreshBtn.textContent = "Refresh"; }, 400);
+    });
+  }
+
+  // ---------- FAQ ----------
+  function renderFaqs() {
+    var wrap = document.getElementById("faqListWrap");
+    if (!state.faqs.length) { wrap.innerHTML = '<div class="empty">No FAQs yet.</div>'; return; }
+    wrap.innerHTML = state.faqs.map(function (f) {
+      return '<div class="faq-item"><div class="faq-q">' + esc(f.question) + '</div><div class="faq-a">' + esc(f.answer) + '</div><div class="faq-meta">by ' + esc(f.author) + " · " + fmtDate(f.created_at) + "</div></div>";
+    }).join("");
+  }
+  document.getElementById("addFaqBtn").addEventListener("click", function () {
+    openModal(
+      "<h3>Add FAQ</h3>" +
+      '<div class="field"><label>Question</label><input id="fqQ" /></div>' +
+      '<div class="field"><label>Answer</label><textarea id="fqA"></textarea></div>' +
+      '<div class="modal-err" id="fqErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="fqCancel">Cancel</button><button class="btn" id="fqSave">Add FAQ</button></div>'
+    );
+    document.getElementById("fqCancel").addEventListener("click", closeModal);
+    document.getElementById("fqSave").addEventListener("click", function () {
+      var q = document.getElementById("fqQ").value.trim(), a = document.getElementById("fqA").value.trim();
+      var err = document.getElementById("fqErr");
+      if (!q || !a) { err.textContent = "Both fields are required."; return; }
+      var btn = document.getElementById("fqSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      api("submitFaq", { question: q, answer: a, author: myKey() }).then(function () {
+        toast("FAQ added");
+        closeModal();
+        return api("getFaqs").then(function (fs) { state.faqs = fs; renderFaqs(); });
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Add FAQ"; });
+    });
+  });
+
+  // ---------- Score Report ----------
+  var scoreMode = "week";
+  document.querySelectorAll("#scoreModeTabs .tab").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll("#scoreModeTabs .tab").forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      scoreMode = b.dataset.mode;
+      document.getElementById("scoreWeekPicker").classList.toggle("hidden", scoreMode !== "week");
+      document.getElementById("scoreRangePicker").classList.toggle("hidden", scoreMode !== "range");
+    });
+  });
+  document.getElementById("scoreGoBtn").addEventListener("click", renderScore);
+
+  function scoreRangeBounds() {
+    if (scoreMode === "week") {
+      var wv = document.getElementById("scoreWeek").value; // "2026-W36"
+      if (!wv) return null;
+      var parts = wv.split("-W"); var year = +parts[0], week = +parts[1];
+      var jan4 = new Date(Date.UTC(year, 0, 4));
+      var weekStart = new Date(jan4);
+      weekStart.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() + 6) % 7) + (week - 1) * 7);
+      var weekEnd = new Date(weekStart); weekEnd.setUTCDate(weekStart.getUTCDate() + 7);
+      return { from: weekStart, to: weekEnd };
+    }
+    var f = document.getElementById("scoreFrom").value, t = document.getElementById("scoreTo").value;
+    if (!f || !t) return null;
+    var to = new Date(t); to.setDate(to.getDate() + 1);
+    return { from: new Date(f), to: to };
+  }
+
+  function renderScore() {
+    var wrap = document.getElementById("scoreTableWrap");
+    var range = scoreRangeBounds();
+    if (!range) { wrap.innerHTML = '<div class="empty">Pick a ' + (scoreMode === "week" ? "week" : "date range") + " to see the report.</div>"; return; }
+    var inRange = state.tasks.filter(function (t) {
+      var d = t.first_date ? new Date(t.first_date) : (t.ts ? new Date(t.ts) : null);
+      return d && d >= range.from && d < range.to;
+    });
+    var byDoer = {};
+    inRange.forEach(function (t) {
+      var key = t.assignee || "Unassigned";
+      if (!byDoer[key]) byDoer[key] = { green: 0, yellow: 0, red: 0, tasks: [] };
+      var color;
+      if (t.status === "Completed") {
+        color = (t.total_rev > 0 || (t.completed_at && t.deadline && new Date(t.completed_at) > new Date(t.deadline))) ? "yellow" : "green";
+      } else {
+        color = (t.deadline && new Date(t.deadline) < new Date()) ? "red" : "yellow";
+      }
+      byDoer[key][color]++;
+      byDoer[key].tasks.push(Object.assign({ _color: color }, t));
+    });
+    var names = Object.keys(byDoer).sort();
+    if (!names.length) { wrap.innerHTML = '<div class="empty">No tasks in this period.</div>'; return; }
+    var rows = names.map(function (name) {
+      var s = byDoer[name], total = s.green + s.yellow + s.red;
+      var pct = total ? Math.round((s.green / total) * 100) : 0;
+      return "<tr>" +
+        "<td><b>" + esc(name) + "</b></td>" +
+        '<td style="color:var(--ok);font-weight:700">' + s.green + "</td>" +
+        '<td style="color:var(--warn);font-weight:700">' + s.yellow + "</td>" +
+        '<td style="color:var(--danger);font-weight:700">' + s.red + "</td>" +
+        "<td>" + total + "</td>" +
+        "<td><b>" + pct + "%</b></td>" +
+        '<td><button class="btn secondary" data-doer="' + esc(name) + '" data-act="scoreDetail">Detail</button></td>' +
+        "</tr>";
+    }).join("");
+    wrap.innerHTML = '<table><thead><tr><th>Doer</th><th>Green</th><th>Yellow</th><th>Red</th><th>Total</th><th>Score</th><th></th></tr></thead><tbody>' + rows + "</tbody></table>";
+    wrap.querySelectorAll('[data-act="scoreDetail"]').forEach(function (b) {
+      b.addEventListener("click", function () { openScoreDetail(b.dataset.doer, byDoer[b.dataset.doer].tasks); });
+    });
+  }
+
+  function openScoreDetail(name, tasks) {
+    var rows = tasks.map(function (t) {
+      return "<tr><td>" + esc(t.task).slice(0, 90) + '</td><td><span class="badge" style="background:' +
+        (t._color === "green" ? "var(--completed)" : t._color === "yellow" ? "var(--pending)" : "#fee2e2") + ";color:" +
+        (t._color === "green" ? "var(--completed-ink)" : t._color === "yellow" ? "var(--pending-ink)" : "var(--danger)") + '">' + t._color + "</span></td><td>" + fmtDate(t.deadline) + "</td></tr>";
+    }).join("");
+    openModal(
+      "<h3>" + esc(name) + " — Task Detail</h3>" +
+      '<div class="card"><table><thead><tr><th>Task</th><th>Score</th><th>Deadline</th></tr></thead><tbody>' + rows + "</tbody></table></div>" +
+      '<div class="modal-actions"><button class="btn secondary" id="sdClose">Close</button></div>'
+    );
+    document.getElementById("sdClose").addEventListener("click", closeModal);
+  }
+
+  // ---------- Boot: restore session ----------
+  (function boot() {
+    try {
+      var saved = localStorage.getItem("deleg_doer");
+      if (saved) { state.doer = JSON.parse(saved); state.demo = false; enterApp(); }
+    } catch (e) {}
+  })();
+})();
+</script>
