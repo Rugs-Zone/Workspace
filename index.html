@@ -143,6 +143,7 @@
   /* Modal */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
   .modal{background:var(--card);border-radius:14px;padding:24px;width:100%;max-width:520px;max-height:88vh;overflow:auto}
+  .modal.wide{max-width:680px}
   .modal h3{margin:0 0 4px}
   .modal .sub{color:var(--sub);font-size:12px;margin-bottom:16px}
   .field{margin-bottom:14px}
@@ -153,6 +154,30 @@
   .modal-err{color:var(--danger);font-size:12px;margin-top:8px;min-height:14px}
   .photo-preview{max-width:100%;border-radius:8px;margin-top:8px;display:block}
   .history-box{background:var(--bg);border-radius:8px;padding:10px;font-size:12px;white-space:pre-wrap;max-height:140px;overflow:auto;margin-top:4px}
+
+  /* Tickets / Help Slips */
+  .ticket-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:10px;cursor:pointer}
+  .ticket-card:hover{border-color:var(--purple1)}
+  .ticket-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+  .ticket-type{font-size:10px;font-weight:800;letter-spacing:.03em;padding:3px 8px;border-radius:99px;text-transform:uppercase;margin-right:6px}
+  .ticket-type.query{background:rgba(37,99,235,.12);color:#2563eb}
+  .ticket-type.help_slip{background:rgba(217,119,6,.14);color:#d97706}
+  .ticket-status{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
+  .ticket-status.Open{background:var(--pending);color:var(--pending-ink)}
+  .ticket-status.In-Progress{background:rgba(37,99,235,.12);color:#2563eb}
+  .ticket-status.Resolved,.ticket-status.Closed{background:var(--completed);color:var(--completed-ink)}
+  .ticket-meta{font-size:12px;color:var(--sub);margin-top:8px}
+  .ticket-problem{font-size:13px;margin-top:8px;white-space:pre-wrap;color:var(--ink)}
+  .solution-list{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--ink)}
+  .comment-thread{margin-top:6px;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .comment-item{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .comment-item:last-child{border-bottom:none}
+  .comment-head{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:var(--sub);margin-bottom:3px;font-weight:700}
+  .comment-item audio{width:100%;margin-top:6px;height:34px}
+  .rec-row{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+  .rec-btn{background:rgba(220,38,38,.1);color:var(--danger);border:none;border-radius:99px;padding:8px 14px;font-size:12px;font-weight:700}
+  .rec-btn.recording{background:var(--danger);color:#fff}
+  .rec-timer{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;font-weight:700}
 
   .faq-item{padding:14px;border-bottom:1px solid var(--line)}
   .faq-item:last-child{border-bottom:none}
@@ -199,11 +224,11 @@
     <button class="nav-item" data-view="tasks">📋 Tasks</button>
     <button class="nav-item hidden" id="navScore" data-view="score">📊 Score Report</button>
     <button class="nav-item hidden" id="navAudit" data-view="audit">📜 Audit &amp; Renewal</button>
+    <button class="nav-item" data-view="tickets">🎫 Queries / Tickets</button>
     <button class="nav-item" data-view="faq">❓ FAQ</button>
     <div class="nav-section-label">Coming soon</div>
     <button class="nav-item" data-view="attendance">🕒 Attendance<span class="soon-badge">Soon</span></button>
     <button class="nav-item" data-view="salary">💰 Salary<span class="soon-badge">Soon</span></button>
-    <button class="nav-item" data-view="tickets">🎫 Queries / Tickets<span class="soon-badge">Soon</span></button>
     <div class="nav-section-label" id="adminSectionLabel" style="display:none">Admin</div>
     <button class="nav-item hidden" id="navAdmin" data-view="admin">🛠️ Admin Control</button>
     <div class="sidebar-footer">
@@ -298,8 +323,19 @@
     </div>
 
     <div id="view-tickets" class="hidden">
-      <div class="page-head"><h2>Queries / Tickets</h2></div>
-      <div class="card coming-soon"><div class="big">🎫</div><b>Query &amp; ticketing module is coming soon</b>Staff will be able to raise and track queries here.</div>
+      <div class="page-head">
+        <h2>Queries / Tickets</h2>
+        <button class="btn" id="newTicketBtn">+ Raise Query / Help Slip</button>
+      </div>
+      <div class="page-sub" style="margin-top:-14px">Raise a query, or a Help Slip with your own proposed solutions — visible to your department and admins, who can reply with text or a voice note.</div>
+      <div class="toolbar">
+        <div class="tabs" id="ticketTabs">
+          <button class="tab active" data-ttab="mine">My Tickets</button>
+          <button class="tab" data-ttab="dept">My Department</button>
+          <button class="tab hidden" id="ticketTabAll" data-ttab="all">All</button>
+        </div>
+      </div>
+      <div id="ticketListWrap"></div>
     </div>
 
     <div id="view-admin" class="hidden">
@@ -335,7 +371,7 @@
   var ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzYmdmam5neHNhYm5uemd4dWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTE2NjMsImV4cCI6MjEwMzk2NzY2M30.u7fq2LkYITL1vv2RjZogUTeZGTpwtoDlWpIsYagYxbo";
   var FN_URL = SUPABASE_URL + "/functions/v1/deleg-api";
 
-  var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tab: "mine", view: "home", demo: false };
+  var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tickets: [], ticketComments: {}, tab: "mine", ticketTab: "mine", view: "home", demo: false };
 
   function api(action, payload) {
     if (state.demo) return demoApi(action, payload || {});
@@ -417,6 +453,36 @@
             resolve({ doc_id: p.doc_id });
             break;
           }
+          case "listTickets": resolve(state.tickets.slice()); break;
+          case "createTicket": {
+            var tid = "TCK" + Math.random().toString(36).slice(2, 7).toUpperCase();
+            var trow = {
+              id: tid, type: p.type === "help_slip" ? "help_slip" : "query", subject: p.subject || "", problem: p.problem,
+              solution_1: p.solution_1 || "", solution_2: p.solution_2 || "", solution_3: p.solution_3 || "",
+              department: p.department || "", raised_by: p.raised_by, raised_by_email: p.raised_by_email || "",
+              status: "Open", created_at: new Date().toISOString(), updated_at: new Date().toISOString()
+            };
+            state.tickets.unshift(trow);
+            resolve({ id: tid });
+            break;
+          }
+          case "updateTicketStatus": {
+            var tk = state.tickets.find(function (x) { return x.id === p.id; });
+            if (tk) { tk.status = p.status; tk.updated_at = new Date().toISOString(); }
+            resolve({ id: p.id });
+            break;
+          }
+          case "getTicketComments": resolve((state.ticketComments[p.ticket_id] || []).slice()); break;
+          case "addTicketComment": {
+            var cid = "c" + Math.random().toString(36).slice(2, 8);
+            if (!state.ticketComments[p.ticket_id]) state.ticketComments[p.ticket_id] = [];
+            state.ticketComments[p.ticket_id].push({
+              id: cid, ticket_id: p.ticket_id, author: p.author, author_email: p.author_email || "",
+              comment_text: p.comment_text || "", voice_note_url: p.voiceBase64 || "", created_at: new Date().toISOString()
+            });
+            resolve({ id: cid });
+            break;
+          }
           default: resolve(null);
         }
       }, 250);
@@ -454,7 +520,16 @@
       { id: "FAQ1", question: "How do I mark a task complete?", answer: "Open the task and click Complete, add remarks and optionally a photo.", author: "Demo Admin", created_at: new Date(now - 100000000).toISOString() },
       { id: "FAQ2", question: "Who can assign tasks to me?", answer: "Anyone with assign permission — usually your manager or an admin.", author: "Kiran Kaur", created_at: new Date(now - 200000000).toISOString() }
     ];
-    return { doers: doers, tasks: tasks, audits: audits, faqs: faqs };
+    var tickets = [
+      { id: "TCK00001", type: "query", subject: "VPN not connecting", problem: "Unable to connect to the office VPN since this morning, blocking access to shared drives.", solution_1: "", solution_2: "", solution_3: "", department: "Sales", raised_by: "Anita Verma", raised_by_email: "", status: "Open", created_at: new Date(now - 5 * h).toISOString(), updated_at: new Date(now - 5 * h).toISOString() },
+      { id: "TCK00002", type: "help_slip", subject: "Sample dispatch delay to buyer", problem: "The sample for buyer XYZ is delayed because the usual courier has no pickup slot today.", solution_1: "Book an alternate courier for today's pickup", solution_2: "Ask the buyer for a 1-day extension", solution_3: "Hand-deliver to the courier hub directly", department: "Production", raised_by: "Rohit Sharma", raised_by_email: "", status: "In Progress", created_at: new Date(now - 30 * h).toISOString(), updated_at: new Date(now - 2 * h).toISOString() }
+    ];
+    var ticketComments = {
+      TCK00002: [
+        { id: "c1", ticket_id: "TCK00002", author: "Demo Admin", author_email: "", comment_text: "Let's go with Solution 1 — booking an alternate courier now, will confirm pickup time shortly.", voice_note_url: "", created_at: new Date(now - 1 * h).toISOString() }
+      ]
+    };
+    return { doers: doers, tasks: tasks, audits: audits, faqs: faqs, tickets: tickets, ticketComments: ticketComments };
   }
 
   function toast(msg, isErr) {
@@ -531,6 +606,8 @@
     state.tasks = seed.tasks;
     state.audits = seed.audits;
     state.faqs = seed.faqs;
+    state.tickets = seed.tickets;
+    state.ticketComments = seed.ticketComments || {};
     document.body.classList.add("demo-mode");
     document.getElementById("demoBanner").classList.remove("hidden");
     enterApp();
@@ -559,19 +636,20 @@
     document.getElementById("navScore").classList.toggle("hidden", !(state.doer.can_view_master || state.doer.is_admin));
     document.getElementById("navAdmin").classList.toggle("hidden", !state.doer.is_admin);
     document.getElementById("adminSectionLabel").style.display = state.doer.is_admin ? "block" : "none";
+    document.getElementById("ticketTabAll").classList.toggle("hidden", !state.doer.is_admin);
     loadAll();
   }
 
   function loadAll() {
     if (state.demo) {
-      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome();
+      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets();
       return;
     }
     Promise.all([
-      api("listTasks"), api("getDoers"), api("getFaqs")
+      api("listTasks"), api("getDoers"), api("getFaqs"), api("listTickets")
     ]).then(function (r) {
-      state.tasks = r[0]; state.doers = r[1]; state.faqs = r[2];
-      renderTasks(); renderFaqs(); renderHome();
+      state.tasks = r[0]; state.doers = r[1]; state.faqs = r[2]; state.tickets = r[3];
+      renderTasks(); renderFaqs(); renderHome(); renderTickets();
       if (state.doer.is_admin) renderAdmin();
       if (state.doer.can_view_audit || state.doer.is_admin) {
         api("getAudits").then(function (a) { state.audits = a; renderAudits(); renderHome(); });
@@ -593,6 +671,7 @@
       if (state.view === "score") renderScore();
       if (state.view === "home") renderHome();
       if (state.view === "admin") renderAdmin();
+      if (state.view === "tickets") renderTickets();
     });
   });
   document.querySelectorAll("#taskTabs .tab").forEach(function (btn) {
@@ -604,6 +683,14 @@
     });
   });
   document.getElementById("taskSearch").addEventListener("input", renderTasks);
+  document.querySelectorAll("#ticketTabs .tab").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll("#ticketTabs .tab").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      state.ticketTab = btn.dataset.ttab;
+      renderTickets();
+    });
+  });
 
   // ---------- Home dashboard ----------
   function renderHome() {
@@ -630,6 +717,9 @@
       { n: dueToday, l: "Due Today" }
     ];
     if (canAudit) tiles.push({ n: auditSoon, l: "Audit Alerts" });
+    var deptTickets = state.tickets.filter(function (tk) { return (tk.department || "").toLowerCase() === (state.doer.department || "").toLowerCase(); });
+    var openDeptTickets = deptTickets.filter(function (tk) { return tk.status === "Open" || tk.status === "In Progress"; }).length;
+    tiles.push({ n: openDeptTickets, l: "Open Tickets (Dept)" });
 
     wrap.innerHTML = tiles.map(function (s) {
       return '<div class="stat-card"><div class="n">' + s.n + '</div><div class="l">' + s.l + '</div></div>';
@@ -642,9 +732,9 @@
     if (mg) {
       var modules = [
         { icon: "✅", name: "Delegation", status: "live" },
+        { icon: "🎫", name: "Queries / Tickets", status: "live" },
         { icon: "🕒", name: "Attendance", status: "soon" },
-        { icon: "💰", name: "Salary", status: "soon" },
-        { icon: "🎫", name: "Queries / Tickets", status: "soon" }
+        { icon: "💰", name: "Salary", status: "soon" }
       ];
       if (state.doer.is_admin) modules.push({ icon: "🛠️", name: "Admin Control", status: "live" });
       mg.innerHTML = modules.map(function (m) {
@@ -750,9 +840,9 @@
   }
 
   // ---------- Modal helper ----------
-  function openModal(html) {
+  function openModal(html, extraClass) {
     var root = document.getElementById("modalRoot");
-    root.innerHTML = '<div class="modal-overlay" id="modalOverlay"><div class="modal">' + html + "</div></div>";
+    root.innerHTML = '<div class="modal-overlay" id="modalOverlay"><div class="modal' + (extraClass ? " " + extraClass : "") + '">' + html + "</div></div>";
     document.getElementById("modalOverlay").addEventListener("click", function (e) {
       if (e.target.id === "modalOverlay") closeModal();
     });
@@ -980,13 +1070,15 @@
       var weekAgo = Date.now() - 7 * 86400000;
       var completed7 = state.tasks.filter(function (t) { return t.status === "Completed" && t.completed_at && new Date(t.completed_at).getTime() >= weekAgo; }).length;
       var auditsDue = state.audits.filter(function (a) { return a.valid_to && (new Date(a.valid_to) - new Date()) / 86400000 < 45; }).length;
+      var openTickets = state.tickets.filter(function (tk) { return tk.status === "Open" || tk.status === "In Progress"; }).length;
       var astats = [
         { n: totalStaff, l: "Total Staff" },
         { n: admins, l: "Administrators" },
         { n: pendingCt, l: "Pending Tasks" },
         { n: overdueCt, l: "Overdue Tasks" },
         { n: completed7, l: "Completed · 7 days" },
-        { n: auditsDue, l: "Audits Due · 45 days" }
+        { n: auditsDue, l: "Audits Due · 45 days" },
+        { n: openTickets, l: "Open Tickets" }
       ];
       statWrap.innerHTML = astats.map(function (s) {
         return '<div class="stat-card"><div class="n">' + s.n + '</div><div class="l">' + s.l + '</div></div>';
@@ -997,9 +1089,9 @@
       var total = state.doers.length || 1;
       var mods = [
         { icon: "✅", name: "Delegation", status: "live", visible: total },
+        { icon: "🎫", name: "Tickets", status: "live", visible: total },
         { icon: "🕒", name: "Attendance", status: "soon", visible: 0 },
-        { icon: "💰", name: "Salary", status: "soon", visible: 0 },
-        { icon: "🎫", name: "Tickets", status: "soon", visible: 0 }
+        { icon: "💰", name: "Salary", status: "soon", visible: 0 }
       ];
       modWrap.innerHTML = mods.map(function (m) {
         return '<div class="module-card" style="cursor:default"><div class="top"><div class="icon lavender" style="margin-bottom:0">' + m.icon + '</div><span class="module-badge ' + (m.status === "live" ? "live" : "soon") + '">' + (m.status === "live" ? "Live" : "Coming Soon") + '</span></div>' +
@@ -1050,6 +1142,226 @@
       adminRefreshBtn.disabled = true; adminRefreshBtn.innerHTML = '<span class="spinner" style="border-color:rgba(0,0,0,.3);border-top-color:var(--brand-ink)"></span>Refreshing…';
       loadAll();
       setTimeout(function () { adminRefreshBtn.disabled = false; adminRefreshBtn.textContent = "Refresh"; }, 400);
+    });
+  }
+
+  // ---------- Tickets / Help Slips ----------
+  function deptOptions(selected) {
+    var depts = [];
+    state.doers.forEach(function (d) { if (d.department && depts.indexOf(d.department) === -1) depts.push(d.department); });
+    depts.sort();
+    if (selected && depts.indexOf(selected) === -1) depts.unshift(selected);
+    return depts.map(function (dp) {
+      return '<option value="' + esc(dp) + '"' + (dp === selected ? " selected" : "") + ">" + esc(dp) + "</option>";
+    }).join("");
+  }
+
+  function ticketsForTab() {
+    var myName = myKey().toLowerCase();
+    var myDept = (state.doer.department || "").toLowerCase();
+    var list = state.tickets.slice();
+    if (state.ticketTab === "mine") {
+      list = list.filter(function (t) { return (t.raised_by || "").toLowerCase() === myName; });
+    } else if (state.ticketTab === "dept") {
+      list = list.filter(function (t) { return myDept && (t.department || "").toLowerCase() === myDept; });
+    } // "all" (admin only) -> no filter
+    list.sort(function (a, b) { return new Date(b.created_at || 0) - new Date(a.created_at || 0); });
+    return list;
+  }
+
+  function renderTickets() {
+    var wrap = document.getElementById("ticketListWrap");
+    if (!wrap || !state.doer) return;
+    var list = ticketsForTab();
+    if (!list.length) { wrap.innerHTML = '<div class="card empty">No tickets here yet.</div>'; return; }
+    wrap.innerHTML = list.map(function (t) {
+      var typeLabel = t.type === "help_slip" ? "Help Slip" : "Query";
+      var title = t.subject || (t.problem || "").slice(0, 60);
+      return '<div class="ticket-card" data-id="' + esc(t.id) + '">' +
+        '<div class="ticket-top">' +
+        '<div><span class="ticket-type ' + esc(t.type) + '">' + typeLabel + '</span><b>' + esc(title) + '</b></div>' +
+        '<span class="ticket-status ' + esc((t.status || "").replace(" ", "-")) + '">' + esc(t.status) + '</span>' +
+        '</div>' +
+        '<div class="ticket-problem">' + esc((t.problem || "").slice(0, 140)) + ((t.problem || "").length > 140 ? "…" : "") + '</div>' +
+        '<div class="ticket-meta">Raised by ' + esc(t.raised_by) + ' · ' + esc(t.department || "—") + ' · ' + fmtDate(t.created_at) + '</div>' +
+        '</div>';
+    }).join("");
+    wrap.querySelectorAll(".ticket-card").forEach(function (card) {
+      card.addEventListener("click", function () {
+        var t = state.tickets.find(function (x) { return x.id === card.dataset.id; });
+        if (t) openTicketDetail(t);
+      });
+    });
+  }
+
+  document.getElementById("newTicketBtn").addEventListener("click", function () {
+    openModal(
+      '<h3>Raise a Query or Help Slip</h3><div class="sub">Visible to your department and admins.</div>' +
+      '<div class="field"><label>Type</label><div class="tabs" id="rtType"><button type="button" class="tab active" data-type="query">General Query</button><button type="button" class="tab" data-type="help_slip">Help Slip</button></div></div>' +
+      '<div class="field"><label>Subject</label><input id="rtSubject" placeholder="Short title" /></div>' +
+      '<div class="field"><label>Department</label><select id="rtDept">' + deptOptions(state.doer.department) + '</select></div>' +
+      '<div class="field"><label>Describe the problem</label><textarea id="rtProblem" placeholder="What\'s going wrong?"></textarea></div>' +
+      '<div id="rtSolutions" class="hidden">' +
+      '<div class="field"><label>Proposed Solution 1 (optional)</label><input id="rtSol1" /></div>' +
+      '<div class="field"><label>Proposed Solution 2 (optional)</label><input id="rtSol2" /></div>' +
+      '<div class="field"><label>Proposed Solution 3 (optional)</label><input id="rtSol3" /></div>' +
+      '</div>' +
+      '<div class="modal-err" id="rtErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="rtCancel">Cancel</button><button class="btn" id="rtSave">Submit</button></div>',
+      "wide"
+    );
+    var rtType = "query";
+    document.querySelectorAll("#rtType .tab").forEach(function (b) {
+      b.addEventListener("click", function () {
+        document.querySelectorAll("#rtType .tab").forEach(function (x) { x.classList.remove("active"); });
+        b.classList.add("active");
+        rtType = b.dataset.type;
+        document.getElementById("rtSolutions").classList.toggle("hidden", rtType !== "help_slip");
+      });
+    });
+    document.getElementById("rtCancel").addEventListener("click", closeModal);
+    document.getElementById("rtSave").addEventListener("click", function () {
+      var problem = document.getElementById("rtProblem").value.trim();
+      var err = document.getElementById("rtErr");
+      if (!problem) { err.textContent = "Describe the problem."; return; }
+      var btn = document.getElementById("rtSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Submitting…';
+      api("createTicket", {
+        type: rtType,
+        subject: document.getElementById("rtSubject").value.trim(),
+        problem: problem,
+        department: document.getElementById("rtDept").value,
+        solution_1: document.getElementById("rtSol1").value.trim(),
+        solution_2: document.getElementById("rtSol2").value.trim(),
+        solution_3: document.getElementById("rtSol3").value.trim(),
+        raised_by: myKey(),
+        raised_by_email: state.doer.email || ""
+      }).then(function () {
+        toast("Submitted");
+        closeModal();
+        return api("listTickets").then(function (ts) { state.tickets = ts; renderTickets(); renderHome(); });
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Submit"; });
+    });
+  });
+
+  function openTicketDetail(t) {
+    var canManage = state.doer.is_admin ||
+      (t.department && (state.doer.department || "").toLowerCase() === t.department.toLowerCase()) ||
+      (t.raised_by || "").toLowerCase() === myKey().toLowerCase();
+    var typeLabel = t.type === "help_slip" ? "Help Slip" : "Query";
+    var solutionsHtml = "";
+    if (t.type === "help_slip" && (t.solution_1 || t.solution_2 || t.solution_3)) {
+      solutionsHtml = '<div class="field"><label>Proposed Solutions</label><ol class="solution-list">' +
+        [t.solution_1, t.solution_2, t.solution_3].filter(Boolean).map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") +
+        "</ol></div>";
+    }
+    var statusOpts = ["Open", "In Progress", "Resolved", "Closed"].map(function (s) {
+      return '<option value="' + s + '"' + (s === t.status ? " selected" : "") + ">" + s + "</option>";
+    }).join("");
+    openModal(
+      "<h3>" + esc(t.subject || typeLabel) + "</h3>" +
+      '<div class="sub"><span class="ticket-type ' + esc(t.type) + '">' + typeLabel + "</span>" + esc(t.department || "—") + " · Raised by " + esc(t.raised_by) + " · " + fmtDate(t.created_at) + "</div>" +
+      '<div class="field"><label>Problem</label><div class="history-box">' + esc(t.problem) + "</div></div>" +
+      solutionsHtml +
+      '<div class="field"><label>Status</label>' + (canManage ? '<select id="tkStatus">' + statusOpts + "</select>" : '<span class="ticket-status ' + esc((t.status || "").replace(" ", "-")) + '">' + esc(t.status) + "</span>") + "</div>" +
+      '<div class="field"><label>Discussion</label><div class="comment-thread" id="tkComments"><div style="color:var(--sub);font-size:12px">Loading…</div></div></div>' +
+      '<div class="field"><label>Reply</label><textarea id="tkReply" placeholder="Write a reply…"></textarea>' +
+      '<div class="rec-row"><button type="button" class="rec-btn" id="tkRecBtn">🎤 Record voice note</button><span class="rec-timer hidden" id="tkRecTimer">0:00</span><audio id="tkRecPreview" class="hidden" controls style="height:32px"></audio><button type="button" class="btn secondary hidden" id="tkRecDiscard" style="padding:6px 10px;font-size:12px">Discard</button></div>' +
+      "</div>" +
+      '<div class="modal-err" id="tkErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="tkClose">Close</button><button class="btn" id="tkSend">Send</button></div>',
+      "wide"
+    );
+    document.getElementById("tkClose").addEventListener("click", closeModal);
+
+    if (canManage) {
+      document.getElementById("tkStatus").addEventListener("change", function (e) {
+        var val = e.target.value;
+        api("updateTicketStatus", { id: t.id, status: val, updatedBy: myKey() }).then(function () {
+          t.status = val;
+          var idx = state.tickets.findIndex(function (x) { return x.id === t.id; });
+          if (idx > -1) state.tickets[idx].status = val;
+          toast("Status updated");
+          renderTickets();
+          renderAdmin();
+        }).catch(function (e2) { toast(e2.message, true); });
+      });
+    }
+
+    function loadComments() {
+      api("getTicketComments", { ticket_id: t.id }).then(function (cs) {
+        var box = document.getElementById("tkComments");
+        if (!box) return;
+        if (!cs.length) { box.innerHTML = '<div style="color:var(--sub);font-size:12px">No replies yet.</div>'; return; }
+        box.innerHTML = cs.map(function (c) {
+          return '<div class="comment-item"><div class="comment-head"><span>' + esc(c.author) + "</span><span>" + fmtDate(c.created_at) + "</span></div>" +
+            (c.comment_text ? "<div>" + esc(c.comment_text) + "</div>" : "") +
+            (c.voice_note_url ? '<audio controls src="' + esc(c.voice_note_url) + '"></audio>' : "") +
+            "</div>";
+        }).join("");
+        box.scrollTop = box.scrollHeight;
+      }).catch(function () {});
+    }
+    loadComments();
+
+    // Voice note recording
+    var mediaRecorder = null, chunks = [], recordedBlob = null, recTimerInt = null, recStart = 0;
+    var recBtn = document.getElementById("tkRecBtn");
+    var recTimer = document.getElementById("tkRecTimer");
+    var recPreview = document.getElementById("tkRecPreview");
+    var recDiscard = document.getElementById("tkRecDiscard");
+    recBtn.addEventListener("click", function () {
+      if (mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); return; }
+      if (!navigator.mediaDevices || !window.MediaRecorder) { toast("Voice recording isn't supported in this browser", true); return; }
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+        chunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = function (e) { if (e.data.size) chunks.push(e.data); };
+        mediaRecorder.onstop = function () {
+          stream.getTracks().forEach(function (tr) { tr.stop(); });
+          clearInterval(recTimerInt);
+          recBtn.classList.remove("recording"); recBtn.textContent = "🎤 Record voice note";
+          recTimer.classList.add("hidden");
+          recordedBlob = new Blob(chunks, { type: mediaRecorder.mimeType || "audio/webm" });
+          recPreview.src = URL.createObjectURL(recordedBlob);
+          recPreview.classList.remove("hidden");
+          recDiscard.classList.remove("hidden");
+        };
+        mediaRecorder.start();
+        recStart = Date.now();
+        recBtn.classList.add("recording"); recBtn.textContent = "⏹ Stop recording";
+        recTimer.classList.remove("hidden");
+        recTimerInt = setInterval(function () {
+          var s = Math.floor((Date.now() - recStart) / 1000);
+          recTimer.textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+        }, 500);
+      }).catch(function () { toast("Microphone access denied", true); });
+    });
+    recDiscard.addEventListener("click", function () {
+      recordedBlob = null;
+      recPreview.classList.add("hidden"); recPreview.src = "";
+      recDiscard.classList.add("hidden");
+    });
+
+    document.getElementById("tkSend").addEventListener("click", function () {
+      var text = document.getElementById("tkReply").value.trim();
+      var err = document.getElementById("tkErr");
+      if (!text && !recordedBlob) { err.textContent = "Write a reply or record a voice note."; return; }
+      var btn = document.getElementById("tkSend"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Sending…';
+      function send(voiceBase64) {
+        api("addTicketComment", { ticket_id: t.id, author: myKey(), author_email: state.doer.email || "", comment_text: text, voiceBase64: voiceBase64 || null }).then(function () {
+          document.getElementById("tkReply").value = "";
+          recordedBlob = null; recPreview.classList.add("hidden"); recDiscard.classList.add("hidden");
+          btn.disabled = false; btn.textContent = "Send";
+          loadComments();
+        }).catch(function (e2) { err.textContent = e2.message; btn.disabled = false; btn.textContent = "Send"; });
+      }
+      if (recordedBlob) {
+        var reader = new FileReader();
+        reader.onload = function (e) { send(e.target.result); };
+        reader.readAsDataURL(recordedBlob);
+      } else {
+        send(null);
+      }
     });
   }
 
