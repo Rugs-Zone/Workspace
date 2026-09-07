@@ -76,6 +76,10 @@
   .sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid var(--sidebar-line)}
   .who{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden}
   .who small{display:block;color:var(--sidebar-sub);font-weight:400;font-size:12px}
+  /* Sidebar is always dark, so its logout button must use sidebar tokens, not the
+     theme-dependent global --ink/--line (which turn near-black-on-black in light mode). */
+  .sidebar-footer .btn.secondary{color:var(--sidebar-ink);border-color:var(--sidebar-line);background:rgba(255,255,255,.04)}
+  .sidebar-footer .btn.secondary:hover{color:#fff;border-color:var(--sidebar-sub);background:var(--sidebar-hover)}
 
   /* Collapsed sidebar rail */
   .sidebar.collapsed{width:64px;padding:20px 10px}
@@ -93,6 +97,36 @@
   @media (max-width:820px){ .sidebar-toggle{display:none} }
 
   main{flex:1;padding:26px 34px;min-width:0}
+
+  /* News-bulletin style ticker for Notice Board + Holidays, always visible above the page content */
+  .ticker-bar{display:none;align-items:stretch;background:var(--sidebar-bg);border-radius:10px;margin-bottom:20px;overflow:hidden;box-shadow:0 6px 18px -10px rgba(0,0,0,.35);flex-shrink:0}
+  .ticker-bar.show{display:flex}
+  .ticker-label{flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--brand);color:#fff;font-weight:800;font-size:11.5px;letter-spacing:.05em;padding:0 16px;text-transform:uppercase;white-space:nowrap}
+  .ticker-viewport{flex:1;overflow:hidden;position:relative}
+  .ticker-track{display:flex;align-items:center;white-space:nowrap;width:max-content;animation:ticker-scroll linear infinite;animation-duration:var(--ticker-dur,26s)}
+  .ticker-bar:hover .ticker-track{animation-play-state:paused}
+  .ticker-item{display:inline-flex;align-items:center;gap:8px;color:var(--sidebar-ink);font-size:13px;font-weight:600;padding:0 30px;position:relative;height:38px}
+  .ticker-item::after{content:"◆";position:absolute;right:-3px;color:var(--sidebar-line);font-size:9px}
+  .ticker-item .tk-emoji{font-size:14px}
+  .ticker-item.tk-holiday{color:#ffb083}
+  .ticker-empty{color:var(--sidebar-sub);font-size:12.5px;font-weight:600;padding:0 16px;display:flex;align-items:center;height:38px}
+  @keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media (prefers-reduced-motion: reduce){.ticker-track{animation:none}}
+
+  /* Footer */
+  .app-footer{margin-top:32px;background:var(--sidebar-bg);border-radius:14px;color:var(--sidebar-ink);overflow:hidden}
+  .footer-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:22px 28px;flex-wrap:wrap;border-bottom:1px solid var(--sidebar-line)}
+  .footer-brand b{color:#fff;font-size:15px;display:block;letter-spacing:-.01em}
+  .footer-brand small{color:var(--sidebar-sub);font-size:12px}
+  .footer-links{display:flex;gap:22px;flex-wrap:wrap}
+  .footer-links a{color:var(--sidebar-ink);text-decoration:none;font-size:13px;font-weight:600;cursor:pointer}
+  .footer-links a:hover{color:var(--sidebar-active)}
+  .footer-bottom{padding:13px 28px;font-size:12px;color:var(--sidebar-sub);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+  .footer-bottom b{color:var(--sidebar-ink)}
+  /* Full-frame embedded modules (Checklist FMS / Costing Calculator) hide the
+     bulletin ticker and footer so the embedded app gets the whole viewport. */
+  body.embed-focus .ticker-bar, body.embed-focus .app-footer{display:none!important}
+
   .page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
   .page-head h2{margin:0;font-size:20px}
   .page-sub{color:var(--sub);font-size:13px;margin:-12px 0 18px}
@@ -133,16 +167,19 @@
   .hero-card .big-l{font-size:12px;opacity:.7}
   .hero-card .pill{display:inline-block;margin-top:auto;padding-top:14px;font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--brand)}
   .module-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px}
-  .module-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;text-align:left;display:block;width:100%;text-decoration:none;color:inherit}
-  .module-card:hover{border-color:var(--brand);box-shadow:0 10px 26px -14px rgba(255,80,1,.55)}
-  .module-card .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
-  .module-badge{font-size:10px;font-weight:800;letter-spacing:.03em;padding:3px 8px;border-radius:99px}
+  .module-card{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;text-align:left;display:block;width:100%;text-decoration:none;color:inherit;box-shadow:0 4px 14px -8px rgba(0,0,0,.18);transition:border-color .15s ease,box-shadow .15s ease,transform .12s ease}
+  .module-card:hover{border-color:var(--brand);box-shadow:0 14px 30px -14px rgba(255,80,1,.5)}
+  .module-card .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+  .module-card .icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+  .module-badge{font-size:10.5px;font-weight:800;letter-spacing:.03em;padding:4px 10px;border-radius:99px}
   .module-badge.live{background:rgba(255,80,1,.16);color:#c23e00}
   .module-badge.soon{background:var(--bg);color:var(--sub);border:1px solid var(--line)}
   :root[data-theme="dark"] .module-badge.live{color:#ff9a5c}
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .module-badge.live{color:#ff9a5c}}
-  .module-card .mt{font-weight:700;font-size:14px;margin-top:2px}
+  .module-card .mt{font-weight:800;font-size:16.5px;margin-top:2px;letter-spacing:-.01em}
   .module-card .mv{font-size:12px;color:var(--sub);margin-top:6px}
+  .embed-back-btn{align-self:flex-start;background:var(--card);border:1px solid var(--line);color:var(--ink);font-weight:700;font-size:13px;padding:9px 16px;border-radius:9px;margin-bottom:12px;cursor:pointer}
+  .embed-back-btn:hover{border-color:var(--brand);color:var(--brand)}
   .notify-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
   .notify-row:last-of-type{border-bottom:none}
   .icon.lavender{background:rgba(255,80,1,.12);color:var(--lavender)}
@@ -340,11 +377,15 @@
       <button class="nav-item" id="navFaq" data-view="faq" title="FAQ"><span class="nav-icon">❓</span><span class="nav-label">FAQ</span></button>
     </div>
     <div class="sidebar-footer">
-      <div class="who who-text" id="whoName">—</div>
+      <div class="who who-text" id="whoName" title="My Profile" style="cursor:pointer">—</div>
       <button class="btn secondary" id="logoutBtn" style="margin-top:10px;width:100%">🚪<span class="btn-label"> Log out</span></button>
     </div>
   </div>
   <main>
+    <div class="ticker-bar" id="tickerBar">
+      <div class="ticker-label">📣 <span>Bulletin</span></div>
+      <div class="ticker-viewport"><div class="ticker-track" id="tickerTrack"></div></div>
+    </div>
     <div id="view-home">
       <img class="home-logo" src="data:image/png;base64,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" alt="Rugs Creation Workspace" />
       <div class="page-head">
@@ -495,9 +536,17 @@
       <div class="card"><div id="holidayListWrap"></div></div>
     </div>
 
-    <div id="view-checklist" class="hidden" style="height:calc(100vh - 52px)">
-      <div class="card" style="height:100%;padding:0">
+    <div id="view-checklist" class="hidden" style="height:calc(100vh - 52px);display:flex;flex-direction:column">
+      <button class="embed-back-btn" data-goto="modules">← Back to Workspace</button>
+      <div class="card" style="flex:1;min-height:0;padding:0">
         <iframe id="checklistFrame" title="Checklist FMS" style="width:100%;height:100%;border:0;display:block;background:#0a0a0b"></iframe>
+      </div>
+    </div>
+
+    <div id="view-costing" class="hidden" style="height:calc(100vh - 52px);display:flex;flex-direction:column">
+      <button class="embed-back-btn" data-goto="modules">← Back to Workspace</button>
+      <div class="card" style="flex:1;min-height:0;padding:0">
+        <iframe id="costingFrame" title="Costing Calculator" style="width:100%;height:100%;border:0;display:block;background:#fff" src="about:blank"></iframe>
       </div>
     </div>
 
@@ -514,16 +563,41 @@
       </div>
       <div class="banner-live">✅ <b>Live &amp; connected</b> — role and visibility changes below save immediately to the database, no separate migration needed.</div>
       <div class="stat-grid" id="adminStatGrid"></div>
+      <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Settings</h2></div>
+      <div class="page-sub" style="margin-top:-12px">Workspace-wide switches — off here means off for everyone.</div>
+      <div class="card" style="padding:18px;margin-bottom:6px"><div id="settingsCardWrap"></div></div>
       <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Module visibility</h2></div>
       <div class="page-sub" style="margin-top:-12px">How many staff can currently see each workspace.</div>
       <div class="module-grid" id="adminModuleGrid"></div>
       <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Buyer visit notify list</h2></div>
       <div class="page-sub" style="margin-top:-12px">These people get an email whenever a buyer visit is logged. Set once here — no need to pick recipients per visit.</div>
       <div class="card" style="padding:18px;margin-bottom:6px"><div id="notifyListWrap"></div></div>
-      <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Staff access</h2></div>
-      <div class="page-sub" style="margin-top:-12px">Toggle what each person can see and do.</div>
+      <div class="page-head" style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div><h2 style="font-size:16px">Staff access</h2></div>
+        <button class="btn" id="addStaffBtn">+ Add Staff</button>
+      </div>
+      <div class="page-sub" style="margin-top:-12px">Toggle what each person can see and do, or edit their details.</div>
       <div class="card"><div id="adminTableWrap"></div></div>
     </div>
+
+    <footer class="app-footer">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <b>Rugs Creation</b>
+          <small>People &amp; Operations Workspace · Karnal, Haryana</small>
+        </div>
+        <div class="footer-links">
+          <a data-goto="home">Home</a>
+          <a data-goto="modules">Modules</a>
+          <a data-goto="notices">Notice Board</a>
+          <a data-goto="faq">FAQ</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="footerYear"></span> <b>Rugs Creation</b>. All rights reserved.</span>
+        <span>Internal workspace — not for external distribution.</span>
+      </div>
+    </footer>
   </main>
 </div>
 
@@ -539,7 +613,7 @@
   var ANON_KEY = "sb_publishable_KrWpU9UQxuE0P5GeUXLs3Q_SVvPMGYT";
   var FN_URL = SUPABASE_URL + "/functions/v1/deleg-api";
 
-  var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tickets: [], ticketComments: {}, buyerVisits: [], buyerNotifyList: [], notices: [], holidays: [], tab: "mine", ticketTab: "mine", helpSlipTab: "mine", view: "home", demo: false };
+  var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tickets: [], ticketComments: {}, buyerVisits: [], buyerNotifyList: [], notices: [], holidays: [], settings: { notifications_enabled: true, disabled_modules: [] }, tab: "mine", ticketTab: "mine", helpSlipTab: "mine", view: "home", demo: false };
 
   function api(action, payload) {
     if (state.demo) return demoApi(action, payload || {});
@@ -621,8 +695,29 @@
               ["can_assign", "can_view_master", "can_view_audit", "is_admin"].forEach(function (k) { if (p[k] !== undefined) d[k] = p[k]; });
               if (Object.prototype.hasOwnProperty.call(p, "visible_modules")) d.visible_modules = p.visible_modules;
               if (Object.prototype.hasOwnProperty.call(p, "visible_sections")) d.visible_sections = p.visible_sections;
+              ["name", "delegation_name", "department", "designation", "phone", "email"].forEach(function (k) { if (p[k] !== undefined) d[k] = p[k]; });
             }
             resolve({ doc_id: p.doc_id });
+            break;
+          }
+          case "createDoer": {
+            var newId = "EMP" + Math.random().toString(36).slice(2, 7).toUpperCase();
+            state.doers.push({
+              doc_id: newId, name: p.name, delegation_name: p.delegation_name || p.name, login_id: p.login_id,
+              department: p.department || "", designation: p.designation || "", phone: p.phone || "", email: p.email || "",
+              can_assign: !!p.can_assign, can_view_master: !!p.can_view_master, can_view_audit: !!p.can_view_audit, is_admin: !!p.is_admin,
+              visible_modules: null, visible_sections: null
+            });
+            resolve({ doc_id: newId });
+            break;
+          }
+          case "changePassword": resolve({ doc_id: p.doc_id }); break;
+          case "getSettings": resolve(state.settings || { notifications_enabled: true, disabled_modules: [] }); break;
+          case "updateSettings": {
+            if (!state.settings) state.settings = { notifications_enabled: true, disabled_modules: [] };
+            if (p.notifications_enabled !== undefined) state.settings.notifications_enabled = !!p.notifications_enabled;
+            if (p.disabled_modules !== undefined) state.settings.disabled_modules = p.disabled_modules;
+            resolve({});
             break;
           }
           case "getNotices": resolve((state.notices || []).slice()); break;
@@ -751,8 +846,15 @@
       { id: "NOTDEMO2", title: "New buyer visit process live", body: "Use the new Buyer Visit tile to log any incoming buyer visit — the notify list gets emailed automatically.", pinned: false, created_by: "Demo Admin", created_at: new Date(now - 5 * d).toISOString() }
     ];
     var holidays = [
-      { id: "HOLDEMO1", name: "Diwali", holiday_date: new Date(now + 18 * d).toISOString().slice(0, 10), created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() },
-      { id: "HOLDEMO2", name: "Republic Day", holiday_date: new Date(now + 120 * d).toISOString().slice(0, 10), created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() }
+      { id: "HOLDEMO1", name: "Republic Day", holiday_date: "2026-01-26", created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() },
+      { id: "HOLDEMO2", name: "Holi", holiday_date: "2026-03-04", created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() },
+      { id: "HOLDEMO3", name: "Independence Day", holiday_date: "2026-08-15", created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() },
+      { id: "HOLDEMO4", name: "Raksha Bandhan", holiday_date: "2026-08-28", created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() },
+      { id: "HOLDEMO5", name: "Gandhi Jayanti", holiday_date: "2026-10-02", created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() },
+      { id: "HOLDEMO6", name: "Dussehra", holiday_date: "2026-10-20", created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() },
+      { id: "HOLDEMO7", name: "Diwali / Govardhan Puja", holiday_date: "2026-11-09", created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() },
+      { id: "HOLDEMO8", name: "Vishwakarma Diwas", holiday_date: "2026-11-10", created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() },
+      { id: "HOLDEMO9", name: "Bhai Dooj", holiday_date: "2026-11-11", created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() }
     ];
     return { doers: doers, tasks: tasks, audits: audits, faqs: faqs, tickets: tickets, ticketComments: ticketComments, buyerVisits: buyerVisits, buyerNotifyList: buyerNotifyList, notices: notices, holidays: holidays };
   }
@@ -862,6 +964,10 @@
     document.body.classList.add("demo-mode");
     document.getElementById("demoBanner").classList.remove("hidden");
     enterApp();
+  });
+
+  document.getElementById("whoName").addEventListener("click", function () {
+    if (state.doer) openProfileModal();
   });
 
   document.getElementById("logoutBtn").addEventListener("click", function () {
@@ -990,7 +1096,7 @@
 
   function loadAll() {
     if (state.demo) {
-      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderNoticeBoard();
+      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderNoticeBoard(); renderSettingsCard();
       return;
     }
     Promise.all([
@@ -1001,6 +1107,7 @@
       if (state.doer.is_admin) {
         renderAdmin();
         api("getBuyerNotifyList").then(function (list) { state.buyerNotifyList = list; renderNotifyList(); }).catch(function () {});
+        api("getSettings").then(function (s) { state.settings = s; renderSettingsCard(); }).catch(function () {});
       }
       if (state.doer.can_view_audit || state.doer.is_admin) {
         api("getAudits").then(function (a) { state.audits = a; renderAudits(); renderHome(); });
@@ -1022,7 +1129,7 @@
     { key: "delegation", icon: "✅", name: "Delegation", status: "live", goto: "tasks" },
     { key: "queries", icon: "📩", name: "Queries", status: "live", goto: "tickets" },
     { key: "helpslip", icon: "🆘", name: "Help Slip", status: "live", goto: "helpslip" },
-    { key: "costing", icon: "🧮", name: "Costing Calculator", status: "live", link: "https://rugs-creation.github.io/costing-dashboard/" },
+    { key: "costing", icon: "🧮", name: "Costing Calculator", status: "live", goto: "costing" },
     { key: "checklist", icon: "📋", name: "Checklist FMS", status: "live", goto: "checklist" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit" },
     { key: "attendance", icon: "🕒", name: "Attendance", status: "soon", goto: "attendance" },
@@ -1052,13 +1159,27 @@
     checklistFrameLoaded = true;
   }
 
-  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "notices", "checklist", "admin"];
+  // Costing Calculator is a live external dashboard (its own GitHub Pages site) —
+  // just embedded by URL, no SSO hand-off since it's not ours to modify. Loaded
+  // once per session, same "leave it running in the background" behavior as above.
+  var costingFrameLoaded = false;
+  function loadCostingFrame() {
+    if (costingFrameLoaded) return;
+    var frame = document.getElementById("costingFrame");
+    if (!frame) return;
+    frame.src = "https://rugs-creation.github.io/costing-dashboard/";
+    costingFrameLoaded = true;
+  }
+
+  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "notices", "checklist", "costing", "admin"];
   function goToView(view) {
     document.querySelectorAll(".nav-item[data-view]").forEach(function (b) { b.classList.toggle("active", b.dataset.view === view); });
     state.view = view;
     if (view === "buyervisit") renderBuyerVisits();
     if (view === "notices") renderNoticeBoard();
     if (view === "checklist") loadChecklistFrame();
+    if (view === "costing") loadCostingFrame();
+    document.body.classList.toggle("embed-focus", view === "checklist" || view === "costing");
     ALL_VIEWS.forEach(function (v) {
       var el = document.getElementById("view-" + v);
       if (el) el.classList.toggle("hidden", v !== state.view);
@@ -1073,6 +1194,14 @@
   document.querySelectorAll(".nav-item[data-view]").forEach(function (btn) {
     btn.addEventListener("click", function () { goToView(btn.dataset.view); });
   });
+  document.querySelectorAll(".embed-back-btn[data-goto]").forEach(function (btn) {
+    btn.addEventListener("click", function () { goToView(btn.dataset.goto); });
+  });
+  document.querySelectorAll(".footer-links [data-goto]").forEach(function (a) {
+    a.addEventListener("click", function () { goToView(a.dataset.goto); });
+  });
+  var footerYearEl = document.getElementById("footerYear");
+  if (footerYearEl) footerYearEl.textContent = new Date().getFullYear();
   document.querySelectorAll("#taskTabs .tab").forEach(function (btn) {
     btn.addEventListener("click", function () {
       document.querySelectorAll("#taskTabs .tab").forEach(function (b) { b.classList.remove("active"); });
@@ -1293,11 +1422,18 @@
   function closeModal() { document.getElementById("modalRoot").innerHTML = ""; }
 
   // ---------- New Task ----------
+  // Assigning to several people at once creates one independent task per person
+  // (each shows up, and gets completed, separately) rather than one shared task.
   document.getElementById("newTaskBtn").addEventListener("click", function () {
-    var opts = state.doers.map(function (d) { return '<option value="' + esc(d.delegation_name) + '">' + esc(d.delegation_name) + "</option>"; }).join("");
+    var rows = state.doers.map(function (d) {
+      return '<label style="display:flex;align-items:center;gap:8px;padding:5px 0">' +
+        '<input type="checkbox" class="nt-assignee" value="' + esc(d.delegation_name) + '" style="width:auto" /> ' + esc(d.delegation_name) +
+        (d.department ? ' <span class="sub" style="font-size:11px">' + esc(d.department) + "</span>" : "") +
+        "</label>";
+    }).join("");
     openModal(
-      '<h3>Assign New Task</h3><div class="sub">Task will appear in the assignee\'s task list immediately.</div>' +
-      '<div class="field"><label>Assign to</label><select id="ntAssignee"><option value="">Select person…</option>' + opts + "</select></div>" +
+      '<h3>Assign New Task</h3><div class="sub">Pick one or more people — each gets their own independent copy of this task, appearing in their list immediately.</div>' +
+      '<div class="field"><label>Assign to</label><div style="max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:8px 12px">' + rows + "</div></div>" +
       '<div class="field"><label>Task details</label><textarea id="ntTask" placeholder="Describe the task…"></textarea></div>' +
       '<div class="field"><label>Deadline</label><input id="ntDeadline" type="datetime-local" /></div>' +
       '<div class="modal-err" id="ntErr"></div>' +
@@ -1305,17 +1441,19 @@
     );
     document.getElementById("ntCancel").addEventListener("click", closeModal);
     document.getElementById("ntSave").addEventListener("click", function () {
-      var assignee = document.getElementById("ntAssignee").value;
+      var assignees = Array.prototype.slice.call(document.querySelectorAll(".nt-assignee")).filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
       var task = document.getElementById("ntTask").value.trim();
       var deadline = document.getElementById("ntDeadline").value;
       var err = document.getElementById("ntErr");
-      if (!assignee || !task || !deadline) { err.textContent = "All fields are required."; return; }
+      if (!assignees.length || !task || !deadline) { err.textContent = "Pick at least one person, and fill in the task and deadline."; return; }
       var btn = document.getElementById("ntSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Assigning…';
-      api("createTask", {
-        assignee: assignee, task: task, deadline: new Date(deadline).toISOString(),
-        first_date: new Date(deadline).toISOString(), delegated_by: myKey()
-      }).then(function () {
-        toast("Task assigned to " + assignee);
+      Promise.all(assignees.map(function (assignee) {
+        return api("createTask", {
+          assignee: assignee, task: task, deadline: new Date(deadline).toISOString(),
+          first_date: new Date(deadline).toISOString(), delegated_by: myKey()
+        });
+      })).then(function () {
+        toast(assignees.length === 1 ? "Task assigned to " + assignees[0] : "Task assigned to " + assignees.length + " people");
         closeModal();
         return api("listTasks").then(function (t) { state.tasks = t; renderTasks(); renderHome(); });
       }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Assign Task"; });
@@ -1560,9 +1698,10 @@
         '<td style="text-align:center">' + cb(d, "can_view_audit") + "</td>" +
         '<td style="text-align:center">' + cb(d, "is_admin") + "</td>" +
         '<td style="text-align:center"><button class="btn secondary mm-btn" data-doc="' + esc(d.doc_id) + '" style="padding:6px 10px;font-size:12px">Visibility</button></td>' +
+        '<td style="text-align:center"><button class="btn secondary edit-staff-btn" data-doc="' + esc(d.doc_id) + '" style="padding:6px 10px;font-size:12px">Edit</button></td>' +
         "</tr>";
     }).join("");
-    wrap.innerHTML = '<table><thead><tr><th>Staff</th><th style="text-align:center">Assign Tasks</th><th style="text-align:center">View All Tasks</th><th style="text-align:center">View Audit</th><th style="text-align:center">Admin</th><th style="text-align:center">Visibility</th></tr></thead><tbody>' + rows + "</tbody></table>";
+    wrap.innerHTML = '<table><thead><tr><th>Staff</th><th style="text-align:center">Assign Tasks</th><th style="text-align:center">View All Tasks</th><th style="text-align:center">View Audit</th><th style="text-align:center">Admin</th><th style="text-align:center">Visibility</th><th style="text-align:center">Edit</th></tr></thead><tbody>' + rows + "</tbody></table>";
     wrap.querySelectorAll('input[type="checkbox"]').forEach(function (cbEl) {
       cbEl.addEventListener("change", function () {
         var docId = cbEl.dataset.doc, field = cbEl.dataset.field, val = cbEl.checked;
@@ -1587,7 +1726,198 @@
         if (d) openModuleModal(d);
       });
     });
+    wrap.querySelectorAll(".edit-staff-btn").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var d = state.doers.find(function (x) { return x.doc_id === b.dataset.doc; });
+        if (d) openEditDoerModal(d);
+      });
+    });
     renderNotifyList();
+    renderSettingsCard();
+  }
+
+  // ---------- Workspace settings (admin) ----------
+  function renderSettingsCard() {
+    var wrap = document.getElementById("settingsCardWrap");
+    if (!wrap || !state.doer || !state.doer.is_admin) return;
+    var s = state.settings || { notifications_enabled: true, disabled_modules: [] };
+    wrap.innerHTML =
+      '<label style="display:flex;align-items:center;gap:10px;cursor:pointer">' +
+      '<input type="checkbox" id="notifEnabledToggle" style="width:auto" ' + (s.notifications_enabled ? "checked" : "") + ' /> ' +
+      '<span><b>Email notifications</b><div class="sub" style="margin-top:2px">Turn off to pause all outbound task/visit emails workspace-wide (in-app data is unaffected).</div></span>' +
+      "</label>";
+    var cb = document.getElementById("notifEnabledToggle");
+    cb.addEventListener("change", function () {
+      var val = cb.checked;
+      cb.disabled = true;
+      api("updateSettings", { notifications_enabled: val }).then(function () {
+        state.settings.notifications_enabled = val;
+        toast(val ? "Email notifications enabled" : "Email notifications disabled");
+      }).catch(function (e) {
+        cb.checked = !val;
+        toast(e.message, true);
+      }).finally(function () { cb.disabled = false; });
+    });
+  }
+
+  // ---------- Staff Access: Edit / Add ----------
+  function openEditDoerModal(d) {
+    openModal(
+      "<h3>Edit Staff — " + esc(d.delegation_name || d.name) + "</h3>" +
+      '<div class="field"><label>Full name</label><input id="esName" value="' + esc(d.name || "") + '" /></div>' +
+      '<div class="field"><label>Display name (used across the app)</label><input id="esDeleg" value="' + esc(d.delegation_name || "") + '" /></div>' +
+      '<div class="field"><label>Department</label><input id="esDept" value="' + esc(d.department || "") + '" /></div>' +
+      '<div class="field"><label>Designation</label><input id="esDesig" value="' + esc(d.designation || "") + '" /></div>' +
+      '<div class="field"><label>Phone</label><input id="esPhone" value="' + esc(d.phone || "") + '" /></div>' +
+      '<div class="field"><label>Email</label><input id="esEmail" type="email" value="' + esc(d.email || "") + '" /></div>' +
+      '<div class="modal-err" id="esErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="esCancel">Cancel</button><button class="btn" id="esSave">Save Changes</button></div>'
+    );
+    document.getElementById("esCancel").addEventListener("click", closeModal);
+    document.getElementById("esSave").addEventListener("click", function () {
+      var btn = document.getElementById("esSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      var payload = {
+        doc_id: d.doc_id,
+        name: document.getElementById("esName").value,
+        delegation_name: document.getElementById("esDeleg").value,
+        department: document.getElementById("esDept").value.trim(),
+        designation: document.getElementById("esDesig").value.trim(),
+        phone: document.getElementById("esPhone").value.trim(),
+        email: document.getElementById("esEmail").value.trim()
+      };
+      api("updateDoerAccess", payload).then(function () {
+        d.name = payload.name.trim(); d.delegation_name = payload.delegation_name.trim();
+        d.department = payload.department; d.designation = payload.designation;
+        d.phone = payload.phone; d.email = payload.email;
+        toast("Updated " + (d.delegation_name || d.name));
+        closeModal();
+        renderAdmin();
+      }).catch(function (e) {
+        document.getElementById("esErr").textContent = e.message;
+        btn.disabled = false; btn.textContent = "Save Changes";
+      });
+    });
+  }
+
+  // ---------- My Profile (every logged-in user) ----------
+  function openProfileModal() {
+    var d = state.doer;
+    openModal(
+      "<h3>My Profile</h3>" +
+      '<div class="sub">' + esc(d.login_id ? "Login ID: " + d.login_id : "") + "</div>" +
+      '<div class="field"><label>Full name</label><input id="pfName" value="' + esc(d.name || "") + '" /></div>' +
+      '<div class="field"><label>Display name (used across the app)</label><input id="pfDeleg" value="' + esc(d.delegation_name || "") + '" /></div>' +
+      '<div class="field"><label>Department</label><input id="pfDept" value="' + esc(d.department || "") + '" /></div>' +
+      '<div class="field"><label>Designation</label><input id="pfDesig" value="' + esc(d.designation || "") + '" /></div>' +
+      '<div class="field"><label>Phone</label><input id="pfPhone" value="' + esc(d.phone || "") + '" /></div>' +
+      '<div class="field"><label>Email</label><input id="pfEmail" type="email" value="' + esc(d.email || "") + '" /></div>' +
+      '<div class="modal-err" id="pfErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="pfClose2">Close</button><button class="btn" id="pfSave2">Save Profile</button></div>' +
+      '<div class="field" style="margin-top:18px;border-top:1px solid var(--line);padding-top:16px"><label>Change password</label></div>' +
+      '<div class="field"><input id="pfCurPass" type="password" placeholder="Current password" /></div>' +
+      '<div class="field"><input id="pfNewPass" type="password" placeholder="New password (min 4 characters)" /></div>' +
+      '<div class="field"><input id="pfNewPass2" type="password" placeholder="Confirm new password" /></div>' +
+      '<div class="modal-err" id="pfPassErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="pfPassBtn">Update Password</button></div>'
+    );
+    document.getElementById("pfClose2").addEventListener("click", closeModal);
+    document.getElementById("pfSave2").addEventListener("click", function () {
+      var btn = document.getElementById("pfSave2"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      var payload = {
+        doc_id: d.doc_id,
+        name: document.getElementById("pfName").value,
+        delegation_name: document.getElementById("pfDeleg").value,
+        department: document.getElementById("pfDept").value.trim(),
+        designation: document.getElementById("pfDesig").value.trim(),
+        phone: document.getElementById("pfPhone").value.trim(),
+        email: document.getElementById("pfEmail").value.trim()
+      };
+      api("updateDoerAccess", payload).then(function () {
+        d.name = payload.name.trim(); d.delegation_name = payload.delegation_name.trim();
+        d.department = payload.department; d.designation = payload.designation;
+        d.phone = payload.phone; d.email = payload.email;
+        var whoEl = document.getElementById("whoName");
+        if (whoEl) whoEl.innerHTML = esc(d.delegation_name || d.name) + "<small>" + esc(d.designation || "") + "</small>";
+        toast("Profile updated");
+        closeModal();
+      }).catch(function (e) {
+        document.getElementById("pfErr").textContent = e.message;
+        btn.disabled = false; btn.textContent = "Save Profile";
+      });
+    });
+    document.getElementById("pfPassBtn").addEventListener("click", function () {
+      var err = document.getElementById("pfPassErr");
+      var cur = document.getElementById("pfCurPass").value;
+      var n1 = document.getElementById("pfNewPass").value;
+      var n2 = document.getElementById("pfNewPass2").value;
+      if (!cur || !n1) { err.textContent = "Enter your current and new password."; return; }
+      if (n1.length < 4) { err.textContent = "New password must be at least 4 characters."; return; }
+      if (n1 !== n2) { err.textContent = "New passwords don't match."; return; }
+      var btn = document.getElementById("pfPassBtn"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Updating…';
+      api("changePassword", { doc_id: d.doc_id, current_pass: cur, new_pass: n1 }).then(function () {
+        toast("Password updated");
+        document.getElementById("pfCurPass").value = "";
+        document.getElementById("pfNewPass").value = "";
+        document.getElementById("pfNewPass2").value = "";
+        err.textContent = "";
+        btn.disabled = false; btn.textContent = "Update Password";
+      }).catch(function (e) {
+        err.textContent = e.message;
+        btn.disabled = false; btn.textContent = "Update Password";
+      });
+    });
+  }
+
+  function openAddDoerModal() {
+    openModal(
+      "<h3>Add Staff</h3>" +
+      '<div class="field"><label>Full name *</label><input id="asName" /></div>' +
+      '<div class="field"><label>Display name (defaults to full name)</label><input id="asDeleg" /></div>' +
+      '<div class="field"><label>Login ID *</label><input id="asLogin" /></div>' +
+      '<div class="field"><label>Password *</label><input id="asPass" type="text" /></div>' +
+      '<div class="field"><label>Department</label><input id="asDept" /></div>' +
+      '<div class="field"><label>Designation</label><input id="asDesig" /></div>' +
+      '<div class="field"><label>Phone</label><input id="asPhone" /></div>' +
+      '<div class="field"><label>Email</label><input id="asEmail" type="email" /></div>' +
+      '<div class="field"><label>Permissions</label>' +
+      '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="asAssign" style="width:auto" /> Can assign tasks</label>' +
+      '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="asViewMaster" style="width:auto" /> Can view all tasks</label>' +
+      '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="asViewAudit" style="width:auto" /> Can view audit</label>' +
+      '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="asAdmin" style="width:auto" /> Admin</label>' +
+      "</div>" +
+      '<div class="modal-err" id="asErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="asCancel">Cancel</button><button class="btn" id="asSave">Add Staff</button></div>'
+    );
+    document.getElementById("asCancel").addEventListener("click", closeModal);
+    document.getElementById("asSave").addEventListener("click", function () {
+      var err = document.getElementById("asErr");
+      var name = document.getElementById("asName").value.trim();
+      var login = document.getElementById("asLogin").value.trim();
+      var pass = document.getElementById("asPass").value;
+      if (!name || !login || !pass) { err.textContent = "Full name, Login ID and Password are required."; return; }
+      var btn = document.getElementById("asSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Adding…';
+      api("createDoer", {
+        name: name,
+        delegation_name: document.getElementById("asDeleg").value.trim(),
+        login_id: login,
+        pass: pass,
+        department: document.getElementById("asDept").value.trim(),
+        designation: document.getElementById("asDesig").value.trim(),
+        phone: document.getElementById("asPhone").value.trim(),
+        email: document.getElementById("asEmail").value.trim(),
+        can_assign: document.getElementById("asAssign").checked,
+        can_view_master: document.getElementById("asViewMaster").checked,
+        can_view_audit: document.getElementById("asViewAudit").checked,
+        is_admin: document.getElementById("asAdmin").checked
+      }).then(function () {
+        toast("Staff member added");
+        closeModal();
+        return api("getDoers").then(function (ds) { state.doers = ds; renderAdmin(); });
+      }).catch(function (e) {
+        err.textContent = e.message;
+        btn.disabled = false; btn.textContent = "Add Staff";
+      });
+    });
   }
 
   // ---------- Per-staff visibility (sidebar sections + module tiles) ----------
@@ -1724,7 +2054,42 @@
     if (isNaN(d)) return "—";
     return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
   }
+  // News-channel-style scrolling bulletin bar: pinned/recent notices + the nearest
+  // upcoming holidays. Lives at the top of <main> so it shows on every page, not just
+  // the Notice Board view itself.
+  function renderNoticeTicker() {
+    var bar = document.getElementById("tickerBar");
+    var track = document.getElementById("tickerTrack");
+    if (!bar || !track) return;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var notices = (state.notices || []).slice().sort(function (a, b) {
+      if (!!b.pinned - !!a.pinned !== 0) return !!b.pinned - !!a.pinned;
+      return new Date(b.created_at) - new Date(a.created_at);
+    }).slice(0, 6);
+    var holidays = (state.holidays || []).filter(function (h) {
+      var d = new Date(h.holiday_date + "T00:00:00");
+      return !isNaN(d) && d >= today;
+    }).sort(function (a, b) { return new Date(a.holiday_date) - new Date(b.holiday_date); }).slice(0, 4);
+    var items = [];
+    notices.forEach(function (n) {
+      items.push('<span class="ticker-item"><span class="tk-emoji">' + (n.pinned ? "📌" : "🗞️") + '</span>' + esc(n.title) + '</span>');
+    });
+    holidays.forEach(function (h) {
+      items.push('<span class="ticker-item tk-holiday"><span class="tk-emoji">🎉</span>Holiday — ' + esc(h.name) + " · " + fmtHolidayDate(h.holiday_date) + '</span>');
+    });
+    if (!items.length) {
+      bar.classList.remove("show");
+      track.innerHTML = "";
+      return;
+    }
+    bar.classList.add("show");
+    // Duplicate the sequence so translateX(-50%) loops seamlessly, and scale the
+    // scroll duration to content length so short lists don't fly past.
+    track.innerHTML = items.join("") + items.join("");
+    track.style.setProperty("--ticker-dur", Math.max(18, items.length * 5) + "s");
+  }
   function renderNoticeBoard() {
+    renderNoticeTicker();
     var isAdmin = state.doer && state.doer.is_admin;
     var nWrap = document.getElementById("noticeListWrap");
     if (nWrap) {
@@ -1778,6 +2143,8 @@
       }
     }
   }
+  var addStaffBtn = document.getElementById("addStaffBtn");
+  if (addStaffBtn) addStaffBtn.addEventListener("click", function () { openAddDoerModal(); });
   var addNoticeBtn = document.getElementById("addNoticeBtn");
   if (addNoticeBtn) addNoticeBtn.addEventListener("click", function () {
     openModal(
