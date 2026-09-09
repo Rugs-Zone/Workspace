@@ -1448,17 +1448,17 @@
   function loadAll() {
     if (state.demo) {
       renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderNoticeBoard(); renderSettingsCard();
-      api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); });
+      api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
       return;
     }
     Promise.all([
-      api("listTasks"), api("getDoers"), api("getFaqs"), api("listTickets"), api("getBuyerVisits"), api("getNotices"), api("getHolidays"), api("getSettings"), api("getBuyerVisitAlertStaff"), api("getTodaysBirthdays")
+      api("listTasks"), api("getDoers"), api("getFaqs"), api("listTickets"), api("getBuyerVisits"), api("getNotices"), api("getHolidays"), api("getSettings"), api("getBuyerVisitAlertStaff")
     ]).then(function (r) {
       // getSettings/getBuyerVisitAlertStaff are fetched for every user, not
       // just admins — both affect what everyone sees (the ticker toggles,
       // and who gets the buyer-visit Home widget), even though only an
       // admin can change either (Settings page is admin-only).
-      state.tasks = r[0]; state.doers = r[1]; state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8]; state.todaysBirthdays = r[9] || [];
+      state.tasks = r[0]; state.doers = r[1]; state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8];
       renderTasks(); renderFaqs(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderNoticeBoard();
       if (state.doer.is_admin) {
         renderAdmin();
@@ -1469,6 +1469,12 @@
         api("getAudits").then(function (a) { state.audits = a; renderAudits(); renderHome(); });
       }
     }).catch(function (e) { toast(e.message, true); });
+    // Kept out of the Promise.all above deliberately: this is a "nice to have"
+    // (the Home-page birthday banner) that must never be able to take the
+    // whole dashboard down with it if it fails for any reason (missing
+    // column, transient error, etc) — one broken non-critical call should
+    // never block tasks/staff/tickets from rendering.
+    api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
   }
 
   // ---------- Nav ----------
