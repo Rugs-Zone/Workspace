@@ -248,11 +248,25 @@
   .hero-card.dark{background:var(--darkcard);display:flex;flex-direction:column}
   .hero-card .tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--brand);margin-bottom:12px}
   .hero-card .tag.muted{color:rgba(255,255,255,.55)}
+  .hero-card.gradient .tag{color:#fff;background:rgba(0,0,0,.35);padding:4px 10px;border-radius:99px;backdrop-filter:blur(2px)}
   .hero-card h2{font-size:24px;margin:0 0 8px;line-height:1.25;position:relative;z-index:1}
   .hero-card p{opacity:.85;font-size:13px;max-width:440px;margin:0;position:relative;z-index:1}
   .hero-card .big-n{font-size:40px;font-weight:800;margin:4px 0;color:var(--brand)}
   .hero-card .big-l{font-size:12px;opacity:.7}
   .hero-card .pill{display:inline-block;margin-top:auto;padding-top:14px;font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--brand)}
+
+  /* Dashboard notification + countdown primitive — reusable for any event a
+     staff member needs to see until it happens (buyer visits today; meeting
+     invites are meant to plug into the same table/cards later). */
+  .notif-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .notif-card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease}
+  .notif-card.unseen{border-left-color:var(--brand);box-shadow:0 4px 16px -8px rgba(255,80,1,.45);background:linear-gradient(0deg,rgba(255,80,1,.07),rgba(255,80,1,.07)),var(--card)}
+  .notif-card .notif-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0}
+  .notif-card:not(.unseen) .notif-dot{visibility:hidden}
+  .notif-card .notif-body-wrap{flex:1;min-width:0}
+  .notif-card .notif-title{font-weight:700;font-size:13.5px;color:var(--ink)}
+  .notif-card .notif-sub{font-size:12px;color:var(--sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .notif-card .notif-countdown{flex-shrink:0;font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--brand-ink);background:rgba(255,80,1,.16);border-radius:99px;padding:5px 11px;white-space:nowrap}
   .module-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px}
   .module-card{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;text-align:left;display:block;width:100%;text-decoration:none;color:inherit;box-shadow:0 4px 14px -8px rgba(0,0,0,.18);transition:border-color .15s ease,box-shadow .15s ease,transform .12s ease}
   .module-card:hover{border-color:var(--brand);box-shadow:0 14px 30px -14px rgba(255,80,1,.5)}
@@ -310,6 +324,24 @@
   .photo-preview{max-width:100%;border-radius:8px;margin-top:8px;display:block}
   .history-box{background:var(--bg);border-radius:8px;padding:10px;font-size:12px;white-space:pre-wrap;max-height:140px;overflow:auto;margin-top:4px}
 
+  /* Attendee / staff picker (e.g. Buyer Visit "also attending") */
+  .bv-picker{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+  .bv-picker-search{padding:8px;border-bottom:1px solid var(--line);background:var(--bg)}
+  .bv-picker-search input{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;background:var(--card);color:var(--ink)}
+  .bv-picker-list{max-height:180px;overflow-y:auto;padding:10px}
+  .bv-picker-count{font-size:11px;color:var(--sub);padding:0 10px 8px}
+  .bv-picker-group{margin-bottom:12px}
+  .bv-picker-group:last-child{margin-bottom:0}
+  .bv-picker-group-label{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--sub);margin-bottom:6px}
+  .bv-picker-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .bv-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:5px 12px 5px 7px;font-size:12.5px;cursor:pointer;background:var(--card);color:var(--ink);transition:background .12s ease,border-color .12s ease;user-select:none}
+  .bv-chip:hover{border-color:var(--brand)}
+  .bv-chip input{display:none}
+  .bv-chip .bv-chip-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;color:transparent;flex-shrink:0;transition:background .12s ease,border-color .12s ease;background:var(--card)}
+  .bv-chip.checked{background:rgba(255,80,1,.1);border-color:var(--brand)}
+  .bv-chip.checked .bv-chip-dot{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+  .bv-picker-empty,.bv-picker-noresults{font-size:13px;color:var(--sub);padding:4px}
+
   /* Tickets / Help Slips */
   .ticket-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:10px;cursor:pointer}
   .ticket-card:hover{border-color:var(--purple1)}
@@ -357,7 +389,7 @@
   .chat-thread-row{display:flex;gap:10px;align-items:center;padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--line)}
   .chat-thread-row:hover{background:var(--bg)}
   .chat-thread-row.active{background:rgba(255,80,1,.1)}
-  .chat-thread-avatar{width:36px;height:36px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+  .chat-thread-avatar{width:36px;height:36px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;object-fit:cover}
   .chat-thread-avatar.group{background:#7c3aed}
   .chat-thread-info{min-width:0;flex:1}
   .chat-thread-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -366,8 +398,14 @@
   .chat-thread-preview{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .chat-thread-empty{padding:30px 18px;text-align:center;color:var(--sub);font-size:13px}
   .chat-main{flex:1;display:flex;flex-direction:column;min-width:0}
-  .chat-main-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .chat-main-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .chat-main-head b{font-size:14px}
+  .chat-main-head-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+  .chat-main-head-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .chat-lock-badge{font-size:11px;font-weight:800;color:var(--brand-ink);background:rgba(255,80,1,.16);border-radius:99px;padding:4px 10px;white-space:nowrap}
+  .chat-locked-banner{padding:14px 18px;text-align:center;color:var(--sub);font-size:12.5px;border-top:1px solid var(--line);background:var(--card)}
+  .pf-avatar-row{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .pf-avatar-preview{width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;flex-shrink:0}
   .chat-main-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:13px;text-align:center;padding:20px}
   .chat-messages{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column}
   /* WhatsApp-style grouping: consecutive bubbles from the same sender within a
@@ -628,6 +666,7 @@
         <span class="online-pill"><span class="dot"></span>System online</span>
       </div>
       <div class="page-sub" style="margin-top:-14px">Your tools, updates, and daily work.</div>
+      <div class="notif-wrap hidden" id="notifHomeWrap"></div>
       <div class="birthday-banner hidden" id="birthdayHomeWidget"><span id="birthdayHomeText"></span></div>
       <div class="hero-grid">
         <div class="hero-card gradient">
@@ -759,7 +798,7 @@
         <div class="field">
           <label>Also attending (optional)</label>
           <div class="sub" style="margin:-2px 0 6px">Anyone else covering this buyer with you — they'll see it too.</div>
-          <div id="bvAttendeePicker" style="display:flex;flex-wrap:wrap;gap:6px 14px;max-height:130px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:10px"></div>
+          <div id="bvAttendeePicker" class="bv-picker"></div>
         </div>
         <div class="modal-err" id="bvErr"></div>
         <button class="btn" id="bvSaveBtn">Log Visit</button>
@@ -816,7 +855,7 @@
     <div id="view-cbm" class="hidden" style="height:calc(100vh - var(--topbar-offset));display:flex;flex-direction:column">
       <button class="embed-back-btn" data-goto="modules">← Back to Workspace</button>
       <div class="card" style="flex:1;min-height:0;padding:0;border-radius:0;border-width:0">
-        <iframe id="cbmFrame" title="CBM / Stowage Planner" style="width:100%;height:100%;border:0;display:block;background:#0a0a0a"></iframe>
+        <iframe id="cbmFrame" title="CBM / Storage Planner" style="width:100%;height:100%;border:0;display:block;background:#0a0a0a"></iframe>
       </div>
     </div>
 
@@ -913,7 +952,7 @@
   var ANON_KEY = "sb_publishable_KrWpU9UQxuE0P5GeUXLs3Q_SVvPMGYT";
   var FN_URL = SUPABASE_URL + "/functions/v1/deleg-api";
 
-  var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tickets: [], ticketComments: {}, buyerVisits: [], buyerNotifyList: [], buyerVisitAlertStaff: [], notices: [], holidays: [], settings: { notifications_enabled: true, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true }, tab: "mine", ticketTab: "mine", helpSlipTab: "mine", view: "home", demo: false, chatThreads: [], chatActiveThread: null, chatMessages: [], demoChat: { threads: [], members: [], messages: [] } };
+  var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tickets: [], ticketComments: {}, buyerVisits: [], buyerNotifyList: [], buyerVisitAlertStaff: [], notices: [], holidays: [], notifications: [], settings: { notifications_enabled: true, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true }, tab: "mine", ticketTab: "mine", helpSlipTab: "mine", view: "home", demo: false, chatThreads: [], chatActiveThread: null, chatMessages: [], demoChat: { threads: [], members: [], messages: [] } };
 
   function api(action, payload) {
     if (state.demo) return demoApi(action, payload || {});
@@ -932,7 +971,7 @@
 
   // ---------- Demo (sample data) API shim ----------
   function demoApi(action, p) {
-    return new Promise(function (resolve) {
+    return new Promise(function (resolve, reject) {
       setTimeout(function () {
         switch (action) {
           case "listTasks": resolve(state.tasks.slice()); break;
@@ -1099,6 +1138,34 @@
             resolve({ id: p.id });
             break;
           }
+          case "createNotification": {
+            if (!state.notifications) state.notifications = [];
+            (p.doc_ids || []).forEach(function (docId) {
+              state.notifications.push({
+                id: "NTF" + Math.random().toString(36).slice(2, 7).toUpperCase(),
+                doc_id: docId, type: p.type, ref_id: p.ref_id || null,
+                title: p.title, body: p.body || "", event_at: p.event_at,
+                created_at: new Date().toISOString(), seen_at: null
+              });
+            });
+            resolve({ count: (p.doc_ids || []).length });
+            break;
+          }
+          case "getMyNotifications": {
+            var notifSince = Date.now() - 24 * 60 * 60 * 1000;
+            var notifList = (state.notifications || []).filter(function (n) {
+              return n.doc_id === p.doc_id && new Date(n.event_at).getTime() > notifSince;
+            }).sort(function (a, b) { return new Date(a.event_at) - new Date(b.event_at); });
+            resolve(notifList);
+            break;
+          }
+          case "markNotificationSeen": {
+            (state.notifications || []).forEach(function (n) {
+              if ((p.ids || []).indexOf(n.id) !== -1) n.seen_at = new Date().toISOString();
+            });
+            resolve({});
+            break;
+          }
           case "getBuyerNotifyList": resolve((state.buyerNotifyList || []).slice()); break;
           case "setBuyerNotifyList": {
             state.buyerNotifyList = (p.list || []).slice();
@@ -1156,7 +1223,8 @@
               }
               var tMsgs = state.demoChat.messages.filter(function (m) { return m.thread_id === t.id; }).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
               var last = tMsgs[0];
-              return { id: t.id, type: t.type, name: displayName, member_doc_ids: memberDocIds, last_text: last ? last.text : "", last_sender_name: last ? last.sender_name : "", last_at: last ? last.created_at : t.created_at };
+              var lockerDoer = t.locked_by ? state.doers.find(function (d) { return d.doc_id === t.locked_by; }) : null;
+              return { id: t.id, type: t.type, name: displayName, member_doc_ids: memberDocIds, last_text: last ? last.text : "", last_sender_name: last ? last.sender_name : "", last_at: last ? last.created_at : t.created_at, locked_by: t.locked_by || null, locked_at: t.locked_at || null, locked_by_name: lockerDoer ? (lockerDoer.delegation_name || lockerDoer.name) : (t.locked_by || null) };
             });
             cResult.sort(function (a, b) { return new Date(b.last_at) - new Date(a.last_at); });
             resolve(cResult);
@@ -1195,6 +1263,8 @@
             break;
           }
           case "sendChatMessage": {
+            var lockedThread = state.demoChat.threads.find(function (t) { return t.id === p.thread_id; });
+            if (lockedThread && lockedThread.locked_by) { reject(new Error("This chat is locked")); break; }
             var mid = "MSGDEMO" + Math.random().toString(36).slice(2, 7).toUpperCase();
             state.demoChat.messages.push({ id: mid, thread_id: p.thread_id, sender_doc_id: p.sender_doc_id, sender_name: p.sender_name || "Someone", text: String(p.text || "").slice(0, 4000), deleted_for: [], created_at: new Date().toISOString() });
             state.demoChat.members.forEach(function (m) { if (m.thread_id === p.thread_id) m.hidden = false; });
@@ -1217,6 +1287,35 @@
           case "hideChatThread": {
             state.demoChat.members.forEach(function (m) { if (m.thread_id === p.thread_id && m.doc_id === p.doc_id) m.hidden = true; });
             resolve({});
+            break;
+          }
+          case "lockChatThread": {
+            var lockT = state.demoChat.threads.find(function (t) { return t.id === p.thread_id; });
+            if (!lockT) { reject(new Error("thread not found")); break; }
+            if (!lockT.locked_by) { lockT.locked_by = p.doc_id; lockT.locked_at = new Date().toISOString(); }
+            resolve({ locked_by: lockT.locked_by });
+            break;
+          }
+          case "unlockChatThread": {
+            var unlockT = state.demoChat.threads.find(function (t) { return t.id === p.thread_id; });
+            if (unlockT) { unlockT.locked_by = null; unlockT.locked_at = null; }
+            resolve({});
+            break;
+          }
+          case "leaveChatThread": {
+            var leaveT = state.demoChat.threads.find(function (t) { return t.id === p.thread_id; });
+            if (!leaveT) { reject(new Error("thread not found")); break; }
+            if (leaveT.type !== "group") { reject(new Error("only group chats can be left")); break; }
+            state.demoChat.members = state.demoChat.members.filter(function (m) { return !(m.thread_id === p.thread_id && m.doc_id === p.doc_id); });
+            resolve({});
+            break;
+          }
+          case "updateMyAvatar": {
+            var avDoer = state.doers.find(function (d) { return d.doc_id === p.doc_id; });
+            var demoUrl = p.avatar_base64;
+            if (avDoer) avDoer.avatar_url = demoUrl;
+            if (state.doer && state.doer.doc_id === p.doc_id) state.doer.avatar_url = demoUrl;
+            resolve({ avatar_url: demoUrl });
             break;
           }
 
@@ -1459,6 +1558,8 @@
   document.getElementById("logoutBtn").addEventListener("click", function () {
     state.doer = null;
     state.demo = false;
+    state.notifications = [];
+    stopNotifPolling();
     try { localStorage.removeItem("deleg_doer"); } catch (e) {}
     document.body.classList.remove("demo-mode");
     document.getElementById("demoBanner").classList.add("hidden");
@@ -1566,6 +1667,7 @@
     // login. Every login starts back at Home.
     goToView("home");
     loadAll();
+    startNotifPolling();
   }
 
   // Sidebar sections an admin can hide per employee (Home always stays —
@@ -1591,6 +1693,7 @@
     if (state.demo) {
       renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderNoticeBoard(); renderSettingsCard();
       api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
+      loadNotifications();
       return;
     }
     Promise.all([
@@ -1617,6 +1720,88 @@
     // column, transient error, etc) — one broken non-critical call should
     // never block tasks/staff/tickets from rendering.
     api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
+    loadNotifications();
+  }
+
+  // ---------- Dashboard notification + countdown primitive ----------
+  // Generic by design (type/ref_id, not buyer-visit-specific) so a later
+  // "meeting invite" feature can create rows here too and get the same
+  // dashboard card + countdown + highlight-until-seen behavior for free.
+  function fmtCountdown(eventAtIso) {
+    var diff = new Date(eventAtIso).getTime() - Date.now();
+    if (diff <= 0) return "Ended";
+    var mins = Math.round(diff / 60000);
+    if (mins < 1) return "Starting now";
+    if (mins < 60) return "in " + mins + "m";
+    var hrs = Math.floor(mins / 60);
+    var remMins = mins % 60;
+    if (hrs < 24) return "in " + hrs + "h" + (remMins ? " " + remMins + "m" : "");
+    var days = Math.floor(hrs / 24);
+    var remHrs = hrs % 24;
+    return "in " + days + "d" + (remHrs ? " " + remHrs + "h" : "");
+  }
+
+  function loadNotifications() {
+    if (!state.doer) return;
+    api("getMyNotifications", { doc_id: state.doer.doc_id }).then(function (list) {
+      state.notifications = list || [];
+      renderNotifications();
+    }).catch(function () {});
+  }
+
+  function renderNotifications() {
+    var wrap = document.getElementById("notifHomeWrap");
+    if (!wrap) return;
+    var list = state.notifications || [];
+    if (!list.length) { wrap.classList.add("hidden"); wrap.innerHTML = ""; return; }
+    wrap.classList.remove("hidden");
+    wrap.innerHTML = list.map(function (n) {
+      return '<div class="notif-card' + (n.seen_at ? '' : ' unseen') + '" data-id="' + esc(n.id) + '">' +
+        '<span class="notif-dot"></span>' +
+        '<div class="notif-body-wrap"><div class="notif-title">' + esc(n.title) + '</div>' +
+        (n.body ? '<div class="notif-sub">' + esc(n.body) + '</div>' : '') + '</div>' +
+        '<span class="notif-countdown">' + esc(fmtCountdown(n.event_at)) + '</span>' +
+        '</div>';
+    }).join("");
+    wrap.querySelectorAll(".notif-card").forEach(function (card) {
+      card.addEventListener("click", function () {
+        var id = card.dataset.id;
+        var n = list.find(function (x) { return x.id === id; });
+        if (n && !n.seen_at) {
+          n.seen_at = new Date().toISOString();
+          card.classList.remove("unseen");
+          api("markNotificationSeen", { ids: [id] }).catch(function () {});
+        }
+      });
+    });
+  }
+
+  var NOTIF_POLL_MS = 20000;
+  var notifPollHandle = null;
+  function startNotifPolling() {
+    stopNotifPolling();
+    notifPollHandle = setInterval(loadNotifications, NOTIF_POLL_MS);
+  }
+  function stopNotifPolling() {
+    if (notifPollHandle) { clearInterval(notifPollHandle); notifPollHandle = null; }
+  }
+
+  // Creates one dashboard-notification row per attendee doc_id, counting
+  // down to the buyer visit itself. Never allowed to block or fail the
+  // visit save/add-attendee flow it's called from — notifications are a
+  // nice-to-have layered on top, not a dependency of logging the visit.
+  function notifyBuyerVisitAttendees(visitId, buyerName, visitAt, attendees) {
+    var docIds = (attendees || []).map(function (a) { return a.doc_id; }).filter(function (id) { return id && id !== state.doer.doc_id; });
+    if (!docIds.length) return;
+    var when = fmtDate(visitAt);
+    api("createNotification", {
+      doc_ids: docIds,
+      type: "buyer_visit",
+      ref_id: visitId,
+      title: "Buyer visit" + (buyerName ? ": " + buyerName : ""),
+      body: "You're marked as attending — " + when,
+      event_at: visitAt
+    }).catch(function () {});
   }
 
   // ---------- Nav ----------
@@ -1636,7 +1821,7 @@
     { key: "helpslip", icon: "🆘", name: "Help Slip", status: "live", goto: "helpslip" },
     { key: "costing", icon: "🧮", name: "Costing Calculator", status: "live", goto: "costing" },
     { key: "checklist", icon: "📋", name: "Checklist FMS", status: "live", goto: "checklist" },
-    { key: "cbm", icon: "📦", name: "CBM / Stowage Planner", status: "live", goto: "cbm" },
+    { key: "cbm", icon: "📦", name: "CBM / Storage Planner", status: "live", goto: "cbm" },
     { key: "buyerorder", icon: "🧾", name: "Buyer Order Dashboard", status: "live", goto: "buyerorder" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit" },
     { key: "samplingfms", icon: "🧵", name: "Sampling FMS", status: "soon", goto: "samplingfms" },
@@ -1727,7 +1912,7 @@
     buyerOrderFrameLoaded = true;
   }
 
-  // CBM / Stowage Planner is a self-contained calculator (own CSS/JS, no login,
+  // CBM / Storage Planner is a self-contained calculator (own CSS/JS, no login,
   // no backend calls) embedded whole in CBM_HTML_B64, the same base64-in-a-hidden-
   // iframe technique used for Checklist FMS above — just without the SSO step,
   // since the tool has no accounts to sign into. Loaded once per session.
@@ -2686,6 +2871,15 @@
     openModal(
       "<h3>My Profile</h3>" +
       '<div class="sub">' + esc(d.login_id ? "Login ID: " + d.login_id : "") + "</div>" +
+      '<div class="pf-avatar-row">' +
+      (d.avatar_url
+        ? '<img class="pf-avatar-preview" id="pfAvatarPreview" src="' + esc(d.avatar_url) + '" alt="" />'
+        : '<div class="pf-avatar-preview" id="pfAvatarPreview">' + esc(chatAvatarInitial(d.delegation_name || d.name)) + '</div>') +
+      '<div><button type="button" class="btn secondary" id="pfAvatarBtn" style="padding:6px 12px;font-size:12px">Change photo</button>' +
+      '<input type="file" id="pfAvatarInput" accept="image/*" class="hidden" />' +
+      '<div class="modal-err" id="pfAvatarErr"></div>' +
+      '<div class="sub" style="margin-top:4px">Shown next to your name in chat.</div></div>' +
+      '</div>' +
       '<div class="field"><label>Full name</label><input id="pfName" value="' + esc(d.name || "") + '" /></div>' +
       '<div class="field"><label>Display name (used across the app)</label><input id="pfDeleg" value="' + esc(d.delegation_name || "") + '" /></div>' +
       '<div class="field"><label>Department</label><input id="pfDept" value="' + esc(d.department || "") + '" /></div>' +
@@ -2704,6 +2898,41 @@
       '<div class="modal-actions"><button class="btn secondary" id="pfPassBtn">Update Password</button></div>'
     );
     document.getElementById("pfClose2").addEventListener("click", closeModal);
+    var pfAvatarBtn = document.getElementById("pfAvatarBtn");
+    var pfAvatarInput = document.getElementById("pfAvatarInput");
+    if (pfAvatarBtn && pfAvatarInput) {
+      pfAvatarBtn.addEventListener("click", function () { pfAvatarInput.click(); });
+      pfAvatarInput.addEventListener("change", function () {
+        var file = pfAvatarInput.files && pfAvatarInput.files[0];
+        if (!file) return;
+        var errEl = document.getElementById("pfAvatarErr");
+        errEl.textContent = "";
+        if (!/^image\//.test(file.type)) { errEl.textContent = "Please choose an image file."; return; }
+        if (file.size > 4 * 1024 * 1024) { errEl.textContent = "Image is too large (max 4MB)."; return; }
+        var origLabel = pfAvatarBtn.textContent;
+        pfAvatarBtn.disabled = true; pfAvatarBtn.textContent = "Uploading…";
+        var reader = new FileReader();
+        reader.onload = function () {
+          api("updateMyAvatar", { doc_id: d.doc_id, avatar_base64: reader.result }).then(function (res) {
+            d.avatar_url = res.avatar_url;
+            var doerInList = (state.doers || []).find(function (x) { return x.doc_id === d.doc_id; });
+            if (doerInList) doerInList.avatar_url = res.avatar_url;
+            var preview = document.getElementById("pfAvatarPreview");
+            if (preview) {
+              var img = document.createElement("img");
+              img.className = "pf-avatar-preview"; img.id = "pfAvatarPreview"; img.src = res.avatar_url; img.alt = "";
+              preview.replaceWith(img);
+            }
+            toast("Photo updated");
+            pfAvatarBtn.disabled = false; pfAvatarBtn.textContent = origLabel;
+          }).catch(function (e) {
+            errEl.textContent = e.message || "Couldn't upload photo";
+            pfAvatarBtn.disabled = false; pfAvatarBtn.textContent = origLabel;
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    }
     document.getElementById("pfSave2").addEventListener("click", function () {
       var btn = document.getElementById("pfSave2"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
       var hiddenStatTiles = Array.from(document.querySelectorAll(".pf-stat-tile")).filter(function (cb) { return !cb.checked; }).map(function (cb) { return cb.dataset.key; });
@@ -2928,9 +3157,67 @@
     if (!wrap) return;
     var others = (state.doers || []).filter(function (d) { return d.doc_id !== state.doer.doc_id; })
       .sort(function (a, b) { return (a.delegation_name || a.name || "").localeCompare(b.delegation_name || b.name || ""); });
-    wrap.innerHTML = others.length ? others.map(function (d) {
-      return '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="bv-attendee-cb" data-doc-id="' + esc(d.doc_id) + '" data-name="' + esc(d.delegation_name || d.name) + '" style="width:auto" />' + esc(d.delegation_name || d.name) + "</label>";
-    }).join("") : '<span class="sub">No other staff to add.</span>';
+    if (!others.length) {
+      wrap.innerHTML = '<div class="bv-picker-empty">No other staff to add.</div>';
+      return;
+    }
+    // Group by department so a long staff list is easy to scan, falling back
+    // to a single "Other" bucket for anyone without one set yet.
+    var groups = {}, order = [];
+    others.forEach(function (d) {
+      var dept = d.department || "Other";
+      if (!groups[dept]) { groups[dept] = []; order.push(dept); }
+      groups[dept].push(d);
+    });
+    order.sort();
+    function chipHtml(d) {
+      var name = d.delegation_name || d.name;
+      return '<label class="bv-chip" data-search="' + esc(name.toLowerCase()) + '">' +
+        '<input type="checkbox" class="bv-attendee-cb" data-doc-id="' + esc(d.doc_id) + '" data-name="' + esc(name) + '" />' +
+        '<span class="bv-chip-dot">✓</span>' + esc(name) + "</label>";
+    }
+    var groupsHtml = order.map(function (dept) {
+      return '<div class="bv-picker-group">' +
+        '<div class="bv-picker-group-label">' + esc(dept) + '</div>' +
+        '<div class="bv-picker-chips">' + groups[dept].map(chipHtml).join("") + "</div></div>";
+    }).join("");
+    wrap.innerHTML =
+      '<div class="bv-picker-search"><input type="text" id="bvAttendeeSearch" placeholder="Search staff…" /></div>' +
+      '<div class="bv-picker-count" id="bvAttendeeCount"></div>' +
+      '<div class="bv-picker-list" id="bvAttendeePickerList">' + groupsHtml +
+      '<div class="bv-picker-noresults hidden">No staff match your search.</div></div>';
+
+    function updateCount() {
+      var n = wrap.querySelectorAll(".bv-attendee-cb:checked").length;
+      var countEl = document.getElementById("bvAttendeeCount");
+      if (countEl) countEl.textContent = n ? n + " selected" : "";
+    }
+    wrap.addEventListener("change", function (e) {
+      if (!e.target.classList || !e.target.classList.contains("bv-attendee-cb")) return;
+      var chip = e.target.closest(".bv-chip");
+      if (chip) chip.classList.toggle("checked", e.target.checked);
+      updateCount();
+    });
+    var searchInput = document.getElementById("bvAttendeeSearch");
+    if (searchInput) {
+      searchInput.addEventListener("input", function () {
+        var q = searchInput.value.trim().toLowerCase();
+        var anyVisible = false;
+        wrap.querySelectorAll(".bv-picker-group").forEach(function (g) {
+          var groupHasMatch = false;
+          g.querySelectorAll(".bv-chip").forEach(function (chip) {
+            var match = !q || chip.dataset.search.indexOf(q) !== -1;
+            chip.classList.toggle("hidden", !match);
+            if (match) groupHasMatch = true;
+          });
+          g.classList.toggle("hidden", !groupHasMatch);
+          if (groupHasMatch) anyVisible = true;
+        });
+        var noRes = wrap.querySelector(".bv-picker-noresults");
+        if (noRes) noRes.classList.toggle("hidden", anyVisible || !q);
+      });
+    }
+    updateCount();
   }
   function renderBuyerVisits() {
     renderBvAttendeePicker();
@@ -2980,6 +3267,7 @@
       var btn = document.getElementById("addAttSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Adding…';
       api("updateBuyerVisit", { id: v.id, attendees: newAttendees }).then(function () {
         v.attendees = newAttendees;
+        notifyBuyerVisitAttendees(v.id, v.buyer_name, v.visit_at, [{ doc_id: docId, name: d ? (d.delegation_name || d.name) : docId }]);
         toast("Added to the visit.");
         closeModal();
         renderBuyerVisits();
@@ -3004,7 +3292,8 @@
       var attendees = Array.from(document.querySelectorAll(".bv-attendee-cb")).filter(function (cb) { return cb.checked; })
         .map(function (cb) { return { doc_id: cb.dataset.docId, name: cb.dataset.name }; });
       bvSaveBtn.disabled = true; bvSaveBtn.innerHTML = '<span class="spinner"></span>Logging…';
-      api("createBuyerVisit", { visit_at: visitAt, num_persons: persons, created_by: myKey(), buyer_name: buyerName, attendees: attendees }).then(function () {
+      api("createBuyerVisit", { visit_at: visitAt, num_persons: persons, created_by: myKey(), buyer_name: buyerName, attendees: attendees }).then(function (res) {
+        notifyBuyerVisitAttendees(res && res.id, buyerName, visitAt, attendees);
         toast("Buyer visit logged — the notify list has been emailed.");
         document.getElementById("bvBuyerName").value = "";
         document.getElementById("bvDate").value = "";
@@ -3281,6 +3570,19 @@
     var n = (name || "?").trim();
     return n ? n.charAt(0).toUpperCase() : "?";
   }
+  // Renders a DM thread's avatar as the other person's uploaded photo when
+  // they have one (looked up client-side from state.doers, which already
+  // carries avatar_url); falls back to the initials circle otherwise. Group
+  // threads always use the initials/emoji circle — no per-group photo.
+  function chatAvatarHtml(t) {
+    var cls = "chat-thread-avatar" + (t.type === "group" ? " group" : "");
+    if (t.type === "dm" && state.doer) {
+      var otherId = (t.member_doc_ids || []).find(function (id) { return id !== state.doer.doc_id; });
+      var other = otherId ? (state.doers || []).find(function (d) { return d.doc_id === otherId; }) : null;
+      if (other && other.avatar_url) return '<img class="' + cls + '" src="' + esc(other.avatar_url) + '" alt="" />';
+    }
+    return '<div class="' + cls + '">' + esc(chatAvatarInitial(t.name)) + '</div>';
+  }
   function fmtChatTime(iso) {
     if (!iso) return "";
     var d = new Date(iso);
@@ -3335,12 +3637,12 @@
   function stopChatMsgPoll() { if (chatMsgPollHandle) { clearInterval(chatMsgPollHandle); chatMsgPollHandle = null; } }
 
   function loadChatThreads(showLoading) {
-    if (!state.doer) return;
+    if (!state.doer) return Promise.resolve();
     if (showLoading) {
       var wrap0 = document.getElementById("chatThreadList");
       if (wrap0) wrap0.innerHTML = '<div class="chat-thread-empty">Loading…</div>';
     }
-    api("getChatThreads", { doc_id: state.doer.doc_id }).then(function (threads) {
+    return api("getChatThreads", { doc_id: state.doer.doc_id }).then(function (threads) {
       state.chatThreads = threads || [];
       renderChatThreadList();
     }).catch(function () { /* a silent poll-tick failure shouldn't interrupt the user */ });
@@ -3358,8 +3660,8 @@
       var preview = t.last_text ? ((t.last_sender_name ? esc(t.last_sender_name) + ": " : "") + esc(t.last_text.slice(0, 40))) : "No messages yet";
       var timeLabel = esc(chatThreadTimeLabel(t.last_at));
       return '<div class="chat-thread-row' + (isActive ? " active" : "") + '" data-id="' + esc(t.id) + '">' +
-        '<div class="chat-thread-avatar' + (t.type === "group" ? " group" : "") + '">' + esc(chatAvatarInitial(t.name)) + '</div>' +
-        '<div class="chat-thread-info"><div class="chat-thread-top"><div class="chat-thread-name">' + esc(t.name || "Unnamed") + (t.type === "group" ? " 👥" : "") + '</div><div class="chat-thread-time">' + timeLabel + '</div></div>' +
+        chatAvatarHtml(t) +
+        '<div class="chat-thread-info"><div class="chat-thread-top"><div class="chat-thread-name">' + esc(t.name || "Unnamed") + (t.type === "group" ? " 👥" : "") + (t.locked_by ? " 🔒" : "") + '</div><div class="chat-thread-time">' + timeLabel + '</div></div>' +
         '<div class="chat-thread-preview">' + preview + '</div></div></div>';
     }).join("");
     wrap.querySelectorAll(".chat-thread-row").forEach(function (row) {
@@ -3445,18 +3747,42 @@
     var wasNearBottom = existingMsgs ? (existingMsgs.scrollHeight - existingMsgs.scrollTop - existingMsgs.clientHeight) < 60 : true;
 
     var headName = thread ? (thread.name || "Chat") + (thread.type === "group" ? " 👥" : "") : "Chat";
+    var isLocked = !!(thread && thread.locked_by);
     main.innerHTML =
-      '<div class="chat-main-head"><b>' + esc(headName) + '</b>' +
-      '<button class="btn secondary" id="chatDeleteThreadBtn" style="padding:6px 12px;font-size:12px">🗑 Delete chat</button></div>' +
+      '<div class="chat-main-head">' +
+      '<div class="chat-main-head-title"><b>' + esc(headName) + '</b>' +
+      (isLocked ? '<span class="chat-lock-badge">🔒 Locked' + (thread.locked_by_name ? " by " + esc(thread.locked_by_name) : "") + '</span>' : '') +
+      '</div>' +
+      '<div class="chat-main-head-actions">' +
+      (thread ? '<button class="btn secondary" id="chatLockBtn" style="padding:6px 12px;font-size:12px">' + (isLocked ? "🔓 Unlock" : "🔒 Lock") + '</button>' : '') +
+      (thread && thread.type === "group" ? '<button class="btn secondary" id="chatLeaveBtn" style="padding:6px 12px;font-size:12px">🚪 Leave</button>' : '') +
+      '<button class="btn secondary" id="chatDeleteThreadBtn" style="padding:6px 12px;font-size:12px">🗑 Delete chat</button>' +
+      '</div></div>' +
       '<div class="chat-messages" id="chatMessagesBox">' + (loading ? '<div class="chat-thread-empty">Loading…</div>' : chatMessagesHtml()) + '</div>' +
-      '<div class="chat-input-row">' +
-      '<div class="chat-emoji-wrap"><button type="button" class="chat-emoji-btn" id="chatEmojiBtn" title="Emoji">😊</button>' +
-      '<div class="chat-emoji-panel hidden" id="chatEmojiPanel"></div></div>' +
-      '<textarea id="chatInputBox" placeholder="Type a message…" rows="1"></textarea>' +
-      '<button class="btn" id="chatSendBtn">Send</button></div>';
+      (isLocked
+        ? '<div class="chat-locked-banner">🔒 This chat is locked' + (thread.locked_by_name ? " by " + esc(thread.locked_by_name) : "") + '. Any member can unlock it to resume sending messages.</div>'
+        : '<div class="chat-input-row">' +
+          '<div class="chat-emoji-wrap"><button type="button" class="chat-emoji-btn" id="chatEmojiBtn" title="Emoji">😊</button>' +
+          '<div class="chat-emoji-panel hidden" id="chatEmojiPanel"></div></div>' +
+          '<textarea id="chatInputBox" placeholder="Type a message…" rows="1"></textarea>' +
+          '<button class="btn" id="chatSendBtn">Send</button></div>');
 
     var delBtn = document.getElementById("chatDeleteThreadBtn");
     if (delBtn) delBtn.addEventListener("click", function () { confirmHideChatThread(state.chatActiveThread); });
+
+    var lockBtn = document.getElementById("chatLockBtn");
+    if (lockBtn) lockBtn.addEventListener("click", function () {
+      var threadId = state.chatActiveThread;
+      var action = isLocked ? "unlockChatThread" : "lockChatThread";
+      lockBtn.disabled = true;
+      api(action, { thread_id: threadId, doc_id: state.doer.doc_id })
+        .then(function () { return loadChatThreads(false); })
+        .then(function () { renderChatMain(false); })
+        .catch(function (e) { lockBtn.disabled = false; toast(e.message || "Couldn't update lock"); });
+    });
+
+    var leaveBtn = document.getElementById("chatLeaveBtn");
+    if (leaveBtn) leaveBtn.addEventListener("click", function () { confirmLeaveChatThread(state.chatActiveThread); });
 
     var emojiBtn = document.getElementById("chatEmojiBtn");
     if (emojiBtn) emojiBtn.addEventListener("click", function (e) { e.stopPropagation(); toggleChatEmojiPanel(); });
@@ -3538,6 +3864,25 @@
     });
   }
 
+  function confirmLeaveChatThread(threadId) {
+    if (!threadId) return;
+    openModal(
+      '<h3>Leave this group?</h3><div class="sub">You\'ll stop seeing this group and its new messages. Someone already in the group will need to add you back if you want to rejoin.</div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="chatLeaveCancel">Cancel</button>' +
+      '<button class="btn" id="chatLeaveOk" style="background:var(--danger);color:#fff">Leave group</button></div>'
+    );
+    document.getElementById("chatLeaveCancel").addEventListener("click", closeModal);
+    document.getElementById("chatLeaveOk").addEventListener("click", function () {
+      api("leaveChatThread", { thread_id: threadId, doc_id: state.doer.doc_id }).then(function () {
+        closeModal();
+        state.chatActiveThread = null;
+        stopChatMsgPoll();
+        renderChatMain(false);
+        loadChatThreads(false);
+      }).catch(function (e) { toast(e.message || "Couldn't leave group"); });
+    });
+  }
+
   var chatNewBtnEl = document.getElementById("chatNewBtn");
   if (chatNewBtnEl) chatNewBtnEl.addEventListener("click", openNewChatModal);
 
@@ -3575,7 +3920,7 @@
       resWrap.innerHTML = list.map(function (d) {
         var nm = d.delegation_name || d.name || "";
         return '<div class="chat-search-row" data-doc="' + esc(d.doc_id) + '" data-name="' + esc(nm) + '">' +
-          '<div class="chat-thread-avatar">' + esc(chatAvatarInitial(nm)) + '</div>' +
+          (d.avatar_url ? '<img class="chat-thread-avatar" src="' + esc(d.avatar_url) + '" alt="" />' : '<div class="chat-thread-avatar">' + esc(chatAvatarInitial(nm)) + '</div>') +
           '<div><div class="chat-search-name">' + esc(nm) + '</div><div class="chat-search-meta">' + esc(d.department || "") + (d.email ? " · " + esc(d.email) : "") + '</div></div>' +
           (groupModeBox.checked ? '<input type="checkbox" class="chat-group-check" ' + (selected[d.doc_id] ? "checked" : "") + ' />' : "") +
           "</div>";
