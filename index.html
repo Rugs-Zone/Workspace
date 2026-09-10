@@ -1552,6 +1552,12 @@
     document.getElementById("navSettings").classList.toggle("hidden", !state.doer.is_admin);
     applySectionVisibility();
     applySidebarState();
+    // Whoever was signed in before (e.g. an admin sitting on the Settings
+    // page) can leave state.view pointing at a page the next person who logs
+    // in shouldn't land on — goToView() only ever runs on a sidebar click, so
+    // without this, that leftover page just stays on screen after a fresh
+    // login. Every login starts back at Home.
+    goToView("home");
     loadAll();
   }
 
