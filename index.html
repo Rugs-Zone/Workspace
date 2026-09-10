@@ -820,6 +820,13 @@
       </div>
     </div>
 
+    <div id="view-buyerorder" class="hidden" style="height:calc(100vh - var(--topbar-offset));display:flex;flex-direction:column">
+      <button class="embed-back-btn" data-goto="modules">← Back to Workspace</button>
+      <div class="card" id="buyerOrderCard" style="flex:1;min-height:0;padding:0;border-radius:0;border-width:0">
+        <iframe id="buyerOrderFrame" title="Buyer Order Dashboard" style="width:100%;height:100%;border:0;display:block;background:#fff" src="about:blank"></iframe>
+      </div>
+    </div>
+
     <div id="view-samplingfms" class="hidden">
       <div class="page-head"><h2>Sampling FMS</h2></div>
       <div class="card coming-soon"><div class="big">🧵</div><b>Sampling FMS is coming soon</b>This module will appear here once the sampling workflow is connected — the tile, routing and visibility controls are already live.</div>
@@ -1630,6 +1637,7 @@
     { key: "costing", icon: "🧮", name: "Costing Calculator", status: "live", goto: "costing" },
     { key: "checklist", icon: "📋", name: "Checklist FMS", status: "live", goto: "checklist" },
     { key: "cbm", icon: "📦", name: "CBM / Stowage Planner", status: "live", goto: "cbm" },
+    { key: "buyerorder", icon: "🧾", name: "Buyer Order Dashboard", status: "live", goto: "buyerorder" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit" },
     { key: "samplingfms", icon: "🧵", name: "Sampling FMS", status: "soon", goto: "samplingfms" },
     { key: "attendance", icon: "🕒", name: "Attendance", status: "soon", goto: "attendance" },
@@ -1697,6 +1705,28 @@
     costingFrameLoaded = true;
   }
 
+  // Buyer Order Dashboard — same pattern as Costing Calculator: a live
+  // external app (the Apps Script buyer-order portal), embedded by URL in
+  // its own full-window frame, no link ever shown as text anywhere in the
+  // UI — the tile just opens straight into the dashboard. Fill in the
+  // deployed Apps Script /exec URL below once it's provided; until then the
+  // tile is live and clickable but shows a plain "not connected yet" note
+  // instead of a blank iframe.
+  var BUYER_ORDER_DASHBOARD_URL = "https://script.google.com/a/macros/rugscreation.com/s/AKfycbyWeGq2ZEopx5IW7J1LRggfKHU7A58WeD9kTQced82mt9EnT3YGtaJcxtIbg4cwXVPf/exec";
+  var buyerOrderFrameLoaded = false;
+  function loadBuyerOrderFrame() {
+    if (buyerOrderFrameLoaded) return;
+    var frame = document.getElementById("buyerOrderFrame");
+    if (!frame) return;
+    if (!BUYER_ORDER_DASHBOARD_URL) {
+      var card = document.getElementById("buyerOrderCard");
+      if (card) card.innerHTML = '<div class="coming-soon" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center"><div class="big">🧾</div><b>Buyer Order Dashboard isn\'t connected yet</b>The link just needs to be added on the backend — nothing for you to do here.</div>';
+      return;
+    }
+    frame.src = BUYER_ORDER_DASHBOARD_URL;
+    buyerOrderFrameLoaded = true;
+  }
+
   // CBM / Stowage Planner is a self-contained calculator (own CSS/JS, no login,
   // no backend calls) embedded whole in CBM_HTML_B64, the same base64-in-a-hidden-
   // iframe technique used for Checklist FMS above — just without the SSO step,
@@ -1712,7 +1742,7 @@
     cbmFrameLoaded = true;
   }
 
-  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "notices", "chat", "checklist", "costing", "cbm", "samplingfms", "admin", "staffControls"];
+  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "admin", "staffControls"];
   function goToView(view) {
     document.querySelectorAll(".nav-item[data-view]").forEach(function (b) { b.classList.toggle("active", b.dataset.view === view); });
     state.view = view;
@@ -1721,7 +1751,8 @@
     if (view === "checklist") loadChecklistFrame();
     if (view === "costing") loadCostingFrame();
     if (view === "cbm") loadCbmFrame();
-    document.body.classList.toggle("embed-focus", view === "checklist" || view === "costing" || view === "cbm");
+    if (view === "buyerorder") loadBuyerOrderFrame();
+    document.body.classList.toggle("embed-focus", view === "checklist" || view === "costing" || view === "cbm" || view === "buyerorder");
     applySidebarState();
     ALL_VIEWS.forEach(function (v) {
       var el = document.getElementById("view-" + v);
