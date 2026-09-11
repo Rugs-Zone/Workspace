@@ -382,9 +382,17 @@
 
   /* Team Chat */
   .chat-shell{display:flex;height:calc(100vh - var(--topbar-offset) - 130px);min-height:420px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+  .chat-lock-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:70px 20px;text-align:center;border:1px solid var(--line);border-radius:12px;background:var(--card);min-height:420px}
+  .chat-lock-icon{font-size:38px}
+  .chat-lock-title{font-size:16px;font-weight:800;color:var(--ink)}
+  .chat-lock-sub{font-size:13px;color:var(--sub);margin:-4px 0 8px}
+  .chat-lock-pin-input{width:160px;text-align:center;letter-spacing:10px;font-size:20px;padding:10px 8px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+  .chat-lock-err{color:var(--danger);font-size:12.5px;min-height:16px}
   .chat-threads{width:280px;flex-shrink:0;border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
   .chat-threads-head{padding:14px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;justify-content:space-between}
   .chat-threads-head h3{margin:0;font-size:14px}
+  .chat-thread-search{padding:10px 14px;border-bottom:1px solid var(--line)}
+  .chat-thread-search input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:12.5px}
   .chat-thread-list{flex:1;overflow-y:auto}
   .chat-thread-row{display:flex;gap:10px;align-items:center;padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--line)}
   .chat-thread-row:hover{background:var(--bg)}
@@ -813,9 +821,18 @@
         <button class="btn" id="chatNewBtn">+ New Chat</button>
       </div>
       <div class="page-sub" style="margin-top:-14px">Message anyone on staff directly, or start a group — private between the people in the chat, no one else (including admins) can see it.</div>
-      <div class="chat-shell">
+      <div class="chat-lock-screen hidden" id="chatLockScreen">
+        <div class="chat-lock-icon">🔒</div>
+        <div class="chat-lock-title">Team Chat is locked</div>
+        <div class="chat-lock-sub">Enter your PIN to continue.</div>
+        <input type="password" inputmode="numeric" maxlength="6" id="chatLockPinInput" class="chat-lock-pin-input" placeholder="••••" autocomplete="off" />
+        <div class="chat-lock-err" id="chatLockErr"></div>
+        <button class="btn" id="chatLockUnlockBtn">Unlock</button>
+      </div>
+      <div class="chat-shell" id="chatShellWrap">
         <div class="chat-threads">
           <div class="chat-threads-head"><h3>Chats</h3></div>
+          <div class="chat-thread-search"><input type="text" id="chatThreadSearch" placeholder="Search chats…" autocomplete="off" /></div>
           <div class="chat-thread-list" id="chatThreadList"><div class="chat-thread-empty">Loading…</div></div>
         </div>
         <div class="chat-main" id="chatMain">
@@ -1318,6 +1335,41 @@
             resolve({ avatar_url: demoUrl });
             break;
           }
+          case "setChatLockPin": {
+            var pinDoer = state.doers.find(function (d) { return d.doc_id === p.doc_id; });
+            if (!pinDoer) { reject(new Error("Account not found.")); break; }
+            if (pinDoer.chat_lock_enabled && (!p.current_pin || pinDoer._demo_pin !== p.current_pin)) {
+              reject(new Error("Current PIN is incorrect.")); break;
+            }
+            if (!/^\d{4,6}$/.test(String(p.new_pin || ""))) { reject(new Error("PIN must be 4 to 6 digits.")); break; }
+            pinDoer._demo_pin = p.new_pin;
+            pinDoer.chat_lock_enabled = true;
+            if (state.doer && state.doer.doc_id === p.doc_id) { state.doer._demo_pin = p.new_pin; state.doer.chat_lock_enabled = true; }
+            resolve({});
+            break;
+          }
+          case "disableChatLock": {
+            var tgtDoer = state.doers.find(function (d) { return d.doc_id === p.requester_doc_id || d.doc_id === p.target_doc_id; });
+            if (!tgtDoer) { reject(new Error("Account not found.")); break; }
+            var requesterIsSelf = !p.target_doc_id || p.target_doc_id === p.requester_doc_id;
+            var requesterIsAdmin = state.doer && state.doer.is_admin;
+            if (requesterIsSelf && !requesterIsAdmin) {
+              if (!p.current_pin || tgtDoer._demo_pin !== p.current_pin) { reject(new Error("Current PIN is incorrect.")); break; }
+            } else if (!requesterIsAdmin) {
+              reject(new Error("Only an admin can reset someone else's chat lock.")); break;
+            }
+            tgtDoer.chat_lock_enabled = false;
+            tgtDoer._demo_pin = null;
+            if (state.doer && state.doer.doc_id === tgtDoer.doc_id) { state.doer.chat_lock_enabled = false; state.doer._demo_pin = null; }
+            resolve({});
+            break;
+          }
+          case "verifyChatLockPin": {
+            var vDoer = state.doers.find(function (d) { return d.doc_id === p.doc_id; });
+            if (!vDoer) { resolve({ valid: false }); break; }
+            resolve({ valid: !!p.pin && vDoer._demo_pin === p.pin });
+            break;
+          }
 
           default: resolve(null);
         }
@@ -1559,6 +1611,7 @@
     state.doer = null;
     state.demo = false;
     state.notifications = [];
+    state.chatUnlockedThisSession = false;
     stopNotifPolling();
     try { localStorage.removeItem("deleg_doer"); } catch (e) {}
     document.body.classList.remove("demo-mode");
@@ -1955,6 +2008,18 @@
   }
   document.querySelectorAll(".nav-item[data-view]").forEach(function (btn) {
     btn.addEventListener("click", function () { goToView(btn.dataset.view); });
+  });
+  // Esc closes the open conversation and returns to the "pick a chat" empty
+  // state, without leaving the Team Chat view itself. Only acts while a
+  // chat is actually open, so it never steals Esc from a modal or anywhere
+  // else in the app.
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && state.view === "chat" && state.chatActiveThread) {
+      state.chatActiveThread = null;
+      stopChatMsgPoll();
+      renderChatThreadList();
+      renderChatMain(false);
+    }
   });
   document.querySelectorAll(".embed-back-btn[data-goto]").forEach(function (btn) {
     btn.addEventListener("click", function () { goToView(btn.dataset.goto); });
@@ -2895,7 +2960,19 @@
       '<div class="field"><input id="pfNewPass" type="password" placeholder="New password (min 4 characters)" /></div>' +
       '<div class="field"><input id="pfNewPass2" type="password" placeholder="Confirm new password" /></div>' +
       '<div class="modal-err" id="pfPassErr"></div>' +
-      '<div class="modal-actions"><button class="btn secondary" id="pfPassBtn">Update Password</button></div>'
+      '<div class="modal-actions"><button class="btn secondary" id="pfPassBtn">Update Password</button></div>' +
+      '<div class="field" style="margin-top:18px;border-top:1px solid var(--line);padding-top:16px"><label>Team Chat lock</label></div>' +
+      (d.chat_lock_enabled
+        ? '<div class="sub" style="margin-top:-6px;margin-bottom:8px">On — Team Chat asks for this PIN every time you sign in, only on your own screen.</div>' +
+          '<div class="field"><input id="pfChatPinCur" type="password" inputmode="numeric" maxlength="6" placeholder="Current PIN" /></div>' +
+          '<div class="field"><input id="pfChatPinNew" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (leave blank to just turn off)" /></div>'
+        : '<div class="sub" style="margin-top:-6px;margin-bottom:8px">Off — set a PIN to keep Team Chat private on this account. No one else is affected.</div>' +
+          '<div class="field"><input id="pfChatPinNew" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4 to 6 digits)" /></div>') +
+      '<div class="modal-err" id="pfChatPinErr"></div>' +
+      '<div class="modal-actions">' +
+      '<button class="btn secondary" id="pfChatPinBtn">' + (d.chat_lock_enabled ? "Change PIN" : "Set PIN") + '</button>' +
+      (d.chat_lock_enabled ? '<button class="btn secondary" id="pfChatPinOffBtn" style="color:var(--danger)">Turn off lock</button>' : "") +
+      '</div>'
     );
     document.getElementById("pfClose2").addEventListener("click", closeModal);
     var pfAvatarBtn = document.getElementById("pfAvatarBtn");
@@ -2983,6 +3060,48 @@
       }).catch(function (e) {
         err.textContent = e.message;
         btn.disabled = false; btn.textContent = "Update Password";
+      });
+    });
+    var pinBtn = document.getElementById("pfChatPinBtn");
+    if (pinBtn) pinBtn.addEventListener("click", function () {
+      var pinErr = document.getElementById("pfChatPinErr");
+      var curEl = document.getElementById("pfChatPinCur");
+      var newEl = document.getElementById("pfChatPinNew");
+      var cur = curEl ? curEl.value.trim() : "";
+      var next = newEl ? newEl.value.trim() : "";
+      pinErr.textContent = "";
+      if (d.chat_lock_enabled && !next) {
+        pinErr.textContent = 'Enter a new PIN, or use "Turn off lock" below to remove it.';
+        return;
+      }
+      if (!/^\d{4,6}$/.test(next)) { pinErr.textContent = "PIN must be 4 to 6 digits."; return; }
+      pinBtn.disabled = true; pinBtn.textContent = "Saving…";
+      api("setChatLockPin", { doc_id: d.doc_id, current_pin: cur || undefined, new_pin: next }).then(function () {
+        d.chat_lock_enabled = true;
+        toast("Chat PIN saved");
+        closeModal();
+        openProfileModal();
+      }).catch(function (e) {
+        pinErr.textContent = e.message || "Couldn't save PIN";
+        pinBtn.disabled = false; pinBtn.textContent = d.chat_lock_enabled ? "Change PIN" : "Set PIN";
+      });
+    });
+    var pinOffBtn = document.getElementById("pfChatPinOffBtn");
+    if (pinOffBtn) pinOffBtn.addEventListener("click", function () {
+      var pinErr = document.getElementById("pfChatPinErr");
+      var curEl = document.getElementById("pfChatPinCur");
+      var cur = curEl ? curEl.value.trim() : "";
+      if (!cur) { pinErr.textContent = "Enter your current PIN to turn off the lock."; return; }
+      pinOffBtn.disabled = true;
+      api("disableChatLock", { requester_doc_id: d.doc_id, current_pin: cur }).then(function () {
+        d.chat_lock_enabled = false;
+        state.chatUnlockedThisSession = true;
+        toast("Chat lock turned off");
+        closeModal();
+        openProfileModal();
+      }).catch(function (e) {
+        pinErr.textContent = e.message || "Couldn't turn off lock";
+        pinOffBtn.disabled = false;
       });
     });
   }
@@ -3622,7 +3741,29 @@
     return (new Date(m.created_at) - new Date(prev.created_at)) < CHAT_GROUP_WINDOW_MS;
   }
 
+  // Personal privacy lock on the whole Team Chat module (separate from the
+  // per-thread lock above, which freezes one conversation for everyone in
+  // it). This one only ever affects the signed-in person's own screen —
+  // it re-locks every fresh session (state.chatUnlockedThisSession is
+  // in-memory only, reset on login/logout), so someone who picks up an
+  // already-open browser still has to enter the PIN.
+  function chatModuleIsLockedForMe() {
+    return !!(state.doer && state.doer.chat_lock_enabled && !state.chatUnlockedThisSession);
+  }
   function openChatView() {
+    if (chatModuleIsLockedForMe()) { renderChatLockScreen(); return; }
+    var lockScr = document.getElementById("chatLockScreen");
+    var shell = document.getElementById("chatShellWrap");
+    if (lockScr) lockScr.classList.add("hidden");
+    if (shell) shell.classList.remove("hidden");
+    var searchBox = document.getElementById("chatThreadSearch");
+    if (searchBox) {
+      searchBox.value = state.chatThreadFilter || "";
+      searchBox.oninput = function () {
+        state.chatThreadFilter = searchBox.value;
+        renderChatThreadList();
+      };
+    }
     loadChatThreads(true);
     stopChatListPoll();
     chatListPollHandle = setInterval(function () { loadChatThreads(false); }, CHAT_POLL_MS + 1000);
@@ -3631,6 +3772,36 @@
       loadChatMessages(true);
       chatMsgPollHandle = setInterval(function () { loadChatMessages(false); }, CHAT_POLL_MS);
     }
+  }
+  function renderChatLockScreen() {
+    stopChatPolling();
+    var shell = document.getElementById("chatShellWrap");
+    var scr = document.getElementById("chatLockScreen");
+    if (shell) shell.classList.add("hidden");
+    if (!scr) return;
+    scr.classList.remove("hidden");
+    var input = document.getElementById("chatLockPinInput");
+    var err = document.getElementById("chatLockErr");
+    err.textContent = "";
+    input.value = "";
+    setTimeout(function () { input.focus(); }, 30);
+    function tryUnlock() {
+      var pin = input.value.trim();
+      if (!pin) return;
+      err.textContent = "";
+      api("verifyChatLockPin", { doc_id: state.doer.doc_id, pin: pin }).then(function (res) {
+        if (res && res.valid) {
+          state.chatUnlockedThisSession = true;
+          openChatView();
+        } else {
+          err.textContent = "Incorrect PIN.";
+          input.value = "";
+          input.focus();
+        }
+      }).catch(function (e) { err.textContent = e.message || "Couldn't verify PIN"; });
+    }
+    document.getElementById("chatLockUnlockBtn").onclick = tryUnlock;
+    input.onkeydown = function (e) { if (e.key === "Enter") tryUnlock(); };
   }
   function stopChatPolling() { stopChatListPoll(); stopChatMsgPoll(); }
   function stopChatListPoll() { if (chatListPollHandle) { clearInterval(chatListPollHandle); chatListPollHandle = null; } }
@@ -3655,7 +3826,15 @@
       wrap.innerHTML = '<div class="chat-thread-empty">No chats yet.<br>Tap "+ New Chat" to message someone.</div>';
       return;
     }
-    wrap.innerHTML = state.chatThreads.map(function (t) {
+    var q = (state.chatThreadFilter || "").trim().toLowerCase();
+    var visibleThreads = !q ? state.chatThreads : state.chatThreads.filter(function (t) {
+      return (t.name || "").toLowerCase().indexOf(q) !== -1;
+    });
+    if (!visibleThreads.length) {
+      wrap.innerHTML = '<div class="chat-thread-empty">No chats match "' + esc(state.chatThreadFilter) + '".</div>';
+      return;
+    }
+    wrap.innerHTML = visibleThreads.map(function (t) {
       var isActive = t.id === state.chatActiveThread;
       var preview = t.last_text ? ((t.last_sender_name ? esc(t.last_sender_name) + ": " : "") + esc(t.last_text.slice(0, 40))) : "No messages yet";
       var timeLabel = esc(chatThreadTimeLabel(t.last_at));
