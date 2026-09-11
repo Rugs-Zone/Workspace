@@ -451,6 +451,64 @@
   .chat-search-meta{font-size:11px;color:var(--sub)}
   .chat-group-check{margin-left:auto;width:auto !important}
 
+  /* Round 13: reply/forward/edit/react/star/pin, attachments, group admin,
+     mute/archive, wallpaper, disappearing, broadcast, presence */
+  .chat-thread-row{position:relative}
+  .chat-thread-menu-btn{background:none;border:none;color:var(--sub);font-size:16px;cursor:pointer;padding:2px 6px;border-radius:6px;flex-shrink:0}
+  .chat-thread-menu-btn:hover{background:var(--line)}
+  .chat-thread-menu{position:absolute;right:10px;top:38px;z-index:25;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px -10px rgba(0,0,0,.35);min-width:150px;overflow:hidden}
+  .chat-thread-menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:9px 12px;font-size:12.5px;color:var(--ink);cursor:pointer}
+  .chat-thread-menu button:hover{background:var(--bg)}
+  .chat-thread-muted-icon{opacity:.6}
+  .chat-archived-toggle{padding:9px 14px;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer;border-bottom:1px solid var(--line);border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .chat-archived-toggle:hover{background:var(--bg)}
+  .chat-presence-dot{width:9px;height:9px;border-radius:50%;background:#9ca3af;display:inline-block;margin-right:5px;flex-shrink:0}
+  .chat-presence-dot.online{background:#22c55e}
+  .chat-main-head-sub{font-size:11px;color:var(--sub);display:flex;align-items:center}
+  .chat-pinned-bar{padding:8px 18px;border-bottom:1px solid var(--line);background:var(--bg);font-size:12px;display:flex;align-items:center;gap:8px;cursor:pointer}
+  .chat-pinned-bar b{font-weight:700}
+  .chat-pinned-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--sub)}
+  .chat-reply-bar{padding:8px 18px;border-top:1px solid var(--line);background:var(--bg);display:flex;align-items:center;gap:10px;font-size:12px}
+  .chat-reply-bar-body{flex:1;min-width:0;border-left:3px solid var(--brand);padding-left:8px}
+  .chat-reply-bar-name{font-weight:700;color:var(--brand-ink)}
+  .chat-reply-bar-text{color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chat-reply-bar-close{background:none;border:none;color:var(--sub);font-size:16px;cursor:pointer}
+  .chat-bubble-reply-quote{border-left:3px solid rgba(0,0,0,.25);padding:3px 8px;margin-bottom:4px;border-radius:6px;background:rgba(0,0,0,.06);font-size:11.5px;cursor:pointer}
+  .chat-bubble-row.me .chat-bubble-reply-quote{background:rgba(0,0,0,.12);border-left-color:rgba(0,0,0,.3)}
+  .chat-bubble-reply-name{font-weight:700}
+  .chat-bubble-reply-text{opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:220px}
+  .chat-bubble-forwarded{font-size:10.5px;font-style:italic;opacity:.75;margin-bottom:2px}
+  .chat-bubble-edited{font-size:10px;opacity:.7;margin-left:4px}
+  .chat-bubble-toolbar{position:absolute;top:-14px;display:flex;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:2px;opacity:0;box-shadow:0 4px 14px -6px rgba(0,0,0,.3);z-index:5}
+  .chat-bubble-row.me .chat-bubble-toolbar{right:0}
+  .chat-bubble-row.them .chat-bubble-toolbar{left:0}
+  .chat-bubble-row:hover .chat-bubble-toolbar{opacity:1}
+  .chat-bubble-toolbar button{background:none;border:none;font-size:13px;cursor:pointer;padding:4px 6px;border-radius:5px;line-height:1}
+  .chat-bubble-toolbar button:hover{background:var(--bg)}
+  .chat-bubble-reactions{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap}
+  .chat-bubble-reaction{background:var(--card);border:1px solid var(--line);border-radius:99px;font-size:11px;padding:1px 7px;cursor:pointer;display:flex;align-items:center;gap:3px}
+  .chat-bubble-reaction.mine{border-color:var(--brand)}
+  .chat-bubble-star{font-size:10px;margin-left:4px}
+  .chat-bubble-ticks{font-size:11px;margin-left:3px}
+  .chat-bubble-ticks.read{color:#34b7f1}
+  .chat-attach-wrap{position:relative;flex-shrink:0}
+  .chat-attach-menu{position:absolute;bottom:46px;left:0;width:180px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px -10px rgba(0,0,0,.35);padding:6px;z-index:20}
+  .chat-attach-menu button{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;padding:9px 10px;font-size:12.5px;color:var(--ink);cursor:pointer;border-radius:8px}
+  .chat-attach-menu button:hover{background:var(--bg)}
+  .chat-attachment-img{max-width:220px;border-radius:10px;display:block;margin-bottom:4px;cursor:pointer}
+  .chat-attachment-doc{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(0,0,0,.06);border-radius:8px;margin-bottom:4px;text-decoration:none;color:inherit}
+  .chat-bubble-row.me .chat-attachment-doc{background:rgba(0,0,0,.14)}
+  .chat-attachment-doc-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+  .chat-rec-row{display:flex;align-items:center;gap:8px;flex:1}
+  .chat-rec-timer{font-size:12px;color:var(--danger);font-weight:700}
+  .chat-group-info-photo{width:72px;height:72px;border-radius:50%;object-fit:cover;background:#7c3aed;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;flex-shrink:0}
+  .chat-group-member-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .chat-group-member-row:last-child{border-bottom:none}
+  .chat-group-admin-badge{font-size:10px;font-weight:800;color:var(--brand-ink);background:rgba(255,80,1,.16);border-radius:99px;padding:2px 8px;margin-left:6px}
+  .chat-wallpaper-swatch{width:34px;height:34px;border-radius:8px;border:2px solid transparent;cursor:pointer;flex-shrink:0}
+  .chat-wallpaper-swatch.active{border-color:var(--brand)}
+  .chat-disappear-badge{font-size:10.5px;color:var(--sub);display:flex;align-items:center;gap:3px}
+
   .faq-item{padding:14px;border-bottom:1px solid var(--line)}
   .faq-item:last-child{border-bottom:none}
   .faq-q{font-weight:700;font-size:14px;margin-bottom:4px}
@@ -818,7 +876,12 @@
     <div id="view-chat" class="hidden">
       <div class="page-head">
         <h2>Team Chat</h2>
-        <button class="btn" id="chatNewBtn">+ New Chat</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn secondary" id="chatSearchAllBtn" style="padding:8px 12px;font-size:13px" title="Search all chats">🔍 Search</button>
+          <button class="btn secondary" id="chatStarredBtn" style="padding:8px 12px;font-size:13px" title="Starred messages">⭐ Starred</button>
+          <button class="btn secondary" id="chatBroadcastBtn" style="padding:8px 12px;font-size:13px" title="Broadcast lists">📢 Broadcast</button>
+          <button class="btn" id="chatNewBtn">+ New Chat</button>
+        </div>
       </div>
       <div class="page-sub" style="margin-top:-14px">Message anyone on staff directly, or start a group — private between the people in the chat, no one else (including admins) can see it.</div>
       <div class="chat-lock-screen hidden" id="chatLockScreen">
@@ -969,7 +1032,8 @@
   var ANON_KEY = "sb_publishable_KrWpU9UQxuE0P5GeUXLs3Q_SVvPMGYT";
   var FN_URL = SUPABASE_URL + "/functions/v1/deleg-api";
 
-  var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tickets: [], ticketComments: {}, buyerVisits: [], buyerNotifyList: [], buyerVisitAlertStaff: [], notices: [], holidays: [], notifications: [], settings: { notifications_enabled: true, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true }, tab: "mine", ticketTab: "mine", helpSlipTab: "mine", view: "home", demo: false, chatThreads: [], chatActiveThread: null, chatMessages: [], demoChat: { threads: [], members: [], messages: [] } };
+  var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tickets: [], ticketComments: {}, buyerVisits: [], buyerNotifyList: [], buyerVisitAlertStaff: [], notices: [], holidays: [], notifications: [], settings: { notifications_enabled: true, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true }, tab: "mine", ticketTab: "mine", helpSlipTab: "mine", view: "home", demo: false, chatThreads: [], chatActiveThread: null, chatMessages: [], demoChat: { threads: [], members: [], messages: [], reactions: [], stars: [], broadcastLists: [] },
+    chatReplyTo: null, chatEditingId: null, chatShowArchived: false, chatWallpaper: {}, chatThreadFilter: "", chatMsgFilter: "", chatInChatSearchOpen: false, chatUnlockedThisSession: false, presenceHeartbeatHandle: null };
 
   function api(action, payload) {
     if (state.demo) return demoApi(action, payload || {});
@@ -1227,7 +1291,10 @@
           }
           case "getChatThreads": {
             var cMyId = p.doc_id;
-            var cMem = state.demoChat.members.filter(function (m) { return m.doc_id === cMyId && !m.hidden; });
+            var cMemAll = state.demoChat.members.filter(function (m) { return m.doc_id === cMyId; });
+            var cMem = cMemAll.filter(function (m) { return !m.hidden; });
+            var myMemberByThread = {};
+            cMemAll.forEach(function (m) { myMemberByThread[m.thread_id] = m; });
             var cThreadIds = cMem.map(function (m) { return m.thread_id; });
             var cThreads = state.demoChat.threads.filter(function (t) { return cThreadIds.indexOf(t.id) !== -1; });
             var cResult = cThreads.map(function (t) {
@@ -1241,7 +1308,15 @@
               var tMsgs = state.demoChat.messages.filter(function (m) { return m.thread_id === t.id; }).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
               var last = tMsgs[0];
               var lockerDoer = t.locked_by ? state.doers.find(function (d) { return d.doc_id === t.locked_by; }) : null;
-              return { id: t.id, type: t.type, name: displayName, member_doc_ids: memberDocIds, last_text: last ? last.text : "", last_sender_name: last ? last.sender_name : "", last_at: last ? last.created_at : t.created_at, locked_by: t.locked_by || null, locked_at: t.locked_at || null, locked_by_name: lockerDoer ? (lockerDoer.delegation_name || lockerDoer.name) : (t.locked_by || null) };
+              var myM = myMemberByThread[t.id] || {};
+              return {
+                id: t.id, type: t.type, name: displayName, member_doc_ids: memberDocIds,
+                last_text: last ? last.text : "", last_sender_name: last ? last.sender_name : "", last_at: last ? last.created_at : t.created_at,
+                locked_by: t.locked_by || null, locked_at: t.locked_at || null, locked_by_name: lockerDoer ? (lockerDoer.delegation_name || lockerDoer.name) : (t.locked_by || null),
+                muted: !!myM.muted, archived: !!myM.archived, is_admin: !!myM.is_admin,
+                description: t.description || "", photo_url: t.photo_url || "", disappear_seconds: t.disappear_seconds || null,
+                created_by: t.created_by || null
+              };
             });
             cResult.sort(function (a, b) { return new Date(b.last_at) - new Date(a.last_at); });
             resolve(cResult);
@@ -1249,10 +1324,32 @@
           }
           case "getChatMessages": {
             var cMyId2 = p.doc_id;
+            var thrInfo = state.demoChat.threads.find(function (t) { return t.id === p.thread_id; });
+            if (thrInfo && thrInfo.disappear_seconds) {
+              var cutoffMs = Date.now() - thrInfo.disappear_seconds * 1000;
+              state.demoChat.messages = state.demoChat.messages.filter(function (m) { return m.thread_id !== p.thread_id || new Date(m.created_at).getTime() >= cutoffMs; });
+            }
             var visible = state.demoChat.messages.filter(function (m) {
               return m.thread_id === p.thread_id && (m.deleted_for || []).indexOf(cMyId2) === -1;
             });
-            resolve(visible.map(function (m) { return { id: m.id, thread_id: m.thread_id, sender_doc_id: m.sender_doc_id, sender_name: m.sender_name, text: m.text, created_at: m.created_at }; }));
+            var byIdDemo = {};
+            state.demoChat.messages.forEach(function (m) { byIdDemo[m.id] = m; });
+            var otherMembers = state.demoChat.members.filter(function (m) { return m.thread_id === p.thread_id && m.doc_id !== cMyId2; });
+            var otherReadTimes = otherMembers.map(function (m) { return m.last_read_at ? new Date(m.last_read_at).getTime() : 0; }).filter(function (t) { return !!t; });
+            resolve(visible.map(function (m) {
+              var isMine = m.sender_doc_id === cMyId2;
+              var readByAll = isMine && otherReadTimes.length > 0 && otherReadTimes.every(function (t) { return t >= new Date(m.created_at).getTime(); });
+              var replyMsg = m.reply_to_id && byIdDemo[m.reply_to_id] ? { id: byIdDemo[m.reply_to_id].id, sender_name: byIdDemo[m.reply_to_id].sender_name, text: byIdDemo[m.reply_to_id].text } : null;
+              var reacts = (state.demoChat.reactions || []).filter(function (r) { return r.message_id === m.id; }).map(function (r) { return { doc_id: r.doc_id, emoji: r.emoji }; });
+              var starred = (state.demoChat.stars || []).some(function (s) { return s.message_id === m.id && s.doc_id === cMyId2; });
+              return {
+                id: m.id, thread_id: m.thread_id, sender_doc_id: m.sender_doc_id, sender_name: m.sender_name, text: m.text, created_at: m.created_at,
+                reply_to: replyMsg, forwarded: !!m.forwarded, edited_at: m.edited_at || null,
+                pinned_at: m.pinned_at || null, pinned_by: m.pinned_by || null,
+                attachment_url: m.attachment_url || null, attachment_type: m.attachment_type || null, attachment_name: m.attachment_name || null, attachment_size: m.attachment_size || null,
+                reactions: reacts, starred: starred, read: isMine ? readByAll : undefined
+              };
+            }));
             break;
           }
           case "openDmThread": {
@@ -1273,9 +1370,9 @@
           }
           case "createChatGroup": {
             var gid = "CHTDEMO" + Math.random().toString(36).slice(2, 7).toUpperCase();
-            state.demoChat.threads.push({ id: gid, type: "group", name: p.name, created_at: new Date().toISOString() });
+            state.demoChat.threads.push({ id: gid, type: "group", name: p.name, created_at: new Date().toISOString(), created_by: p.created_by_doc_id });
             var allIds = Array.from(new Set([p.created_by_doc_id].concat(p.member_doc_ids || [])));
-            allIds.forEach(function (docId) { state.demoChat.members.push({ thread_id: gid, doc_id: docId, hidden: false }); });
+            allIds.forEach(function (docId) { state.demoChat.members.push({ thread_id: gid, doc_id: docId, hidden: false, is_admin: docId === p.created_by_doc_id }); });
             resolve({ thread_id: gid });
             break;
           }
@@ -1283,7 +1380,13 @@
             var lockedThread = state.demoChat.threads.find(function (t) { return t.id === p.thread_id; });
             if (lockedThread && lockedThread.locked_by) { reject(new Error("This chat is locked")); break; }
             var mid = "MSGDEMO" + Math.random().toString(36).slice(2, 7).toUpperCase();
-            state.demoChat.messages.push({ id: mid, thread_id: p.thread_id, sender_doc_id: p.sender_doc_id, sender_name: p.sender_name || "Someone", text: String(p.text || "").slice(0, 4000), deleted_for: [], created_at: new Date().toISOString() });
+            state.demoChat.messages.push({
+              id: mid, thread_id: p.thread_id, sender_doc_id: p.sender_doc_id, sender_name: p.sender_name || "Someone",
+              text: String(p.text || "").slice(0, 4000), deleted_for: [], created_at: new Date().toISOString(),
+              reply_to_id: p.reply_to_id || null,
+              attachment_url: p.attachment_base64 || null, attachment_type: p.attachment_kind || null, attachment_name: p.attachment_name || null,
+              attachment_size: p.attachment_base64 ? Math.floor((p.attachment_base64.length * 3) / 4) : null
+            });
             state.demoChat.members.forEach(function (m) { if (m.thread_id === p.thread_id) m.hidden = false; });
             resolve({ id: mid });
             break;
@@ -1371,6 +1474,219 @@
             break;
           }
 
+          case "editChatMessage": {
+            var emsg = state.demoChat.messages.find(function (m) { return m.id === p.message_id; });
+            if (!emsg) { reject(new Error("message not found")); break; }
+            if (emsg.sender_doc_id !== p.doc_id) { reject(new Error("only the sender can edit this message")); break; }
+            emsg.text = String(p.text || "").slice(0, 4000);
+            emsg.edited_at = new Date().toISOString();
+            resolve({});
+            break;
+          }
+          case "reactToChatMessage": {
+            state.demoChat.reactions = (state.demoChat.reactions || []).filter(function (r) { return !(r.message_id === p.message_id && r.doc_id === p.doc_id); });
+            if (p.emoji) state.demoChat.reactions.push({ message_id: p.message_id, doc_id: p.doc_id, emoji: p.emoji });
+            resolve({});
+            break;
+          }
+          case "starChatMessage": {
+            state.demoChat.stars = state.demoChat.stars || [];
+            if (!state.demoChat.stars.some(function (s) { return s.message_id === p.message_id && s.doc_id === p.doc_id; })) {
+              state.demoChat.stars.push({ message_id: p.message_id, doc_id: p.doc_id, starred_at: new Date().toISOString() });
+            }
+            resolve({});
+            break;
+          }
+          case "unstarChatMessage": {
+            state.demoChat.stars = (state.demoChat.stars || []).filter(function (s) { return !(s.message_id === p.message_id && s.doc_id === p.doc_id); });
+            resolve({});
+            break;
+          }
+          case "getStarredMessages": {
+            var starIds = (state.demoChat.stars || []).filter(function (s) { return s.doc_id === p.doc_id; }).map(function (s) { return s.message_id; });
+            var starredMsgs = starIds.map(function (id) { return state.demoChat.messages.find(function (m) { return m.id === id; }); }).filter(Boolean);
+            resolve(starredMsgs.map(function (m) {
+              var th = state.demoChat.threads.find(function (t) { return t.id === m.thread_id; });
+              return Object.assign({}, m, { thread_name: th ? (th.name || "Chat") : "Unknown" });
+            }));
+            break;
+          }
+          case "pinChatMessage": {
+            var pmsg = state.demoChat.messages.find(function (m) { return m.id === p.message_id; });
+            if (pmsg) { pmsg.pinned_at = new Date().toISOString(); pmsg.pinned_by = p.doc_id; }
+            resolve({});
+            break;
+          }
+          case "unpinChatMessage": {
+            var upmsg = state.demoChat.messages.find(function (m) { return m.id === p.message_id; });
+            if (upmsg) { upmsg.pinned_at = null; upmsg.pinned_by = null; }
+            resolve({});
+            break;
+          }
+          case "getPinnedMessages": {
+            resolve(state.demoChat.messages.filter(function (m) { return m.thread_id === p.thread_id && m.pinned_at; }));
+            break;
+          }
+          case "forwardChatMessage": {
+            var fmsg = state.demoChat.messages.find(function (m) { return m.id === p.message_id; });
+            if (!fmsg) { reject(new Error("message not found")); break; }
+            var fme = state.doers.find(function (d) { return d.doc_id === p.doc_id; });
+            var fName = fme ? (fme.delegation_name || fme.name) : "Someone";
+            var fSent = 0;
+            (p.to_thread_ids || []).forEach(function (tid) {
+              var isMember = state.demoChat.members.some(function (m) { return m.thread_id === tid && m.doc_id === p.doc_id; });
+              if (!isMember) return;
+              var tThread = state.demoChat.threads.find(function (t) { return t.id === tid; });
+              if (tThread && tThread.locked_by) return;
+              var fmid = "MSGDEMO" + Math.random().toString(36).slice(2, 7).toUpperCase();
+              state.demoChat.messages.push({ id: fmid, thread_id: tid, sender_doc_id: p.doc_id, sender_name: fName, text: fmsg.text || "", forwarded: true, deleted_for: [], created_at: new Date().toISOString(), attachment_url: fmsg.attachment_url || null, attachment_type: fmsg.attachment_type || null, attachment_name: fmsg.attachment_name || null, attachment_size: fmsg.attachment_size || null });
+              state.demoChat.members.forEach(function (m) { if (m.thread_id === tid) m.hidden = false; });
+              fSent++;
+            });
+            resolve({ sent: fSent });
+            break;
+          }
+          case "markChatRead": {
+            var rMem = state.demoChat.members.find(function (m) { return m.thread_id === p.thread_id && m.doc_id === p.doc_id; });
+            if (rMem) rMem.last_read_at = new Date().toISOString();
+            resolve({});
+            break;
+          }
+          case "searchChatMessages": {
+            var sMemberships = state.demoChat.members.filter(function (m) { return m.doc_id === p.doc_id && !m.hidden; }).map(function (m) { return m.thread_id; });
+            var q2 = (p.query || "").toLowerCase();
+            var sResults = state.demoChat.messages.filter(function (m) {
+              return sMemberships.indexOf(m.thread_id) !== -1 && (m.deleted_for || []).indexOf(p.doc_id) === -1 && (m.text || "").toLowerCase().indexOf(q2) !== -1;
+            }).sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); }).slice(0, 50);
+            resolve(sResults.map(function (m) {
+              var sTh = state.demoChat.threads.find(function (t) { return t.id === m.thread_id; });
+              return { id: m.id, thread_id: m.thread_id, sender_name: m.sender_name, text: m.text, created_at: m.created_at, thread_name: sTh ? (sTh.name || "Chat") : "Unknown" };
+            }));
+            break;
+          }
+          case "getChatGroupMembers": {
+            var gRows = state.demoChat.members.filter(function (m) { return m.thread_id === p.thread_id; });
+            resolve(gRows.map(function (m) {
+              var gd = state.doers.find(function (d) { return d.doc_id === m.doc_id; });
+              return { doc_id: m.doc_id, is_admin: !!m.is_admin, joined_at: m.joined_at || new Date().toISOString(), name: gd ? (gd.delegation_name || gd.name) : m.doc_id, avatar_url: gd ? gd.avatar_url : null };
+            }));
+            break;
+          }
+          case "updateChatGroupInfo": {
+            var giThread = state.demoChat.threads.find(function (t) { return t.id === p.thread_id; });
+            if (!giThread) { reject(new Error("thread not found")); break; }
+            var giMem = state.demoChat.members.find(function (m) { return m.thread_id === p.thread_id && m.doc_id === p.doc_id; });
+            if (!giMem || !giMem.is_admin) { reject(new Error("only group admins can change group info")); break; }
+            if (typeof p.name === "string" && p.name.trim()) giThread.name = p.name.trim().slice(0, 120);
+            if (typeof p.description === "string") giThread.description = p.description.slice(0, 500);
+            if (p.photo_base64) giThread.photo_url = p.photo_base64;
+            resolve({});
+            break;
+          }
+          case "addChatGroupMembers": {
+            var amThread = state.demoChat.threads.find(function (t) { return t.id === p.thread_id; });
+            if (!amThread || amThread.type !== "group") { reject(new Error("only group chats support adding members")); break; }
+            var amMem = state.demoChat.members.find(function (m) { return m.thread_id === p.thread_id && m.doc_id === p.doc_id; });
+            if (!amMem || !amMem.is_admin) { reject(new Error("only group admins can add members")); break; }
+            var existingIds = state.demoChat.members.filter(function (m) { return m.thread_id === p.thread_id; }).map(function (m) { return m.doc_id; });
+            var toAdd = (p.add_doc_ids || []).filter(function (id) { return existingIds.indexOf(id) === -1; });
+            toAdd.forEach(function (id) { state.demoChat.members.push({ thread_id: p.thread_id, doc_id: id, hidden: false }); });
+            resolve({ added: toAdd.length });
+            break;
+          }
+          case "removeChatGroupMember": {
+            if (p.remove_doc_id === p.doc_id) { reject(new Error("use leaveChatThread to remove yourself")); break; }
+            var rmMem = state.demoChat.members.find(function (m) { return m.thread_id === p.thread_id && m.doc_id === p.doc_id; });
+            if (!rmMem || !rmMem.is_admin) { reject(new Error("only group admins can remove members")); break; }
+            state.demoChat.members = state.demoChat.members.filter(function (m) { return !(m.thread_id === p.thread_id && m.doc_id === p.remove_doc_id); });
+            resolve({});
+            break;
+          }
+          case "setChatGroupAdmin": {
+            var saMem = state.demoChat.members.find(function (m) { return m.thread_id === p.thread_id && m.doc_id === p.doc_id; });
+            if (!saMem || !saMem.is_admin) { reject(new Error("only group admins can change admin status")); break; }
+            if (!p.is_admin) {
+              var admins = state.demoChat.members.filter(function (m) { return m.thread_id === p.thread_id && m.is_admin; });
+              if (admins.length <= 1 && admins[0] && admins[0].doc_id === p.target_doc_id) { reject(new Error("a group needs at least one admin")); break; }
+            }
+            var tgtMem = state.demoChat.members.find(function (m) { return m.thread_id === p.thread_id && m.doc_id === p.target_doc_id; });
+            if (tgtMem) tgtMem.is_admin = !!p.is_admin;
+            resolve({});
+            break;
+          }
+          case "muteChatThread": {
+            var muMem = state.demoChat.members.find(function (m) { return m.thread_id === p.thread_id && m.doc_id === p.doc_id; });
+            if (muMem) muMem.muted = !!p.muted;
+            resolve({});
+            break;
+          }
+          case "archiveChatThread": {
+            var arMem = state.demoChat.members.find(function (m) { return m.thread_id === p.thread_id && m.doc_id === p.doc_id; });
+            if (arMem) arMem.archived = !!p.archived;
+            resolve({});
+            break;
+          }
+          case "setChatDisappearing": {
+            var allowedSecs = [null, 86400, 604800, 7776000];
+            var secVal = (p.seconds === undefined || p.seconds === "") ? null : p.seconds;
+            if (allowedSecs.indexOf(secVal) === -1) { reject(new Error("invalid duration")); break; }
+            var sdThread = state.demoChat.threads.find(function (t) { return t.id === p.thread_id; });
+            if (sdThread) sdThread.disappear_seconds = secVal;
+            resolve({});
+            break;
+          }
+          case "createBroadcastList": {
+            var blId = "BCLDEMO" + Math.random().toString(36).slice(2, 7).toUpperCase();
+            state.demoChat.broadcastLists = state.demoChat.broadcastLists || [];
+            state.demoChat.broadcastLists.push({ id: blId, owner_doc_id: p.owner_doc_id, name: p.name, member_doc_ids: p.member_doc_ids || [], created_at: new Date().toISOString() });
+            resolve({ id: blId });
+            break;
+          }
+          case "getBroadcastLists": {
+            resolve((state.demoChat.broadcastLists || []).filter(function (l) { return l.owner_doc_id === p.owner_doc_id; }).sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); }));
+            break;
+          }
+          case "deleteBroadcastList": {
+            state.demoChat.broadcastLists = (state.demoChat.broadcastLists || []).filter(function (l) { return !(l.id === p.id && l.owner_doc_id === p.owner_doc_id); });
+            resolve({});
+            break;
+          }
+          case "sendBroadcast": {
+            var bList = (state.demoChat.broadcastLists || []).find(function (l) { return l.id === p.list_id && l.owner_doc_id === p.owner_doc_id; });
+            if (!bList) { reject(new Error("broadcast list not found")); break; }
+            var bMe = state.doers.find(function (d) { return d.doc_id === p.owner_doc_id; });
+            var bName = bMe ? (bMe.delegation_name || bMe.name) : "Someone";
+            var bSent = 0;
+            (bList.member_doc_ids || []).forEach(function (otherId) {
+              if (otherId === p.owner_doc_id) return;
+              var mine = state.demoChat.members.filter(function (m) { return m.doc_id === p.owner_doc_id; }).map(function (m) { return m.thread_id; });
+              var theirs = state.demoChat.members.filter(function (m) { return m.doc_id === otherId; }).map(function (m) { return m.thread_id; });
+              var shared = mine.filter(function (tid) { return theirs.indexOf(tid) !== -1; });
+              var dmT = shared.map(function (tid) { return state.demoChat.threads.find(function (t) { return t.id === tid; }); }).find(function (t) { return t && t.type === "dm"; });
+              var dmTid = dmT ? dmT.id : null;
+              if (!dmTid) {
+                dmTid = "CHTDEMO" + Math.random().toString(36).slice(2, 7).toUpperCase();
+                state.demoChat.threads.push({ id: dmTid, type: "dm", created_at: new Date().toISOString() });
+                state.demoChat.members.push({ thread_id: dmTid, doc_id: p.owner_doc_id, hidden: false }, { thread_id: dmTid, doc_id: otherId, hidden: false });
+              }
+              var lockedT = state.demoChat.threads.find(function (t) { return t.id === dmTid; });
+              if (lockedT && lockedT.locked_by) return;
+              var bMid = "MSGDEMO" + Math.random().toString(36).slice(2, 7).toUpperCase();
+              state.demoChat.messages.push({ id: bMid, thread_id: dmTid, sender_doc_id: p.owner_doc_id, sender_name: bName, text: String(p.text || "").slice(0, 4000), deleted_for: [], created_at: new Date().toISOString() });
+              state.demoChat.members.forEach(function (m) { if (m.thread_id === dmTid) m.hidden = false; });
+              bSent++;
+            });
+            resolve({ sent: bSent });
+            break;
+          }
+          case "heartbeat": {
+            var hbDoer = state.doers.find(function (d) { return d.doc_id === p.doc_id; });
+            if (hbDoer) hbDoer.last_active_at = new Date().toISOString();
+            if (state.doer && state.doer.doc_id === p.doc_id) state.doer.last_active_at = new Date().toISOString();
+            resolve({});
+            break;
+          }
+
           default: resolve(null);
         }
       }, 250);
@@ -1439,12 +1755,12 @@
     ];
     var chatThreads = [
       { id: "CHTDEMO1", type: "dm", created_at: new Date(now - 3 * h).toISOString() },
-      { id: "CHTDEMO2", type: "group", name: "Sales + Production", created_at: new Date(now - 26 * h).toISOString() }
+      { id: "CHTDEMO2", type: "group", name: "Sales + Production", created_by: "demo_admin", created_at: new Date(now - 26 * h).toISOString() }
     ];
     var chatMembers = [
       { thread_id: "CHTDEMO1", doc_id: "demo_admin", hidden: false },
       { thread_id: "CHTDEMO1", doc_id: "anita_sales", hidden: false },
-      { thread_id: "CHTDEMO2", doc_id: "demo_admin", hidden: false },
+      { thread_id: "CHTDEMO2", doc_id: "demo_admin", hidden: false, is_admin: true },
       { thread_id: "CHTDEMO2", doc_id: "anita_sales", hidden: false },
       { thread_id: "CHTDEMO2", doc_id: "rohit_prod", hidden: false }
     ];
@@ -1613,6 +1929,7 @@
     state.notifications = [];
     state.chatUnlockedThisSession = false;
     stopNotifPolling();
+    stopChatPresenceHeartbeat();
     try { localStorage.removeItem("deleg_doer"); } catch (e) {}
     document.body.classList.remove("demo-mode");
     document.getElementById("demoBanner").classList.add("hidden");
@@ -1721,6 +2038,7 @@
     goToView("home");
     loadAll();
     startNotifPolling();
+    startChatPresenceHeartbeat();
   }
 
   // Sidebar sections an admin can hide per employee (Home always stays —
@@ -1837,6 +2155,21 @@
   }
   function stopNotifPolling() {
     if (notifPollHandle) { clearInterval(notifPollHandle); notifPollHandle = null; }
+  }
+
+  // Presence ("online"/"last seen") — no realtime/websocket, just a
+  // last_active_at timestamp on the doer row bumped every ~30s while the
+  // app is open (not just while Team Chat is open), so DM threads can show
+  // an up-to-date status without the user having to be inside the chat.
+  var CHAT_HEARTBEAT_MS = 30000;
+  function startChatPresenceHeartbeat() {
+    stopChatPresenceHeartbeat();
+    function beat() { if (state.doer) api("heartbeat", { doc_id: state.doer.doc_id }).catch(function () {}); }
+    beat();
+    state.presenceHeartbeatHandle = setInterval(beat, CHAT_HEARTBEAT_MS);
+  }
+  function stopChatPresenceHeartbeat() {
+    if (state.presenceHeartbeatHandle) { clearInterval(state.presenceHeartbeatHandle); state.presenceHeartbeatHandle = null; }
   }
 
   // Creates one dashboard-notification row per attendee doc_id, counting
@@ -3827,29 +4160,87 @@
       return;
     }
     var q = (state.chatThreadFilter || "").trim().toLowerCase();
-    var visibleThreads = !q ? state.chatThreads : state.chatThreads.filter(function (t) {
+    var filtered = !q ? state.chatThreads : state.chatThreads.filter(function (t) {
       return (t.name || "").toLowerCase().indexOf(q) !== -1;
     });
-    if (!visibleThreads.length) {
+    if (!filtered.length) {
       wrap.innerHTML = '<div class="chat-thread-empty">No chats match "' + esc(state.chatThreadFilter) + '".</div>';
       return;
     }
-    wrap.innerHTML = visibleThreads.map(function (t) {
+    var activeThreads = filtered.filter(function (t) { return !t.archived; });
+    var archivedThreads = filtered.filter(function (t) { return t.archived; });
+
+    function rowHtml(t) {
       var isActive = t.id === state.chatActiveThread;
       var preview = t.last_text ? ((t.last_sender_name ? esc(t.last_sender_name) + ": " : "") + esc(t.last_text.slice(0, 40))) : "No messages yet";
       var timeLabel = esc(chatThreadTimeLabel(t.last_at));
+      var menuOpen = state.chatThreadMenuOpenId === t.id;
       return '<div class="chat-thread-row' + (isActive ? " active" : "") + '" data-id="' + esc(t.id) + '">' +
         chatAvatarHtml(t) +
-        '<div class="chat-thread-info"><div class="chat-thread-top"><div class="chat-thread-name">' + esc(t.name || "Unnamed") + (t.type === "group" ? " 👥" : "") + (t.locked_by ? " 🔒" : "") + '</div><div class="chat-thread-time">' + timeLabel + '</div></div>' +
-        '<div class="chat-thread-preview">' + preview + '</div></div></div>';
-    }).join("");
+        '<div class="chat-thread-info"><div class="chat-thread-top"><div class="chat-thread-name">' + esc(t.name || "Unnamed") + (t.type === "group" ? " 👥" : "") + (t.locked_by ? " 🔒" : "") + (t.muted ? ' <span class="chat-thread-muted-icon">🔕</span>' : "") + '</div>' +
+        '<div style="display:flex;align-items:center;gap:2px"><div class="chat-thread-time">' + timeLabel + '</div>' +
+        '<button type="button" class="chat-thread-menu-btn" data-menu-id="' + esc(t.id) + '">⋮</button></div></div>' +
+        '<div class="chat-thread-preview">' + preview + '</div></div>' +
+        (menuOpen ? chatThreadMenuHtml(t) : "") +
+        '</div>';
+    }
+
+    var html = activeThreads.map(rowHtml).join("");
+    if (archivedThreads.length) {
+      html += '<div class="chat-archived-toggle" id="chatArchivedToggle"><span>🗄 Archived (' + archivedThreads.length + ')</span><span>' + (state.chatShowArchived ? "▲" : "▼") + '</span></div>';
+      if (state.chatShowArchived) html += archivedThreads.map(rowHtml).join("");
+    }
+    wrap.innerHTML = html;
+
     wrap.querySelectorAll(".chat-thread-row").forEach(function (row) {
-      row.addEventListener("click", function () { selectChatThread(row.dataset.id); });
+      row.addEventListener("click", function (e) {
+        if (e.target.closest(".chat-thread-menu-btn") || e.target.closest(".chat-thread-menu")) return;
+        selectChatThread(row.dataset.id);
+      });
     });
+    wrap.querySelectorAll(".chat-thread-menu-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        state.chatThreadMenuOpenId = (state.chatThreadMenuOpenId === btn.dataset.menuId) ? null : btn.dataset.menuId;
+        renderChatThreadList();
+      });
+    });
+    wrap.querySelectorAll("[data-thread-action]").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var tid = btn.dataset.threadId, action = btn.dataset.threadAction;
+        state.chatThreadMenuOpenId = null;
+        if (action === "mute" || action === "unmute") {
+          api("muteChatThread", { thread_id: tid, doc_id: state.doer.doc_id, muted: action === "mute" }).then(function () { loadChatThreads(false); }).catch(function (er) { toast(er.message || "Couldn't update"); });
+        } else if (action === "archive" || action === "unarchive") {
+          api("archiveChatThread", { thread_id: tid, doc_id: state.doer.doc_id, archived: action === "archive" }).then(function () { loadChatThreads(false); }).catch(function (er) { toast(er.message || "Couldn't update"); });
+        } else if (action === "delete") {
+          confirmHideChatThread(tid);
+        }
+        renderChatThreadList();
+      });
+    });
+    var archToggle = document.getElementById("chatArchivedToggle");
+    if (archToggle) archToggle.addEventListener("click", function () { state.chatShowArchived = !state.chatShowArchived; renderChatThreadList(); });
   }
+  function chatThreadMenuHtml(t) {
+    return '<div class="chat-thread-menu">' +
+      '<button type="button" data-thread-action="' + (t.muted ? "unmute" : "mute") + '" data-thread-id="' + esc(t.id) + '">' + (t.muted ? "🔔 Unmute" : "🔕 Mute") + '</button>' +
+      '<button type="button" data-thread-action="' + (t.archived ? "unarchive" : "archive") + '" data-thread-id="' + esc(t.id) + '">' + (t.archived ? "📤 Unarchive" : "🗄 Archive") + '</button>' +
+      '<button type="button" data-thread-action="delete" data-thread-id="' + esc(t.id) + '">🗑 Delete chat</button>' +
+      '</div>';
+  }
+  document.addEventListener("click", function (e) {
+    if (state.chatThreadMenuOpenId && !e.target.closest(".chat-thread-menu") && !e.target.closest(".chat-thread-menu-btn")) {
+      state.chatThreadMenuOpenId = null;
+      renderChatThreadList();
+    }
+  });
 
   function selectChatThread(threadId) {
     state.chatActiveThread = threadId;
+    state.chatInChatSearchOpen = false;
+    state.chatMsgFilter = "";
     renderChatThreadList();
     stopChatMsgPoll();
     loadChatMessages(true);
@@ -3872,33 +4263,173 @@
       // focus) completely alone.
       if (showLoading) renderChatMain(false);
       else updateChatMessagesOnly();
+      api("markChatRead", { thread_id: threadId, doc_id: state.doer.doc_id }).catch(function () {});
     }).catch(function () {});
+  }
+
+  var CHAT_REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+
+  function chatAttachmentHtml(m) {
+    if (!m.attachment_url) return "";
+    if (m.attachment_type === "image") {
+      return '<img class="chat-attachment-img" src="' + esc(m.attachment_url) + '" alt="" data-att-view="' + esc(m.attachment_url) + '" />';
+    }
+    if (m.attachment_type === "voice") {
+      return '<audio controls src="' + esc(m.attachment_url) + '" style="max-width:220px;display:block;margin-bottom:4px"></audio>';
+    }
+    return '<a class="chat-attachment-doc" href="' + esc(m.attachment_url) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 <span class="chat-attachment-doc-name">' + esc(m.attachment_name || "Document") + '</span></a>';
   }
 
   function chatMessagesHtml() {
     if (!state.chatMessages.length) return '<div class="chat-thread-empty">No messages yet — say hello 👋</div>';
     var myId = state.doer.doc_id;
+    var byId = {};
+    state.chatMessages.forEach(function (m) { byId[m.id] = m; });
+    var filterQ = (state.chatMsgFilter || "").trim().toLowerCase();
+    var visibleMsgs = !filterQ ? state.chatMessages : state.chatMessages.filter(function (m) { return (m.text || "").toLowerCase().indexOf(filterQ) !== -1; });
+    if (filterQ && !visibleMsgs.length) return '<div class="chat-thread-empty">No messages match "' + esc(state.chatMsgFilter) + '".</div>';
     var html = "";
     var prev = null;
-    state.chatMessages.forEach(function (m) {
+    visibleMsgs.forEach(function (m) {
       var mine = m.sender_doc_id === myId;
       if (!prev || chatDayLabel(prev.created_at) !== chatDayLabel(m.created_at)) {
         html += '<div class="chat-date-sep"><span>' + esc(chatDayLabel(m.created_at)) + '</span></div>';
         prev = null; // a date break always starts a fresh visual group
       }
       var grouped = chatGroupsWithPrev(m, prev);
-      html += '<div class="chat-bubble-row ' + (mine ? "me" : "them") + (grouped ? " grouped" : "") + '">' +
+      var reply = m.reply_to || (m.reply_to_id && byId[m.reply_to_id] ? { id: byId[m.reply_to_id].id, sender_name: byId[m.reply_to_id].sender_name, text: byId[m.reply_to_id].text } : null);
+      var reactions = m.reactions || [];
+      var reactCounts = {};
+      reactions.forEach(function (r) { reactCounts[r.emoji] = (reactCounts[r.emoji] || 0) + 1; });
+      var myReaction = reactions.find(function (r) { return r.doc_id === myId; });
+      var isPinned = !!m.pinned_at;
+      var isStarred = !!m.starred;
+      html += '<div class="chat-bubble-row ' + (mine ? "me" : "them") + (grouped ? " grouped" : "") + '" data-msg-id="' + esc(m.id) + '">' +
         (!mine && !grouped ? '<div class="chat-bubble-sender">' + esc(m.sender_name) + '</div>' : "") +
-        '<div class="chat-bubble">' + esc(m.text) +
-        '<button class="chat-bubble-del" data-id="' + esc(m.id) + '" data-mine="' + (mine ? "1" : "0") + '" title="Delete">🗑</button>' +
-        '</div><div class="chat-bubble-time">' + esc(fmtChatTime(m.created_at)) + '</div></div>';
+        '<div class="chat-bubble">' +
+        '<div class="chat-bubble-toolbar">' +
+        '<button type="button" data-act="reply" title="Reply">↩️</button>' +
+        '<button type="button" data-act="forward" title="Forward">➡️</button>' +
+        '<button type="button" data-act="react" title="React">😊</button>' +
+        '<button type="button" data-act="' + (isStarred ? "unstar" : "star") + '" title="Star">' + (isStarred ? "⭐" : "☆") + '</button>' +
+        '<button type="button" data-act="' + (isPinned ? "unpin" : "pin") + '" title="Pin">📌</button>' +
+        (mine && !m.attachment_url ? '<button type="button" data-act="edit" title="Edit">✏️</button>' : "") +
+        '<button type="button" class="chat-bubble-del" data-act="delete" title="Delete">🗑</button>' +
+        '</div>' +
+        (m.forwarded ? '<div class="chat-bubble-forwarded">↪ Forwarded</div>' : "") +
+        (reply ? '<div class="chat-bubble-reply-quote" data-jump-id="' + esc(reply.id) + '"><span class="chat-bubble-reply-name">' + esc(reply.sender_name) + '</span><span class="chat-bubble-reply-text">' + esc((reply.text || "[attachment]").slice(0, 80)) + '</span></div>' : "") +
+        chatAttachmentHtml(m) +
+        (m.text ? esc(m.text) : "") +
+        (m.edited_at ? '<span class="chat-bubble-edited">(edited)</span>' : "") +
+        '</div>' +
+        (reactions.length ? '<div class="chat-bubble-reactions">' + Object.keys(reactCounts).map(function (em) {
+          return '<span class="chat-bubble-reaction' + (myReaction && myReaction.emoji === em ? " mine" : "") + '" data-react-emoji="' + esc(em) + '">' + em + " " + reactCounts[em] + '</span>';
+        }).join("") + '</div>' : "") +
+        '<div class="chat-bubble-time">' + esc(fmtChatTime(m.created_at)) +
+        (mine ? '<span class="chat-bubble-ticks' + (m.read ? " read" : "") + '">' + (m.read ? "✓✓" : "✓") + '</span>' : "") +
+        '</div></div>';
       prev = m;
     });
     return html;
   }
 
+  function toggleReactionPicker(btn, msg) {
+    var existing = document.getElementById("chatReactPicker");
+    if (existing) {
+      var wasSameMsg = existing.dataset.msgId === msg.id;
+      existing.remove();
+      if (wasSameMsg) return;
+    }
+    var panel = document.createElement("div");
+    panel.id = "chatReactPicker";
+    panel.className = "chat-emoji-panel";
+    panel.style.position = "fixed";
+    panel.dataset.msgId = msg.id;
+    var rect = btn.getBoundingClientRect();
+    panel.style.top = (rect.bottom + 4) + "px";
+    panel.style.left = Math.max(8, rect.left - 100) + "px";
+    panel.innerHTML = CHAT_REACTION_EMOJIS.map(function (e) { return '<button type="button" class="chat-emoji-opt">' + e + "</button>"; }).join("");
+    document.body.appendChild(panel);
+    panel.querySelectorAll(".chat-emoji-opt").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var mine = (msg.reactions || []).find(function (r) { return r.doc_id === state.doer.doc_id && r.emoji === b.textContent; });
+        api("reactToChatMessage", { message_id: msg.id, doc_id: state.doer.doc_id, emoji: mine ? "" : b.textContent }).then(function () { loadChatMessages(false); }).catch(function () {});
+        panel.remove();
+      });
+    });
+  }
+  document.addEventListener("click", function (e) {
+    var p = document.getElementById("chatReactPicker");
+    if (p && !p.contains(e.target) && (!e.target.dataset || e.target.dataset.act !== "react")) p.remove();
+  });
+
+  function startChatReply(msg) {
+    state.chatEditingId = null;
+    state.chatEditingText = "";
+    state.chatReplyTo = { id: msg.id, sender_name: msg.sender_name, text: msg.text || "[attachment]" };
+    renderChatMain(false);
+  }
+  function startChatEdit(msg) {
+    state.chatReplyTo = null;
+    state.chatEditingId = msg.id;
+    state.chatEditingText = msg.text || "";
+    renderChatMain(false);
+  }
+  function cancelChatReplyOrEdit() {
+    state.chatReplyTo = null;
+    state.chatEditingId = null;
+    state.chatEditingText = "";
+    renderChatMain(false);
+  }
+
+  function wireChatBubbleActions(box) {
+    if (!box) return;
+    box.querySelectorAll(".chat-bubble-row").forEach(function (row) {
+      var msgId = row.dataset.msgId;
+      var msg = state.chatMessages.find(function (m) { return m.id === msgId; });
+      if (!msg) return;
+      row.querySelectorAll("[data-act]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var act = btn.dataset.act;
+          if (act === "delete") { confirmDeleteChatMessage(msg.id, msg.sender_doc_id === state.doer.doc_id); return; }
+          if (act === "reply") { startChatReply(msg); return; }
+          if (act === "forward") { openForwardMessageModal(msg); return; }
+          if (act === "star" || act === "unstar") {
+            api(act === "star" ? "starChatMessage" : "unstarChatMessage", { message_id: msg.id, doc_id: state.doer.doc_id }).then(function () { loadChatMessages(false); }).catch(function (er) { toast(er.message || "Couldn't update"); });
+            return;
+          }
+          if (act === "pin" || act === "unpin") {
+            api(act === "pin" ? "pinChatMessage" : "unpinChatMessage", { thread_id: state.chatActiveThread, message_id: msg.id, doc_id: state.doer.doc_id }).then(function () { loadChatMessages(false); }).catch(function (er) { toast(er.message || "Couldn't update"); });
+            return;
+          }
+          if (act === "edit") { startChatEdit(msg); return; }
+          if (act === "react") { toggleReactionPicker(btn, msg); return; }
+        });
+      });
+      row.querySelectorAll(".chat-bubble-reaction").forEach(function (pill) {
+        pill.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var emoji = pill.dataset.reactEmoji;
+          var mine = (msg.reactions || []).find(function (r) { return r.doc_id === state.doer.doc_id && r.emoji === emoji; });
+          api("reactToChatMessage", { message_id: msg.id, doc_id: state.doer.doc_id, emoji: mine ? "" : emoji }).then(function () { loadChatMessages(false); }).catch(function () {});
+        });
+      });
+      var quote = row.querySelector(".chat-bubble-reply-quote");
+      if (quote) quote.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var jumpId = quote.dataset.jumpId;
+        var target = box.querySelector('[data-msg-id="' + jumpId + '"]');
+        if (target) { target.scrollIntoView({ behavior: "smooth", block: "center" }); target.style.outline = "2px solid var(--brand)"; setTimeout(function () { target.style.outline = ""; }, 1200); }
+      });
+      var img = row.querySelector("[data-att-view]");
+      if (img) img.addEventListener("click", function (e) { e.stopPropagation(); window.open(img.getAttribute("data-att-view"), "_blank"); });
+    });
+  }
+
   // Refreshes just the message list (used by the polling tick) — rebinds the
-  // per-message delete buttons and preserves "was I scrolled to the bottom"
+  // per-message action buttons and preserves "was I scrolled to the bottom"
   // the same way the full render does, but never touches #chatInputBox.
   function updateChatMessagesOnly() {
     var box = document.getElementById("chatMessagesBox");
@@ -3906,12 +4437,150 @@
     var wasNearBottom = (box.scrollHeight - box.scrollTop - box.clientHeight) < 60;
     box.innerHTML = chatMessagesHtml();
     if (wasNearBottom) box.scrollTop = box.scrollHeight;
-    box.querySelectorAll(".chat-bubble-del").forEach(function (btn) {
-      btn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        confirmDeleteChatMessage(btn.dataset.id, btn.dataset.mine === "1");
-      });
+    wireChatBubbleActions(box);
+    updateChatPinnedBar();
+  }
+
+  // ---- presence, disappearing-message badge, wallpaper, pinned bar helpers ----
+  function chatRelativeTime(ms) {
+    var diff = Math.max(0, Date.now() - ms);
+    var mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return mins + "m ago";
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + "h ago";
+    var days = Math.floor(hrs / 24);
+    return days + "d ago";
+  }
+  function chatPresenceHtml(thread) {
+    if (!thread || thread.type !== "dm") return "";
+    var otherId = (thread.member_doc_ids || []).find(function (id) { return id !== state.doer.doc_id; });
+    var other = otherId ? (state.doers || []).find(function (d) { return d.doc_id === otherId; }) : null;
+    if (!other) return "";
+    var lastActive = other.last_active_at ? new Date(other.last_active_at).getTime() : 0;
+    var online = !!lastActive && (Date.now() - lastActive) < 45000;
+    var label = online ? "Online" : (lastActive ? "Last seen " + chatRelativeTime(lastActive) : "Offline");
+    return '<div class="chat-main-head-sub"><span class="chat-presence-dot' + (online ? " online" : "") + '"></span>' + esc(label) + '</div>';
+  }
+  function chatDisappearLabel(seconds) {
+    if (seconds === 86400) return "24h";
+    if (seconds === 604800) return "7d";
+    if (seconds === 7776000) return "90d";
+    return "";
+  }
+  var CHAT_WALLPAPER_CSS = { warm: "linear-gradient(135deg,#fff7ed,#ffedd5)", cool: "linear-gradient(135deg,#eff6ff,#dbeafe)", mint: "linear-gradient(135deg,#ecfdf5,#d1fae5)", dark: "linear-gradient(135deg,#1e293b,#0f172a)" };
+  function getChatWallpaperKey(threadId) {
+    if (state.chatWallpaper[threadId] === undefined) {
+      var key = "";
+      try { key = localStorage.getItem("chatWallpaper_" + threadId) || ""; } catch (e) {}
+      state.chatWallpaper[threadId] = key;
+    }
+    return state.chatWallpaper[threadId];
+  }
+  function chatPinnedBarHtml() {
+    var pinned = state.chatMessages.filter(function (m) { return m.pinned_at; });
+    if (!pinned.length) return "";
+    pinned = pinned.slice().sort(function (a, b) { return new Date(b.pinned_at) - new Date(a.pinned_at); });
+    var top = pinned[0];
+    return '<div class="chat-pinned-bar" id="chatPinnedBar" data-jump-id="' + esc(top.id) + '">📌 <b>' + (pinned.length > 1 ? pinned.length + " pinned — " : "") + '</b><span class="chat-pinned-text">' + esc(top.text || "[attachment]") + '</span></div>';
+  }
+  function wirePinnedBar() {
+    var pinnedBar = document.getElementById("chatPinnedBar");
+    if (pinnedBar) pinnedBar.addEventListener("click", function () {
+      var jumpId = pinnedBar.dataset.jumpId;
+      var box2 = document.getElementById("chatMessagesBox");
+      var target = box2 ? box2.querySelector('[data-msg-id="' + jumpId + '"]') : null;
+      if (target) { target.scrollIntoView({ behavior: "smooth", block: "center" }); target.style.outline = "2px solid var(--brand)"; setTimeout(function () { target.style.outline = ""; }, 1200); }
     });
+  }
+  // Pinning/unpinning happens via a poll-safe partial update (loadChatMessages
+  // with showLoading=false only patches the messages box, never the whole
+  // pane), so the pinned bar needs its own lightweight refresh alongside it —
+  // otherwise a newly-pinned message never shows up there until the next
+  // full renderChatMain (switching threads and back).
+  function updateChatPinnedBar() {
+    var wrap = document.getElementById("chatPinnedBarWrap");
+    if (!wrap) return;
+    wrap.innerHTML = chatPinnedBarHtml();
+    wirePinnedBar();
+  }
+  function chatContextBarHtml() {
+    if (state.chatEditingId) {
+      return '<div class="chat-reply-bar" id="chatContextBarInner"><div class="chat-reply-bar-body"><div class="chat-reply-bar-name">Editing message</div></div>' +
+        '<button type="button" class="chat-reply-bar-close" id="chatCancelEditBtn">✕</button></div>';
+    }
+    if (state.chatReplyTo) {
+      return '<div class="chat-reply-bar" id="chatContextBarInner"><div class="chat-reply-bar-body"><div class="chat-reply-bar-name">Replying to ' + esc(state.chatReplyTo.sender_name) + '</div>' +
+        '<div class="chat-reply-bar-text">' + esc(state.chatReplyTo.text) + '</div></div>' +
+        '<button type="button" class="chat-reply-bar-close" id="chatCancelReplyBtn">✕</button></div>';
+    }
+    return "";
+  }
+
+  var chatMediaRecorder = null, chatRecChunks = [], chatRecordedBlob = null, chatRecTimerInt = null, chatRecStart = 0;
+  function startChatVoiceRecording() {
+    if (chatMediaRecorder && chatMediaRecorder.state === "recording") return;
+    if (!navigator.mediaDevices || !window.MediaRecorder) { toast("Voice recording isn't supported in this browser"); return; }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      chatRecChunks = [];
+      chatMediaRecorder = new MediaRecorder(stream);
+      chatMediaRecorder.ondataavailable = function (e) { if (e.data.size) chatRecChunks.push(e.data); };
+      chatMediaRecorder.onstop = function () {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        chatRecordedBlob = new Blob(chatRecChunks, { type: chatMediaRecorder.mimeType || "audio/webm" });
+        var preview = document.getElementById("chatRecPreview");
+        if (preview) { preview.src = URL.createObjectURL(chatRecordedBlob); preview.classList.remove("hidden"); }
+        var stopBtn = document.getElementById("chatRecStopBtn");
+        if (stopBtn) stopBtn.classList.add("hidden");
+        var timerEl = document.getElementById("chatRecTimer");
+        if (timerEl) timerEl.classList.add("hidden");
+        var discardBtn = document.getElementById("chatRecDiscardBtn");
+        if (discardBtn) discardBtn.classList.remove("hidden");
+        clearInterval(chatRecTimerInt);
+      };
+      chatMediaRecorder.start();
+      chatRecStart = Date.now();
+      var inputEl = document.getElementById("chatInputBox");
+      if (inputEl) inputEl.classList.add("hidden");
+      var ew = document.querySelector(".chat-emoji-wrap");
+      if (ew) ew.classList.add("hidden");
+      var aw = document.querySelector(".chat-attach-wrap");
+      if (aw) aw.classList.add("hidden");
+      var recRow = document.getElementById("chatRecRow");
+      if (recRow) recRow.classList.remove("hidden");
+      var timerEl2 = document.getElementById("chatRecTimer");
+      if (timerEl2) { timerEl2.classList.remove("hidden"); timerEl2.textContent = "0:00"; }
+      chatRecTimerInt = setInterval(function () {
+        var secs = Math.floor((Date.now() - chatRecStart) / 1000);
+        if (timerEl2) timerEl2.textContent = Math.floor(secs / 60) + ":" + String(secs % 60).padStart(2, "0");
+      }, 500);
+    }).catch(function () { toast("Microphone access denied"); });
+  }
+  function stopChatVoiceRecording() {
+    if (chatMediaRecorder && chatMediaRecorder.state === "recording") chatMediaRecorder.stop();
+  }
+  function discardChatVoiceRecording() {
+    chatRecordedBlob = null;
+    renderChatMain(false);
+  }
+  function sendChatAttachment(blobOrDataUrl, kind, filename) {
+    var threadId = state.chatActiveThread;
+    function proceed(base64) {
+      var replyId = state.chatReplyTo ? state.chatReplyTo.id : null;
+      state.chatReplyTo = null;
+      api("sendChatMessage", {
+        thread_id: threadId, sender_doc_id: state.doer.doc_id, sender_name: state.doer.delegation_name || state.doer.name,
+        text: "", reply_to_id: replyId, attachment_base64: base64, attachment_kind: kind, attachment_name: filename || ""
+      }).then(function () {
+        chatRecordedBlob = null;
+        loadChatMessages(false); loadChatThreads(false);
+        renderChatMain(false);
+      }).catch(function (e) { toast(e.message || "Couldn't send attachment"); });
+    }
+    if (typeof blobOrDataUrl === "string") { proceed(blobOrDataUrl); return; }
+    var reader = new FileReader();
+    reader.onload = function () { proceed(reader.result); };
+    reader.readAsDataURL(blobOrDataUrl);
   }
 
   function renderChatMain(loading) {
@@ -3927,24 +4596,52 @@
 
     var headName = thread ? (thread.name || "Chat") + (thread.type === "group" ? " 👥" : "") : "Chat";
     var isLocked = !!(thread && thread.locked_by);
+    var wallpaperKey = thread ? getChatWallpaperKey(thread.id) : "";
+    var wallpaperCss = CHAT_WALLPAPER_CSS[wallpaperKey] || "";
+    chatRecordedBlob = null;
     main.innerHTML =
       '<div class="chat-main-head">' +
-      '<div class="chat-main-head-title"><b>' + esc(headName) + '</b>' +
+      '<div><div class="chat-main-head-title"><b>' + esc(headName) + '</b>' +
       (isLocked ? '<span class="chat-lock-badge">🔒 Locked' + (thread.locked_by_name ? " by " + esc(thread.locked_by_name) : "") + '</span>' : '') +
-      '</div>' +
+      (thread && thread.disappear_seconds ? '<span class="chat-disappear-badge">⏳ ' + chatDisappearLabel(thread.disappear_seconds) + '</span>' : '') +
+      '</div>' + chatPresenceHtml(thread) + '</div>' +
       '<div class="chat-main-head-actions">' +
       (thread ? '<button class="btn secondary" id="chatLockBtn" style="padding:6px 12px;font-size:12px">' + (isLocked ? "🔓 Unlock" : "🔒 Lock") + '</button>' : '') +
+      (thread && thread.type === "group" ? '<button class="btn secondary" id="chatGroupInfoBtn" style="padding:6px 12px;font-size:12px">ℹ️ Group</button>' : '') +
       (thread && thread.type === "group" ? '<button class="btn secondary" id="chatLeaveBtn" style="padding:6px 12px;font-size:12px">🚪 Leave</button>' : '') +
+      '<button class="btn secondary" id="chatInChatSearchBtn" style="padding:6px 12px;font-size:12px" title="Search in this chat">🔍</button>' +
+      '<button class="btn secondary" id="chatSettingsBtn" style="padding:6px 12px;font-size:12px" title="Chat settings">⚙️</button>' +
       '<button class="btn secondary" id="chatDeleteThreadBtn" style="padding:6px 12px;font-size:12px">🗑 Delete chat</button>' +
       '</div></div>' +
-      '<div class="chat-messages" id="chatMessagesBox">' + (loading ? '<div class="chat-thread-empty">Loading…</div>' : chatMessagesHtml()) + '</div>' +
+      (state.chatInChatSearchOpen
+        ? '<div class="chat-inchat-search-row" style="display:flex;gap:8px;padding:8px 16px;border-bottom:1px solid var(--line)">' +
+          '<input id="chatInChatSearchInput" placeholder="Search in this chat…" value="' + esc(state.chatMsgFilter || "") + '" style="flex:1" />' +
+          '<button class="btn secondary" id="chatInChatSearchCloseBtn" style="padding:6px 10px;font-size:12px">✕</button></div>'
+        : '') +
+      '<div id="chatPinnedBarWrap">' + chatPinnedBarHtml() + '</div>' +
+      '<div class="chat-messages" id="chatMessagesBox"' + (wallpaperCss ? ' style="background:' + wallpaperCss + '"' : "") + '>' + (loading ? '<div class="chat-thread-empty">Loading…</div>' : chatMessagesHtml()) + '</div>' +
       (isLocked
         ? '<div class="chat-locked-banner">🔒 This chat is locked' + (thread.locked_by_name ? " by " + esc(thread.locked_by_name) : "") + '. Any member can unlock it to resume sending messages.</div>'
-        : '<div class="chat-input-row">' +
+        : '<div id="chatContextBar">' + chatContextBarHtml() + '</div>' +
+          '<div class="chat-input-row" id="chatInputRow">' +
+          '<div class="chat-attach-wrap"><button type="button" class="chat-emoji-btn" id="chatAttachBtn" title="Attach">📎</button>' +
+          '<div class="chat-attach-menu hidden" id="chatAttachMenu">' +
+          '<button type="button" id="chatAttachPhotoBtn">🖼 Photo</button>' +
+          '<button type="button" id="chatAttachDocBtn">📄 Document</button>' +
+          '<button type="button" id="chatAttachVoiceBtn">🎤 Voice note</button>' +
+          '</div></div>' +
+          '<input type="file" id="chatPhotoInput" accept="image/*" class="hidden" />' +
+          '<input type="file" id="chatDocInput" class="hidden" />' +
           '<div class="chat-emoji-wrap"><button type="button" class="chat-emoji-btn" id="chatEmojiBtn" title="Emoji">😊</button>' +
           '<div class="chat-emoji-panel hidden" id="chatEmojiPanel"></div></div>' +
-          '<textarea id="chatInputBox" placeholder="Type a message…" rows="1"></textarea>' +
-          '<button class="btn" id="chatSendBtn">Send</button></div>');
+          '<textarea id="chatInputBox" placeholder="Type a message…" rows="1">' + esc(state.chatEditingId ? state.chatEditingText : "") + '</textarea>' +
+          '<div class="chat-rec-row hidden" id="chatRecRow">' +
+          '<button type="button" class="btn secondary" id="chatRecStopBtn" style="padding:6px 12px;font-size:12px">⏹ Stop</button>' +
+          '<span class="chat-rec-timer hidden" id="chatRecTimer">0:00</span>' +
+          '<audio id="chatRecPreview" class="hidden" controls style="height:32px"></audio>' +
+          '<button type="button" class="btn secondary hidden" id="chatRecDiscardBtn" style="padding:6px 10px;font-size:12px">Discard</button>' +
+          '</div>' +
+          '<button class="btn" id="chatSendBtn">' + (state.chatEditingId ? "Save" : "Send") + '</button></div>');
 
     var delBtn = document.getElementById("chatDeleteThreadBtn");
     if (delBtn) delBtn.addEventListener("click", function () { confirmHideChatThread(state.chatActiveThread); });
@@ -3963,28 +4660,107 @@
     var leaveBtn = document.getElementById("chatLeaveBtn");
     if (leaveBtn) leaveBtn.addEventListener("click", function () { confirmLeaveChatThread(state.chatActiveThread); });
 
+    var groupInfoBtn = document.getElementById("chatGroupInfoBtn");
+    if (groupInfoBtn) groupInfoBtn.addEventListener("click", function () { openGroupInfoModal(thread); });
+
+    var settingsBtn = document.getElementById("chatSettingsBtn");
+    if (settingsBtn) settingsBtn.addEventListener("click", function () { openChatSettingsModal(thread); });
+
+    var inChatSearchBtn = document.getElementById("chatInChatSearchBtn");
+    if (inChatSearchBtn) inChatSearchBtn.addEventListener("click", function () {
+      state.chatInChatSearchOpen = !state.chatInChatSearchOpen;
+      if (!state.chatInChatSearchOpen) state.chatMsgFilter = "";
+      renderChatMain(false);
+    });
+    var inChatSearchInput = document.getElementById("chatInChatSearchInput");
+    if (inChatSearchInput) {
+      inChatSearchInput.addEventListener("input", function () {
+        state.chatMsgFilter = inChatSearchInput.value;
+        updateChatMessagesOnly();
+      });
+      inChatSearchInput.focus();
+    }
+    var inChatSearchCloseBtn = document.getElementById("chatInChatSearchCloseBtn");
+    if (inChatSearchCloseBtn) inChatSearchCloseBtn.addEventListener("click", function () {
+      state.chatInChatSearchOpen = false;
+      state.chatMsgFilter = "";
+      renderChatMain(false);
+    });
+
+    wirePinnedBar();
+
+    var cancelReplyBtn = document.getElementById("chatCancelReplyBtn");
+    if (cancelReplyBtn) cancelReplyBtn.addEventListener("click", cancelChatReplyOrEdit);
+    var cancelEditBtn = document.getElementById("chatCancelEditBtn");
+    if (cancelEditBtn) cancelEditBtn.addEventListener("click", cancelChatReplyOrEdit);
+
     var emojiBtn = document.getElementById("chatEmojiBtn");
     if (emojiBtn) emojiBtn.addEventListener("click", function (e) { e.stopPropagation(); toggleChatEmojiPanel(); });
+
+    var attachBtn = document.getElementById("chatAttachBtn");
+    if (attachBtn) attachBtn.addEventListener("click", function (e) { e.stopPropagation(); var m = document.getElementById("chatAttachMenu"); if (m) m.classList.toggle("hidden"); });
+    var attachPhotoBtn = document.getElementById("chatAttachPhotoBtn");
+    if (attachPhotoBtn) attachPhotoBtn.addEventListener("click", function () { document.getElementById("chatAttachMenu").classList.add("hidden"); document.getElementById("chatPhotoInput").click(); });
+    var attachDocBtn = document.getElementById("chatAttachDocBtn");
+    if (attachDocBtn) attachDocBtn.addEventListener("click", function () { document.getElementById("chatAttachMenu").classList.add("hidden"); document.getElementById("chatDocInput").click(); });
+    var attachVoiceBtn = document.getElementById("chatAttachVoiceBtn");
+    if (attachVoiceBtn) attachVoiceBtn.addEventListener("click", function () { document.getElementById("chatAttachMenu").classList.add("hidden"); startChatVoiceRecording(); });
+    var photoInput = document.getElementById("chatPhotoInput");
+    if (photoInput) photoInput.addEventListener("change", function () {
+      var f = photoInput.files && photoInput.files[0];
+      photoInput.value = "";
+      if (!f) return;
+      if (f.size > 5 * 1024 * 1024) { toast("Image is too large (max 5MB)"); return; }
+      sendChatAttachment(f, "image", f.name);
+    });
+    var docInput = document.getElementById("chatDocInput");
+    if (docInput) docInput.addEventListener("change", function () {
+      var f = docInput.files && docInput.files[0];
+      docInput.value = "";
+      if (!f) return;
+      if (f.size > 8 * 1024 * 1024) { toast("File is too large (max 8MB)"); return; }
+      sendChatAttachment(f, "document", f.name);
+    });
+    var recStopBtn = document.getElementById("chatRecStopBtn");
+    if (recStopBtn) recStopBtn.addEventListener("click", stopChatVoiceRecording);
+    var recDiscardBtn = document.getElementById("chatRecDiscardBtn");
+    if (recDiscardBtn) recDiscardBtn.addEventListener("click", discardChatVoiceRecording);
 
     var box = document.getElementById("chatMessagesBox");
     if (box) {
       if (wasNearBottom) box.scrollTop = box.scrollHeight;
-      box.querySelectorAll(".chat-bubble-del").forEach(function (btn) {
-        btn.addEventListener("click", function (e) {
-          e.stopPropagation();
-          confirmDeleteChatMessage(btn.dataset.id, btn.dataset.mine === "1");
-        });
-      });
+      wireChatBubbleActions(box);
     }
 
     var input = document.getElementById("chatInputBox");
     var sendBtn = document.getElementById("chatSendBtn");
     function doSend() {
+      if (state.chatEditingId) {
+        var newText = (input.value || "").trim();
+        if (!newText) return;
+        var editId = state.chatEditingId;
+        api("editChatMessage", { message_id: editId, doc_id: state.doer.doc_id, text: newText })
+          .then(function () {
+            state.chatEditingId = null; state.chatEditingText = "";
+            var ctxBar = document.getElementById("chatContextBar");
+            if (ctxBar) ctxBar.innerHTML = "";
+            input.value = "";
+            sendBtn.textContent = "Send";
+            loadChatMessages(false);
+          })
+          .catch(function (e) { toast(e.message || "Couldn't save edit"); });
+        return;
+      }
+      if (chatRecordedBlob) { sendChatAttachment(chatRecordedBlob, "voice", "voice-note.webm"); return; }
       var text = (input.value || "").trim();
       if (!text) return;
       input.value = "";
       var threadId = state.chatActiveThread;
-      api("sendChatMessage", { thread_id: threadId, sender_doc_id: state.doer.doc_id, sender_name: state.doer.delegation_name || state.doer.name, text: text })
+      var replyId = state.chatReplyTo ? state.chatReplyTo.id : null;
+      state.chatReplyTo = null;
+      var ctxBar2 = document.getElementById("chatContextBar");
+      if (ctxBar2) ctxBar2.innerHTML = "";
+      api("sendChatMessage", { thread_id: threadId, sender_doc_id: state.doer.doc_id, sender_name: state.doer.delegation_name || state.doer.name, text: text, reply_to_id: replyId })
         .then(function () { loadChatMessages(false); loadChatThreads(false); })
         .catch(function (e) { toast(e.message || "Couldn't send message"); });
     }
@@ -4000,6 +4776,10 @@
       if (!loading) input.focus();
     }
   }
+  document.addEventListener("click", function (e) {
+    var am = document.getElementById("chatAttachMenu");
+    if (am && !am.classList.contains("hidden") && !am.contains(e.target) && e.target.id !== "chatAttachBtn") am.classList.add("hidden");
+  });
 
   function confirmDeleteChatMessage(messageId, mine) {
     openModal(
@@ -4064,6 +4844,211 @@
 
   var chatNewBtnEl = document.getElementById("chatNewBtn");
   if (chatNewBtnEl) chatNewBtnEl.addEventListener("click", openNewChatModal);
+  var chatSearchAllBtnEl = document.getElementById("chatSearchAllBtn");
+  if (chatSearchAllBtnEl) chatSearchAllBtnEl.addEventListener("click", openChatSearchAllModal);
+  var chatStarredBtnEl = document.getElementById("chatStarredBtn");
+  if (chatStarredBtnEl) chatStarredBtnEl.addEventListener("click", openStarredMessagesModal);
+  var chatBroadcastBtnEl = document.getElementById("chatBroadcastBtn");
+  if (chatBroadcastBtnEl) chatBroadcastBtnEl.addEventListener("click", openBroadcastListsModal);
+
+  function jumpToChatMessage(threadId, messageId) {
+    selectChatThread(threadId);
+    var tries = 0;
+    (function tryScroll() {
+      tries++;
+      var box = document.getElementById("chatMessagesBox");
+      var target = box ? box.querySelector('[data-msg-id="' + messageId + '"]') : null;
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        target.style.outline = "2px solid var(--brand)";
+        setTimeout(function () { target.style.outline = ""; }, 1200);
+      } else if (tries < 6) {
+        setTimeout(tryScroll, 300);
+      }
+    })();
+  }
+
+  function openChatSearchAllModal() {
+    var myId = state.doer.doc_id;
+    openModal(
+      '<h3>Search all chats</h3>' +
+      '<div class="field"><input id="casInput" placeholder="Search messages…" autocomplete="off" /></div>' +
+      '<div class="chat-search-list" id="casResults"><div class="chat-thread-empty">Type to search across your chats.</div></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="casClose">Close</button></div>',
+      "wide"
+    );
+    document.getElementById("casClose").addEventListener("click", closeModal);
+    var input = document.getElementById("casInput");
+    var debounceHandle = null;
+    input.addEventListener("input", function () {
+      clearTimeout(debounceHandle);
+      var q = input.value.trim();
+      var wrap = document.getElementById("casResults");
+      if (!q) { wrap.innerHTML = '<div class="chat-thread-empty">Type to search across your chats.</div>'; return; }
+      debounceHandle = setTimeout(function () {
+        wrap.innerHTML = '<div class="chat-thread-empty">Searching…</div>';
+        api("searchChatMessages", { doc_id: myId, query: q }).then(function (rows) {
+          rows = rows || [];
+          if (!rows.length) { wrap.innerHTML = '<div class="chat-thread-empty">No messages match "' + esc(q) + '".</div>'; return; }
+          wrap.innerHTML = rows.map(function (m) {
+            return '<div class="chat-search-row" data-tid="' + esc(m.thread_id) + '" data-mid="' + esc(m.id) + '">' +
+              '<div style="flex:1"><div class="chat-search-name">' + esc(m.thread_name) + ' · ' + esc(m.sender_name) + '</div>' +
+              '<div class="chat-search-meta">' + esc((m.text || "").slice(0, 90)) + '</div></div></div>';
+          }).join("");
+          wrap.querySelectorAll(".chat-search-row").forEach(function (row) {
+            row.addEventListener("click", function () {
+              var tid = row.dataset.tid, mid = row.dataset.mid;
+              closeModal();
+              jumpToChatMessage(tid, mid);
+            });
+          });
+        }).catch(function (e) { wrap.innerHTML = '<div class="chat-thread-empty">' + esc(e.message || "Search failed") + '</div>'; });
+      }, 300);
+    });
+    input.focus();
+  }
+
+  function openStarredMessagesModal() {
+    var myId = state.doer.doc_id;
+    openModal(
+      '<h3>Starred messages</h3>' +
+      '<div class="chat-search-list" id="starResults"><div class="chat-thread-empty">Loading…</div></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="starClose">Close</button></div>',
+      "wide"
+    );
+    document.getElementById("starClose").addEventListener("click", closeModal);
+    api("getStarredMessages", { doc_id: myId }).then(function (rows) {
+      rows = rows || [];
+      var wrap = document.getElementById("starResults");
+      if (!wrap) return;
+      if (!rows.length) { wrap.innerHTML = '<div class="chat-thread-empty">No starred messages yet.</div>'; return; }
+      wrap.innerHTML = rows.map(function (m) {
+        return '<div class="chat-search-row" data-tid="' + esc(m.thread_id) + '" data-mid="' + esc(m.id) + '">' +
+          '<div style="flex:1"><div class="chat-search-name">' + esc(m.thread_name) + ' · ' + esc(m.sender_name) + '</div>' +
+          '<div class="chat-search-meta">' + esc((m.text || "[attachment]").slice(0, 90)) + '</div></div></div>';
+      }).join("");
+      wrap.querySelectorAll(".chat-search-row").forEach(function (row) {
+        row.addEventListener("click", function () {
+          var tid = row.dataset.tid, mid = row.dataset.mid;
+          closeModal();
+          jumpToChatMessage(tid, mid);
+        });
+      });
+    }).catch(function (e) {
+      var wrap = document.getElementById("starResults");
+      if (wrap) wrap.innerHTML = '<div class="chat-thread-empty">' + esc(e.message || "Couldn't load starred messages") + '</div>';
+    });
+  }
+
+  function openBroadcastListsModal() {
+    var myId = state.doer.doc_id;
+    function render() {
+      api("getBroadcastLists", { owner_doc_id: myId }).then(function (lists) {
+        lists = lists || [];
+        openModal(
+          '<h3>Broadcast lists</h3><div class="sub">A broadcast sends your message as separate direct messages — recipients don\'t see each other or share a thread.</div>' +
+          '<div class="chat-search-list" id="bcList">' +
+          (lists.length ? lists.map(function (l) {
+            return '<div class="chat-group-member-row" data-id="' + esc(l.id) + '">' +
+              '<div style="flex:1"><div class="chat-search-name">' + esc(l.name) + '</div><div class="chat-search-meta">' + (l.member_doc_ids || []).length + ' recipient(s)</div></div>' +
+              '<div style="display:flex;gap:6px">' +
+              '<button class="btn secondary" data-bc-act="send" style="padding:4px 10px;font-size:11px">Send</button>' +
+              '<button class="btn secondary" data-bc-act="delete" style="padding:4px 10px;font-size:11px;color:var(--danger)">Delete</button>' +
+              '</div></div>';
+          }).join("") : '<div class="chat-thread-empty">No broadcast lists yet.</div>') +
+          '</div>' +
+          '<div class="modal-actions"><button class="btn secondary" id="bcClose">Close</button><button class="btn" id="bcNew">+ New List</button></div>',
+          "wide"
+        );
+        document.getElementById("bcClose").addEventListener("click", closeModal);
+        document.getElementById("bcNew").addEventListener("click", openCreateBroadcastListModal);
+        document.querySelectorAll("#bcList [data-bc-act]").forEach(function (btn) {
+          var row = btn.closest(".chat-group-member-row");
+          var listId = row.dataset.id;
+          var list = lists.find(function (l) { return l.id === listId; });
+          btn.addEventListener("click", function () {
+            var act = btn.dataset.bcAct;
+            if (act === "delete") {
+              api("deleteBroadcastList", { id: listId, owner_doc_id: myId }).then(render).catch(function (e) { toast(e.message || "Couldn't delete"); });
+            } else if (act === "send") {
+              openSendBroadcastModal(list);
+            }
+          });
+        });
+      }).catch(function (e) { toast(e.message || "Couldn't load broadcast lists"); });
+    }
+    render();
+
+    function openCreateBroadcastListModal() {
+      var others = state.doers.filter(function (d) { return d.doc_id !== myId; });
+      var selected = {};
+      openModal(
+        '<h3>New broadcast list</h3>' +
+        '<div class="field"><label>List name</label><input id="bcName" placeholder="e.g. All Dept Heads" /></div>' +
+        '<div class="field"><input id="bcSearchBox" placeholder="Search staff…" autocomplete="off" /></div>' +
+        '<div class="chat-search-list" id="bcResults"></div>' +
+        '<div class="modal-err" id="bcErr"></div>' +
+        '<div class="modal-actions"><button class="btn secondary" id="bcCancel">Cancel</button><button class="btn" id="bcSave">Create</button></div>',
+        "wide"
+      );
+      var searchBox = document.getElementById("bcSearchBox");
+      function renderPicker() {
+        var q = (searchBox.value || "").trim().toLowerCase();
+        var list = !q ? others : others.filter(function (d) { return (d.delegation_name || d.name || "").toLowerCase().indexOf(q) !== -1; });
+        var wrap = document.getElementById("bcResults");
+        if (!list.length) { wrap.innerHTML = '<div class="chat-thread-empty">No staff match that search.</div>'; return; }
+        wrap.innerHTML = list.map(function (d) {
+          var nm = d.delegation_name || d.name || "";
+          return '<div class="chat-search-row" data-doc="' + esc(d.doc_id) + '">' +
+            (d.avatar_url ? '<img class="chat-thread-avatar" src="' + esc(d.avatar_url) + '" alt="" />' : '<div class="chat-thread-avatar">' + esc(chatAvatarInitial(nm)) + '</div>') +
+            '<div><div class="chat-search-name">' + esc(nm) + '</div></div>' +
+            '<input type="checkbox" class="chat-group-check" ' + (selected[d.doc_id] ? "checked" : "") + ' />' +
+            '</div>';
+        }).join("");
+        wrap.querySelectorAll(".chat-search-row").forEach(function (row) {
+          row.addEventListener("click", function () {
+            var docId = row.dataset.doc;
+            if (selected[docId]) delete selected[docId]; else selected[docId] = true;
+            renderPicker();
+          });
+        });
+      }
+      renderPicker();
+      searchBox.addEventListener("input", renderPicker);
+      document.getElementById("bcCancel").addEventListener("click", closeModal);
+      document.getElementById("bcSave").addEventListener("click", function () {
+        var name = (document.getElementById("bcName").value || "").trim();
+        var ids = Object.keys(selected);
+        var err = document.getElementById("bcErr");
+        if (!name) { err.textContent = "List name is required."; return; }
+        if (!ids.length) { err.textContent = "Pick at least one person."; return; }
+        err.textContent = "";
+        api("createBroadcastList", { owner_doc_id: myId, name: name, member_doc_ids: ids })
+          .then(function () { render(); })
+          .catch(function (e) { err.textContent = e.message || "Couldn't create list"; });
+      });
+    }
+
+    function openSendBroadcastModal(list) {
+      if (!list) return;
+      openModal(
+        '<h3>Send to "' + esc(list.name) + '"</h3><div class="sub">' + (list.member_doc_ids || []).length + ' recipient(s) will each get this as a separate direct message.</div>' +
+        '<div class="field"><textarea id="bcSendText" placeholder="Type your broadcast message…"></textarea></div>' +
+        '<div class="modal-err" id="bcSendErr"></div>' +
+        '<div class="modal-actions"><button class="btn secondary" id="bcSendCancel">Cancel</button><button class="btn" id="bcSendGo">Send</button></div>'
+      );
+      document.getElementById("bcSendCancel").addEventListener("click", closeModal);
+      document.getElementById("bcSendGo").addEventListener("click", function () {
+        var text = (document.getElementById("bcSendText").value || "").trim();
+        var err = document.getElementById("bcSendErr");
+        if (!text) { err.textContent = "Message can't be empty."; return; }
+        err.textContent = "";
+        api("sendBroadcast", { list_id: list.id, owner_doc_id: myId, text: text })
+          .then(function (r) { toast("Sent to " + ((r && r.sent) || 0) + " recipient(s)"); closeModal(); })
+          .catch(function (e) { err.textContent = e.message || "Couldn't send broadcast"; });
+      });
+    }
+  }
 
   function openNewChatModal() {
     var others = state.doers.filter(function (d) { return d.doc_id !== state.doer.doc_id; });
@@ -4146,6 +5131,248 @@
           loadChatThreads(false);
           setTimeout(function () { selectChatThread(r.thread_id); }, 50);
         }).catch(function (e) { err.textContent = e.message || "Couldn't create group"; });
+    });
+  }
+
+  function openGroupInfoModal(thread) {
+    if (!thread || thread.type !== "group") return;
+    var myId = state.doer.doc_id;
+    var isAdmin = !!thread.is_admin;
+    openModal(
+      '<h3>Group Info</h3>' +
+      '<div style="text-align:center;margin-bottom:10px">' +
+      (thread.photo_url ? '<img src="' + esc(thread.photo_url) + '" alt="" class="chat-group-info-photo" style="background:none" />' : '<div class="chat-group-info-photo">' + esc(chatAvatarInitial(thread.name)) + '</div>') +
+      (isAdmin ? '<div style="margin-top:6px"><label class="btn secondary" style="padding:5px 10px;font-size:12px;cursor:pointer;display:inline-block">Change Photo<input type="file" id="giPhotoInput" accept="image/*" class="hidden" /></label></div>' : '') +
+      '</div>' +
+      '<div class="field"><label>Group name</label><input id="giName" value="' + esc(thread.name || "") + '" ' + (isAdmin ? "" : "disabled") + ' /></div>' +
+      '<div class="field"><label>Description</label><textarea id="giDesc" placeholder="What\'s this group about?" ' + (isAdmin ? "" : "disabled") + '>' + esc(thread.description || "") + '</textarea></div>' +
+      (isAdmin ? '<div class="modal-err" id="giSaveErr"></div><div class="modal-actions" style="justify-content:flex-start"><button class="btn" id="giSaveBtn" style="padding:7px 14px;font-size:13px">Save changes</button></div>' : '') +
+      '<div class="field"><label>Members (' + (thread.member_doc_ids || []).length + ')' + (isAdmin ? ' <button class="btn secondary" id="giAddBtn" style="padding:4px 10px;font-size:12px;margin-left:8px">+ Add</button>' : '') + '</label>' +
+      '<div id="giMemberList">Loading…</div></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="giClose">Close</button></div>',
+      "wide"
+    );
+    document.getElementById("giClose").addEventListener("click", closeModal);
+
+    function loadMembers() {
+      api("getChatGroupMembers", { thread_id: thread.id, doc_id: myId }).then(function (rows) {
+        renderMemberList(rows || []);
+      }).catch(function () {
+        var fallback = (thread.member_doc_ids || []).map(function (id) {
+          var d = state.doers.find(function (x) { return x.doc_id === id; });
+          return { doc_id: id, name: d ? (d.delegation_name || d.name) : id, avatar_url: d ? d.avatar_url : null, is_admin: id === thread.created_by };
+        });
+        renderMemberList(fallback);
+      });
+    }
+    function renderMemberList(rows) {
+      var wrap = document.getElementById("giMemberList");
+      if (!wrap) return;
+      if (!rows.length) { wrap.innerHTML = '<div class="chat-thread-empty">No members.</div>'; return; }
+      wrap.innerHTML = rows.map(function (m) {
+        var isMe = m.doc_id === myId;
+        return '<div class="chat-group-member-row" data-doc="' + esc(m.doc_id) + '">' +
+          (m.avatar_url ? '<img class="chat-thread-avatar" src="' + esc(m.avatar_url) + '" alt="" />' : '<div class="chat-thread-avatar">' + esc(chatAvatarInitial(m.name)) + '</div>') +
+          '<div style="flex:1"><div class="chat-search-name">' + esc(m.name) + (isMe ? " (you)" : "") + '</div>' + (m.is_admin ? '<div class="chat-search-meta">Group admin</div>' : '') + '</div>' +
+          (isAdmin && !isMe ? '<div style="display:flex;gap:6px">' +
+            '<button class="btn secondary" data-gm-act="' + (m.is_admin ? "demote" : "promote") + '" style="padding:3px 8px;font-size:11px">' + (m.is_admin ? "Remove admin" : "Make admin") + '</button>' +
+            '<button class="btn secondary" data-gm-act="remove" style="padding:3px 8px;font-size:11px;color:var(--danger)">Remove</button>' +
+            '</div>' : '') +
+          '</div>';
+      }).join("");
+      wrap.querySelectorAll("[data-gm-act]").forEach(function (btn) {
+        var targetId = btn.closest(".chat-group-member-row").dataset.doc;
+        btn.addEventListener("click", function () {
+          var act = btn.dataset.gmAct;
+          if (act === "remove") {
+            api("removeChatGroupMember", { thread_id: thread.id, doc_id: myId, remove_doc_id: targetId })
+              .then(function () { loadMembers(); loadChatThreads(false); })
+              .catch(function (e) { toast(e.message || "Couldn't remove member"); });
+          } else {
+            api("setChatGroupAdmin", { thread_id: thread.id, doc_id: myId, target_doc_id: targetId, is_admin: act === "promote" })
+              .then(function () { loadMembers(); })
+              .catch(function (e) { toast(e.message || "Couldn't update admin status"); });
+          }
+        });
+      });
+    }
+    loadMembers();
+
+    if (isAdmin) {
+      var photoInput = document.getElementById("giPhotoInput");
+      if (photoInput) photoInput.addEventListener("change", function () {
+        var f = photoInput.files && photoInput.files[0];
+        photoInput.value = "";
+        if (!f) return;
+        if (f.size > 3 * 1024 * 1024) { toast("Image is too large (max 3MB)"); return; }
+        var reader = new FileReader();
+        reader.onload = function () {
+          api("updateChatGroupInfo", { thread_id: thread.id, doc_id: myId, photo_base64: reader.result })
+            .then(function () { toast("Group photo updated"); closeModal(); loadChatThreads(false); renderChatMain(false); })
+            .catch(function (e) { toast(e.message || "Couldn't update photo"); });
+        };
+        reader.readAsDataURL(f);
+      });
+      var saveBtn = document.getElementById("giSaveBtn");
+      if (saveBtn) saveBtn.addEventListener("click", function () {
+        var name = (document.getElementById("giName").value || "").trim();
+        var desc = (document.getElementById("giDesc").value || "").trim();
+        var err = document.getElementById("giSaveErr");
+        if (!name) { err.textContent = "Group name can't be empty."; return; }
+        err.textContent = "";
+        api("updateChatGroupInfo", { thread_id: thread.id, doc_id: myId, name: name, description: desc })
+          .then(function () { toast("Group info updated"); closeModal(); loadChatThreads(false); renderChatMain(false); })
+          .catch(function (e) { err.textContent = e.message || "Couldn't save"; });
+      });
+      var addBtn = document.getElementById("giAddBtn");
+      if (addBtn) addBtn.addEventListener("click", function () { openAddGroupMembersModal(thread); });
+    }
+  }
+
+  function openAddGroupMembersModal(thread) {
+    var current = new Set(thread.member_doc_ids || []);
+    var others = state.doers.filter(function (d) { return !current.has(d.doc_id); });
+    var selected = {};
+    openModal(
+      '<h3>Add members</h3><div class="sub">Pick people to add to "' + esc(thread.name || "this group") + '".</div>' +
+      '<div class="field"><input id="gamSearchBox" placeholder="Search staff…" autocomplete="off" /></div>' +
+      '<div class="chat-search-list" id="gamResults"></div>' +
+      '<div class="modal-err" id="gamErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="gamCancel">Cancel</button><button class="btn" id="gamAdd">Add</button></div>',
+      "wide"
+    );
+    var searchBox = document.getElementById("gamSearchBox");
+    function render() {
+      var q = (searchBox.value || "").trim().toLowerCase();
+      var list = !q ? others : others.filter(function (d) { return (d.delegation_name || d.name || "").toLowerCase().indexOf(q) !== -1; });
+      var wrap = document.getElementById("gamResults");
+      if (!list.length) { wrap.innerHTML = '<div class="chat-thread-empty">No staff match that search.</div>'; return; }
+      wrap.innerHTML = list.map(function (d) {
+        var nm = d.delegation_name || d.name || "";
+        return '<div class="chat-search-row" data-doc="' + esc(d.doc_id) + '">' +
+          (d.avatar_url ? '<img class="chat-thread-avatar" src="' + esc(d.avatar_url) + '" alt="" />' : '<div class="chat-thread-avatar">' + esc(chatAvatarInitial(nm)) + '</div>') +
+          '<div><div class="chat-search-name">' + esc(nm) + '</div><div class="chat-search-meta">' + esc(d.department || "") + '</div></div>' +
+          '<input type="checkbox" class="chat-group-check" ' + (selected[d.doc_id] ? "checked" : "") + ' />' +
+          '</div>';
+      }).join("");
+      wrap.querySelectorAll(".chat-search-row").forEach(function (row) {
+        row.addEventListener("click", function () {
+          var docId = row.dataset.doc;
+          if (selected[docId]) delete selected[docId]; else selected[docId] = true;
+          render();
+        });
+      });
+    }
+    render();
+    searchBox.addEventListener("input", render);
+    searchBox.focus();
+    document.getElementById("gamCancel").addEventListener("click", closeModal);
+    document.getElementById("gamAdd").addEventListener("click", function () {
+      var ids = Object.keys(selected);
+      var err = document.getElementById("gamErr");
+      if (!ids.length) { err.textContent = "Pick at least one person."; return; }
+      err.textContent = "";
+      api("addChatGroupMembers", { thread_id: thread.id, doc_id: state.doer.doc_id, add_doc_ids: ids })
+        .then(function () {
+          closeModal();
+          loadChatThreads(false).then(function () {
+            var t = state.chatThreads.find(function (x) { return x.id === thread.id; });
+            openGroupInfoModal(t || thread);
+          });
+        })
+        .catch(function (e) { err.textContent = e.message || "Couldn't add members"; });
+    });
+  }
+
+  function openChatSettingsModal(thread) {
+    if (!thread) return;
+    var myId = state.doer.doc_id;
+    var currentWallpaper = getChatWallpaperKey(thread.id);
+    var swatches = [
+      { key: "", label: "Default", css: "#e5ddd5" },
+      { key: "warm", label: "Warm", css: CHAT_WALLPAPER_CSS.warm },
+      { key: "cool", label: "Cool", css: CHAT_WALLPAPER_CSS.cool },
+      { key: "mint", label: "Mint", css: CHAT_WALLPAPER_CSS.mint },
+      { key: "dark", label: "Dark", css: CHAT_WALLPAPER_CSS.dark }
+    ];
+    var disappearOptions = [
+      { val: "", label: "Off" },
+      { val: "86400", label: "24 hours" },
+      { val: "604800", label: "7 days" },
+      { val: "7776000", label: "90 days" }
+    ];
+    var curDisappear = thread.disappear_seconds ? String(thread.disappear_seconds) : "";
+    openModal(
+      '<h3>Chat Settings</h3>' +
+      '<div class="field"><label>Wallpaper</label><div style="display:flex;gap:10px;flex-wrap:wrap">' +
+      swatches.map(function (s) {
+        return '<div class="chat-wallpaper-swatch' + (currentWallpaper === s.key ? " active" : "") + '" data-wp="' + esc(s.key) + '" style="background:' + s.css + '" title="' + esc(s.label) + '"></div>';
+      }).join("") +
+      '</div></div>' +
+      '<div class="field"><label>Disappearing messages</label><select id="csDisappearSel">' +
+      disappearOptions.map(function (o) { return '<option value="' + o.val + '"' + (o.val === curDisappear ? " selected" : "") + '>' + o.label + '</option>'; }).join("") +
+      '</select><div class="sub" style="margin-top:4px">Applies to everyone in this chat. Any participant can change it.</div></div>' +
+      '<div class="modal-err" id="csErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="csClose">Close</button><button class="btn" id="csSave">Save</button></div>'
+    );
+    document.getElementById("csClose").addEventListener("click", closeModal);
+    document.querySelectorAll(".chat-wallpaper-swatch").forEach(function (sw) {
+      sw.addEventListener("click", function () {
+        document.querySelectorAll(".chat-wallpaper-swatch").forEach(function (s) { s.classList.remove("active"); });
+        sw.classList.add("active");
+      });
+    });
+    document.getElementById("csSave").addEventListener("click", function () {
+      var chosen = document.querySelector(".chat-wallpaper-swatch.active");
+      var wpKey = chosen ? chosen.dataset.wp : "";
+      try { localStorage.setItem("chatWallpaper_" + thread.id, wpKey); } catch (e) {}
+      state.chatWallpaper[thread.id] = wpKey;
+      var secondsVal = document.getElementById("csDisappearSel").value;
+      var seconds = secondsVal ? parseInt(secondsVal, 10) : null;
+      var err = document.getElementById("csErr");
+      api("setChatDisappearing", { thread_id: thread.id, doc_id: myId, seconds: seconds })
+        .then(function () { closeModal(); loadChatThreads(false); renderChatMain(false); toast("Settings saved"); })
+        .catch(function (e) { err.textContent = e.message || "Couldn't save settings"; });
+    });
+  }
+
+  function openForwardMessageModal(msg) {
+    if (!msg) return;
+    var myId = state.doer.doc_id;
+    var threads = (state.chatThreads || []).filter(function (t) { return t.id !== state.chatActiveThread; });
+    var selected = {};
+    openModal(
+      '<h3>Forward message</h3><div class="sub">' + esc((msg.text || "[attachment]").slice(0, 80)) + '</div>' +
+      '<div class="chat-search-list" id="fwList">' +
+      (threads.length ? threads.map(function (t) {
+        return '<div class="chat-search-row" data-tid="' + esc(t.id) + '">' +
+          (t.photo_url ? '<img class="chat-thread-avatar" src="' + esc(t.photo_url) + '" alt="" />' : '<div class="chat-thread-avatar">' + esc(chatAvatarInitial(t.name)) + '</div>') +
+          '<div><div class="chat-search-name">' + esc(t.name || "Chat") + '</div></div>' +
+          '<input type="checkbox" class="chat-group-check" />' +
+          '</div>';
+      }).join("") : '<div class="chat-thread-empty">No other chats to forward to.</div>') +
+      '</div>' +
+      '<div class="modal-err" id="fwErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="fwCancel">Cancel</button><button class="btn" id="fwSend">Forward</button></div>',
+      "wide"
+    );
+    document.getElementById("fwCancel").addEventListener("click", closeModal);
+    document.querySelectorAll("#fwList .chat-search-row").forEach(function (row) {
+      row.addEventListener("click", function () {
+        var tid = row.dataset.tid;
+        var cb = row.querySelector(".chat-group-check");
+        if (selected[tid]) { delete selected[tid]; if (cb) cb.checked = false; }
+        else { selected[tid] = true; if (cb) cb.checked = true; }
+      });
+    });
+    document.getElementById("fwSend").addEventListener("click", function () {
+      var ids = Object.keys(selected);
+      var err = document.getElementById("fwErr");
+      if (!ids.length) { err.textContent = "Pick at least one chat."; return; }
+      err.textContent = "";
+      api("forwardChatMessage", { message_id: msg.id, doc_id: myId, to_thread_ids: ids })
+        .then(function (r) { closeModal(); toast(((r && r.sent) || ids.length) + " message(s) forwarded"); })
+        .catch(function (e) { err.textContent = e.message || "Couldn't forward"; });
     });
   }
 
