@@ -752,6 +752,10 @@
         <h3>🚪 Upcoming Buyer Visits</h3>
         <ul class="mini-list" id="bvHomeList"></ul>
       </div>
+      <div class="card hidden" id="inspHomeWidget" style="padding:18px;margin-bottom:20px">
+        <h3>🔍 Upcoming Inspections</h3>
+        <ul class="mini-list" id="inspHomeList"></ul>
+      </div>
       <div class="home-grid">
         <div class="card" style="padding:18px"><h3>Upcoming Deadlines</h3><ul class="mini-list" id="homeUpcoming"></ul></div>
         <div class="card" style="padding:18px"><h3>Audit Alerts</h3><ul class="mini-list" id="homeAuditAlerts"></ul></div>
@@ -873,6 +877,24 @@
       <div class="card"><div id="bvListWrap"></div></div>
     </div>
 
+    <div id="view-inspection" class="hidden">
+      <div class="page-head"><h2>Inspection Visits</h2></div>
+      <div class="page-sub" style="margin-top:-14px">Log an incoming inspection so the right people are aware — everyone on the notify list gets an email.</div>
+      <div class="card" style="padding:18px;margin-bottom:18px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div class="field" style="flex:1;min-width:180px"><label>Person's name</label><input id="inspVisitorName" placeholder="e.g. Rakesh Mehta" /></div>
+          <div class="field" style="flex:1;min-width:180px"><label>Buyer name</label><input id="inspBuyerName" placeholder="e.g. Kohinoor Textiles" /></div>
+          <div class="field" style="flex:1;min-width:160px"><label>Visit date</label><input id="inspDate" type="date" /></div>
+          <div class="field" style="flex:1;min-width:140px"><label>Visit time</label><input id="inspTime" type="time" /></div>
+        </div>
+        <div class="field"><label>Reason for visit</label><input id="inspReason" placeholder="e.g. Final quality inspection before shipment" /></div>
+        <div class="modal-err" id="inspErr"></div>
+        <button class="btn" id="inspSaveBtn">Log Inspection</button>
+      </div>
+      <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Upcoming &amp; recent inspections</h2></div>
+      <div class="card"><div id="inspListWrap"></div></div>
+    </div>
+
     <div id="view-chat" class="hidden">
       <div class="page-head">
         <h2>Team Chat</h2>
@@ -976,6 +998,12 @@
       <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Buyer visit — Home page alert</h2></div>
       <div class="page-sub" style="margin-top:-12px">Whoever's checked here sees an "Upcoming Buyer Visits" card on their own Home page (buyer, time, who's attending) — it disappears on its own once the visit time passes. Separate from the email list above.</div>
       <div class="card" style="padding:18px;margin-bottom:6px"><div id="bvAlertStaffWrap"></div></div>
+      <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Inspection notify list</h2></div>
+      <div class="page-sub" style="margin-top:-12px">These people get an email whenever an inspection is logged. Set once here — no need to pick recipients per visit.</div>
+      <div class="card" style="padding:18px;margin-bottom:6px"><div id="inspNotifyListWrap"></div></div>
+      <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Inspection — Home page alert</h2></div>
+      <div class="page-sub" style="margin-top:-12px">Whoever's checked here sees an "Upcoming Inspections" card on their own Home page (person, buyer, reason, time) — it disappears on its own once the visit time passes. Separate from the email list above.</div>
+      <div class="card" style="padding:18px;margin-bottom:6px"><div id="inspAlertStaffWrap"></div></div>
       <div class="page-head" style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
         <div><h2 style="font-size:16px">Staff access</h2></div>
         <button class="btn" id="addStaffBtn">+ Add Staff</button>
@@ -1256,6 +1284,30 @@
           case "getBuyerVisitAlertStaff": resolve((state.buyerVisitAlertStaff || []).slice()); break;
           case "setBuyerVisitAlertStaff": {
             state.buyerVisitAlertStaff = (p.doc_ids || []).slice();
+            resolve({ ok: true });
+            break;
+          }
+          case "getInspections": resolve((state.inspections || []).slice()); break;
+          case "createInspection": {
+            var iid = "INSP" + Math.random().toString(36).slice(2, 7).toUpperCase();
+            if (!state.inspections) state.inspections = [];
+            state.inspections.unshift({
+              id: iid, visit_at: p.visit_at, visitor_name: p.visitor_name || "", buyer_name: p.buyer_name || "",
+              reason: p.reason || "", department: p.department || "", created_by: p.created_by || "Unknown",
+              created_at: new Date().toISOString()
+            });
+            resolve({ id: iid });
+            break;
+          }
+          case "getInspectionNotifyList": resolve((state.inspectionNotifyList || []).slice()); break;
+          case "setInspectionNotifyList": {
+            state.inspectionNotifyList = (p.list || []).slice();
+            resolve({ ok: true });
+            break;
+          }
+          case "getInspectionAlertStaff": resolve((state.inspectionAlertStaff || []).slice()); break;
+          case "setInspectionAlertStaff": {
+            state.inspectionAlertStaff = (p.doc_ids || []).slice();
             resolve({ ok: true });
             break;
           }
@@ -1738,6 +1790,10 @@
       { id: "VISDEMO2", visit_at: new Date(now - 48 * h).toISOString(), num_persons: 2, created_by: "Demo Admin", buyer_name: "Silverline Exports", attendees: [], created_at: new Date(now - 50 * h).toISOString() }
     ];
     var buyerNotifyList = [{ name: "Demo Admin", email: "admin@example.com" }];
+    var inspections = [
+      { id: "INSPDEMO1", visit_at: new Date(now + 30 * h).toISOString(), visitor_name: "Rakesh Mehta", buyer_name: "Kohinoor Textiles", reason: "Final quality inspection before shipment", department: "Merchant", created_by: "Demo Admin", created_at: new Date(now - 1 * h).toISOString() }
+    ];
+    var inspectionNotifyList = [{ name: "Demo Admin", email: "admin@example.com" }];
     var notices = [
       { id: "NOTDEMO1", title: "Office closed for Diwali", body: "The office will remain closed on the festival dates. Plan handovers in advance.", pinned: true, created_by: "Demo Admin", created_at: new Date(now - 2 * d).toISOString() },
       { id: "NOTDEMO2", title: "New buyer visit process live", body: "Use the new Buyer Visit tile to log any incoming buyer visit — the notify list gets emailed automatically.", pinned: false, created_by: "Demo Admin", created_at: new Date(now - 5 * d).toISOString() }
@@ -1769,7 +1825,7 @@
       { id: "MSGDEMO2", thread_id: "CHTDEMO1", sender_doc_id: "demo_admin", sender_name: "Demo Admin", text: "Yes, confirmed — going with the navy and rust combo.", deleted_for: [], created_at: new Date(now - 2.8 * h).toISOString() },
       { id: "MSGDEMO3", thread_id: "CHTDEMO2", sender_doc_id: "rohit_prod", sender_name: "Rohit Sharma", text: "Batch #221 QC is done, ready to ship tomorrow.", deleted_for: [], created_at: new Date(now - 25 * h).toISOString() }
     ];
-    return { doers: doers, tasks: tasks, audits: audits, faqs: faqs, tickets: tickets, ticketComments: ticketComments, buyerVisits: buyerVisits, buyerNotifyList: buyerNotifyList, notices: notices, holidays: holidays, chatThreads: chatThreads, chatMembers: chatMembers, chatMessages: chatMessages };
+    return { doers: doers, tasks: tasks, audits: audits, faqs: faqs, tickets: tickets, ticketComments: ticketComments, buyerVisits: buyerVisits, buyerNotifyList: buyerNotifyList, inspections: inspections, inspectionNotifyList: inspectionNotifyList, notices: notices, holidays: holidays, chatThreads: chatThreads, chatMembers: chatMembers, chatMessages: chatMessages };
   }
 
   function toast(msg, isErr) {
@@ -1880,6 +1936,8 @@
     state.ticketComments = seed.ticketComments || {};
     state.buyerVisits = seed.buyerVisits || [];
     state.buyerNotifyList = seed.buyerNotifyList || [];
+    state.inspections = seed.inspections || [];
+    state.inspectionNotifyList = seed.inspectionNotifyList || [];
     state.notices = seed.notices || [];
     state.holidays = seed.holidays || [];
     state.demoChat = { threads: seed.chatThreads || [], members: seed.chatMembers || [], messages: seed.chatMessages || [] };
@@ -2062,23 +2120,37 @@
 
   function loadAll() {
     if (state.demo) {
-      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderNoticeBoard(); renderSettingsCard();
+      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard();
       api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
       loadNotifications();
       return;
     }
     Promise.all([
-      api("listTasks"), api("getDoers"), api("getFaqs"), api("listTickets"), api("getBuyerVisits"), api("getNotices"), api("getHolidays"), api("getSettings"), api("getBuyerVisitAlertStaff")
+      api("listTasks"), api("getDoers"), api("getFaqs"), api("listTickets"), api("getBuyerVisits"), api("getNotices"), api("getHolidays"), api("getSettings"), api("getBuyerVisitAlertStaff"), api("getInspections"), api("getInspectionAlertStaff")
     ]).then(function (r) {
-      // getSettings/getBuyerVisitAlertStaff are fetched for every user, not
-      // just admins — both affect what everyone sees (the ticker toggles,
-      // and who gets the buyer-visit Home widget), even though only an
-      // admin can change either (Settings page is admin-only).
-      state.tasks = r[0]; state.doers = r[1]; state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8];
-      renderTasks(); renderFaqs(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderNoticeBoard();
+      // getSettings/getBuyerVisitAlertStaff/getInspectionAlertStaff are fetched
+      // for every user, not just admins — they affect what everyone sees (the
+      // ticker toggles, and who gets the buyer-visit / inspection Home widgets),
+      // even though only an admin can change any of them (Settings page is admin-only).
+      state.tasks = r[0]; state.doers = r[1]; state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8]; state.inspections = r[9]; state.inspectionAlertStaff = r[10];
+      // Re-sync my own record from the just-fetched staff list. Without this, a
+      // session restored from localStorage (see boot() below) keeps whatever
+      // visible_modules/visible_sections/permissions it had at last login
+      // forever — an admin granting a module tile (or any other access change)
+      // never shows up for that person until they explicitly log out and back
+      // in. getDoers is fetched on every load anyway, so use it to keep the
+      // signed-in doer's own access flags current too.
+      var freshMe = (state.doers || []).find(function (dd) { return dd.doc_id === state.doer.doc_id; });
+      if (freshMe) {
+        state.doer = Object.assign({}, state.doer, freshMe);
+        try { localStorage.setItem("deleg_doer", JSON.stringify(state.doer)); } catch (e) {}
+        applySectionVisibility();
+      }
+      renderTasks(); renderFaqs(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard();
       if (state.doer.is_admin) {
         renderAdmin();
         api("getBuyerNotifyList").then(function (list) { state.buyerNotifyList = list; renderNotifyList(); }).catch(function () {});
+        api("getInspectionNotifyList").then(function (list) { state.inspectionNotifyList = list; renderInspectionNotifyList(); }).catch(function () {});
         renderSettingsCard();
       }
       if (state.doer.can_view_audit || state.doer.is_admin) {
@@ -2210,6 +2282,7 @@
     { key: "cbm", icon: "📦", name: "CBM / Storage Planner", status: "live", goto: "cbm" },
     { key: "buyerorder", icon: "🧾", name: "Buyer Order Dashboard", status: "live", goto: "buyerorder" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit" },
+    { key: "inspection", icon: "🔍", name: "Inspection", status: "live", goto: "inspection" },
     { key: "samplingfms", icon: "🧵", name: "Sampling FMS", status: "soon", goto: "samplingfms" },
     { key: "attendance", icon: "🕒", name: "Attendance", status: "soon", goto: "attendance" },
     { key: "salary", icon: "💰", name: "Salary", status: "soon", goto: "salary" }
@@ -2313,11 +2386,12 @@
     cbmFrameLoaded = true;
   }
 
-  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "admin", "staffControls"];
+  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "inspection", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "admin", "staffControls"];
   function goToView(view) {
     document.querySelectorAll(".nav-item[data-view]").forEach(function (b) { b.classList.toggle("active", b.dataset.view === view); });
     state.view = view;
     if (view === "buyervisit") renderBuyerVisits();
+    if (view === "inspection") renderInspections();
     if (view === "notices") renderNoticeBoard();
     if (view === "checklist") loadChecklistFrame();
     if (view === "costing") loadCostingFrame();
@@ -2536,6 +2610,25 @@
         bvWidget.classList.remove("hidden");
       } else {
         bvWidget.classList.add("hidden");
+      }
+    }
+
+    var inspWidget = document.getElementById("inspHomeWidget");
+    if (inspWidget) {
+      var inspAlertList = state.inspectionAlertStaff || [];
+      var inspEligible = state.doer.is_admin || inspAlertList.indexOf(state.doer.doc_id) !== -1;
+      var inspNowTs = Date.now();
+      var upcomingInsp = inspEligible ? (state.inspections || []).filter(function (v) {
+        return new Date(v.visit_at).getTime() >= inspNowTs;
+      }).sort(function (a, b) { return new Date(a.visit_at) - new Date(b.visit_at); }) : [];
+      if (upcomingInsp.length) {
+        document.getElementById("inspHomeList").innerHTML = upcomingInsp.map(function (v) {
+          var label = esc(v.visitor_name || "Inspection") + (v.buyer_name ? " — " + esc(v.buyer_name) : "");
+          return "<li><span><b>" + label + "</b>" + (v.reason ? " <span class=\"sub\">" + esc(v.reason) + "</span>" : "") + "</span><span>" + fmtDate(v.visit_at) + "</span></li>";
+        }).join("");
+        inspWidget.classList.remove("hidden");
+      } else {
+        inspWidget.classList.add("hidden");
       }
     }
 
@@ -2944,6 +3037,8 @@
     });
     renderNotifyList();
     renderBvAlertStaffList();
+    renderInspectionNotifyList();
+    renderInspectionAlertStaffList();
     renderSettingsCard();
   }
 
@@ -3754,6 +3849,118 @@
         return api("getBuyerVisits").then(function (v) { state.buyerVisits = v; renderBuyerVisits(); renderHome(); });
       }).catch(function (e) { err.textContent = e.message; }).finally(function () {
         bvSaveBtn.disabled = false; bvSaveBtn.textContent = "Log Visit";
+      });
+    });
+  }
+
+  // ---------- Inspection notify list (admin) ----------
+  function renderInspectionNotifyList() {
+    var wrap = document.getElementById("inspNotifyListWrap");
+    if (!wrap || !state.doer || !state.doer.is_admin) return;
+    var list = state.inspectionNotifyList || [];
+    var rows = list.map(function (p, i) {
+      return '<div class="notify-row"><div><b>' + esc(p.name || "—") + '</b><div style="color:var(--sub);font-size:12px">' + esc(p.email) + '</div></div>' +
+        '<button class="btn secondary insp-notify-remove" data-i="' + i + '" style="padding:6px 10px;font-size:12px">Remove</button></div>';
+    }).join("");
+    wrap.innerHTML = (list.length ? rows : '<div class="empty" style="padding:16px">No one on the notify list yet.</div>') +
+      '<div class="field" style="margin-top:14px"><label>Add person</label>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+      '<input id="inspNotifyName" placeholder="Name (optional)" style="flex:1;min-width:140px" />' +
+      '<input id="inspNotifyEmail" placeholder="Email" style="flex:1;min-width:180px" />' +
+      '<button class="btn" id="inspNotifyAddBtn">Add</button>' +
+      "</div></div>";
+    wrap.querySelectorAll(".insp-notify-remove").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var i = parseInt(b.dataset.i, 10);
+        var newList = state.inspectionNotifyList.slice();
+        newList.splice(i, 1);
+        saveInspectionNotifyList(newList);
+      });
+    });
+    var addBtn = document.getElementById("inspNotifyAddBtn");
+    if (addBtn) addBtn.addEventListener("click", function () {
+      var name = document.getElementById("inspNotifyName").value.trim();
+      var email = document.getElementById("inspNotifyEmail").value.trim();
+      if (!email || email.indexOf("@") === -1) { toast("Enter a valid email.", true); return; }
+      var newList = (state.inspectionNotifyList || []).concat([{ name: name, email: email }]);
+      saveInspectionNotifyList(newList);
+    });
+  }
+  function saveInspectionNotifyList(newList) {
+    api("setInspectionNotifyList", { list: newList }).then(function () {
+      state.inspectionNotifyList = newList;
+      renderInspectionNotifyList();
+      toast("Inspection notify list updated.");
+    }).catch(function (e) { toast(e.message, true); });
+  }
+
+  // ---------- Inspection — Home page alert list (admin) ----------
+  function renderInspectionAlertStaffList() {
+    var wrap = document.getElementById("inspAlertStaffWrap");
+    if (!wrap || !state.doer || !state.doer.is_admin) return;
+    var current = state.inspectionAlertStaff || [];
+    var sorted = (state.doers || []).slice().sort(function (a, b) { return (a.delegation_name || a.name || "").localeCompare(b.delegation_name || b.name || ""); });
+    wrap.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 14px;max-height:220px;overflow-y:auto;padding-bottom:10px">' +
+      sorted.map(function (d) {
+        return '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13.5px"><input type="checkbox" class="insp-alert-cb" data-doc-id="' + esc(d.doc_id) + '" style="width:auto" ' + (current.indexOf(d.doc_id) !== -1 ? "checked" : "") + ' /> ' + esc(d.delegation_name || d.name) + (d.designation ? '<span class="sub">' + esc(d.designation) + "</span>" : "") + "</label>";
+      }).join("") +
+      '</div><button class="btn" id="inspAlertSaveBtn" style="margin-top:4px">Save</button>';
+    document.getElementById("inspAlertSaveBtn").addEventListener("click", function () {
+      var btn = document.getElementById("inspAlertSaveBtn"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      var docIds = Array.from(document.querySelectorAll(".insp-alert-cb")).filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.dataset.docId; });
+      api("setInspectionAlertStaff", { doc_ids: docIds }).then(function () {
+        state.inspectionAlertStaff = docIds;
+        renderHome();
+        toast("Inspection alert list updated.");
+      }).catch(function (e) { toast(e.message, true); }).finally(function () {
+        btn.disabled = false; btn.textContent = "Save";
+      });
+    });
+  }
+
+  // ---------- Inspection Visits (logged by Merchant dept staff — gated by the
+  // "Inspection" module tile in Staff Controls, same as every other module) ----------
+  function renderInspections() {
+    var wrap = document.getElementById("inspListWrap");
+    if (!wrap || !state.doer) return;
+    var list = (state.inspections || []).slice().sort(function (a, b) { return new Date(b.visit_at) - new Date(a.visit_at); });
+    if (!list.length) { wrap.innerHTML = '<div class="empty">No inspections logged yet.</div>'; return; }
+    var now = Date.now();
+    var rows = list.map(function (v) {
+      var d = new Date(v.visit_at);
+      var upcoming = d.getTime() >= now;
+      return "<tr><td>" + esc(v.visitor_name || "—") + "</td>" +
+        "<td>" + esc(v.buyer_name || "—") + "</td>" +
+        "<td>" + d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + "</td>" +
+        "<td>" + esc(v.reason || "—") + "</td>" +
+        "<td>" + esc(v.created_by || "—") + "</td>" +
+        '<td><span class="module-badge ' + (upcoming ? "live" : "soon") + '">' + (upcoming ? "Upcoming" : "Past") + "</span></td></tr>";
+    }).join("");
+    wrap.innerHTML = "<table><thead><tr><th>Person</th><th>Buyer</th><th>When</th><th>Reason</th><th>Logged by</th><th>Status</th></tr></thead><tbody>" + rows + "</tbody></table>";
+  }
+  var inspSaveBtn = document.getElementById("inspSaveBtn");
+  if (inspSaveBtn) {
+    inspSaveBtn.addEventListener("click", function () {
+      var visitorName = document.getElementById("inspVisitorName").value.trim();
+      var buyerName = document.getElementById("inspBuyerName").value.trim();
+      var date = document.getElementById("inspDate").value;
+      var time = document.getElementById("inspTime").value;
+      var reason = document.getElementById("inspReason").value.trim();
+      var err = document.getElementById("inspErr");
+      err.textContent = "";
+      if (!visitorName || !date || !time) { err.textContent = "Enter the person's name, date and time."; return; }
+      var visitAt = new Date(date + "T" + time).toISOString();
+      inspSaveBtn.disabled = true; inspSaveBtn.innerHTML = '<span class="spinner"></span>Logging…';
+      api("createInspection", { visit_at: visitAt, visitor_name: visitorName, buyer_name: buyerName, reason: reason, department: state.doer.department || "", created_by: myKey() }).then(function () {
+        toast("Inspection logged — the notify list has been emailed.");
+        document.getElementById("inspVisitorName").value = "";
+        document.getElementById("inspBuyerName").value = "";
+        document.getElementById("inspDate").value = "";
+        document.getElementById("inspTime").value = "";
+        document.getElementById("inspReason").value = "";
+        return api("getInspections").then(function (v) { state.inspections = v; renderInspections(); renderHome(); });
+      }).catch(function (e) { err.textContent = e.message; }).finally(function () {
+        inspSaveBtn.disabled = false; inspSaveBtn.textContent = "Log Inspection";
       });
     });
   }
