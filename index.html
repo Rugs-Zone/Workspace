@@ -1056,8 +1056,8 @@
 <script>
 (function(){
   "use strict";
-  var SUPABASE_URL = "https://lestwabfbjsbwuovayub.supabase.co";
-  var ANON_KEY = "sb_publishable_KrWpU9UQxuE0P5GeUXLs3Q_SVvPMGYT";
+  var SUPABASE_URL = "https://asbgfjngxsabnnzgxugu.supabase.co";
+  var ANON_KEY = "sb_publishable_puw8o_XzDvXmitIaNZvCtQ_5UGjXTBB";
   var FN_URL = SUPABASE_URL + "/functions/v1/deleg-api";
 
   var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tickets: [], ticketComments: {}, buyerVisits: [], buyerNotifyList: [], buyerVisitAlertStaff: [], notices: [], holidays: [], notifications: [], settings: { notifications_enabled: true, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true }, tab: "mine", ticketTab: "mine", helpSlipTab: "mine", view: "home", demo: false, chatThreads: [], chatActiveThread: null, chatMessages: [], demoChat: { threads: [], members: [], messages: [], reactions: [], stars: [], broadcastLists: [] },
@@ -2126,7 +2126,13 @@
       return;
     }
     Promise.all([
-      api("listTasks"), api("getDoers"), api("getFaqs"), api("listTickets"), api("getBuyerVisits"), api("getNotices"), api("getHolidays"), api("getSettings"), api("getBuyerVisitAlertStaff"), api("getInspections"), api("getInspectionAlertStaff")
+      api("listTasks"), api("getDoers"), api("getFaqs"), api("listTickets"), api("getBuyerVisits"), api("getNotices"), api("getHolidays"), api("getSettings"), api("getBuyerVisitAlertStaff"),
+      // .catch-guarded: these two are only "unknown action" until the deleg-api
+      // edge function is redeployed with the Inspection cases. Falling back to
+      // [] here means an out-of-sync backend degrades just the Inspection
+      // widget/list to empty, instead of failing this whole Promise.all and
+      // blanking every stat tile and module on Home for every single user.
+      api("getInspections").catch(function () { return []; }), api("getInspectionAlertStaff").catch(function () { return []; })
     ]).then(function (r) {
       // getSettings/getBuyerVisitAlertStaff/getInspectionAlertStaff are fetched
       // for every user, not just admins — they affect what everyone sees (the
