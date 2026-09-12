@@ -2154,9 +2154,9 @@
     document.getElementById("navScore").classList.toggle("hidden", !(state.doer.can_view_master || state.doer.is_admin));
     document.getElementById("ticketTabAll").classList.toggle("hidden", !state.doer.is_admin);
     document.getElementById("helpSlipTabAll").classList.toggle("hidden", !state.doer.is_admin);
-    document.getElementById("addNoticeBtn").classList.toggle("hidden", !state.doer.is_admin);
-    document.getElementById("addHolidayBtn").classList.toggle("hidden", !state.doer.is_admin);
-    document.getElementById("addBirthdayBtn").classList.toggle("hidden", !state.doer.is_admin);
+    document.getElementById("addNoticeBtn").classList.toggle("hidden", !canManageModule("notices"));
+    document.getElementById("addHolidayBtn").classList.toggle("hidden", !canManageModule("holidays"));
+    document.getElementById("addBirthdayBtn").classList.toggle("hidden", !canManageModule("birthdays"));
     document.getElementById("navSettings").classList.toggle("hidden", !state.doer.is_admin);
     applySectionVisibility();
     applySidebarState();
@@ -2439,6 +2439,35 @@
     return '<select id="' + (selectId || "") + '" data-doc="' + esc(d.doc_id) + '" class="ws-role-select">' +
       options.map(function (r) { return '<option value="' + r + '"' + (r === cur ? " selected" : "") + ">" + WS_ROLE_LABELS[r] + "</option>"; }).join("") +
       "</select>";
+  }
+
+  // Delegated module access — lets an Admin/Super Admin hand a specific
+  // employee (or manager) the ability to manage one content area (e.g. the
+  // Birthday Registry) without making them a workspace admin. Independent of
+  // WS_ROLES above: a plain employee can hold managed_modules while staying
+  // "employee" everywhere else. Audits already has its own long-standing
+  // per-person toggle (can_view_audit) that does the same job for that page,
+  // so it isn't duplicated here — this covers areas that were previously
+  // admin-only with no per-person override.
+  var MODULE_ACCESS_DEFS = [
+    { key: "birthdays", label: "Birthday Registry" },
+    { key: "notices", label: "Notice Board" },
+    { key: "holidays", label: "Holiday List" }
+  ];
+  function canManageModule(key) {
+    if (!state.doer) return false;
+    if (state.doer.is_admin) return true;
+    var mm = state.doer.managed_modules || [];
+    return mm.indexOf(key) !== -1;
+  }
+  function moduleAccessCheckboxesHtml(d, idPrefix) {
+    var mm = (d && d.managed_modules) || [];
+    return MODULE_ACCESS_DEFS.map(function (m) {
+      return '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="' + idPrefix + m.key + '" class="module-access-cb" data-module="' + m.key + '" style="width:auto" ' + (mm.indexOf(m.key) !== -1 ? "checked" : "") + " /> " + esc(m.label) + "</label>";
+    }).join("");
+  }
+  function collectModuleAccessCheckboxes(root) {
+    return Array.from((root || document).querySelectorAll(".module-access-cb")).filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.dataset.module; });
   }
 
   // Checklist FMS is a separate, self-contained React app (own login gate, own state)
@@ -3311,6 +3340,11 @@
         "</div>" +
       "</div>" +
       '<div class="card" style="padding:18px;margin-bottom:16px">' +
+        '<div class="page-head" style="margin:0 0 4px"><h2 style="font-size:15px">Delegated module access</h2></div>' +
+        '<div class="page-sub" style="margin:0 0 10px">Let this person manage a specific area (add/edit/delete) without making them a Workspace Admin — e.g. hand Birthday Registry to HR. Has no effect if they\'re already an Admin/Super Admin, since those already manage everything.</div>' +
+        moduleAccessCheckboxesHtml(d, "scMod_") +
+      "</div>" +
+      '<div class="card" style="padding:18px;margin-bottom:16px">' +
         '<div class="page-head" style="margin:0 0 4px"><h2 style="font-size:15px">Visibility</h2></div>' +
         '<div class="page-sub" style="margin:0 0 10px">Untick anything this person shouldn\'t see. Workspace Admin above isn\'t affected by this.</div>' +
         '<div class="field"><label>Sidebar sections</label>' + visChecklist(SECTION_DEFS, curSections, "sc-section") + "</div>" +
@@ -3361,7 +3395,8 @@
         can_view_audit: document.getElementById("scViewAudit").checked,
         visible_sections: sectionKeys,
         visible_modules: moduleKeys,
-        module_roles: newRoles
+        module_roles: newRoles,
+        managed_modules: collectModuleAccessCheckboxes(wrap)
       };
       // #scRole only exists when canEditWsRole(d) allowed showing an editable
       // select (see renderStaffControls above) — a read-only badge otherwise,
@@ -4257,7 +4292,9 @@
   }
   function renderNoticeBoard() {
     renderNoticeTicker();
-    var isAdmin = state.doer && state.doer.is_admin;
+    var canNotices = canManageModule("notices");
+    var canHolidays = canManageModule("holidays");
+    var canBirthdays = canManageModule("birthdays");
     var nWrap = document.getElementById("noticeListWrap");
     if (nWrap) {
       var notices = (state.notices || []).slice();
@@ -4272,12 +4309,12 @@
             (n.body ? '<div class="notice-body">' + esc(n.body) + '</div>' : "") +
             '<div class="notice-meta">by ' + esc(n.created_by || "Admin") + " · " + fmtDate(n.created_at) + '</div>' +
             '</div>' +
-            (isAdmin ? '<button class="btn secondary notice-del" data-id="' + esc(n.id) + '" style="padding:6px 10px;font-size:12px">Delete</button>' : "") +
+            (canNotices ? '<button class="btn secondary notice-del" data-id="' + esc(n.id) + '" style="padding:6px 10px;font-size:12px">Delete</button>' : "") +
             '</div>';
         }).join("");
         nWrap.querySelectorAll(".notice-del").forEach(function (b) {
           b.addEventListener("click", function () {
-            api("deleteNotice", { id: b.dataset.id }).then(function () {
+            api("deleteNotice", { id: b.dataset.id, requester_doc_id: state.doer.doc_id }).then(function () {
               state.notices = state.notices.filter(function (n) { return n.id !== b.dataset.id; });
               renderNoticeBoard();
               toast("Notice removed");
@@ -4295,12 +4332,12 @@
         hWrap.innerHTML = holidays.map(function (h) {
           return '<div class="holiday-row"><div class="holiday-date">' + fmtHolidayDate(h.holiday_date) + '</div>' +
             '<div style="flex:1">' + esc(h.name) + '</div>' +
-            (isAdmin ? '<button class="btn secondary holiday-del" data-id="' + esc(h.id) + '" style="padding:6px 10px;font-size:12px">Delete</button>' : "") +
+            (canHolidays ? '<button class="btn secondary holiday-del" data-id="' + esc(h.id) + '" style="padding:6px 10px;font-size:12px">Delete</button>' : "") +
             '</div>';
         }).join("");
         hWrap.querySelectorAll(".holiday-del").forEach(function (b) {
           b.addEventListener("click", function () {
-            api("deleteHoliday", { id: b.dataset.id }).then(function () {
+            api("deleteHoliday", { id: b.dataset.id, requester_doc_id: state.doer.doc_id }).then(function () {
               state.holidays = state.holidays.filter(function (h) { return h.id !== b.dataset.id; });
               renderNoticeBoard();
               toast("Holiday removed");
@@ -4326,12 +4363,12 @@
             : '<div class="birthday-row-photo initial">' + esc(chatAvatarInitial(bd.name)) + "</div>";
           return '<div class="birthday-row">' + bdPhoto + '<div class="birthday-date">' + fmtBirthdayDate(bd.dob) + '</div>' +
             '<div style="flex:1">' + esc(bd.name) + '</div>' +
-            (isAdmin ? '<button class="btn secondary birthday-del" data-id="' + esc(bd.id) + '" style="padding:6px 10px;font-size:12px">Delete</button>' : "") +
+            (canBirthdays ? '<button class="btn secondary birthday-del" data-id="' + esc(bd.id) + '" style="padding:6px 10px;font-size:12px">Delete</button>' : "") +
             '</div>';
         }).join("");
         bWrap.querySelectorAll(".birthday-del").forEach(function (b) {
           b.addEventListener("click", function () {
-            api("deleteBirthday", { id: b.dataset.id }).then(function () {
+            api("deleteBirthday", { id: b.dataset.id, requester_doc_id: state.doer.doc_id }).then(function () {
               state.birthdays = state.birthdays.filter(function (bd) { return bd.id !== b.dataset.id; });
               renderNoticeBoard();
               toast("Birthday removed");
@@ -4363,7 +4400,7 @@
       var err = document.getElementById("ntcErr");
       if (!title) { err.textContent = "Title is required."; return; }
       var btn = document.getElementById("ntcSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Posting…';
-      api("createNotice", { title: title, body: body, pinned: pinned, created_by: myKey() }).then(function () {
+      api("createNotice", { title: title, body: body, pinned: pinned, created_by: myKey(), requester_doc_id: state.doer.doc_id }).then(function () {
         toast("Notice posted");
         closeModal();
         return api("getNotices").then(function (ns) { state.notices = ns; renderNoticeBoard(); });
@@ -4386,7 +4423,7 @@
       var err = document.getElementById("holErr");
       if (!name || !date) { err.textContent = "Name and date are required."; return; }
       var btn = document.getElementById("holSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
-      api("createHoliday", { name: name, holiday_date: date, created_by: myKey() }).then(function () {
+      api("createHoliday", { name: name, holiday_date: date, created_by: myKey(), requester_doc_id: state.doer.doc_id }).then(function () {
         toast("Holiday added");
         closeModal();
         return api("getHolidays").then(function (hs) { state.holidays = hs; renderNoticeBoard(); });
@@ -4412,7 +4449,7 @@
       if (!name || !dob) { err.textContent = "Name and date of birth are required."; return; }
       var btn = document.getElementById("bdSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
       var finishAddBirthday = function (photoBase64) {
-        api("createBirthday", { name: name, dob: dob, photoBase64: photoBase64 || "", created_by: myKey() }).then(function () {
+        api("createBirthday", { name: name, dob: dob, photoBase64: photoBase64 || "", created_by: myKey(), requester_doc_id: state.doer.doc_id }).then(function () {
           toast("Birthday added");
           closeModal();
           return api("getBirthdays").then(function (bs) { state.birthdays = bs; renderNoticeBoard(); });
