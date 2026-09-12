@@ -973,6 +973,16 @@
       <div class="card coming-soon"><div class="big">🧵</div><b>Sampling FMS is coming soon</b>This module will appear here once the sampling workflow is connected — the tile, routing and visibility controls are already live.</div>
     </div>
 
+    <div id="view-ordertracking" class="hidden">
+      <div class="page-head"><h2>Order Tracking</h2></div>
+      <div class="card coming-soon"><div class="big">🚚</div><b>Order Tracking is coming soon</b>This module will appear here once the order tracking workflow is connected — the tile, routing and visibility controls are already live.</div>
+    </div>
+
+    <div id="view-teamworkspace" class="hidden">
+      <div class="page-head"><h2>Team Workspace</h2></div>
+      <div class="card coming-soon"><div class="big">🗂️</div><b>Team Workspace is coming soon</b>This module will appear here once the team workspace workflow is connected — the tile, routing and visibility controls are already live.</div>
+    </div>
+
     <div id="view-admin" class="hidden">
       <div class="hero-card dark" style="margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
@@ -2289,6 +2299,8 @@
     { key: "buyerorder", icon: "🧾", name: "Buyer Order Dashboard", status: "live", goto: "buyerorder" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit" },
     { key: "inspection", icon: "🔍", name: "Inspection", status: "live", goto: "inspection" },
+    { key: "ordertracking", icon: "🚚", name: "Order Tracking", status: "soon", goto: "ordertracking" },
+    { key: "teamworkspace", icon: "🗂️", name: "Team Workspace", status: "soon", goto: "teamworkspace" },
     { key: "samplingfms", icon: "🧵", name: "Sampling FMS", status: "soon", goto: "samplingfms" },
     { key: "attendance", icon: "🕒", name: "Attendance", status: "soon", goto: "attendance" },
     { key: "salary", icon: "💰", name: "Salary", status: "soon", goto: "salary" }
@@ -2392,7 +2404,7 @@
     cbmFrameLoaded = true;
   }
 
-  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "inspection", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "admin", "staffControls"];
+  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "admin", "staffControls"];
   function goToView(view) {
     document.querySelectorAll(".nav-item[data-view]").forEach(function (b) { b.classList.toggle("active", b.dataset.view === view); });
     state.view = view;
