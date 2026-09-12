@@ -240,8 +240,20 @@
   .home-logo{height:26px;width:auto;display:block;margin:0 auto 10px}
   .online-pill{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--ink)}
   .online-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
-  .birthday-banner{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#f472b6,#fb923c);color:#fff;border-radius:14px;padding:14px 20px;margin-bottom:16px;font-weight:700;font-size:14.5px;box-shadow:0 4px 14px rgba(251,146,60,.25)}
-  .birthday-banner::before{content:"🎉";font-size:20px}
+  .birthday-banner{margin-bottom:16px}
+  .birthday-poster-row{display:flex;gap:14px;flex-wrap:wrap}
+  .birthday-poster-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#f472b6,#fb923c);color:#fff;border-radius:16px;padding:16px 22px 16px 16px;box-shadow:0 6px 20px rgba(251,146,60,.3);flex:1;min-width:260px}
+  .birthday-poster-card::after{content:"🎉";position:absolute;right:10px;top:6px;font-size:22px;opacity:.85}
+  .birthday-poster-photo{width:58px;height:58px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.85);flex-shrink:0;background:rgba(255,255,255,.25)}
+  .birthday-poster-photo.initial{display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff}
+  .birthday-poster-text{min-width:0}
+  .birthday-poster-title{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.9}
+  .birthday-poster-name{font-size:17px;font-weight:800;line-height:1.25;margin-top:1px}
+  .birthday-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .birthday-row:last-child{border-bottom:none}
+  .birthday-row-photo{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--card2, #f2f2f5)}
+  .birthday-row-photo.initial{display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--brand)}
+  .birthday-date{font-size:12px;font-weight:700;color:var(--brand);min-width:90px}
   .hero-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:20px}
   .hero-card{border-radius:16px;padding:26px;color:#fff;position:relative;overflow:hidden}
   .hero-card.gradient{background:linear-gradient(135deg,var(--purple1),var(--purple2))}
@@ -733,7 +745,7 @@
       </div>
       <div class="page-sub" style="margin-top:-14px">Your tools, updates, and daily work.</div>
       <div class="notif-wrap hidden" id="notifHomeWrap"></div>
-      <div class="birthday-banner hidden" id="birthdayHomeWidget"><span id="birthdayHomeText"></span></div>
+      <div class="birthday-banner hidden" id="birthdayHomeWidget"><div class="birthday-poster-row" id="birthdayPosterRow"></div></div>
       <div class="hero-grid">
         <div class="hero-card gradient">
           <div class="tag">Good to see you</div>
@@ -780,6 +792,15 @@
           <button class="tab hidden" data-tab="all" id="tabAll">All Tasks</button>
         </div>
         <input class="search" id="taskSearch" placeholder="Search task, assignee, ID…" />
+      </div>
+      <div class="toolbar" style="margin-top:8px;flex-wrap:wrap;gap:8px">
+        <select id="taskFilterMonth"><option value="">All Months</option></select>
+        <select id="taskFilterName"><option value="">All Staff</option></select>
+        <select id="taskFilterStatus">
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="Completed">Completed</option>
+        </select>
       </div>
       <div class="card"><div id="taskTableWrap"></div></div>
     </div>
@@ -938,6 +959,12 @@
         <button class="btn secondary hidden" id="addHolidayBtn">+ Add Holiday</button>
       </div>
       <div class="card"><div id="holidayListWrap"></div></div>
+      <div class="page-head" style="margin-top:22px">
+        <h2 style="font-size:16px">Birthdays</h2>
+        <button class="btn secondary hidden" id="addBirthdayBtn">+ Add Birthday</button>
+      </div>
+      <div class="page-sub" style="margin-top:-14px">Admin-managed — whoever's listed here gets a birthday poster on everyone's Home page on their day.</div>
+      <div class="card"><div id="birthdayListWrap"></div></div>
     </div>
 
     <div id="view-checklist" class="hidden" style="height:calc(100vh - var(--topbar-offset));display:flex;flex-direction:column">
@@ -1070,7 +1097,7 @@
   var ANON_KEY = "sb_publishable_puw8o_XzDvXmitIaNZvCtQ_5UGjXTBB";
   var FN_URL = SUPABASE_URL + "/functions/v1/deleg-api";
 
-  var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tickets: [], ticketComments: {}, buyerVisits: [], buyerNotifyList: [], buyerVisitAlertStaff: [], notices: [], holidays: [], notifications: [], settings: { notifications_enabled: true, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true }, tab: "mine", ticketTab: "mine", helpSlipTab: "mine", view: "home", demo: false, chatThreads: [], chatActiveThread: null, chatMessages: [], demoChat: { threads: [], members: [], messages: [], reactions: [], stars: [], broadcastLists: [] },
+  var state = { doer: null, doers: [], tasks: [], faqs: [], audits: [], tickets: [], ticketComments: {}, buyerVisits: [], buyerNotifyList: [], buyerVisitAlertStaff: [], notices: [], holidays: [], birthdays: [], todaysBirthdays: [], notifications: [], settings: { notifications_enabled: true, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true }, tab: "mine", ticketTab: "mine", helpSlipTab: "mine", view: "home", demo: false, chatThreads: [], chatActiveThread: null, chatMessages: [], demoChat: { threads: [], members: [], messages: [], reactions: [], stars: [], broadcastLists: [] },
     chatReplyTo: null, chatEditingId: null, chatShowArchived: false, chatWallpaper: {}, chatThreadFilter: "", chatMsgFilter: "", chatInChatSearchOpen: false, chatUnlockedThisSession: false, presenceHeartbeatHandle: null };
 
   function api(action, payload) {
@@ -1187,16 +1214,39 @@
             resolve({ doc_id: pdTgt2 });
             break;
           }
+          // Admin-managed birthday registry (name/dob/photo) — see deleg_birthdays
+          // on the real backend. Kept entirely separate from the private-details
+          // KYC date-of-birth above: that one is self-entered and private; this
+          // one is admin-entered and what actually powers the Home poster.
+          case "getBirthdays": resolve((state.birthdays || []).slice()); break;
+          case "createBirthday": {
+            var bdId = "BDAY" + Math.random().toString(36).slice(2, 7).toUpperCase();
+            if (!state.birthdays) state.birthdays = [];
+            state.birthdays.push({ id: bdId, name: p.name, dob: p.dob, photo_url: p.photoBase64 || "", created_by: p.created_by || "Admin", created_at: new Date().toISOString() });
+            resolve({ id: bdId });
+            break;
+          }
+          case "updateBirthday": {
+            var bdRec = (state.birthdays || []).find(function (b) { return b.id === p.id; });
+            if (bdRec) {
+              if (p.name !== undefined) bdRec.name = p.name;
+              if (p.dob !== undefined) bdRec.dob = p.dob;
+              if (p.photoBase64) bdRec.photo_url = p.photoBase64;
+            }
+            resolve({ id: p.id });
+            break;
+          }
+          case "deleteBirthday": {
+            state.birthdays = (state.birthdays || []).filter(function (b) { return b.id !== p.id; });
+            resolve({ id: p.id });
+            break;
+          }
           case "getTodaysBirthdays": {
-            var bList = [];
             var bNow = new Date(), bMm = String(bNow.getMonth() + 1).padStart(2, "0"), bDd = String(bNow.getDate()).padStart(2, "0");
-            (state.doers || []).forEach(function (bd) {
-              var rec = state._privateDetails && state._privateDetails[bd.doc_id];
-              if (rec && rec.date_of_birth) {
-                var parts = rec.date_of_birth.split("-");
-                if (parts[1] === bMm && parts[2] === bDd) bList.push({ doc_id: bd.doc_id, name: bd.name, delegation_name: bd.delegation_name, department: bd.department });
-              }
-            });
+            var bList = (state.birthdays || []).filter(function (b) {
+              var parts = String(b.dob || "").split("-");
+              return parts[1] === bMm && parts[2] === bDd;
+            }).map(function (b) { return { name: b.name, photo_url: b.photo_url || "" }; });
             resolve(bList);
             break;
           }
@@ -1819,6 +1869,16 @@
       { id: "HOLDEMO8", name: "Vishwakarma Diwas", holiday_date: "2026-11-10", created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() },
       { id: "HOLDEMO9", name: "Bhai Dooj", holiday_date: "2026-11-11", created_by: "Demo Admin", created_at: new Date(now - 40 * d).toISOString() }
     ];
+    // One entry deliberately dated "today" (month/day only matters — year is a
+    // placeholder) so the Home page birthday poster has something to show as
+    // soon as Demo Preview loads, without needing anyone to add one first.
+    var todayForDemo = new Date();
+    var todayMonthDay = String(todayForDemo.getMonth() + 1).padStart(2, "0") + "-" + String(todayForDemo.getDate()).padStart(2, "0");
+    var birthdays = [
+      { id: "BDAYDEMO1", name: "Anita Verma", dob: "1994-" + todayMonthDay, photo_url: "", created_by: "Demo Admin", created_at: new Date(now - 60 * d).toISOString() },
+      { id: "BDAYDEMO2", name: "Rohit Sharma", dob: "1990-06-14", photo_url: "", created_by: "Demo Admin", created_at: new Date(now - 60 * d).toISOString() },
+      { id: "BDAYDEMO3", name: "Kiran Kaur", dob: "1988-11-02", photo_url: "", created_by: "Demo Admin", created_at: new Date(now - 60 * d).toISOString() }
+    ];
     var chatThreads = [
       { id: "CHTDEMO1", type: "dm", created_at: new Date(now - 3 * h).toISOString() },
       { id: "CHTDEMO2", type: "group", name: "Sales + Production", created_by: "demo_admin", created_at: new Date(now - 26 * h).toISOString() }
@@ -1835,7 +1895,7 @@
       { id: "MSGDEMO2", thread_id: "CHTDEMO1", sender_doc_id: "demo_admin", sender_name: "Demo Admin", text: "Yes, confirmed — going with the navy and rust combo.", deleted_for: [], created_at: new Date(now - 2.8 * h).toISOString() },
       { id: "MSGDEMO3", thread_id: "CHTDEMO2", sender_doc_id: "rohit_prod", sender_name: "Rohit Sharma", text: "Batch #221 QC is done, ready to ship tomorrow.", deleted_for: [], created_at: new Date(now - 25 * h).toISOString() }
     ];
-    return { doers: doers, tasks: tasks, audits: audits, faqs: faqs, tickets: tickets, ticketComments: ticketComments, buyerVisits: buyerVisits, buyerNotifyList: buyerNotifyList, inspections: inspections, inspectionNotifyList: inspectionNotifyList, notices: notices, holidays: holidays, chatThreads: chatThreads, chatMembers: chatMembers, chatMessages: chatMessages };
+    return { doers: doers, tasks: tasks, audits: audits, faqs: faqs, tickets: tickets, ticketComments: ticketComments, buyerVisits: buyerVisits, buyerNotifyList: buyerNotifyList, inspections: inspections, inspectionNotifyList: inspectionNotifyList, notices: notices, holidays: holidays, birthdays: birthdays, chatThreads: chatThreads, chatMembers: chatMembers, chatMessages: chatMessages };
   }
 
   function toast(msg, isErr) {
@@ -1950,6 +2010,7 @@
     state.inspectionNotifyList = seed.inspectionNotifyList || [];
     state.notices = seed.notices || [];
     state.holidays = seed.holidays || [];
+    state.birthdays = seed.birthdays || [];
     state.demoChat = { threads: seed.chatThreads || [], members: seed.chatMembers || [], messages: seed.chatMessages || [] };
     document.body.classList.add("demo-mode");
     document.getElementById("demoBanner").classList.remove("hidden");
@@ -2095,6 +2156,7 @@
     document.getElementById("helpSlipTabAll").classList.toggle("hidden", !state.doer.is_admin);
     document.getElementById("addNoticeBtn").classList.toggle("hidden", !state.doer.is_admin);
     document.getElementById("addHolidayBtn").classList.toggle("hidden", !state.doer.is_admin);
+    document.getElementById("addBirthdayBtn").classList.toggle("hidden", !state.doer.is_admin);
     document.getElementById("navSettings").classList.toggle("hidden", !state.doer.is_admin);
     applySectionVisibility();
     applySidebarState();
@@ -2137,18 +2199,19 @@
     }
     Promise.all([
       api("listTasks"), api("getDoers"), api("getFaqs"), api("listTickets"), api("getBuyerVisits"), api("getNotices"), api("getHolidays"), api("getSettings"), api("getBuyerVisitAlertStaff"),
-      // .catch-guarded: these two are only "unknown action" until the deleg-api
-      // edge function is redeployed with the Inspection cases. Falling back to
-      // [] here means an out-of-sync backend degrades just the Inspection
+      // .catch-guarded: these calls are only "unknown action" until the deleg-api
+      // edge function is redeployed with the matching cases. Falling back to
+      // [] here means an out-of-sync backend degrades just that one
       // widget/list to empty, instead of failing this whole Promise.all and
       // blanking every stat tile and module on Home for every single user.
-      api("getInspections").catch(function () { return []; }), api("getInspectionAlertStaff").catch(function () { return []; })
+      api("getInspections").catch(function () { return []; }), api("getInspectionAlertStaff").catch(function () { return []; }),
+      api("getBirthdays").catch(function () { return []; })
     ]).then(function (r) {
       // getSettings/getBuyerVisitAlertStaff/getInspectionAlertStaff are fetched
       // for every user, not just admins — they affect what everyone sees (the
       // ticker toggles, and who gets the buyer-visit / inspection Home widgets),
       // even though only an admin can change any of them (Settings page is admin-only).
-      state.tasks = r[0]; state.doers = r[1]; state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8]; state.inspections = r[9]; state.inspectionAlertStaff = r[10];
+      state.tasks = r[0]; state.doers = r[1]; state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8]; state.inspections = r[9]; state.inspectionAlertStaff = r[10]; state.birthdays = r[11];
       // Re-sync my own record from the just-fetched staff list. Without this, a
       // session restored from localStorage (see boot() below) keeps whatever
       // visible_modules/visible_sections/permissions it had at last login
@@ -2327,6 +2390,57 @@
     return d && d.is_admin ? "admin" : "employee";
   }
 
+  // ---------- Workspace-wide 4-tier role hierarchy ----------
+  // Super Admin > Admin > Manager > Employee. Separate from moduleRole() above,
+  // which is per-embedded-module (Checklist FMS etc); this one is the
+  // Workspace-wide rank set from Staff Access / Add Staff / Staff Controls,
+  // backed by the `role` column on deleg_doers (kept in sync server-side with
+  // is_admin/can_assign so older code reading those flags directly never goes
+  // stale). Falls back to is_admin ? "admin" : "employee" for any doer that
+  // predates the role column, so nobody's access looks different until an
+  // admin explicitly sets a role for them.
+  var WS_ROLES = ["super_admin", "admin", "manager", "employee"];
+  var WS_ROLE_LABELS = { super_admin: "Super Admin", admin: "Admin", manager: "Manager", employee: "Employee" };
+  function wsRole(d) {
+    if (d && d.role && WS_ROLES.indexOf(d.role) !== -1) return d.role;
+    return d && d.is_admin ? "admin" : "employee";
+  }
+  function myWsRole() { return wsRole(state.doer); }
+  // Which ranks the signed-in admin may hand out. Only a Super Admin can grant
+  // Admin or Super Admin; a plain Admin can only grant Manager or Employee —
+  // "according to their categories will divide... the rules, visibility,
+  // permission and authorities", i.e. rank-granting is itself gated by rank.
+  function grantableWsRoles() {
+    return myWsRole() === "super_admin" ? WS_ROLES : ["manager", "employee"];
+  }
+  // Whether the signed-in admin may change THIS doer's rank at all. Nobody
+  // edits their own rank here (mirrors the existing "can't remove your own
+  // admin access" self-guard, just extended to the full hierarchy so a Super
+  // Admin can't accidentally strand the workspace with no admins either). A
+  // plain Admin additionally can't touch anyone who is already Admin or
+  // Super Admin — only Manager/Employee accounts are theirs to manage.
+  function canEditWsRole(d) {
+    if (d.doc_id === state.doer.doc_id) return false;
+    if (myWsRole() === "super_admin") return true;
+    var cur = wsRole(d);
+    return cur === "manager" || cur === "employee";
+  }
+  // Builds the Role cell for one doer: an editable <select> when the
+  // signed-in admin may change it, else a read-only badge showing their
+  // current rank (still always visible, never hidden).
+  function wsRoleCellHtml(d, selectId) {
+    var cur = wsRole(d);
+    if (!canEditWsRole(d)) {
+      var whyTitle = d.doc_id === state.doer.doc_id ? "You can't change your own rank here" : "Only a Super Admin can change this person's rank";
+      return '<span class="module-badge live" title="' + esc(whyTitle) + '">' + esc(WS_ROLE_LABELS[cur] || cur) + "</span>";
+    }
+    var options = grantableWsRoles().slice();
+    if (options.indexOf(cur) === -1) options.push(cur); // never hide what they actually have, even if not grantable by this admin
+    return '<select id="' + (selectId || "") + '" data-doc="' + esc(d.doc_id) + '" class="ws-role-select">' +
+      options.map(function (r) { return '<option value="' + r + '"' + (r === cur ? " selected" : "") + ">" + WS_ROLE_LABELS[r] + "</option>"; }).join("") +
+      "</select>";
+  }
+
   // Checklist FMS is a separate, self-contained React app (own login gate, own state)
   // embedded whole in CHECKLIST_HTML_B64 below. It's mounted in a hidden iframe the
   // first time someone opens the Checklist FMS tile, and a tiny SSO script is spliced
@@ -2463,6 +2577,9 @@
     });
   });
   document.getElementById("taskSearch").addEventListener("input", renderTasks);
+  ["taskFilterMonth", "taskFilterName", "taskFilterStatus"].forEach(function (id) {
+    document.getElementById(id).addEventListener("change", renderTasks);
+  });
   document.querySelectorAll("#ticketTabs .tab").forEach(function (btn) {
     btn.addEventListener("click", function () {
       document.querySelectorAll("#ticketTabs .tab").forEach(function (b) { b.classList.remove("active"); });
@@ -2533,8 +2650,14 @@
     var myName = state.doer.delegation_name || state.doer.name || "";
     var heroEl = document.getElementById("heroGreeting");
     if (heroEl) heroEl.textContent = "Hey " + myName + ", ready for a focused day?";
-    var privileged = state.doer.can_view_master || state.doer.is_admin;
-    var scope = privileged ? state.tasks : state.tasks.filter(function (t) { return (t.assignee || "").toLowerCase() === myKey().toLowerCase(); });
+    // Home's task tiles are always THIS PERSON's own tasks — including for
+    // admins/can_view_master. An admin who is also personally carrying a full
+    // workload (e.g. Vinay, Gaurav) needs their own Home page to reflect their
+    // own ~170/~700 tasks, not the whole company's total, which is what
+    // "privileged" scope used to show here. Org-wide totals are still
+    // available to admins via the Admin panel's stat grid and the Tasks
+    // page's "All Tasks" tab (with the Staff Name filter to isolate anyone).
+    var scope = state.tasks.filter(function (t) { return (t.assignee || "").toLowerCase() === myKey().toLowerCase(); });
     var total = scope.length;
     var pending = scope.filter(function (t) { return t.status === "Pending"; }).length;
     var completed = scope.filter(function (t) { return t.status === "Completed"; }).length;
@@ -2544,7 +2667,7 @@
     var auditSoon = canAudit ? state.audits.filter(function (a) { return a.valid_to && (new Date(a.valid_to) - new Date()) / 86400000 < 45; }).length : 0;
 
     var tiles = [
-      { key: "tasks_total", n: total, l: privileged ? "Total Tasks" : "My Tasks", goto: "tasks" },
+      { key: "tasks_total", n: total, l: "My Tasks", goto: "tasks" },
       { key: "tasks_pending", n: pending, l: "Pending", goto: "tasks" },
       { key: "tasks_completed", n: completed, l: "Completed", goto: "tasks" },
       { key: "tasks_overdue", n: overdue, l: "Overdue", goto: "tasks" },
@@ -2653,20 +2776,60 @@
     var bdWidget = document.getElementById("birthdayHomeWidget");
     if (bdWidget) {
       var bdList = state.todaysBirthdays || [];
-      if (bdList.length) {
-        var bdNames = bdList.map(function (b) { return b.delegation_name || b.name; });
-        var bdText = bdNames.length === 1
-          ? "Happy Birthday, " + esc(bdNames[0]) + "! 🎂"
-          : "Happy Birthday " + bdNames.map(esc).join(", ") + "! 🎂";
-        document.getElementById("birthdayHomeText").innerHTML = bdText;
+      var bdRow = document.getElementById("birthdayPosterRow");
+      if (bdList.length && bdRow) {
+        bdRow.innerHTML = bdList.map(function (b) {
+          var bName = b.delegation_name || b.name || "";
+          var photo = b.photo_url
+            ? '<img class="birthday-poster-photo" src="' + esc(b.photo_url) + '" alt="" />'
+            : '<div class="birthday-poster-photo initial">' + esc(chatAvatarInitial(bName)) + "</div>";
+          return '<div class="birthday-poster-card">' + photo +
+            '<div class="birthday-poster-text"><div class="birthday-poster-title">Happy Birthday!</div>' +
+            '<div class="birthday-poster-name">' + esc(bName) + ' 🎂</div></div></div>';
+        }).join("");
         bdWidget.classList.remove("hidden");
       } else {
+        if (bdRow) bdRow.innerHTML = "";
         bdWidget.classList.add("hidden");
       }
     }
   }
 
   // ---------- Tasks ----------
+  // "YYYY-MM" for a task's deadline — the month filter groups by this, since
+  // deadline (not when it was assigned) is what people actually think of as
+  // "this month's tasks".
+  function taskMonthKey(t) {
+    if (!t.deadline) return "";
+    var d = new Date(t.deadline);
+    if (isNaN(d)) return "";
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  }
+  function taskMonthLabel(key) {
+    var parts = key.split("-");
+    var d = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
+    return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  }
+  // Rebuilds the Month/Staff filter <select>s from whatever's actually in the
+  // data right now, preserving the current selection across re-renders (same
+  // pattern as deptOptions() elsewhere) so picking a filter doesn't reset itself.
+  function populateTaskFilterOptions() {
+    var monthSel = document.getElementById("taskFilterMonth");
+    var nameSel = document.getElementById("taskFilterName");
+    if (!monthSel || !nameSel) return;
+    var curMonth = monthSel.value, curName = nameSel.value;
+    var months = [];
+    state.tasks.forEach(function (t) {
+      var mk = taskMonthKey(t);
+      if (mk && months.indexOf(mk) === -1) months.push(mk);
+    });
+    months.sort().reverse();
+    monthSel.innerHTML = '<option value="">All Months</option>' +
+      months.map(function (mk) { return '<option value="' + mk + '"' + (mk === curMonth ? " selected" : "") + ">" + taskMonthLabel(mk) + "</option>"; }).join("");
+    var names = state.doers.slice().sort(function (a, b) { return (a.delegation_name || a.name || "").localeCompare(b.delegation_name || b.name || ""); });
+    nameSel.innerHTML = '<option value="">All Staff</option>' +
+      names.map(function (d) { var n = d.delegation_name || d.name; return '<option value="' + esc(n) + '"' + (n === curName ? " selected" : "") + ">" + esc(n) + "</option>"; }).join("");
+  }
   function filteredTasks() {
     var key = myKey().toLowerCase();
     var list = state.tasks.slice();
@@ -2687,6 +2850,12 @@
           (t.delegated_by || "").toLowerCase().indexOf(q) > -1;
       });
     }
+    var monthFilter = document.getElementById("taskFilterMonth").value;
+    if (monthFilter) list = list.filter(function (t) { return taskMonthKey(t) === monthFilter; });
+    var nameFilter = document.getElementById("taskFilterName").value;
+    if (nameFilter) list = list.filter(function (t) { return (t.assignee || "").toLowerCase() === nameFilter.toLowerCase(); });
+    var statusFilter = document.getElementById("taskFilterStatus").value;
+    if (statusFilter) list = list.filter(function (t) { return t.status === statusFilter; });
     list.sort(function (a, b) {
       if (a.status !== b.status) return a.status === "Pending" ? -1 : 1;
       return new Date(b.ts || 0) - new Date(a.ts || 0);
@@ -2695,6 +2864,7 @@
   }
 
   function renderTasks() {
+    populateTaskFilterOptions();
     var list = filteredTasks();
     var wrap = document.getElementById("taskTableWrap");
     if (!list.length) { wrap.innerHTML = '<div class="empty">No tasks here.</div>'; return; }
@@ -2706,6 +2876,12 @@
       if (t.status === "Pending" && isMine) {
         actions += '<button class="btn" data-act="complete" data-id="' + esc(t.id) + '">Complete</button>';
         actions += '<button class="btn secondary" data-act="revise" data-id="' + esc(t.id) + '">Revise</button>';
+      }
+      // Admins (and anyone with assign rights) can mark someone ELSE's pending
+      // task done directly too — e.g. when the assignee reports it verbally or
+      // by phone and isn't the one logging it in themselves.
+      if (t.status === "Pending" && !isMine && canManage) {
+        actions += '<button class="btn secondary" data-act="admincomplete" data-id="' + esc(t.id) + '" title="Mark this done on ' + esc(t.assignee) + '\'s behalf">Mark Done</button>';
       }
       if (t.status === "Completed") {
         actions += '<button class="btn secondary" data-act="proof" data-id="' + esc(t.id) + '">View Proof</button>';
@@ -2727,6 +2903,7 @@
       b.addEventListener("click", function () {
         var id = b.dataset.id, t = state.tasks.find(function (x) { return x.id === id; });
         if (b.dataset.act === "complete") openCompleteModal(t);
+        if (b.dataset.act === "admincomplete") openCompleteModal(t);
         if (b.dataset.act === "revise") openReviseModal(t);
         if (b.dataset.act === "proof") openProofModal(t);
         if (b.dataset.act === "edit") openEditModal(t);
@@ -3015,8 +3192,7 @@
     if (!state.doers.length) { wrap.innerHTML = '<div class="empty">No staff records.</div>'; return; }
     var sorted = state.doers.slice().sort(function (a, b) { return (a.delegation_name || a.name || "").localeCompare(b.delegation_name || b.name || ""); });
     function cb(d, field) {
-      var isSelfAdmin = d.doc_id === state.doer.doc_id && field === "is_admin";
-      return '<input type="checkbox" data-doc="' + esc(d.doc_id) + '" data-field="' + field + '" ' + (d[field] ? "checked" : "") + (isSelfAdmin ? " disabled title=\"You can't remove your own admin access here\"" : "") + ' />';
+      return '<input type="checkbox" data-doc="' + esc(d.doc_id) + '" data-field="' + field + '" ' + (d[field] ? "checked" : "") + ' />';
     }
     var rows = sorted.map(function (d) {
       return "<tr>" +
@@ -3024,11 +3200,11 @@
         '<td style="text-align:center">' + cb(d, "can_assign") + "</td>" +
         '<td style="text-align:center">' + cb(d, "can_view_master") + "</td>" +
         '<td style="text-align:center">' + cb(d, "can_view_audit") + "</td>" +
-        '<td style="text-align:center">' + cb(d, "is_admin") + "</td>" +
+        '<td style="text-align:center">' + wsRoleCellHtml(d) + "</td>" +
         '<td style="text-align:center"><button class="btn secondary staff-controls-btn" data-doc="' + esc(d.doc_id) + '" style="padding:6px 10px;font-size:12px">Controls</button></td>' +
         "</tr>";
     }).join("");
-    wrap.innerHTML = '<table><thead><tr><th>Staff</th><th style="text-align:center">Assign Tasks</th><th style="text-align:center">View All Tasks</th><th style="text-align:center">View Audit</th><th style="text-align:center">Admin</th><th style="text-align:center">Controls</th></tr></thead><tbody>' + rows + "</tbody></table>";
+    wrap.innerHTML = '<table><thead><tr><th>Staff</th><th style="text-align:center">Assign Tasks</th><th style="text-align:center">View All Tasks</th><th style="text-align:center">View Audit</th><th style="text-align:center">Role</th><th style="text-align:center">Controls</th></tr></thead><tbody>' + rows + "</tbody></table>";
     wrap.querySelectorAll('input[type="checkbox"]').forEach(function (cbEl) {
       cbEl.addEventListener("change", function () {
         var docId = cbEl.dataset.doc, field = cbEl.dataset.field, val = cbEl.checked;
@@ -3043,7 +3219,28 @@
           cbEl.checked = !val;
           toast(e.message, true);
         }).finally(function () {
-          if (!(docId === state.doer.doc_id && field === "is_admin")) cbEl.disabled = false;
+          cbEl.disabled = false;
+        });
+      });
+    });
+    wrap.querySelectorAll(".ws-role-select").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        var docId = sel.dataset.doc, newRole = sel.value;
+        var d = state.doers.find(function (x) { return x.doc_id === docId; });
+        var prevRole = d ? wsRole(d) : null;
+        sel.disabled = true;
+        api("updateDoerAccess", { doc_id: docId, role: newRole }).then(function () {
+          if (d) {
+            d.role = newRole;
+            d.is_admin = newRole === "super_admin" || newRole === "admin";
+            if (newRole === "manager") d.can_assign = true;
+          }
+          toast("Set " + (d ? (d.delegation_name || d.name) : docId) + " to " + WS_ROLE_LABELS[newRole]);
+          renderAdmin();
+        }).catch(function (e) {
+          toast(e.message, true);
+          sel.value = prevRole || "employee";
+          sel.disabled = false;
         });
       });
     });
@@ -3099,7 +3296,19 @@
         '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="scAssign" style="width:auto" ' + (d.can_assign ? "checked" : "") + ' /> Can assign tasks</label>' +
         '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="scViewMaster" style="width:auto" ' + (d.can_view_master ? "checked" : "") + ' /> Can view all tasks</label>' +
         '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="scViewAudit" style="width:auto" ' + (d.can_view_audit ? "checked" : "") + ' /> Can view audit</label>' +
-        '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="scAdmin" style="width:auto" ' + (d.is_admin ? "checked" : "") + (isSelf ? " disabled title=\"You can't remove your own admin access here\"" : "") + ' /> Workspace Admin</label>' +
+        '<div class="field" style="margin-top:10px"><label>Workspace role</label>' +
+        (canEditWsRole(d)
+          ? '<select id="scRole">' +
+              (function () {
+                var cur = wsRole(d), opts = grantableWsRoles().slice();
+                if (opts.indexOf(cur) === -1) opts.push(cur);
+                return opts.map(function (r) { return '<option value="' + r + '"' + (r === cur ? " selected" : "") + ">" + WS_ROLE_LABELS[r] + "</option>"; }).join("");
+              })() +
+            "</select>" +
+            (myWsRole() !== "super_admin" ? '<div class="sub" style="margin-top:4px">Only a Super Admin can promote someone to Admin or Super Admin.</div>' : "")
+          : '<div><span class="module-badge live">' + esc(WS_ROLE_LABELS[wsRole(d)] || wsRole(d)) + '</span>' +
+            '<div class="sub" style="margin-top:4px">' + (isSelf ? "You can't change your own rank here." : "Only a Super Admin can change this person's rank.") + '</div></div>') +
+        "</div>" +
       "</div>" +
       '<div class="card" style="padding:18px;margin-bottom:16px">' +
         '<div class="page-head" style="margin:0 0 4px"><h2 style="font-size:15px">Visibility</h2></div>' +
@@ -3150,13 +3359,21 @@
         can_assign: document.getElementById("scAssign").checked,
         can_view_master: document.getElementById("scViewMaster").checked,
         can_view_audit: document.getElementById("scViewAudit").checked,
-        is_admin: document.getElementById("scAdmin").checked,
         visible_sections: sectionKeys,
         visible_modules: moduleKeys,
         module_roles: newRoles
       };
+      // #scRole only exists when canEditWsRole(d) allowed showing an editable
+      // select (see renderStaffControls above) — a read-only badge otherwise,
+      // in which case the rank is simply left untouched by this save.
+      var scRoleEl = document.getElementById("scRole");
+      if (scRoleEl) payload.role = scRoleEl.value;
       api("updateDoerAccess", payload).then(function () {
         Object.keys(payload).forEach(function (k) { if (k !== "doc_id") d[k] = payload[k]; });
+        if (payload.role) {
+          d.is_admin = payload.role === "super_admin" || payload.role === "admin";
+          if (payload.role === "manager") d.can_assign = true;
+        }
         toast("Saved controls for " + (d.delegation_name || d.name));
         if (d.doc_id === state.doer.doc_id) { state.doer = d; }
         btn.disabled = false; btn.textContent = "Save all changes";
@@ -3252,13 +3469,13 @@
   // ---------- Private / KYC details (shared by My Profile + admin Edit Staff) ----------
   // Restricted server-side to the staff member themselves or an admin
   // (getMyPrivateDetails/updateMyPrivateDetails both enforce this even if
-  // this UI were bypassed). Also powers the Home-page birthday banner via
-  // getTodaysBirthdays, which only ever exposes name/department — never
-  // any field from this block.
+  // this UI were bypassed). Purely private bank/KYC data — the Home-page
+  // birthday poster is a separate, admin-managed registry (Notice Board >
+  // Birthdays) and never reads anything from here.
   function privateDetailsBlockHtml(prefix) {
     return '<div class="field" style="margin-top:18px;border-top:1px solid var(--line);padding-top:16px">' +
       "<label>Private Details (KYC)</label>" +
-      '<div class="sub" style="margin-bottom:8px">Visible only to you and admins. Your date of birth is used for an automatic birthday wish on the Home page — nothing else here is ever shown to anyone else.</div>' +
+      '<div class="sub" style="margin-bottom:8px">Visible only to you and admins. Never shown to anyone else.</div>' +
       '<div id="' + prefix + 'Loading" class="sub">Loading…</div>' +
       '<div id="' + prefix + 'Body" class="hidden">' +
       '<div class="field"><label>Date of birth</label><input id="' + prefix + 'Dob" type="date" /></div>' +
@@ -3318,7 +3535,6 @@
           toast("Private details saved");
           saveBtn.disabled = false; saveBtn.textContent = "Save Private Details";
           fileInput.value = "";
-          if (targetId === state.doer.doc_id) api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
         }).catch(function (e) {
           err.textContent = e.message;
           saveBtn.disabled = false; saveBtn.textContent = "Save Private Details";
@@ -3563,11 +3779,16 @@
       '<div class="field"><label>Designation</label><input id="asDesig" /></div>' +
       '<div class="field"><label>Phone</label><input id="asPhone" /></div>' +
       '<div class="field"><label>Email</label><input id="asEmail" type="email" /></div>' +
-      '<div class="field"><label>Permissions</label>' +
+      '<div class="field"><label>Role</label>' +
+      '<select id="asRole">' +
+        grantableWsRoles().map(function (r) { return '<option value="' + r + '"' + (r === "employee" ? " selected" : "") + ">" + WS_ROLE_LABELS[r] + "</option>"; }).join("") +
+      "</select>" +
+      (myWsRole() !== "super_admin" ? '<div class="sub" style="margin-top:4px">Only a Super Admin can create an Admin or Super Admin account.</div>' : "") +
+      "</div>" +
+      '<div class="field"><label>Extra permissions</label>' +
       '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="asAssign" style="width:auto" /> Can assign tasks</label>' +
       '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="asViewMaster" style="width:auto" /> Can view all tasks</label>' +
       '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="asViewAudit" style="width:auto" /> Can view audit</label>' +
-      '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="asAdmin" style="width:auto" /> Admin</label>' +
       "</div>" +
       '<div class="modal-err" id="asErr"></div>' +
       '<div class="modal-actions"><button class="btn secondary" id="asCancel">Cancel</button><button class="btn" id="asSave">Add Staff</button></div>'
@@ -3592,7 +3813,7 @@
         can_assign: document.getElementById("asAssign").checked,
         can_view_master: document.getElementById("asViewMaster").checked,
         can_view_audit: document.getElementById("asViewAudit").checked,
-        is_admin: document.getElementById("asAdmin").checked
+        role: document.getElementById("asRole").value
       }).then(function () {
         toast("Staff member added");
         closeModal();
@@ -3990,6 +4211,15 @@
     if (isNaN(d)) return "—";
     return d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
   }
+  // Birthdays list day+month only (no year) — the year on file is whatever was
+  // entered and isn't the point of this list, so it's left out to avoid it
+  // reading like an age reveal.
+  function fmtBirthdayDate(iso) {
+    if (!iso) return "—";
+    var d = new Date(iso + "T00:00:00");
+    if (isNaN(d)) return "—";
+    return d.toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+  }
   // News-channel-style scrolling bulletin bar: pinned/recent notices + the nearest
   // upcoming holidays. Lives at the top of <main> so it shows on every page, not just
   // the Notice Board view itself.
@@ -4079,6 +4309,37 @@
         });
       }
     }
+    var bWrap = document.getElementById("birthdayListWrap");
+    if (bWrap) {
+      // Sorted by month-then-day (not by year — dob's year is whatever was
+      // entered and isn't meaningful here) so the list reads like a birthday
+      // calendar rather than an age ranking.
+      var birthdaysList = (state.birthdays || []).slice().sort(function (a, b) {
+        return String(a.dob || "").slice(5) < String(b.dob || "").slice(5) ? -1 : 1;
+      });
+      if (!birthdaysList.length) {
+        bWrap.innerHTML = '<div class="empty">No birthdays added yet.</div>';
+      } else {
+        bWrap.innerHTML = birthdaysList.map(function (bd) {
+          var bdPhoto = bd.photo_url
+            ? '<img class="birthday-row-photo" src="' + esc(bd.photo_url) + '" alt="" />'
+            : '<div class="birthday-row-photo initial">' + esc(chatAvatarInitial(bd.name)) + "</div>";
+          return '<div class="birthday-row">' + bdPhoto + '<div class="birthday-date">' + fmtBirthdayDate(bd.dob) + '</div>' +
+            '<div style="flex:1">' + esc(bd.name) + '</div>' +
+            (isAdmin ? '<button class="btn secondary birthday-del" data-id="' + esc(bd.id) + '" style="padding:6px 10px;font-size:12px">Delete</button>' : "") +
+            '</div>';
+        }).join("");
+        bWrap.querySelectorAll(".birthday-del").forEach(function (b) {
+          b.addEventListener("click", function () {
+            api("deleteBirthday", { id: b.dataset.id }).then(function () {
+              state.birthdays = state.birthdays.filter(function (bd) { return bd.id !== b.dataset.id; });
+              renderNoticeBoard();
+              toast("Birthday removed");
+            }).catch(function (e) { toast(e.message, true); });
+          });
+        });
+      }
+    }
   }
   var addStaffBtn = document.getElementById("addStaffBtn");
   if (addStaffBtn) addStaffBtn.addEventListener("click", function () { openAddDoerModal(); });
@@ -4130,6 +4391,42 @@
         closeModal();
         return api("getHolidays").then(function (hs) { state.holidays = hs; renderNoticeBoard(); });
       }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Add Holiday"; });
+    });
+  });
+
+  var addBirthdayBtn = document.getElementById("addBirthdayBtn");
+  if (addBirthdayBtn) addBirthdayBtn.addEventListener("click", function () {
+    openModal(
+      "<h3>Add Birthday</h3>" +
+      '<div class="field"><label>Name</label><input id="bdName" /></div>' +
+      '<div class="field"><label>Date of birth</label><input id="bdDob" type="date" /></div>' +
+      '<div class="field"><label>Photo (optional)</label><input id="bdPhotoFile" type="file" accept="image/*" /></div>' +
+      '<div class="modal-err" id="bdErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="bdCancel">Cancel</button><button class="btn" id="bdSave">Add Birthday</button></div>'
+    );
+    document.getElementById("bdCancel").addEventListener("click", closeModal);
+    document.getElementById("bdSave").addEventListener("click", function () {
+      var name = document.getElementById("bdName").value.trim();
+      var dob = document.getElementById("bdDob").value;
+      var err = document.getElementById("bdErr");
+      if (!name || !dob) { err.textContent = "Name and date of birth are required."; return; }
+      var btn = document.getElementById("bdSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      var finishAddBirthday = function (photoBase64) {
+        api("createBirthday", { name: name, dob: dob, photoBase64: photoBase64 || "", created_by: myKey() }).then(function () {
+          toast("Birthday added");
+          closeModal();
+          return api("getBirthdays").then(function (bs) { state.birthdays = bs; renderNoticeBoard(); });
+        }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Add Birthday"; });
+      };
+      var bdFile = document.getElementById("bdPhotoFile").files && document.getElementById("bdPhotoFile").files[0];
+      if (bdFile) {
+        var bdReader = new FileReader();
+        bdReader.onload = function () { finishAddBirthday(bdReader.result); };
+        bdReader.onerror = function () { err.textContent = "Could not read that photo."; btn.disabled = false; btn.textContent = "Add Birthday"; };
+        bdReader.readAsDataURL(bdFile);
+      } else {
+        finishAddBirthday("");
+      }
     });
   });
 
