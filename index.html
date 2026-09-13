@@ -1119,6 +1119,20 @@
         <button class="btn" id="addStaffBtn">+ Add Staff</button>
       </div>
       <div class="page-sub" style="margin-top:-12px">Toggle what each person can see and do, or edit their details.</div>
+      <div class="card" style="padding:14px 18px;margin-bottom:6px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <input class="search" id="staffSearch" placeholder="Search staff by name, department or designation…" style="flex:1;min-width:220px" />
+          <select id="staffFilterRole" style="min-width:150px">
+            <option value="">All roles</option>
+            <option value="super_admin">Super Admin</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="employee">Employee</option>
+          </select>
+          <select id="staffFilterDept" style="min-width:170px"><option value="">All departments</option></select>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);white-space:nowrap"><input type="checkbox" id="staffShowDeleted" /> Show removed staff</label>
+        </div>
+      </div>
       <div class="card"><div id="adminTableWrap"></div></div>
     </div>
 
@@ -1902,6 +1916,16 @@
             resolve({});
             break;
           }
+          case "setChatTyping": {
+            // No other simulated participant ever types back in demo mode —
+            // this just keeps the call from erroring out.
+            resolve({});
+            break;
+          }
+          case "getChatTyping": {
+            resolve([]);
+            break;
+          }
 
           default: resolve(null);
         }
@@ -2102,6 +2126,7 @@
     var seed = demoSeed();
     state.demo = true;
     state.doer = seed.doers[0];
+    state.allDoers = seed.doers;
     state.doers = seed.doers;
     state.tasks = seed.tasks;
     state.audits = seed.audits;
@@ -2316,7 +2341,7 @@
       // for every user, not just admins — they affect what everyone sees (the
       // ticker toggles, and who gets the buyer-visit / inspection Home widgets),
       // even though only an admin can change any of them (Settings page is admin-only).
-      state.tasks = r[0]; state.doers = r[1]; state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8]; state.inspections = r[9]; state.inspectionAlertStaff = r[10]; state.birthdays = r[11];
+      state.tasks = r[0]; state.allDoers = r[1] || []; state.doers = state.allDoers.filter(function (d) { return !d.is_deleted; }); state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8]; state.inspections = r[9]; state.inspectionAlertStaff = r[10]; state.birthdays = r[11];
       state.teams = r[12] || []; state.leaves = r[13] || []; state.reimbursements = r[14] || [];
       // Re-sync my own record from the just-fetched staff list. Without this, a
       // session restored from localStorage (see boot() below) keeps whatever
@@ -2474,7 +2499,8 @@
     { key: "leave", icon: "🏖️", name: "Leave Request", status: "live", goto: "leave" },
     { key: "reimbursement", icon: "🧳", name: "Travel/Outstation Reimbursement", status: "live", goto: "reimbursement" },
     { key: "attendance", icon: "🕒", name: "Attendance", status: "soon", goto: "attendance" },
-    { key: "salary", icon: "💰", name: "Salary", status: "soon", goto: "salary" }
+    { key: "salary", icon: "💰", name: "Salary", status: "soon", goto: "salary" },
+    { key: "rugsconnect", icon: "🔗", name: "Rugs Connect", status: "live", link: "https://rugsconnect.com/login?next=%2F" }
   ];
 
   // Modules whose embedded app has its own distinct "manager" role, reachable purely
@@ -2790,6 +2816,12 @@
     });
   });
   document.getElementById("taskSearch").addEventListener("input", renderTasks);
+  var staffSearchEl = document.getElementById("staffSearch");
+  if (staffSearchEl) staffSearchEl.addEventListener("input", renderAdmin);
+  ["staffFilterRole", "staffFilterDept", "staffShowDeleted"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener(id === "staffShowDeleted" ? "change" : "change", renderAdmin);
+  });
   ["taskFilterMonth", "taskFilterName", "taskFilterStatus"].forEach(function (id) {
     document.getElementById(id).addEventListener("change", renderTasks);
   });
@@ -3423,22 +3455,57 @@
     }
 
     if (!state.doers.length) { wrap.innerHTML = '<div class="empty">No staff records.</div>'; return; }
-    var sorted = state.doers.slice().sort(function (a, b) { return (a.delegation_name || a.name || "").localeCompare(b.delegation_name || b.name || ""); });
+
+    // ---- Department filter options (rebuilt each render, selection preserved) ----
+    var deptSelEl = document.getElementById("staffFilterDept");
+    if (deptSelEl) {
+      var depts = Array.from(new Set(state.doers.map(function (d) { return (d.department || "").trim(); }).filter(Boolean))).sort();
+      var prevDept = deptSelEl.value;
+      deptSelEl.innerHTML = '<option value="">All departments</option>' + depts.map(function (dep) { return '<option value="' + esc(dep) + '">' + esc(dep) + "</option>"; }).join("");
+      if (depts.indexOf(prevDept) > -1) deptSelEl.value = prevDept;
+    }
+
+    var showDeleted = !!(document.getElementById("staffShowDeleted") || {}).checked;
+    var searchQ = ((document.getElementById("staffSearch") || {}).value || "").trim().toLowerCase();
+    var roleFilterVal = (document.getElementById("staffFilterRole") || {}).value || "";
+    var deptFilterVal = (document.getElementById("staffFilterDept") || {}).value || "";
+
+    var visible = (state.allDoers || state.doers).filter(function (d) {
+      if (!!d.is_deleted !== showDeleted) return false;
+      if (roleFilterVal && wsRole(d) !== roleFilterVal) return false;
+      if (deptFilterVal && (d.department || "") !== deptFilterVal) return false;
+      if (searchQ) {
+        var hay = ((d.delegation_name || "") + " " + (d.name || "") + " " + (d.department || "") + " " + (d.designation || "") + " " + (d.login_id || "")).toLowerCase();
+        if (hay.indexOf(searchQ) === -1) return false;
+      }
+      return true;
+    });
+    var sorted = visible.slice().sort(function (a, b) { return (a.delegation_name || a.name || "").localeCompare(b.delegation_name || b.name || ""); });
     function cb(d, field) {
-      return '<input type="checkbox" data-doc="' + esc(d.doc_id) + '" data-field="' + field + '" ' + (d[field] ? "checked" : "") + ' />';
+      return '<input type="checkbox" data-doc="' + esc(d.doc_id) + '" data-field="' + field + '" ' + (d[field] ? "checked" : "") + (d.is_deleted ? " disabled" : "") + ' />';
+    }
+    if (!sorted.length) {
+      wrap.innerHTML = '<div class="empty">' + (showDeleted ? "No removed staff." : "No staff match this search/filter.") + '</div>';
+      renderNotifyList(); renderBvAlertStaffList(); renderInspectionNotifyList(); renderInspectionAlertStaffList();
+      renderSettingsCard(); renderNotifTypesCard(); renderTeamsCard();
+      return;
     }
     var rows = sorted.map(function (d) {
-      return "<tr>" +
-        "<td><b>" + esc(d.delegation_name || d.name) + "</b><div style='color:var(--sub);font-size:11px'>" + esc(d.department || "") + (d.designation ? " · " + esc(d.designation) : "") + "</div></td>" +
+      return "<tr" + (d.is_deleted ? ' style="opacity:.55"' : "") + ">" +
+        "<td><b>" + esc(d.delegation_name || d.name) + "</b>" + (d.is_deleted ? ' <span class="badge" style="font-size:10px;background:#f4d4d4;color:#8a1f1f">Removed</span>' : "") + "<div style='color:var(--sub);font-size:11px'>" + esc(d.department || "") + (d.designation ? " · " + esc(d.designation) : "") + "</div></td>" +
         '<td style="text-align:center">' + cb(d, "can_assign") + "</td>" +
         '<td style="text-align:center">' + cb(d, "can_view_master") + "</td>" +
         '<td style="text-align:center">' + cb(d, "can_view_audit") + "</td>" +
         '<td style="text-align:center">' + wsRoleCellHtml(d) + "</td>" +
-        '<td style="text-align:center"><button class="btn secondary staff-controls-btn" data-doc="' + esc(d.doc_id) + '" style="padding:6px 10px;font-size:12px">Controls</button></td>' +
+        '<td style="text-align:center;white-space:nowrap"><button class="btn secondary staff-controls-btn" data-doc="' + esc(d.doc_id) + '" style="padding:6px 10px;font-size:12px" ' + (d.is_deleted ? "disabled" : "") + '>Controls</button> ' +
+          (d.is_deleted
+            ? '<button class="btn secondary staff-restore-btn" data-doc="' + esc(d.doc_id) + '" style="padding:6px 10px;font-size:12px">Restore</button>'
+            : '<button class="btn secondary staff-delete-btn" data-doc="' + esc(d.doc_id) + '" style="padding:6px 10px;font-size:12px;color:#c0392b">Delete</button>') +
+        "</td>" +
         "</tr>";
     }).join("");
     wrap.innerHTML = '<table><thead><tr><th>Staff</th><th style="text-align:center">Assign Tasks</th><th style="text-align:center">View All Tasks</th><th style="text-align:center">View Audit</th><th style="text-align:center">Role</th><th style="text-align:center">Controls</th></tr></thead><tbody>' + rows + "</tbody></table>";
-    wrap.querySelectorAll('input[type="checkbox"]').forEach(function (cbEl) {
+    wrap.querySelectorAll('input[type="checkbox"]:not([disabled])').forEach(function (cbEl) {
       cbEl.addEventListener("change", function () {
         var docId = cbEl.dataset.doc, field = cbEl.dataset.field, val = cbEl.checked;
         var d = state.doers.find(function (x) { return x.doc_id === docId; });
@@ -3481,6 +3548,48 @@
       b.addEventListener("click", function () {
         var d = state.doers.find(function (x) { return x.doc_id === b.dataset.doc; });
         if (d) openStaffControls(d);
+      });
+    });
+    // ---- Delete (soft) / Restore ----
+    wrap.querySelectorAll(".staff-delete-btn").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var d = state.doers.find(function (x) { return x.doc_id === b.dataset.doc; });
+        if (!d) return;
+        if (d.doc_id === state.doer.doc_id) { toast("You can't remove your own account", true); return; }
+        openModal(
+          '<h3>Remove staff member?</h3>' +
+          '<div class="sub">' + esc(d.delegation_name || d.name) + ' will lose sign-in access immediately and disappear from staff lists. Their task/audit/leave history is kept, and an admin can restore them any time from "Show removed staff".</div>' +
+          '<div class="modal-err" id="sdErr"></div>' +
+          '<div class="modal-actions"><button class="btn secondary" id="sdCancel">Cancel</button><button class="btn" id="sdConfirm" style="background:#c0392b;border-color:#c0392b">Remove</button></div>'
+        );
+        document.getElementById("sdCancel").addEventListener("click", closeModal);
+        document.getElementById("sdConfirm").addEventListener("click", function () {
+          var btn = document.getElementById("sdConfirm"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Removing…';
+          api("deleteDoer", { doc_id: d.doc_id, requester_doc_id: state.doer.doc_id }).then(function () {
+            d.is_deleted = true;
+            toast((d.delegation_name || d.name) + " removed");
+            closeModal();
+            renderAdmin();
+          }).catch(function (e) {
+            document.getElementById("sdErr").textContent = e.message;
+            btn.disabled = false; btn.textContent = "Remove";
+          });
+        });
+      });
+    });
+    wrap.querySelectorAll(".staff-restore-btn").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var d = state.doers.find(function (x) { return x.doc_id === b.dataset.doc; });
+        if (!d) return;
+        b.disabled = true; b.textContent = "Restoring…";
+        api("deleteDoer", { doc_id: d.doc_id, requester_doc_id: state.doer.doc_id, restore: true }).then(function () {
+          d.is_deleted = false;
+          toast((d.delegation_name || d.name) + " restored");
+          renderAdmin();
+        }).catch(function (e) {
+          toast(e.message, true);
+          b.disabled = false; b.textContent = "Restore";
+        });
       });
     });
     renderNotifyList();
@@ -4178,7 +4287,7 @@
       }).then(function () {
         toast("Staff member added");
         closeModal();
-        return api("getDoers").then(function (ds) { state.doers = ds; renderAdmin(); });
+        return api("getDoers").then(function (ds) { state.allDoers = ds || []; state.doers = state.allDoers.filter(function (d) { return !d.is_deleted; }); renderAdmin(); });
       }).catch(function (e) {
         err.textContent = e.message;
         btn.disabled = false; btn.textContent = "Add Staff";
@@ -5330,6 +5439,10 @@
   var CHAT_POLL_MS = 3000;
   var chatListPollHandle = null;
   var chatMsgPollHandle = null;
+  var chatTypingPollHandle = null;
+  var chatTypingIdleHandle = null;
+  var chatTypingUsers = [];
+  var chatIAmTyping = false;
 
   function chatAvatarInitial(name) {
     var n = (name || "?").trim();
@@ -5417,6 +5530,8 @@
       stopChatMsgPoll();
       loadChatMessages(true);
       chatMsgPollHandle = setInterval(function () { loadChatMessages(false); }, CHAT_POLL_MS);
+      stopChatTypingPoll();
+      chatTypingPollHandle = setInterval(pollChatTyping, 2500);
     }
   }
   function renderChatLockScreen() {
@@ -5449,9 +5564,45 @@
     document.getElementById("chatLockUnlockBtn").onclick = tryUnlock;
     input.onkeydown = function (e) { if (e.key === "Enter") tryUnlock(); };
   }
-  function stopChatPolling() { stopChatListPoll(); stopChatMsgPoll(); }
+  function stopChatPolling() { stopChatListPoll(); stopChatMsgPoll(); stopChatTypingPoll(); }
   function stopChatListPoll() { if (chatListPollHandle) { clearInterval(chatListPollHandle); chatListPollHandle = null; } }
   function stopChatMsgPoll() { if (chatMsgPollHandle) { clearInterval(chatMsgPollHandle); chatMsgPollHandle = null; } }
+  function stopChatTypingPoll() {
+    if (chatTypingPollHandle) { clearInterval(chatTypingPollHandle); chatTypingPollHandle = null; }
+    chatTypingUsers = [];
+    if (chatIAmTyping && state.chatActiveThread && state.doer) {
+      api("setChatTyping", { thread_id: state.chatActiveThread, doc_id: state.doer.doc_id, typing: false }).catch(function () {});
+    }
+    chatIAmTyping = false;
+  }
+  // Polls who else is typing in the active thread and refreshes just the
+  // header line (chatPresenceHtml) rather than the whole message pane.
+  function pollChatTyping() {
+    var threadId = state.chatActiveThread;
+    if (!threadId || !state.doer) return;
+    api("getChatTyping", { thread_id: threadId, doc_id: state.doer.doc_id }).then(function (rows) {
+      if (state.chatActiveThread !== threadId) return;
+      chatTypingUsers = rows || [];
+      var sub = document.getElementById("chatHeadSub");
+      if (sub) {
+        var thread = state.chatThreads.find(function (t) { return t.id === threadId; });
+        sub.outerHTML = chatPresenceHtml(thread);
+      }
+    }).catch(function () {});
+  }
+  function notifyChatTyping() {
+    var threadId = state.chatActiveThread;
+    if (!threadId || !state.doer) return;
+    if (!chatIAmTyping) {
+      chatIAmTyping = true;
+      api("setChatTyping", { thread_id: threadId, doc_id: state.doer.doc_id, typing: true }).catch(function () {});
+    }
+    clearTimeout(chatTypingIdleHandle);
+    chatTypingIdleHandle = setTimeout(function () {
+      chatIAmTyping = false;
+      api("setChatTyping", { thread_id: threadId, doc_id: state.doer.doc_id, typing: false }).catch(function () {});
+    }, 4000);
+  }
 
   function loadChatThreads(showLoading) {
     if (!state.doer) return Promise.resolve();
@@ -5558,6 +5709,8 @@
     stopChatMsgPoll();
     loadChatMessages(true);
     chatMsgPollHandle = setInterval(function () { loadChatMessages(false); }, CHAT_POLL_MS);
+    stopChatTypingPoll();
+    chatTypingPollHandle = setInterval(pollChatTyping, 2500);
   }
 
   function loadChatMessages(showLoading) {
@@ -5789,14 +5942,21 @@
     return days + "d ago";
   }
   function chatPresenceHtml(thread) {
-    if (!thread || thread.type !== "dm") return "";
+    if (thread && (chatTypingUsers || []).length) {
+      var names = chatTypingUsers.map(function (u) { return u.name; });
+      var typingLabel = thread.type === "group"
+        ? (names.length === 1 ? names[0] + " is typing…" : names.slice(0, 2).join(", ") + (names.length > 2 ? " and others" : "") + " typing…")
+        : "typing…";
+      return '<div class="chat-main-head-sub" id="chatHeadSub"><span class="chat-presence-dot online"></span><i>' + esc(typingLabel) + '</i></div>';
+    }
+    if (!thread || thread.type !== "dm") return '<div class="chat-main-head-sub" id="chatHeadSub"></div>';
     var otherId = (thread.member_doc_ids || []).find(function (id) { return id !== state.doer.doc_id; });
     var other = otherId ? (state.doers || []).find(function (d) { return d.doc_id === otherId; }) : null;
-    if (!other) return "";
+    if (!other) return '<div class="chat-main-head-sub" id="chatHeadSub"></div>';
     var lastActive = other.last_active_at ? new Date(other.last_active_at).getTime() : 0;
     var online = !!lastActive && (Date.now() - lastActive) < 45000;
     var label = online ? "Online" : (lastActive ? "Last seen " + chatRelativeTime(lastActive) : "Offline");
-    return '<div class="chat-main-head-sub"><span class="chat-presence-dot' + (online ? " online" : "") + '"></span>' + esc(label) + '</div>';
+    return '<div class="chat-main-head-sub" id="chatHeadSub"><span class="chat-presence-dot' + (online ? " online" : "") + '"></span>' + esc(label) + '</div>';
   }
   function chatDisappearLabel(seconds) {
     if (seconds === 86400) return "24h";
@@ -6097,6 +6257,8 @@
       state.chatReplyTo = null;
       var ctxBar2 = document.getElementById("chatContextBar");
       if (ctxBar2) ctxBar2.innerHTML = "";
+      clearTimeout(chatTypingIdleHandle);
+      chatIAmTyping = false;
       api("sendChatMessage", { thread_id: threadId, sender_doc_id: state.doer.doc_id, sender_name: state.doer.delegation_name || state.doer.name, text: text, reply_to_id: replyId })
         .then(function () { loadChatMessages(false); loadChatThreads(false); })
         .catch(function (e) { toast(e.message || "Couldn't send message"); });
@@ -6109,6 +6271,7 @@
       input.addEventListener("input", function () {
         input.style.height = "auto";
         input.style.height = Math.min(input.scrollHeight, 120) + "px";
+        if (!state.chatEditingId && input.value.trim()) notifyChatTyping();
       });
       if (!loading) input.focus();
     }
