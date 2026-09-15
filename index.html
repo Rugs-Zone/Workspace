@@ -1077,7 +1077,7 @@
     <div id="view-buyerorder" class="hidden" style="height:calc(100vh - var(--topbar-offset));display:flex;flex-direction:column">
       <button class="embed-back-btn" data-goto="modules">← Back to Workspace</button>
       <div class="card" id="buyerOrderCard" style="flex:1;min-height:0;padding:0;border-radius:0;border-width:0">
-        <iframe id="buyerOrderFrame" title="Buyer Order Dashboard" style="width:100%;height:100%;border:0;display:block;background:#fff" src="about:blank"></iframe>
+        <iframe id="buyerOrderFrame" title="Buyer Order Dashboard" style="width:100%;height:100%;border:0;display:block;background:#fff" src="about:blank" allow="fullscreen" allowfullscreen></iframe>
       </div>
     </div>
 
@@ -2167,6 +2167,43 @@
     return state.doer.delegation_name || state.doer.name;
   }
 
+  // ---------- Robust task <-> person matching ----------
+  // Tasks store "assignee"/"delegated_by" as a point-in-time COPY of the
+  // person's name string, not a stable id. When someone's delegation_name
+  // is edited later (e.g. their title/designation changes in Staff admin —
+  // "Sr. Merchant" -> "Sr. Merchandiser DMM"), every task created before
+  // that edit stops exact-matching myKey() and silently disappears from
+  // that person's "My Tasks" / "Delegated by Me" tabs, even though the
+  // task is still theirs. This normalizes both sides to the name portion
+  // before " - <designation>" and only trusts that looser match when it's
+  // unambiguous among CURRENT staff, so two people who legitimately share
+  // a first/short name (e.g. two "Rajesh Kumar"s, two "Gaurav"s) never get
+  // shown each other's tasks.
+  function taskNameCore_(s) {
+    return (s || "").split(" - ")[0].replace(/\s+/g, " ").trim().toLowerCase();
+  }
+  function taskCoreIsUnique_(core) {
+    if (!core) return false;
+    var n = 0;
+    for (var i = 0; i < state.doers.length; i++) {
+      if (taskNameCore_(state.doers[i].delegation_name || state.doers[i].name) === core) n++;
+      if (n > 1) return false;
+    }
+    return n === 1;
+  }
+  function nameMatchesMe_(nameStr) {
+    var raw = (nameStr || "").trim().toLowerCase();
+    if (!raw) return false;
+    if (raw === myKey().toLowerCase()) return true;
+    var myNameLc = (state.doer.name || "").trim().toLowerCase();
+    if (myNameLc && raw === myNameLc) return true;
+    var core = taskNameCore_(nameStr);
+    if (!core) return false;
+    var myCore = taskNameCore_(myKey()) || taskNameCore_(state.doer.name);
+    if (core !== myCore) return false;
+    return taskCoreIsUnique_(core);
+  }
+
   // ---------- Gen-Z hover tilt for .tilt cards (module tiles, stat tiles, tickets) ----------
   (function () {
     var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -3070,7 +3107,7 @@
     // "privileged" scope used to show here. Org-wide totals are still
     // available to admins via the Admin panel's stat grid and the Tasks
     // page's "All Tasks" tab (with the Staff Name filter to isolate anyone).
-    var scope = state.tasks.filter(function (t) { return (t.assignee || "").toLowerCase() === myKey().toLowerCase(); });
+    var scope = state.tasks.filter(function (t) { return nameMatchesMe_(t.assignee); });
     var total = scope.length;
     var pending = scope.filter(function (t) { return t.status === "Pending"; }).length;
     var completed = scope.filter(function (t) { return t.status === "Completed"; }).length;
@@ -3308,15 +3345,11 @@
       names.map(function (d) { var n = d.delegation_name || d.name; return '<option value="' + esc(n) + '"' + (n === curName ? " selected" : "") + ">" + esc(n) + "</option>"; }).join("");
   }
   function filteredTasks() {
-    var key = myKey().toLowerCase();
     var list = state.tasks.slice();
     if (state.tab === "mine") {
-      list = list.filter(function (t) { return (t.assignee || "").toLowerCase() === key; });
+      list = list.filter(function (t) { return nameMatchesMe_(t.assignee); });
     } else if (state.tab === "delegated") {
-      list = list.filter(function (t) {
-        var by = (t.delegated_by || "").toLowerCase();
-        return by === key || by === (state.doer.name || "").toLowerCase();
-      });
+      list = list.filter(function (t) { return nameMatchesMe_(t.delegated_by); });
     } // "all" = no filter
     var q = document.getElementById("taskSearch").value.trim().toLowerCase();
     if (q) {
@@ -3349,7 +3382,7 @@
     var rows = list.map(function (t) {
       var overdue = isOverdue(t);
       var actions = "";
-      var isMine = (t.assignee || "").toLowerCase() === myKey().toLowerCase();
+      var isMine = nameMatchesMe_(t.assignee);
       if (t.status === "Pending" && isMine) {
         actions += '<button class="btn" data-act="complete" data-id="' + esc(t.id) + '">Complete</button>';
         actions += '<button class="btn secondary" data-act="revise" data-id="' + esc(t.id) + '">Revise</button>';
@@ -3549,7 +3582,7 @@
     var canManage = myRole === "leader" || state.doer.is_admin || state.doer.can_assign;
     var rows = w.tasks.slice().sort(function (a, b) { return new Date(b.ts) - new Date(a.ts); }).map(function (t) {
       var overdue = t.status === "Pending" && t.deadline && new Date(t.deadline) < new Date();
-      var isMine = (t.assignee || "").toLowerCase() === myKey().toLowerCase();
+      var isMine = nameMatchesMe_(t.assignee);
       var actions = "";
       if (t.status === "Pending" && isMine) actions += '<button class="btn" data-act="complete" data-id="' + esc(t.id) + '">Complete</button>';
       if (t.status === "Pending" && !isMine && canManage) actions += '<button class="btn secondary" data-act="admincomplete" data-id="' + esc(t.id) + '">Mark Done</button>';
