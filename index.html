@@ -814,6 +814,14 @@
         <h3>🔍 Upcoming Inspections</h3>
         <ul class="mini-list" id="inspHomeList"></ul>
       </div>
+      <div class="card hidden" id="approvalsHomeWidget" style="padding:18px;margin-bottom:20px;border:1px solid #ffd8b0;background:#fff8f2">
+        <h3>✅ Pending Your Approval</h3>
+        <ul class="mini-list" id="approvalsHomeList"></ul>
+      </div>
+      <div class="card hidden" id="leaveTodayHomeWidget" style="padding:18px;margin-bottom:20px">
+        <h3>📅 On Leave Today</h3>
+        <ul class="mini-list" id="leaveTodayHomeList"></ul>
+      </div>
       <div class="home-grid">
         <div class="card" style="padding:18px"><h3>Upcoming Deadlines</h3><ul class="mini-list" id="homeUpcoming"></ul></div>
         <div class="card" style="padding:18px"><h3>Audit Alerts</h3><ul class="mini-list" id="homeAuditAlerts"></ul></div>
@@ -3174,6 +3182,66 @@
       }
     }
 
+    // Pending-approvals widget — the one place a TL / reimbursement approver
+    // / admin sees, right on Home, that something of theirs is waiting.
+    // Leave and Reimbursement each already route correctly on the backend
+    // (tl_doc_id is resolved and stored at request time); the gap this
+    // closes is visibility — before this, the only way to see a pending
+    // item was to already know to open Leave/Reimbursement and click their
+    // "Approvals" tab.
+    var apWidget = document.getElementById("approvalsHomeWidget");
+    if (apWidget) {
+      var apItems = [];
+      (state.leaves || []).forEach(function (l) {
+        if (l.status === "Pending" && (state.doer.is_admin || l.tl_doc_id === state.doer.doc_id)) {
+          apItems.push({ sort: l.created_at, goto: "leave", tab: "leaveTab",
+            label: "Leave — " + doerName(l.doc_id) + " (" + leaveRange(l) + ")" });
+        }
+      });
+      (state.reimbursements || []).forEach(function (r) {
+        if (typeof canActOnReimbRow === "function" && canActOnReimbRow(r, state.doer)) {
+          apItems.push({ sort: r.created_at, goto: "reimbursement", tab: "reimbTab",
+            label: "Reimbursement — " + doerName(r.doc_id) + " (₹" + Number(r.total_amount).toLocaleString("en-IN") + ")" });
+        }
+      });
+      apItems.sort(function (a, b) { return new Date(a.sort) - new Date(b.sort); });
+      if (apItems.length) {
+        document.getElementById("approvalsHomeList").innerHTML = apItems.map(function (it) {
+          return '<li class="home-approval-item" data-goto="' + it.goto + '" data-tab="' + it.tab + '" style="cursor:pointer"><span>' + esc(it.label) + '</span><span>›</span></li>';
+        }).join("");
+        apWidget.querySelectorAll(".home-approval-item").forEach(function (li) {
+          li.addEventListener("click", function () {
+            state[li.dataset.tab] = "approvals";
+            goToView(li.dataset.goto);
+          });
+        });
+        apWidget.classList.remove("hidden");
+      } else {
+        apWidget.classList.add("hidden");
+      }
+    }
+
+    // "On leave today" — for admins and anyone in an HR-ish department, so
+    // whoever handles HR sees at a glance who's out today without having to
+    // open Leave Requests and cross-reference dates themselves.
+    var ltWidget = document.getElementById("leaveTodayHomeWidget");
+    if (ltWidget) {
+      var myDept = (state.doer.department || "").toLowerCase();
+      var isHRViewer = state.doer.is_admin || myDept.indexOf("hr") !== -1 || myDept.indexOf("human resource") !== -1;
+      var todayStr = new Date().toISOString().slice(0, 10);
+      var onLeaveToday = isHRViewer ? (state.leaves || []).filter(function (l) {
+        return l.status === "Approved" && l.start_date <= todayStr && l.end_date >= todayStr;
+      }) : [];
+      if (onLeaveToday.length) {
+        document.getElementById("leaveTodayHomeList").innerHTML = onLeaveToday.map(function (l) {
+          return "<li><span><b>" + esc(doerName(l.doc_id)) + "</b> — " + esc(l.leave_type) + (l.is_short_leave ? " (short leave)" : "") + "</span><span>" + esc(leaveRange(l)) + "</span></li>";
+        }).join("");
+        ltWidget.classList.remove("hidden");
+      } else {
+        ltWidget.classList.add("hidden");
+      }
+    }
+
     var bdWidget = document.getElementById("birthdayHomeWidget");
     if (bdWidget) {
       var bdList = state.todaysBirthdays || [];
@@ -3604,19 +3672,34 @@
   // (each shows up, and gets completed, separately) rather than one shared task.
   document.getElementById("newTaskBtn").addEventListener("click", function () {
     var rows = state.doers.map(function (d) {
-      return '<label style="display:flex;align-items:center;gap:8px;padding:5px 0">' +
+      return '<label class="nt-assignee-row" data-search="' + esc((d.delegation_name || "").toLowerCase() + " " + (d.department || "").toLowerCase()) + '" style="display:flex;align-items:center;gap:8px;padding:5px 0">' +
         '<input type="checkbox" class="nt-assignee" value="' + esc(d.delegation_name) + '" style="width:auto" /> ' + esc(d.delegation_name) +
         (d.department ? ' <span class="sub" style="font-size:11px">' + esc(d.department) + "</span>" : "") +
         "</label>";
     }).join("");
     openModal(
       '<h3>Assign New Task</h3><div class="sub">Pick one or more people — each gets their own independent copy of this task, appearing in their list immediately.</div>' +
-      '<div class="field"><label>Assign to</label><div style="max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:8px 12px">' + rows + "</div></div>" +
+      '<div class="field"><label>Assign to</label>' +
+      '<input id="ntAssigneeSearch" placeholder="Search people…" style="margin-bottom:8px" />' +
+      '<div style="display:flex;gap:10px;margin-bottom:6px"><button type="button" class="btn secondary" id="ntSelectAll" style="padding:4px 10px;font-size:12px">Select all</button><button type="button" class="btn secondary" id="ntClearAll" style="padding:4px 10px;font-size:12px">Clear</button></div>' +
+      '<div id="ntAssigneeList" style="max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:8px 12px">' + rows + "</div></div>" +
       '<div class="field"><label>Task details</label><textarea id="ntTask" placeholder="Describe the task…"></textarea></div>' +
       '<div class="field"><label>Deadline</label><input id="ntDeadline" type="datetime-local" /></div>' +
       '<div class="modal-err" id="ntErr"></div>' +
       '<div class="modal-actions"><button class="btn secondary" id="ntCancel">Cancel</button><button class="btn" id="ntSave">Assign Task</button></div>'
     );
+    document.getElementById("ntAssigneeSearch").addEventListener("input", function (e) {
+      var q = e.target.value.trim().toLowerCase();
+      document.querySelectorAll(".nt-assignee-row").forEach(function (row) {
+        row.classList.toggle("hidden", q.length > 0 && row.dataset.search.indexOf(q) === -1);
+      });
+    });
+    document.getElementById("ntSelectAll").addEventListener("click", function () {
+      document.querySelectorAll(".nt-assignee-row:not(.hidden) .nt-assignee").forEach(function (c) { c.checked = true; });
+    });
+    document.getElementById("ntClearAll").addEventListener("click", function () {
+      document.querySelectorAll(".nt-assignee").forEach(function (c) { c.checked = false; });
+    });
     document.getElementById("ntCancel").addEventListener("click", closeModal);
     document.getElementById("ntSave").addEventListener("click", function () {
       var assignees = Array.prototype.slice.call(document.querySelectorAll(".nt-assignee")).filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
