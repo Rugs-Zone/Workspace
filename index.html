@@ -1173,6 +1173,9 @@
       <div class="page-head" style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="font-size:16px">Custom Modules</h2><button class="btn secondary" id="newCustomModuleBtn" style="padding:8px 12px;font-size:13px">+ New Module</button></div>
       <div class="page-sub" style="margin-top:-12px">Add a module tile without a code change — one link for everyone, a different link per person (e.g. each merchant's own dashboard), or paste in a block of HTML. Show/hide it per staff member the same way as any other module, from Staff Controls → Visibility.</div>
       <div class="card" style="padding:18px;margin-bottom:6px"><div id="customModulesCardWrap"></div></div>
+      <div class="page-head" style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="font-size:16px">Buyer Email Directory</h2><div style="display:flex;gap:8px"><button class="btn secondary" id="bulkImportBuyerEmailBtn" style="padding:8px 12px;font-size:13px">Bulk import</button><button class="btn secondary" id="newBuyerEmailBtn" style="padding:8px 12px;font-size:13px">+ Add Buyer</button></div></div>
+      <div class="page-sub" style="margin-top:-12px">Buyer code → email, one row per buyer. The Buyer Order Dashboard's "send to buyer" emails use this list directly — edit a row here and the next send picks it up, no Sheet or script edit needed.</div>
+      <div class="card" style="padding:18px;margin-bottom:6px"><div id="buyerEmailsCardWrap"></div></div>
       <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Buyer visit notify list</h2></div>
       <div class="page-sub" style="margin-top:-12px">These people get an email whenever a buyer visit is logged. Set once here — no need to pick recipients per visit.</div>
       <div class="card" style="padding:18px;margin-bottom:6px"><div id="notifyListWrap"></div></div>
@@ -1299,7 +1302,11 @@
     workspaces: [], wsActiveId: null, wsTab: "tasks",
     // Custom Modules — admin-defined module tiles backed by a link (shared or
     // per-person) or pasted HTML, no code change needed to add one.
-    customModules: [], activeCustomModuleKey: null };
+    customModules: [], activeCustomModuleKey: null,
+    // Buyer Email Directory — admin-managed buyer_code -> email, replaces the
+    // old external Google Sheet as the source the Buyer Order Dashboard's
+    // "send to buyer" emails actually use.
+    buyerEmails: [] };
 
   function api(action, payload) {
     if (state.demo) return demoApi(action, payload || {});
@@ -2438,14 +2445,15 @@
       api("getInspections").catch(function () { return []; }), api("getInspectionAlertStaff").catch(function () { return []; }),
       api("getBirthdays").catch(function () { return []; }),
       api("teamsList").catch(function () { return []; }), api("leaveList").catch(function () { return []; }), api("reimbursementList").catch(function () { return []; }),
-      api("customModulesList", { requester_doc_id: state.doer.doc_id }).catch(function () { return []; })
+      api("customModulesList", { requester_doc_id: state.doer.doc_id }).catch(function () { return []; }),
+      api("buyerEmailsList", { requester_doc_id: state.doer.doc_id }).catch(function () { return []; })
     ]).then(function (r) {
       // getSettings/getBuyerVisitAlertStaff/getInspectionAlertStaff are fetched
       // for every user, not just admins — they affect what everyone sees (the
       // ticker toggles, and who gets the buyer-visit / inspection Home widgets),
       // even though only an admin can change any of them (Settings page is admin-only).
       state.tasks = r[0]; state.allDoers = r[1] || []; state.doers = state.allDoers.filter(function (d) { return !d.is_deleted; }); state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8]; state.inspections = r[9]; state.inspectionAlertStaff = r[10]; state.birthdays = r[11];
-      state.teams = r[12] || []; state.leaves = r[13] || []; state.reimbursements = r[14] || []; state.customModules = r[15] || [];
+      state.teams = r[12] || []; state.leaves = r[13] || []; state.reimbursements = r[14] || []; state.customModules = r[15] || []; state.buyerEmails = r[16] || [];
       // Re-sync my own record from the just-fetched staff list. Without this, a
       // session restored from localStorage (see boot() below) keeps whatever
       // visible_modules/visible_sections/permissions it had at last login
@@ -2464,7 +2472,7 @@
         renderAdmin();
         api("getBuyerNotifyList").then(function (list) { state.buyerNotifyList = list; renderNotifyList(); }).catch(function () {});
         api("getInspectionNotifyList").then(function (list) { state.inspectionNotifyList = list; renderInspectionNotifyList(); }).catch(function () {});
-        renderSettingsCard(); renderNotifTypesCard(); renderTeamsCard(); renderCustomModulesCard();
+        renderSettingsCard(); renderNotifTypesCard(); renderTeamsCard(); renderCustomModulesCard(); renderBuyerEmailsCard();
       }
       if (state.doer.can_view_audit || state.doer.is_admin) {
         api("getAudits").then(function (a) { state.audits = a; renderAudits(); renderHome(); });
@@ -4531,6 +4539,129 @@
     });
   }
 
+  // ---------- Buyer Email Directory ----------
+  // Admin-managed buyer_code -> email, one row per buyer. This is what the
+  // Buyer Order Dashboard's "send to buyer" emails actually look up now
+  // (via the getBuyerEmailMap backend action) — it replaces the old
+  // external "BuyerDatabase" Google Sheet entirely, so editing a row here
+  // is what the next send uses, no Sheet or Apps Script edit needed.
+  function renderBuyerEmailsCard() {
+    var wrap = document.getElementById("buyerEmailsCardWrap");
+    if (!wrap || !state.doer || !state.doer.is_admin) return;
+    var rows = state.buyerEmails || [];
+    if (!rows.length) { wrap.innerHTML = '<div class="empty">No buyers yet — click "+ Add Buyer" above, or "Bulk import" to paste in a list.</div>'; return; }
+    var sorted = rows.slice().sort(function (a, b) { return (a.buyer_code || "").localeCompare(b.buyer_code || ""); });
+    var trs = sorted.map(function (r) {
+      return "<tr><td><b>" + esc(r.buyer_code) + "</b></td><td>" + esc(r.buyer_name || "") + "</td><td>" + esc(r.email) + "</td>" +
+        '<td style="white-space:nowrap">' +
+        '<button class="btn secondary be-edit-btn" data-code="' + esc(r.buyer_code) + '" style="padding:5px 10px;font-size:12px">Edit</button> ' +
+        '<button class="btn secondary be-del-btn" data-code="' + esc(r.buyer_code) + '" style="padding:5px 10px;font-size:12px">Delete</button>' +
+        "</td></tr>";
+    }).join("");
+    wrap.innerHTML = '<div class="sub" style="margin-bottom:8px">' + rows.length + " buyer" + (rows.length === 1 ? "" : "s") + '</div><table><thead><tr><th>Buyer code</th><th>Name</th><th>Email</th><th></th></tr></thead><tbody>' + trs + "</tbody></table>";
+    wrap.querySelectorAll(".be-edit-btn").forEach(function (b) { b.addEventListener("click", function () { openEditBuyerEmailModal(b.dataset.code); }); });
+    wrap.querySelectorAll(".be-del-btn").forEach(function (b) { b.addEventListener("click", function () { confirmDeleteBuyerEmail(b.dataset.code); }); });
+  }
+  function buyerEmailModalHtml(r) {
+    return "<h3>" + (r ? "Edit Buyer" : "Add Buyer") + "</h3>" +
+      '<div class="field"><label>Buyer code</label><input id="beCode" value="' + (r ? esc(r.buyer_code) : "") + '" placeholder="e.g. ABC123" ' + (r ? "disabled" : "") + ' /></div>' +
+      '<div class="field"><label>Buyer / merchant name (optional)</label><input id="beName" value="' + (r ? esc(r.buyer_name || "") : "") + '" placeholder="e.g. Acme Rugs Inc" /></div>' +
+      '<div class="field"><label>Email</label><input id="beEmail" value="' + (r ? esc(r.email) : "") + '" placeholder="buyer@example.com" /></div>' +
+      '<div class="modal-err" id="beErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="beCancel">Cancel</button><button class="btn" id="beSaveBtn">' + (r ? "Save Changes" : "Add Buyer") + "</button></div>";
+  }
+  function wireBuyerEmailModal(r) {
+    document.getElementById("beCancel").addEventListener("click", closeModal);
+    document.getElementById("beSaveBtn").addEventListener("click", function () {
+      var buyer_code = document.getElementById("beCode").value.trim();
+      var buyer_name = document.getElementById("beName").value.trim();
+      var email = document.getElementById("beEmail").value.trim();
+      if (!buyer_code) { document.getElementById("beErr").textContent = "Buyer code required."; return; }
+      if (!email) { document.getElementById("beErr").textContent = "Email required."; return; }
+      var btn = document.getElementById("beSaveBtn"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      api("buyerEmailUpsert", { requester_doc_id: state.doer.doc_id, buyer_code: buyer_code, buyer_name: buyer_name, email: email }).then(function (row) {
+        var existing = (state.buyerEmails || []).find(function (x) { return x.buyer_code === row.buyer_code; });
+        if (existing) { Object.assign(existing, row); } else { state.buyerEmails.push(row); }
+        closeModal();
+        renderBuyerEmailsCard();
+        toast(r ? "Buyer updated." : "Buyer added.");
+      }).catch(function (e) {
+        document.getElementById("beErr").textContent = e.message;
+        btn.disabled = false; btn.textContent = r ? "Save Changes" : "Add Buyer";
+      });
+    });
+  }
+  function openNewBuyerEmailModal() { openModal(buyerEmailModalHtml(null)); wireBuyerEmailModal(null); }
+  function openEditBuyerEmailModal(code) {
+    var r = (state.buyerEmails || []).find(function (x) { return x.buyer_code === code; });
+    if (!r) return;
+    openModal(buyerEmailModalHtml(r));
+    wireBuyerEmailModal(r);
+  }
+  function confirmDeleteBuyerEmail(code) {
+    var r = (state.buyerEmails || []).find(function (x) { return x.buyer_code === code; });
+    if (!r) return;
+    openModal(
+      "<h3>Delete \"" + esc(code) + "\"?</h3><div class=\"sub\">Emails to this buyer code will stop sending until it's added back. This can't be undone.</div>" +
+      '<div class="modal-actions"><button class="btn secondary" id="beDelCancel">Cancel</button><button class="btn" id="beDelConfirm" style="background:var(--danger);color:#fff">Delete</button></div>'
+    );
+    document.getElementById("beDelCancel").addEventListener("click", closeModal);
+    document.getElementById("beDelConfirm").addEventListener("click", function () {
+      var btn = document.getElementById("beDelConfirm"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Deleting…';
+      api("buyerEmailDelete", { requester_doc_id: state.doer.doc_id, buyer_code: code }).then(function () {
+        state.buyerEmails = (state.buyerEmails || []).filter(function (x) { return x.buyer_code !== code; });
+        closeModal();
+        renderBuyerEmailsCard();
+        toast("Buyer deleted.");
+      }).catch(function (e) { toast(e.message, true); btn.disabled = false; btn.textContent = "Delete"; });
+    });
+  }
+  // Bulk import — paste rows as "code,email" or "code,name,email" (comma,
+  // tab, or multiple spaces all accepted), one per line. Sends them one at
+  // a time (no batch endpoint on the backend) and reports how many
+  // succeeded/failed at the end, since a bad line shouldn't block the rest.
+  function openBulkImportBuyerEmailModal() {
+    openModal(
+      "<h3>Bulk import buyers</h3>" +
+      '<div class="field"><label>Paste rows — one buyer per line: <code>code, email</code> or <code>code, name, email</code></label>' +
+      '<textarea id="beBulkText" rows="10" style="font-family:monospace;font-size:12px" placeholder="ABC123, buyer@example.com\nDEF456, Acme Rugs, acme@example.com"></textarea></div>' +
+      '<div class="modal-err" id="beBulkErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="beBulkCancel">Cancel</button><button class="btn" id="beBulkGo">Import</button></div>'
+    );
+    document.getElementById("beBulkCancel").addEventListener("click", closeModal);
+    document.getElementById("beBulkGo").addEventListener("click", function () {
+      var raw = document.getElementById("beBulkText").value;
+      var lines = raw.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+      var parsed = [];
+      var badLines = [];
+      lines.forEach(function (line) {
+        var parts = line.split(/\t|,/).map(function (p) { return p.trim(); }).filter(Boolean);
+        if (parts.length < 2) { badLines.push(line); return; }
+        var buyer_code = parts[0];
+        var email = parts[parts.length - 1];
+        var buyer_name = parts.length > 2 ? parts.slice(1, -1).join(" ") : "";
+        if (!buyer_code || !/@/.test(email)) { badLines.push(line); return; }
+        parsed.push({ buyer_code: buyer_code, buyer_name: buyer_name, email: email });
+      });
+      if (!parsed.length) { document.getElementById("beBulkErr").textContent = "No valid rows found — each line needs at least a code and an email."; return; }
+      var btn = document.getElementById("beBulkGo"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Importing…';
+      var okCount = 0, failCount = 0;
+      parsed.reduce(function (chain, item) {
+        return chain.then(function () {
+          return api("buyerEmailUpsert", { requester_doc_id: state.doer.doc_id, buyer_code: item.buyer_code, buyer_name: item.buyer_name, email: item.email }).then(function (row) {
+            okCount++;
+            var existing = (state.buyerEmails || []).find(function (x) { return x.buyer_code === row.buyer_code; });
+            if (existing) { Object.assign(existing, row); } else { state.buyerEmails.push(row); }
+          }).catch(function () { failCount++; });
+        });
+      }, Promise.resolve()).then(function () {
+        closeModal();
+        renderBuyerEmailsCard();
+        toast(okCount + " buyer" + (okCount === 1 ? "" : "s") + " imported" + (failCount ? ", " + failCount + " failed" : "") + (badLines.length ? " (" + badLines.length + " line" + (badLines.length === 1 ? "" : "s") + " skipped — no valid code/email)" : "") + ".", failCount > 0 || badLines.length > 0);
+      });
+    });
+  }
+
   // ---- Manage per-person links (content_type === "per_user_link") ----
   function openManageLinksModal(key) {
     var m = (state.customModules || []).find(function (x) { return x.module_key === key; });
@@ -4598,6 +4729,10 @@
   }
   var newCustomModuleBtnEl = document.getElementById("newCustomModuleBtn");
   if (newCustomModuleBtnEl) newCustomModuleBtnEl.addEventListener("click", openNewCustomModuleModal);
+  var newBuyerEmailBtnEl = document.getElementById("newBuyerEmailBtn");
+  if (newBuyerEmailBtnEl) newBuyerEmailBtnEl.addEventListener("click", openNewBuyerEmailModal);
+  var bulkImportBuyerEmailBtnEl = document.getElementById("bulkImportBuyerEmailBtn");
+  if (bulkImportBuyerEmailBtnEl) bulkImportBuyerEmailBtnEl.addEventListener("click", openBulkImportBuyerEmailModal);
 
   // ---------- Staff Access: Edit / Add ----------
   function openEditDoerModal(d) {
