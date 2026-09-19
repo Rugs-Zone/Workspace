@@ -4561,29 +4561,23 @@
       body.appendChild(frame);
       frame.srcdoc = m.html_content || "";
     } else if (directUrl) {
-      // A "link" / "per_user_link" module used to open INSIDE the app in an
-      // iframe. In practice almost every real external site (Google
-      // Workspace, Zoho, banking portals, etc.) sends X-Frame-Options/CSP
-      // that refuses to be framed — that's not the "rare" case the old
-      // comment here assumed, it's the common one, and it showed up as a
-      // dead "refused to connect" page with no explanation. So these now
-      // always launch in a real new tab instead of attempting an embed —
-      // no iframe, no silent failure. (Built-in modules like Costing
-      // Calculator, which embed *their own* GitHub Pages sites and are
-      // known to allow framing, are untouched — this only affects
-      // admin-added custom module links.)
-      var alreadyOpened = state.customModuleAutoOpened && state.customModuleAutoOpened[m.module_key];
-      body.innerHTML =
-        '<div class="empty" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:60px 20px">' +
-          '<div style="font-size:15px;color:var(--text)">' + esc(m.name) + ' opens in a new browser tab — most external sites like this don\'t allow being shown inside another page.</div>' +
-          '<a class="btn primary" href="' + esc(directUrl) + '" target="_blank" rel="noopener">Open ' + esc(m.name) + ' ↗</a>' +
-        '</div>';
+      // A "link" / "per_user_link" module embeds directly in an iframe, same
+      // as it always has — most of these are our own Apps Script deployments
+      // (Merchant Dashboard, Production Planning, ...) and those don't block
+      // framing, so this works for them exactly like before. A genuinely
+      // external site that refuses to be framed (Zoho, a bank, etc.) can't be
+      // detected from here with certainty — the browser blocks it silently,
+      // cross-origin, with no error we can read — so instead of guessing and
+      // hijacking every module into a new tab (which broke the ones that DID
+      // work), we just always keep the small "Open in new tab ↗" button in
+      // the toolbar available as a one-click fallback for whichever ones
+      // don't load.
+      body.innerHTML = "";
+      var frame = document.createElement("iframe");
+      frame.style.cssText = "width:100%;height:75vh;border:1px solid var(--line);border-radius:10px;background:#fff;";
+      frame.src = directUrl;
+      body.appendChild(frame);
       if (openBtn) { openBtn.href = directUrl; openBtn.classList.remove("hidden"); }
-      if (!alreadyOpened) {
-        state.customModuleAutoOpened = state.customModuleAutoOpened || {};
-        state.customModuleAutoOpened[m.module_key] = true;
-        window.open(directUrl, "_blank", "noopener");
-      }
     } else {
       body.innerHTML = '<div class="empty">No link has been assigned to you for this module yet. Ask an admin to add one under Admin & Settings → Custom Modules.</div>';
     }
