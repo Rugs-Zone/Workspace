@@ -897,6 +897,7 @@
         <div class="tabs" id="taskTabs">
           <button class="tab active" data-tab="mine">My Tasks</button>
           <button class="tab hidden" data-tab="delegated" id="tabDelegated">Delegated by Me</button>
+          <button class="tab hidden" data-tab="team" id="tabTeam" title="Tasks assigned to the people on your team, so you can follow up with them">My Team</button>
           <button class="tab hidden" data-tab="all" id="tabAll">All Tasks</button>
         </div>
         <input class="search" id="taskSearch" placeholder="Search task, assignee, ID…" />
@@ -2602,13 +2603,14 @@
 
   function loadAll() {
     if (state.demo) {
+      document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
       renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard(); renderNotifTypesCard(); renderTeamsCard(); renderLeavePage(); renderReimbursementPage();
       api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
       loadNotifications();
       return;
     }
     Promise.all([
-      api("listTasks"), api("getDoers"), api("getFaqs"), api("listTickets"), api("getBuyerVisits"), api("getNotices"), api("getHolidays"), api("getSettings"), api("getBuyerVisitAlertStaff"),
+      api("listTasks"), api("getDoers"), api("getFaqs"), api("listTickets"), api("getBuyerVisits", { requester_doc_id: state.doer.doc_id }), api("getNotices"), api("getHolidays"), api("getSettings"), api("getBuyerVisitAlertStaff"),
       // .catch-guarded: these calls are only "unknown action" until the deleg-api
       // edge function is redeployed with the matching cases. Falling back to
       // [] here means an out-of-sync backend degrades just that one
@@ -2626,6 +2628,7 @@
       // even though only an admin can change any of them (Settings page is admin-only).
       state.tasks = r[0]; state.allDoers = r[1] || []; state.doers = state.allDoers.filter(function (d) { return !d.is_deleted; }); state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8]; state.inspections = r[9]; state.inspectionAlertStaff = r[10]; state.birthdays = r[11];
       state.teams = r[12] || []; state.leaves = r[13] || []; state.reimbursements = r[14] || []; state.customModules = r[15] || []; state.buyerEmails = r[16] || [];
+      document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
       // Re-sync my own record from the just-fetched staff list. Without this, a
       // session restored from localStorage (see boot() below) keeps whatever
       // visible_modules/visible_sections/permissions it had at last login
@@ -3546,12 +3549,39 @@
     nameSel.innerHTML = '<option value="">All Staff</option>' +
       names.map(function (d) { var n = d.delegation_name || d.name; return '<option value="' + esc(n) + '"' + (n === curName ? " selected" : "") + ">" + esc(n) + "</option>"; }).join("");
   }
+  // Teams the current user leads (deleg_teams.tl_doc_id === me), and the
+  // current display names of everyone on those teams — used by the "My
+  // Team" task tab so a TL can see (and follow up on) what their reports
+  // have been assigned, without an admin having to hand them can_assign.
+  // Reuses the same deleg_teams/team_id data the Leave-approval flow
+  // already relies on (see isTLOfAnyTeam above).
+  function myLedTeamIds_() {
+    return (state.teams || [])
+      .filter(function (t) { return t.tl_doc_id === state.doer.doc_id; })
+      .map(function (t) { return t.id; });
+  }
+  function myTeamMemberNames_() {
+    var teamIds = myLedTeamIds_();
+    if (!teamIds.length) return [];
+    return (state.doers || [])
+      .filter(function (d) { return teamIds.indexOf(d.team_id) > -1 && d.doc_id !== state.doer.doc_id; })
+      .map(function (d) { return d.delegation_name || d.name; })
+      .filter(Boolean);
+  }
   function filteredTasks() {
     var list = state.tasks.slice();
     if (state.tab === "mine") {
       list = list.filter(function (t) { return nameMatchesMe_(t.assignee); });
     } else if (state.tab === "delegated") {
       list = list.filter(function (t) { return nameMatchesMe_(t.delegated_by); });
+    } else if (state.tab === "team") {
+      var teamNames = myTeamMemberNames_();
+      // Match old- and new-name-format tasks the same safe way nameMatchesFilter_
+      // already does for the admin Staff filter, so a renamed team member's
+      // older tasks still show up here instead of silently dropping out.
+      list = list.filter(function (t) {
+        return teamNames.some(function (n) { return nameMatchesFilter_(t.assignee, n); });
+      });
     } // "all" = no filter
     var q = document.getElementById("taskSearch").value.trim().toLowerCase();
     if (q) {
@@ -3607,10 +3637,14 @@
         "<td>" + esc(t.delegated_by) + "</td>" +
         '<td class="' + (overdue ? "overdue" : "") + '">' + fmtDate(t.deadline) + (overdue ? " ⚠" : "") + "</td>" +
         '<td><span class="badge ' + esc(t.status) + '">' + esc(t.status) + "</span></td>" +
+        // Completion time wasn't visible anywhere except the "View Proof" modal —
+        // shown right in the row now so it doesn't take an extra click to see
+        // when a task actually got finished, and whether that was late.
+        "<td>" + (t.status === "Completed" ? fmtDate(t.completed_at) : "—") + "</td>" +
         '<td class="row-actions">' + actions + "</td>" +
         "</tr>";
     }).join("");
-    wrap.innerHTML = '<table><thead><tr><th>Task</th><th>Assignee</th><th>Delegated By</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + rows + "</tbody></table>";
+    wrap.innerHTML = '<table><thead><tr><th>Task</th><th>Assignee</th><th>Delegated By</th><th>Deadline</th><th>Status</th><th>Completed</th><th>Actions</th></tr></thead><tbody>' + rows + "</tbody></table>";
     wrap.querySelectorAll("button[data-act]").forEach(function (b) {
       b.addEventListener("click", function () {
         var id = b.dataset.id, t = state.tasks.find(function (x) { return x.id === id; });
@@ -5803,7 +5837,7 @@
         document.getElementById("bvDate").value = "";
         document.getElementById("bvTime").value = "";
         document.getElementById("bvPersons").value = "1";
-        return api("getBuyerVisits").then(function (v) { state.buyerVisits = v; renderBuyerVisits(); renderHome(); });
+        return api("getBuyerVisits", { requester_doc_id: state.doer.doc_id }).then(function (v) { state.buyerVisits = v; renderBuyerVisits(); renderHome(); });
       }).catch(function (e) { err.textContent = e.message; }).finally(function () {
         bvSaveBtn.disabled = false; bvSaveBtn.textContent = "Log Visit";
       });
