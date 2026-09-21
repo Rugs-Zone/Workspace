@@ -2303,6 +2303,41 @@
     if (core !== myCore) return false;
     return taskCoreIsUnique_(core);
   }
+  // Same loose-but-safe match as nameMatchesMe_ above, generalized to any
+  // two name strings rather than just "me" — used by the admin task-list
+  // "Staff" filter dropdown and by the Delegation score report so a task
+  // stored under someone's OLD delegation_name (before an admin renamed
+  // them in Staff admin) still matches when filtering/grouping by their
+  // CURRENT name, instead of silently vanishing or showing as a separate
+  // person.
+  function nameMatchesFilter_(nameStr, filterValue) {
+    var a = (nameStr || "").trim().toLowerCase();
+    var b = (filterValue || "").trim().toLowerCase();
+    if (!a || !b) return false;
+    if (a === b) return true;
+    var coreA = taskNameCore_(nameStr), coreB = taskNameCore_(filterValue);
+    if (!coreA || coreA !== coreB) return false;
+    return taskCoreIsUnique_(coreA);
+  }
+  // Resolves any historical assignee string to today's current staff-list
+  // display name when it's an unambiguous match (same core, only one
+  // current staff member with that first-name/short-name), so score
+  // reports and "by person" groupings merge old- and new-name-format
+  // tasks into one row instead of splitting the same person in two. Falls
+  // back to the raw string as-is when there's no unique current match
+  // (e.g. the person was removed, or the short name is genuinely shared).
+  function canonAssignee_(nameStr) {
+    var raw = (nameStr || "").trim();
+    if (!raw) return "Unassigned";
+    var core = taskNameCore_(raw);
+    if (core && taskCoreIsUnique_(core)) {
+      for (var i = 0; i < state.doers.length; i++) {
+        var dName = state.doers[i].delegation_name || state.doers[i].name;
+        if (taskNameCore_(dName) === core) return dName;
+      }
+    }
+    return raw;
+  }
 
   // ---------- Gen-Z hover tilt for .tilt cards (module tiles, stat tiles, tickets) ----------
   (function () {
@@ -3530,7 +3565,7 @@
     var monthFilter = document.getElementById("taskFilterMonth").value;
     if (monthFilter) list = list.filter(function (t) { return taskMonthKey(t) === monthFilter; });
     var nameFilter = document.getElementById("taskFilterName").value;
-    if (nameFilter) list = list.filter(function (t) { return (t.assignee || "").toLowerCase() === nameFilter.toLowerCase(); });
+    if (nameFilter) list = list.filter(function (t) { return nameMatchesFilter_(t.assignee, nameFilter); });
     var statusFilter = document.getElementById("taskFilterStatus").value;
     if (statusFilter) list = list.filter(function (t) { return t.status === statusFilter; });
     list.sort(function (a, b) {
@@ -8309,7 +8344,7 @@
     });
     var byDoer = {};
     inRange.forEach(function (t) {
-      var key = t.assignee || "Unassigned";
+      var key = canonAssignee_(t.assignee);
       if (!byDoer[key]) byDoer[key] = { green: 0, yellow: 0, red: 0, tasks: [] };
       var color;
       if (t.status === "Completed") {
