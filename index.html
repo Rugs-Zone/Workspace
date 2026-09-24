@@ -3020,11 +3020,23 @@
       setTimeout(function () { finish(null); }, 8500);
     });
   }
+  // Xh Ym — used for completed/historical rows, where seconds don't matter.
   function fmtElapsed(ms) {
     if (ms < 0) ms = 0;
     var totalMin = Math.floor(ms / 60000);
     var h = Math.floor(totalMin / 60), m = totalMin % 60;
     return h + "h " + (m < 10 ? "0" : "") + m + "m";
+  }
+  // HH:MM:SS — the live, actually-ticking counter while someone is punched
+  // in, per "time will start with Hr: Min: Sec".
+  function fmtElapsedHMS(ms) {
+    if (ms < 0) ms = 0;
+    var totalSec = Math.floor(ms / 1000);
+    var h = Math.floor(totalSec / 3600);
+    var m = Math.floor((totalSec % 3600) / 60);
+    var s = totalSec % 60;
+    var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+    return pad(h) + ":" + pad(m) + ":" + pad(s);
   }
   function fmtClockTime(iso) {
     if (!iso) return "—";
@@ -3036,7 +3048,13 @@
   function startAttendanceLiveTimer() {
     stopAttendanceLiveTimer();
     renderAttendanceWidget();
-    attendLiveTimerHandle = setInterval(renderAttendanceWidget, 30000);
+    if (state.view === "attendance") renderAttendanceTodayCard();
+    // Ticks every second so the Hr:Min:Sec counter actually counts, not just
+    // jumps every half-minute.
+    attendLiveTimerHandle = setInterval(function () {
+      renderAttendanceWidget();
+      if (state.view === "attendance") renderAttendanceTodayCard();
+    }, 1000);
   }
   function renderAttendanceWidget() {
     var wrap = document.getElementById("attendWidget");
@@ -3046,13 +3064,13 @@
     wrap.classList.remove("hidden");
     var today = state.attendanceToday;
     if (today && today.punch_in_at && !today.punch_out_at) {
-      var elapsed = fmtElapsed(Date.now() - new Date(today.punch_in_at).getTime());
+      var elapsed = fmtElapsedHMS(Date.now() - new Date(today.punch_in_at).getTime());
       statusEl.className = "attend-status in";
-      statusEl.innerHTML = '<span class="dot"></span><span>Punched in · ' + elapsed + "<small>Since " + fmtClockTime(today.punch_in_at) + "</small></span>";
+      statusEl.innerHTML = '<span class="dot"></span><span>Punched in · <span style="font-variant-numeric:tabular-nums">' + elapsed + "</span><small>Since " + fmtClockTime(today.punch_in_at) + "</small></span>";
       btn.textContent = "Punch Out"; btn.dataset.action = "out";
     } else if (today && today.punch_out_at) {
       statusEl.className = "attend-status out";
-      statusEl.innerHTML = '<span class="dot"></span><span>Done for today<small>' + fmtClockTime(today.punch_in_at) + " – " + fmtClockTime(today.punch_out_at) + "</small></span>";
+      statusEl.innerHTML = '<span class="dot"></span><span>Done for today<small>' + fmtClockTime(today.punch_in_at) + " – " + fmtClockTime(today.punch_out_at) + " · " + attendanceHoursLabel(today) + "</small></span>";
       btn.textContent = "Punched Out ✓"; btn.dataset.action = "done"; btn.disabled = true;
     } else {
       statusEl.className = "attend-status out";
@@ -3169,13 +3187,25 @@
     var ms = new Date(row.punch_out_at).getTime() - new Date(row.punch_in_at).getTime();
     return fmtElapsed(ms);
   }
+  // On every 1s tick while punched in, just update the ticking number in
+  // place — rebuilding the whole card (and re-binding its button) every
+  // second is wasteful and risks stealing focus/flicker. Only a real state
+  // change (punch in/out, page switch) does the full re-render below.
+  function tickAttendanceTodayCardIfPresent() {
+    if (!state.attendanceToday || !state.attendanceToday.punch_in_at || state.attendanceToday.punch_out_at) return false;
+    var span = document.getElementById("attendTodayElapsed");
+    if (!span) return false;
+    span.textContent = fmtElapsedHMS(Date.now() - new Date(state.attendanceToday.punch_in_at).getTime());
+    return true;
+  }
   function renderAttendanceTodayCard() {
     var el = document.getElementById("attendTodayCard");
     if (!el) return;
+    if (tickAttendanceTodayCardIfPresent()) return;
     var today = state.attendanceToday;
     if (today && today.punch_in_at && !today.punch_out_at) {
       el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">' +
-        '<div><b style="font-size:16px">🟢 Punched in today</b><div class="sub" style="margin-top:2px">Since ' + fmtClockTime(today.punch_in_at) + " · " + fmtElapsed(Date.now() - new Date(today.punch_in_at).getTime()) + " so far</div></div>" +
+        '<div><b style="font-size:16px">🟢 Punched in today</b><div class="sub" style="margin-top:2px">Since ' + fmtClockTime(today.punch_in_at) + ' · <span id="attendTodayElapsed" style="font-variant-numeric:tabular-nums">' + fmtElapsedHMS(Date.now() - new Date(today.punch_in_at).getTime()) + "</span> so far</div></div>" +
         '<button class="btn" id="attendPageOutBtn">Punch Out</button></div>';
       var b = document.getElementById("attendPageOutBtn");
       if (b) b.addEventListener("click", function () { doAttendancePunchOut(); });
