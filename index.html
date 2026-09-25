@@ -18,6 +18,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
     --bg:#f5f6f8; --card:#ffffff; --ink:#14161c; --sub:#5f6570; --line:#e6e8eb;
@@ -900,6 +901,7 @@
         <button type="button" class="online-badge" id="onlineBadge" title="Click to see who's online">🟢 <span id="onlineCount">–</span> online now</button>
         <div class="online-popover hidden" id="onlinePopover"></div>
       </div>
+      <button class="btn secondary" id="globalSearchBtn" style="width:100%;margin-bottom:10px">🔎<span class="btn-label"> Search Workspace</span></button>
       <div class="who who-text" id="whoName" title="My Profile" style="cursor:pointer">—</div>
       <button class="btn secondary" id="themeToggleBtn" title="Switch theme (system / light / dark)" style="margin-top:10px;width:100%">🖥️<span class="btn-label"> Theme</span></button>
       <button class="btn secondary" id="logoutBtn" style="margin-top:8px;width:100%">🚪<span class="btn-label"> Log out</span></button>
@@ -920,6 +922,35 @@
       <div class="notif-wrap hidden" id="notifHomeWrap"></div>
       <div class="profile-nudge hidden" id="profileNudgeWrap"></div>
       <div class="birthday-banner hidden" id="birthdayHomeWidget"><div class="birthday-poster-row" id="birthdayPosterRow"></div></div>
+      <div class="card hidden" id="anniversaryHomeWidget" style="padding:18px;margin-bottom:20px;background:#fff7e6;border:1px solid #ffe2a8"></div>
+      <div class="card hidden" id="digestHomeWidget" style="padding:18px;margin-bottom:20px;background:#f0f5ff;border:1px solid #cfe0ff">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div><h3 style="margin:0 0 6px">☀️ Your Daily Digest</h3><div id="digestHomeBody" class="sub"></div></div>
+          <button class="btn secondary" id="digestDismissBtn" style="padding:4px 10px;font-size:12px">Dismiss</button>
+        </div>
+      </div>
+      <div class="card hidden" id="moodHomeWidget" style="padding:18px;margin-bottom:20px">
+        <h3 style="margin:0 0 8px">How's today going?</h3>
+        <div id="moodHomeButtons" style="display:flex;gap:10px"></div>
+      </div>
+      <div class="card hidden" id="streakHomeWidget" style="padding:18px;margin-bottom:20px">
+        <div id="streakHomeBody"></div>
+      </div>
+      <div class="card hidden" id="kudosHomeWidget" style="padding:18px;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h3 style="margin:0">🎉 Recent Kudos</h3>
+          <button class="btn secondary" id="kudosHomeGiveBtn" style="padding:4px 10px;font-size:12px">+ Give Kudos</button>
+        </div>
+        <ul class="mini-list" id="kudosHomeList" style="margin-top:8px"></ul>
+      </div>
+      <div class="card hidden" id="triageHomeWidget" style="padding:18px;margin-bottom:20px;border:1px solid #ffd8b0;background:#fff8f2">
+        <h3>⏳ Stuck Tasks (no update in 3+ days)</h3>
+        <ul class="mini-list" id="triageHomeList"></ul>
+      </div>
+      <div class="card hidden" id="quickLinksHomeWidget" style="padding:18px;margin-bottom:20px">
+        <h3 style="margin:0 0 8px">🔗 Quick Links</h3>
+        <div id="quickLinksHomeRow" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
       <div class="hero-grid">
         <div class="hero-card gradient">
           <div class="tag">Good to see you</div>
@@ -1019,11 +1050,71 @@
         <h2>FAQ</h2>
         <button class="btn" id="addFaqBtn">+ Add FAQ</button>
       </div>
-      <div class="card"><div id="faqListWrap"></div></div>
+      <div class="card">
+        <input id="faqAskInput" placeholder="Ask a question… (e.g. how do I apply leave)" style="margin-bottom:12px" />
+        <div id="faqAskResult" class="hidden" style="margin-bottom:12px"></div>
+        <div id="faqListWrap"></div>
+      </div>
+    </div>
+
+    <div id="view-kudos" class="hidden">
+      <div class="page-head">
+        <h2>Kudos Wall 🎉</h2>
+        <button class="btn" id="giveKudosBtn">+ Give Kudos</button>
+      </div>
+      <div class="card"><div id="kudosListWrap"></div></div>
+    </div>
+
+    <div id="view-polls" class="hidden">
+      <div class="page-head">
+        <h2>Polls</h2>
+        <button class="btn hidden" id="newPollBtn">+ New Poll</button>
+      </div>
+      <div class="card"><div id="pollsListWrap"></div></div>
+    </div>
+
+    <div id="view-ideabox" class="hidden">
+      <div class="page-head">
+        <h2>Idea Box 💡</h2>
+        <button class="btn" id="submitIdeaBtn">+ Share an Idea</button>
+      </div>
+      <div class="card"><div id="ideaboxWrap"></div></div>
+    </div>
+
+    <div id="view-teamcalendar" class="hidden">
+      <div class="page-head">
+        <h2>Team Calendar</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn secondary" id="calPrevBtn">‹</button>
+          <span id="calLabel" style="font-weight:700;min-width:120px;text-align:center;display:inline-block"></span>
+          <button class="btn secondary" id="calNextBtn">›</button>
+        </div>
+      </div>
+      <div class="card"><div id="teamCalendarWrap"></div></div>
+    </div>
+
+    <div id="view-notes" class="hidden">
+      <div class="page-head">
+        <h2>Notes 📝</h2>
+        <button class="btn" id="newNoteBtn">+ New Note</button>
+      </div>
+      <div id="notesGridWrap" class="module-grid"></div>
+    </div>
+
+    <div id="view-todo" class="hidden">
+      <div class="page-head">
+        <h2>To-Do</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn secondary" id="newTodoListBtn">+ Shared List</button>
+          <button class="btn" id="newTodoBtn">+ Add Task</button>
+        </div>
+      </div>
+      <div class="tabs" id="todoListTabs" style="margin-bottom:14px"></div>
+      <div class="card"><div id="todoListWrap"></div></div>
     </div>
 
     <div id="view-attendance" class="hidden">
-      <div class="page-head"><h2>Attendance</h2></div>
+      <div class="page-head"><h2>Attendance</h2><button class="btn secondary" id="attendQrBtn">📱 Quick-Punch QR</button></div>
       <div class="card" id="attendTodayCard"></div>
       <div class="toolbar" style="margin-top:16px">
         <div class="tabs" id="attendTabs">
@@ -1042,7 +1133,7 @@
 
     <div id="view-salary" class="hidden">
       <div class="page-head"><h2>Salary</h2></div>
-      <div class="card coming-soon"><div class="big">💰</div><b>Salary module is coming soon</b>Payslips and salary details will appear here once this module is built.</div>
+      <div class="card"><div id="salaryWrap"></div></div>
     </div>
 
     <div id="view-tickets" class="hidden">
@@ -1258,8 +1349,11 @@
     </div>
 
     <div id="view-ordertracking" class="hidden">
-      <div class="page-head"><h2>Order Tracking</h2></div>
-      <div class="card coming-soon"><div class="big">🚚</div><b>Order Tracking is coming soon</b>This module will appear here once the order tracking workflow is connected — the tile, routing and visibility controls are already live.</div>
+      <div class="page-head">
+        <h2>Order Tracking</h2>
+        <button class="btn hidden" id="newOrderTrackBtn">+ New Order</button>
+      </div>
+      <div class="card"><div id="orderTrackingWrap"></div></div>
     </div>
 
     <div id="view-teamworkspace" class="hidden">
@@ -1349,6 +1443,9 @@
         <div class="page-head" style="margin-top:22px"><h2 style="font-size:16px">Module Covers</h2></div>
         <div class="page-sub" style="margin-top:-12px">Give a module tile a colored cover instead of the plain card background — visible to everyone who can see that module.</div>
         <div class="card" style="padding:18px;margin-bottom:6px"><div id="moduleCoversCardWrap"></div></div>
+        <div class="page-head" style="margin-top:22px"><h2 style="font-size:16px">Quick Links</h2></div>
+        <div class="page-sub" style="margin-top:-12px">Company links shown on everyone's Home page (HR portal, ERP, etc).</div>
+        <div class="card" style="padding:18px;margin-bottom:6px"><div id="quickLinksCardWrap"></div></div>
         <div class="page-head" style="margin-top:22px"><h2 style="font-size:16px">Email notifications</h2></div>
         <div class="page-sub" style="margin-top:-12px">Turn specific kinds of emails off without touching the master switch above.</div>
         <div class="card" style="padding:18px;margin-bottom:6px"><div id="notifTypesCardWrap"></div></div>
@@ -1512,7 +1609,12 @@
     // Buyer Email Directory — admin-managed buyer_code -> email, replaces the
     // old external Google Sheet as the source the Buyer Order Dashboard's
     // "send to buyer" emails actually use.
-    buyerEmails: [] };
+    buyerEmails: [],
+    // Gen-Z feature pack
+    kudos: [], polls: [], ideas: [], orderTracking: [], salarySlips: [],
+    calMonth: new Date().getMonth(), calYear: new Date().getFullYear(),
+    // Microsoft-365-style feature pack
+    notes: [], todoLists: [], activeTodoListId: null, todos: [], quickLinks: [] };
 
   function api(action, payload) {
     if (state.demo) return demoApi(action, payload || {});
@@ -2812,7 +2914,7 @@
   function loadAll() {
     if (state.demo) {
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
-      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard(); renderModuleCoversCard(); renderNotifTypesCard(); renderTeamsCard(); renderLeavePage(); renderReimbursementPage();
+      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard(); renderModuleCoversCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderLeavePage(); renderReimbursementPage(); renderHomeExtras();
       api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
       loadNotifications();
       return;
@@ -2850,12 +2952,12 @@
         try { localStorage.setItem("deleg_doer", JSON.stringify(state.doer)); } catch (e) {}
         applySectionVisibility();
       }
-      renderTasks(); renderFaqs(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderLeavePage(); renderReimbursementPage();
+      renderTasks(); renderFaqs(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderLeavePage(); renderReimbursementPage(); renderHomeExtras();
       if (state.doer.is_admin) {
         renderAdmin();
         api("getBuyerNotifyList").then(function (list) { state.buyerNotifyList = list; renderNotifyList(); }).catch(function () {});
         api("getInspectionNotifyList").then(function (list) { state.inspectionNotifyList = list; renderInspectionNotifyList(); }).catch(function () {});
-        renderSettingsCard(); renderModuleCoversCard(); renderNotifTypesCard(); renderTeamsCard(); renderCustomModulesCard(); renderBuyerEmailsCard();
+        renderSettingsCard(); renderModuleCoversCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderCustomModulesCard(); renderBuyerEmailsCard();
       }
       if (state.doer.can_view_audit || state.doer.is_admin) {
         api("getAudits").then(function (a) { state.audits = a; renderAudits(); renderHome(); });
@@ -3041,14 +3143,44 @@
   var ONLINE_COUNT_POLL_MS = CHAT_HEARTBEAT_MS;
   var onlineCountPollHandle = null;
   var lastOnlineList = [];
+  // Teams-style presence status — stored in dashboard_prefs.status (no new
+  // table), so it rides along on the existing updateDoerAccess merge pattern.
+  var PRESENCE_STATUSES = [
+    { key: "available", emoji: "🟢", label: "Available" },
+    { key: "busy", emoji: "🔴", label: "Busy" },
+    { key: "meeting", emoji: "🟣", label: "In a Meeting" },
+    { key: "focusing", emoji: "🎧", label: "Focusing" }
+  ];
+  function presenceStatusFor(d) {
+    var key = d && d.dashboard_prefs && d.dashboard_prefs.status;
+    return PRESENCE_STATUSES.find(function (s) { return s.key === key; }) || null;
+  }
+  function setMyPresenceStatus(key) {
+    if (!state.doer.dashboard_prefs) state.doer.dashboard_prefs = {};
+    state.doer.dashboard_prefs.status = key;
+    api("updateDoerAccess", { doc_id: state.doer.doc_id, dashboard_prefs: state.doer.dashboard_prefs }).then(function () {
+      renderOnlinePopover(); toast("Status updated");
+    }).catch(function () {});
+  }
   function renderOnlinePopover() {
     var pop = document.getElementById("onlinePopover");
     if (!pop || pop.classList.contains("hidden")) return; // don't bother building it while it's closed
-    if (!lastOnlineList.length) { pop.innerHTML = '<div class="online-popover-empty">No one else is online right now.</div>'; return; }
-    pop.innerHTML = '<div class="online-popover-title">Online now</div>' + lastOnlineList.map(function (p) {
-      var name = p.delegation_name || p.name || "Someone";
-      return '<div class="online-popover-row"><span class="dot"></span>' + esc(name) + (state.doer && p.doc_id === state.doer.doc_id ? " (you)" : "") + "</div>";
-    }).join("");
+    var myStatus = state.doer ? presenceStatusFor(state.doer) : null;
+    var statusPicker = '<div class="online-popover-title">Your status</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">' +
+      PRESENCE_STATUSES.map(function (s) {
+        return '<button type="button" class="btn secondary" data-set-status="' + s.key + '" style="padding:3px 8px;font-size:11px' + (myStatus && myStatus.key === s.key ? ";outline:2px solid var(--accent,#ff5000)" : "") + '">' + s.emoji + " " + s.label + '</button>';
+      }).join("") + "</div>";
+    if (!lastOnlineList.length) { pop.innerHTML = statusPicker + '<div class="online-popover-empty">No one else is online right now.</div>'; }
+    else {
+      pop.innerHTML = statusPicker + '<div class="online-popover-title">Online now</div>' + lastOnlineList.map(function (p) {
+        var name = p.delegation_name || p.name || "Someone";
+        var st = presenceStatusFor(p);
+        return '<div class="online-popover-row"><span class="dot"></span>' + esc(name) + (st ? " " + st.emoji + " " + st.label : "") + (state.doer && p.doc_id === state.doer.doc_id ? " (you)" : "") + "</div>";
+      }).join("");
+    }
+    pop.querySelectorAll("[data-set-status]").forEach(function (b) {
+      b.addEventListener("click", function () { setMyPresenceStatus(b.dataset.setStatus); });
+    });
   }
   function refreshOnlineCount() {
     if (!state.doer) return;
@@ -3397,15 +3529,21 @@
     { key: "buyerorder", icon: "🧾", name: "Buyer Order Dashboard", status: "live", goto: "buyerorder" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit" },
     { key: "inspection", icon: "🔍", name: "Inspection", status: "live", goto: "inspection" },
-    { key: "ordertracking", icon: "🚚", name: "Order Tracking", status: "soon", goto: "ordertracking" },
+    { key: "ordertracking", icon: "🚚", name: "Order Tracking", status: "live", goto: "ordertracking" },
     { key: "teamworkspace", icon: "🗂️", name: "Team Workspace", status: "live", goto: "teamworkspace" },
     { key: "samplingfms", icon: "🧵", name: "Sampling FMS", status: "live", goto: "samplingfms" },
     { key: "leave", icon: "🏖️", name: "Leave Request", status: "live", goto: "leave" },
     { key: "reimbursement", icon: "🧳", name: "Travel/Outstation Reimbursement", status: "live", goto: "reimbursement" },
     { key: "attendance", icon: "🕒", name: "Attendance", status: "live", goto: "attendance" },
-    { key: "salary", icon: "💰", name: "Salary", status: "soon", goto: "salary" },
+    { key: "salary", icon: "💰", name: "Salary", status: "live", goto: "salary" },
     { key: "rugsconnect", icon: "🔗", name: "Rugs Connect", status: "live", goto: "rugsconnect" },
-    { key: "counterroom", icon: "🔢", name: "Counter Room", status: "live", goto: "counterroom" }
+    { key: "counterroom", icon: "🔢", name: "Counter Room", status: "live", goto: "counterroom" },
+    { key: "kudos", icon: "🎉", name: "Kudos Wall", status: "live", goto: "kudos" },
+    { key: "polls", icon: "🗳️", name: "Polls", status: "live", goto: "polls" },
+    { key: "ideabox", icon: "💡", name: "Idea Box", status: "live", goto: "ideabox" },
+    { key: "teamcalendar", icon: "📅", name: "Team Calendar", status: "live", goto: "teamcalendar" },
+    { key: "notes", icon: "📝", name: "Notes", status: "live", goto: "notes" },
+    { key: "todo", icon: "✔️", name: "To-Do", status: "live", goto: "todo" }
   ];
 
   // Admin-defined modules from Admin → Custom Modules (state.customModules,
@@ -3820,7 +3958,7 @@
     }
   });
 
-  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "leave", "reimbursement", "admin", "staffControls", "customModule"];
+  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "ideabox", "teamcalendar", "notes", "todo"];
   function goToView(view) {
     // External URL-backed modules (Costing Calculator, Rugs Connect, Buyer
     // Order Dashboard, and any custom "link"/"per_user_link" module) now
@@ -3866,6 +4004,14 @@
     if (view === "samplingfms") loadSamplingFmsFrame();
     if (view === "counterroom") loadCounterRoomFrame();
     if (view === "teamworkspace") renderWorkspaces();
+    if (view === "salary") renderSalaryPage();
+    if (view === "ordertracking") renderOrderTracking();
+    if (view === "kudos") renderKudosWall();
+    if (view === "polls") renderPolls();
+    if (view === "ideabox") renderIdeaBox();
+    if (view === "teamcalendar") renderTeamCalendar();
+    if (view === "notes") renderNotes();
+    if (view === "todo") renderTodoPage();
     // costing / buyerorder / rugsconnect never reach here — intercepted
     // above and sent straight to a new browser tab instead. Counter Room,
     // like Checklist/CBM/Sampling FMS, is embedded in place below.
@@ -3876,7 +4022,7 @@
       if (el) el.classList.toggle("hidden", v !== state.view);
     });
     if (state.view === "score") renderScore();
-    if (state.view === "home") renderHome();
+    if (state.view === "home") { renderHome(); renderHomeExtras(); }
     if (state.view === "modules") renderHome();
     if (state.view === "admin") renderAdmin();
     if (state.view === "staffControls") renderStaffControls();
@@ -5147,7 +5293,7 @@
     if (!sorted.length) {
       wrap.innerHTML = '<div class="empty">' + (showDeleted ? "No removed staff." : "No staff match this search/filter.") + '</div>';
       renderNotifyList(); renderBvAlertStaffList(); renderInspectionNotifyList(); renderInspectionAlertStaffList();
-      renderSettingsCard(); renderModuleCoversCard(); renderNotifTypesCard(); renderTeamsCard();
+      renderSettingsCard(); renderModuleCoversCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
       return;
     }
     var rows = sorted.map(function (d) {
@@ -5256,7 +5402,7 @@
     renderBvAlertStaffList();
     renderInspectionNotifyList();
     renderInspectionAlertStaffList();
-    renderSettingsCard(); renderModuleCoversCard(); renderNotifTypesCard(); renderTeamsCard();
+    renderSettingsCard(); renderModuleCoversCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
   }
 
   // ---------- Manage Visibility for one module (from Settings → Modules) ----------
@@ -9105,7 +9251,9 @@
       '<h3>Raise a ' + (isHelp ? "Help Slip" : "Query") + '</h3><div class="sub">Visible to your department and admins.</div>' +
       '<div class="field"><label>Subject</label><input id="rtSubject" placeholder="Short title" /></div>' +
       '<div class="field"><label>Department</label><select id="rtDept">' + deptOptions(state.doer.department) + '</select></div>' +
-      '<div class="field"><label>Describe the problem</label><textarea id="rtProblem" placeholder="What\'s going wrong?"></textarea></div>' +
+      '<div class="field"><label>Describe the problem ' +
+        '<button type="button" id="rtMic" class="btn secondary" style="padding:2px 8px;font-size:11px;margin-left:6px">🎤 Voice</button>' +
+        '</label><textarea id="rtProblem" placeholder="What\'s going wrong? (or tap 🎤 Voice to dictate)"></textarea></div>' +
       (isHelp ?
         '<div class="field"><label>Proposed Solution 1 (optional)</label><input id="rtSol1" /></div>' +
         '<div class="field"><label>Proposed Solution 2 (optional)</label><input id="rtSol2" /></div>' +
@@ -9116,6 +9264,7 @@
       "wide"
     );
     document.getElementById("rtCancel").addEventListener("click", closeModal);
+    wireVoiceDictation("rtMic", "rtProblem");
     document.getElementById("rtSave").addEventListener("click", function () {
       var problem = document.getElementById("rtProblem").value.trim();
       var err = document.getElementById("rtErr");
@@ -9296,6 +9445,874 @@
     });
   });
 
+  // ================= Gen-Z feature pack =================
+  // Every call below is wrapped so a table/action the user hasn't deployed
+  // yet (migration not run / edge function not redeployed) just leaves that
+  // one widget empty instead of breaking the rest of Home.
+
+  // ---------- Voice dictation (Web Speech API) ----------
+  function wireVoiceDictation(btnId, textareaId) {
+    var btn = document.getElementById(btnId);
+    if (!btn) return;
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { btn.classList.add("hidden"); return; }
+    var recognizing = false, rec = null;
+    btn.addEventListener("click", function () {
+      var ta = document.getElementById(textareaId);
+      if (!ta) return;
+      if (recognizing) { if (rec) rec.stop(); return; }
+      rec = new SR();
+      rec.lang = "en-IN";
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.onstart = function () { recognizing = true; btn.textContent = "🔴 Listening…"; };
+      rec.onerror = function () { recognizing = false; btn.textContent = "🎤 Voice"; };
+      rec.onend = function () { recognizing = false; btn.textContent = "🎤 Voice"; };
+      rec.onresult = function (e) {
+        var text = e.results[0][0].transcript;
+        ta.value = (ta.value ? ta.value.trim() + " " : "") + text;
+      };
+      try { rec.start(); } catch (e) {}
+    });
+  }
+
+  // ---------- Confetti (pure CSS/canvas, no library) ----------
+  function fireConfetti() {
+    try {
+      var canvas = document.createElement("canvas");
+      canvas.style.cssText = "position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:99999";
+      canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+      document.body.appendChild(canvas);
+      var ctx = canvas.getContext("2d");
+      var colors = ["#ff5000", "#ffb700", "#22c55e", "#3b82f6", "#e0a23e"];
+      var pieces = [];
+      for (var i = 0; i < 80; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width, y: -20 - Math.random() * canvas.height * 0.3,
+          w: 6 + Math.random() * 6, h: 8 + Math.random() * 8,
+          vy: 2 + Math.random() * 3, vx: -2 + Math.random() * 4,
+          rot: Math.random() * 360, vr: -8 + Math.random() * 16,
+          color: colors[Math.floor(Math.random() * colors.length)]
+        });
+      }
+      var frames = 0;
+      function tick() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(function (p) {
+          p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+          ctx.fillStyle = p.color; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+        });
+        frames++;
+        if (frames < 90) requestAnimationFrame(tick);
+        else canvas.remove();
+      }
+      requestAnimationFrame(tick);
+    } catch (e) {}
+  }
+
+  // ---------- Kudos Wall ----------
+  function kudosCardsHtml(list) {
+    if (!list || !list.length) return '<div class="empty">No kudos yet — be the first to give one!</div>';
+    return list.map(function (k) {
+      return '<li>' + k.emoji + ' <b>' + esc(doerName(k.from_doc_id)) + '</b> → <b>' + esc(doerName(k.to_doc_id)) + '</b>' +
+        (k.message ? ': "' + esc(k.message) + '"' : '') +
+        '<span class="sub" style="margin-left:6px">' + fmtDate(k.created_at) + '</span></li>';
+    }).join("");
+  }
+  function renderKudosWall() {
+    var wrap = document.getElementById("kudosListWrap");
+    if (!wrap) return;
+    wrap.innerHTML = '<div class="empty">Loading…</div>';
+    api("kudosList", { limit: 100 }).then(function (list) {
+      state.kudos = list || [];
+      wrap.innerHTML = '<ul class="mini-list">' + kudosCardsHtml(state.kudos) + '</ul>';
+    }).catch(function (e) { wrap.innerHTML = '<div class="empty">' + esc(e.message || "Kudos Wall isn't set up yet — ask your admin to run the Gen-Z feature migration.") + '</div>'; });
+  }
+  function renderKudosHomeWidget() {
+    var widget = document.getElementById("kudosHomeWidget"), list = document.getElementById("kudosHomeList");
+    if (!widget || !list) return;
+    api("kudosList", { limit: 5 }).then(function (ks) {
+      widget.classList.remove("hidden");
+      list.innerHTML = kudosCardsHtml(ks || []);
+    }).catch(function () { widget.classList.add("hidden"); });
+  }
+  function openGiveKudosModal() {
+    var others = (state.doers || []).filter(function (d) { return d.doc_id !== state.doer.doc_id; });
+    var opts = others.map(function (d) { return '<option value="' + esc(d.doc_id) + '">' + esc(d.delegation_name || d.name) + '</option>'; }).join("");
+    var emojis = ["👏", "🔥", "💯", "🚀", "🌟", "🙌"];
+    openModal(
+      '<h3>Give Kudos 🎉</h3>' +
+      '<div class="field"><label>To</label><select id="kToDoer">' + opts + '</select></div>' +
+      '<div class="field"><label>Emoji</label><div style="display:flex;gap:8px" id="kEmojiRow">' +
+      emojis.map(function (e, i) { return '<button type="button" class="btn secondary" data-emoji="' + e + '" style="font-size:18px;padding:6px 10px' + (i === 0 ? ';outline:2px solid var(--accent, #ff5000)' : '') + '">' + e + '</button>'; }).join("") +
+      '</div></div>' +
+      '<div class="field"><label>Message (optional)</label><textarea id="kMsg" placeholder="Great job on..."></textarea></div>' +
+      '<div class="modal-err" id="kErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="kCancel">Cancel</button><button class="btn" id="kSave">Send Kudos</button></div>'
+    );
+    var chosenEmoji = emojis[0];
+    document.querySelectorAll("#kEmojiRow [data-emoji]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        chosenEmoji = b.dataset.emoji;
+        document.querySelectorAll("#kEmojiRow [data-emoji]").forEach(function (x) { x.style.outline = ""; });
+        b.style.outline = "2px solid var(--accent, #ff5000)";
+      });
+    });
+    document.getElementById("kCancel").addEventListener("click", closeModal);
+    document.getElementById("kSave").addEventListener("click", function () {
+      var to = document.getElementById("kToDoer").value;
+      var err = document.getElementById("kErr");
+      if (!to) { err.textContent = "Pick who this is for."; return; }
+      var btn = document.getElementById("kSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Sending…';
+      api("kudosSend", { from_doc_id: state.doer.doc_id, to_doc_id: to, emoji: chosenEmoji, message: document.getElementById("kMsg").value.trim() }).then(function () {
+        toast("Kudos sent!"); closeModal(); fireConfetti();
+        renderKudosWall(); renderKudosHomeWidget();
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Send Kudos"; });
+    });
+  }
+  var giveKudosBtnEl = document.getElementById("giveKudosBtn");
+  if (giveKudosBtnEl) giveKudosBtnEl.addEventListener("click", openGiveKudosModal);
+  var kudosHomeGiveBtnEl = document.getElementById("kudosHomeGiveBtn");
+  if (kudosHomeGiveBtnEl) kudosHomeGiveBtnEl.addEventListener("click", openGiveKudosModal);
+
+  // ---------- Mood check-in ----------
+  function renderMoodHomeWidget() {
+    var widget = document.getElementById("moodHomeWidget"), row = document.getElementById("moodHomeButtons");
+    if (!widget || !row) return;
+    var MOODS = [{ key: "great", emoji: "😄", label: "Great" }, { key: "ok", emoji: "😐", label: "OK" }, { key: "low", emoji: "😩", label: "Low" }];
+    var savedKey = "rc_mood_" + state.doer.doc_id + "_" + new Date().toISOString().slice(0, 10);
+    var already = null;
+    try { already = sessionStorage.getItem(savedKey); } catch (e) {}
+    widget.classList.remove("hidden");
+    row.innerHTML = MOODS.map(function (m) {
+      return '<button type="button" class="btn secondary" data-mood="' + m.key + '" style="font-size:20px;padding:8px 14px' + (already === m.key ? ";outline:2px solid var(--accent, #ff5000)" : "") + '">' + m.emoji + '<div style="font-size:10px;margin-top:2px">' + m.label + '</div></button>';
+    }).join("");
+    if (already) return;
+    row.querySelectorAll("[data-mood]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        api("moodCheckinSave", { doc_id: state.doer.doc_id, mood: b.dataset.mood }).then(function () {
+          try { sessionStorage.setItem(savedKey, b.dataset.mood); } catch (e) {}
+          toast("Thanks for checking in!");
+          renderMoodHomeWidget();
+        }).catch(function () { widget.classList.add("hidden"); });
+      });
+    });
+  }
+
+  // ---------- Streaks + Badges (computed client-side, cached in dashboard_prefs) ----------
+  function computeAttendanceStreak(rows) {
+    // rows: newest-first deleg_attendance rows for this doer. A streak day
+    // counts if they punched in that day; breaks the first day with no
+    // punch-in (weekends/holidays aren't filtered — good enough for a
+    // lightweight streak counter, not payroll).
+    var byDate = {};
+    (rows || []).forEach(function (r) { if (r.punch_in_at) byDate[r.date] = true; });
+    var streak = 0, d = new Date();
+    // if today has no punch-in yet, start counting from yesterday instead of
+    // breaking the streak at 0 the moment someone opens the app before 9am
+    var todayStr = d.toISOString().slice(0, 10);
+    if (!byDate[todayStr]) d.setDate(d.getDate() - 1);
+    while (true) {
+      var ds = d.toISOString().slice(0, 10);
+      if (byDate[ds]) { streak++; d.setDate(d.getDate() - 1); } else break;
+      if (streak > 400) break;
+    }
+    return streak;
+  }
+  var BADGE_DEFS = [
+    { key: "streak7", label: "🔥 7-Day Streak", test: function (ctx) { return ctx.streak >= 7; } },
+    { key: "streak30", label: "🏅 30-Day Streak", test: function (ctx) { return ctx.streak >= 30; } },
+    { key: "kudos10", label: "🌟 Kudos Magnet (10 received)", test: function (ctx) { return ctx.kudosReceived >= 10; } },
+    { key: "greenscore", label: "💚 Zero-Defect Month", test: function (ctx) { return ctx.scorePct >= 100 && ctx.scoreTotal >= 5; } }
+  ];
+  function renderStreakHomeWidget() {
+    var widget = document.getElementById("streakHomeWidget"), body = document.getElementById("streakHomeBody");
+    if (!widget || !body || !state.doer) return;
+    api("attendanceMyHistory", { doc_id: state.doer.doc_id, limit: 60 }).then(function (rows) {
+      var streak = computeAttendanceStreak(rows);
+      var earned = (state.doer.dashboard_prefs && state.doer.dashboard_prefs.badges) || [];
+      var ctx = { streak: streak, kudosReceived: (state.kudos || []).filter(function (k) { return k.to_doc_id === state.doer.doc_id; }).length, scorePct: 0, scoreTotal: 0 };
+      var newlyEarned = [];
+      BADGE_DEFS.forEach(function (b) {
+        if (earned.indexOf(b.key) === -1 && b.test(ctx)) { earned.push(b.key); newlyEarned.push(b); }
+      });
+      if (newlyEarned.length) {
+        if (!state.doer.dashboard_prefs) state.doer.dashboard_prefs = {};
+        state.doer.dashboard_prefs.badges = earned;
+        api("updateDoerAccess", { doc_id: state.doer.doc_id, dashboard_prefs: state.doer.dashboard_prefs }).catch(function () {});
+        fireConfetti();
+        toast("Badge unlocked: " + newlyEarned[0].label + "!");
+      }
+      widget.classList.remove("hidden");
+      var badgeChips = earned.map(function (k) {
+        var b = BADGE_DEFS.find(function (x) { return x.key === k; });
+        return b ? '<span class="module-badge live" style="margin-right:6px">' + b.label + '</span>' : "";
+      }).join("");
+      body.innerHTML = '<h3 style="margin:0 0 8px">🔥 ' + streak + '-day attendance streak</h3>' +
+        (badgeChips ? '<div style="margin-top:6px">' + badgeChips + '</div>' : '<div class="sub">Keep punching in daily to earn badges.</div>');
+    }).catch(function () { widget.classList.add("hidden"); });
+  }
+
+  // ---------- Daily digest ----------
+  function renderDigestHomeWidget() {
+    var widget = document.getElementById("digestHomeWidget"), body = document.getElementById("digestHomeBody");
+    if (!widget || !body || !state.doer) return;
+    var todayStr = new Date().toISOString().slice(0, 10);
+    var dismissKey = "rc_digest_dismissed_" + state.doer.doc_id + "_" + todayStr;
+    try { if (sessionStorage.getItem(dismissKey)) { widget.classList.add("hidden"); return; } } catch (e) {}
+    var mine = myKey();
+    var overdue = (state.tasks || []).filter(function (t) { return t.status === "Pending" && canonAssignee_(t.assignee) === canonAssignee_(mine) && t.deadline && new Date(t.deadline) < new Date(); }).length;
+    var pendingLeaves = state.doer.is_admin ? (state.leaves || []).filter(function (l) { return l.status === "Pending"; }).length : 0;
+    var lateToday = 0;
+    var bits = [];
+    if (overdue) bits.push(overdue + " overdue task" + (overdue === 1 ? "" : "s"));
+    if (pendingLeaves) bits.push(pendingLeaves + " leave request" + (pendingLeaves === 1 ? "" : "s") + " awaiting your approval");
+    if (!bits.length) { widget.classList.add("hidden"); return; }
+    widget.classList.remove("hidden");
+    body.textContent = bits.join(" · ") + ".";
+    var dismissBtn = document.getElementById("digestDismissBtn");
+    if (dismissBtn) dismissBtn.onclick = function () {
+      try { sessionStorage.setItem(dismissKey, "1"); } catch (e) {}
+      widget.classList.add("hidden");
+    };
+  }
+
+  // ---------- Smart task triage ----------
+  function renderTriageHomeWidget() {
+    var widget = document.getElementById("triageHomeWidget"), list = document.getElementById("triageHomeList");
+    if (!widget || !list || !state.doer) return;
+    var mine = myKey();
+    var threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    var stuck = (state.tasks || []).filter(function (t) {
+      if (t.status !== "Pending") return false;
+      var mineOrAssigned = state.doer.is_admin || state.doer.can_assign || canonAssignee_(t.assignee) === canonAssignee_(mine);
+      if (!mineOrAssigned) return false;
+      var lastTouch = t.updated_at ? new Date(t.updated_at) : (t.ts ? new Date(t.ts) : null);
+      return lastTouch && lastTouch < threeDaysAgo;
+    }).slice(0, 8);
+    if (!stuck.length) { widget.classList.add("hidden"); return; }
+    widget.classList.remove("hidden");
+    list.innerHTML = stuck.map(function (t) {
+      return '<li><b>' + esc(t.task) + '</b> <span class="sub">— ' + esc(t.assignee) + ' · last touched ' + fmtDate(t.updated_at || t.ts) + '</span></li>';
+    }).join("");
+  }
+
+  // ---------- Work anniversary (from deleg_doers.created_at) ----------
+  function renderAnniversaryHomeWidget() {
+    var widget = document.getElementById("anniversaryHomeWidget");
+    if (!widget) return;
+    var today = new Date();
+    var hits = (state.doers || []).filter(function (d) {
+      if (!d.created_at) return false;
+      var c = new Date(d.created_at);
+      return c.getMonth() === today.getMonth() && c.getDate() === today.getDate() && c.getFullYear() < today.getFullYear();
+    });
+    if (!hits.length) { widget.classList.add("hidden"); return; }
+    widget.classList.remove("hidden");
+    widget.innerHTML = "<h3 style=\"margin:0 0 6px\">🎊 Work Anniversary</h3>" + hits.map(function (d) {
+      var years = today.getFullYear() - new Date(d.created_at).getFullYear();
+      return "<div>" + esc(d.delegation_name || d.name) + " — " + years + " year" + (years === 1 ? "" : "s") + " on the team today!</div>";
+    }).join("");
+  }
+
+  // Called once after login/loadAll, and every time Home is (re)shown.
+  function renderHomeExtras() {
+    if (!state.doer) return;
+    renderMoodHomeWidget();
+    renderStreakHomeWidget();
+    renderKudosHomeWidget();
+    renderDigestHomeWidget();
+    renderTriageHomeWidget();
+    renderAnniversaryHomeWidget();
+    renderQuickLinksHomeWidget();
+  }
+
+  // ---------- Polls ----------
+  function renderPolls() {
+    var wrap = document.getElementById("pollsListWrap");
+    if (!wrap) return;
+    document.getElementById("newPollBtn").classList.toggle("hidden", !state.doer.is_admin);
+    wrap.innerHTML = '<div class="empty">Loading…</div>';
+    api("pollsList", { doc_id: state.doer.doc_id }).then(function (polls) {
+      state.polls = polls || [];
+      if (!state.polls.length) { wrap.innerHTML = '<div class="empty">No polls yet.</div>'; return; }
+      wrap.innerHTML = state.polls.map(function (p) {
+        var totalVotes = p.total_votes || 0;
+        var optsHtml = (p.options || []).map(function (opt, i) {
+          var count = (p.counts || [])[i] || 0;
+          var pct = totalVotes ? Math.round((count / totalVotes) * 100) : 0;
+          var mine = p.my_vote === i;
+          return '<div style="margin:6px 0">' +
+            '<button type="button" class="btn ' + (mine ? "" : "secondary") + '" data-poll="' + p.id + '" data-opt="' + i + '" ' + (p.is_closed ? "disabled" : "") + ' style="width:100%;text-align:left;display:flex;justify-content:space-between">' +
+            '<span>' + (mine ? "✓ " : "") + esc(opt) + '</span><span>' + count + ' (' + pct + '%)</span></button>' +
+            '<div style="height:4px;background:#eee;border-radius:2px;margin-top:3px"><div style="height:100%;width:' + pct + '%;background:var(--accent,#ff5000);border-radius:2px"></div></div>' +
+            '</div>';
+        }).join("");
+        return '<div class="card" style="margin-bottom:14px">' +
+          '<div style="display:flex;justify-content:space-between"><b>' + esc(p.question) + '</b>' + (p.is_closed ? '<span class="module-badge soon">Closed</span>' : "") + '</div>' +
+          '<div class="sub" style="margin:4px 0 10px">' + totalVotes + ' vote' + (totalVotes === 1 ? "" : "s") + (state.doer.is_admin && !p.is_closed ? ' · <a href="#" data-close-poll="' + p.id + '">Close poll</a>' : "") + '</div>' +
+          optsHtml + '</div>';
+      }).join("");
+      wrap.querySelectorAll("[data-poll]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          api("pollVote", { poll_id: b.dataset.poll, doc_id: state.doer.doc_id, option_index: Number(b.dataset.opt) }).then(function () { renderPolls(); }).catch(function (e) { toast(e.message, true); });
+        });
+      });
+      wrap.querySelectorAll("[data-close-poll]").forEach(function (a) {
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          api("pollClose", { requester_doc_id: state.doer.doc_id, poll_id: a.dataset.closePoll }).then(function () { renderPolls(); }).catch(function (e2) { toast(e2.message, true); });
+        });
+      });
+    }).catch(function (e) { wrap.innerHTML = '<div class="empty">' + esc(e.message || "Polls aren't set up yet — ask your admin to run the Gen-Z feature migration.") + '</div>'; });
+  }
+  var newPollBtnEl = document.getElementById("newPollBtn");
+  if (newPollBtnEl) newPollBtnEl.addEventListener("click", function () {
+    openModal(
+      '<h3>New Poll</h3>' +
+      '<div class="field"><label>Question</label><input id="npQ" /></div>' +
+      '<div class="field"><label>Options (one per line, min 2)</label><textarea id="npOpts" placeholder="Option A\nOption B"></textarea></div>' +
+      '<div class="modal-err" id="npErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="npCancel">Cancel</button><button class="btn" id="npSave">Create Poll</button></div>'
+    );
+    document.getElementById("npCancel").addEventListener("click", closeModal);
+    document.getElementById("npSave").addEventListener("click", function () {
+      var q = document.getElementById("npQ").value.trim();
+      var opts = document.getElementById("npOpts").value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      var err = document.getElementById("npErr");
+      if (!q || opts.length < 2) { err.textContent = "A question and at least 2 options are required."; return; }
+      var btn = document.getElementById("npSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Creating…';
+      api("pollCreate", { requester_doc_id: state.doer.doc_id, question: q, options: opts }).then(function () {
+        toast("Poll created"); closeModal(); renderPolls();
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Create Poll"; });
+    });
+  });
+
+  // ---------- Idea Box ----------
+  function renderIdeaBox() {
+    var wrap = document.getElementById("ideaboxWrap");
+    if (!wrap) return;
+    wrap.innerHTML = '<div class="empty">Loading…</div>';
+    var action = state.doer.is_admin ? "ideasListAdmin" : "ideasListMine";
+    api(action, { requester_doc_id: state.doer.doc_id, doc_id: state.doer.doc_id }).then(function (ideas) {
+      state.ideas = ideas || [];
+      if (!state.ideas.length) { wrap.innerHTML = '<div class="empty">' + (state.doer.is_admin ? "No ideas submitted yet." : "You haven't shared an idea yet — tap + Share an Idea.") + '</div>'; return; }
+      wrap.innerHTML = state.ideas.map(function (idea) {
+        var statusColor = { "New": "soon", "Under review": "soon", "Actioned": "live", "Declined": "" }[idea.status] || "soon";
+        return '<div class="card" style="margin-bottom:10px">' +
+          '<div style="display:flex;justify-content:space-between;gap:10px"><div>' + esc(idea.text) + '</div>' +
+          '<span class="module-badge ' + statusColor + '">' + esc(idea.status) + '</span></div>' +
+          '<div class="sub" style="margin-top:6px">' + (idea.is_anonymous ? "Anonymous" : esc(doerName(idea.doc_id))) + ' · ' + fmtDate(idea.created_at) + '</div>' +
+          (idea.admin_note ? '<div class="sub" style="margin-top:4px">Admin note: ' + esc(idea.admin_note) + '</div>' : "") +
+          (state.doer.is_admin ? '<div style="margin-top:8px"><select data-idea-status="' + idea.id + '">' +
+            ["New", "Under review", "Actioned", "Declined"].map(function (s) { return '<option value="' + s + '"' + (s === idea.status ? " selected" : "") + '>' + s + '</option>'; }).join("") +
+            '</select></div>' : "") +
+          '</div>';
+      }).join("");
+      wrap.querySelectorAll("[data-idea-status]").forEach(function (sel) {
+        sel.addEventListener("change", function () {
+          api("ideaUpdateStatus", { requester_doc_id: state.doer.doc_id, id: sel.dataset.ideaStatus, status: sel.value }).then(function () { toast("Updated"); renderIdeaBox(); }).catch(function (e) { toast(e.message, true); });
+        });
+      });
+    }).catch(function (e) { wrap.innerHTML = '<div class="empty">' + esc(e.message || "Idea Box isn't set up yet — ask your admin to run the Gen-Z feature migration.") + '</div>'; });
+  }
+  var submitIdeaBtnEl = document.getElementById("submitIdeaBtn");
+  if (submitIdeaBtnEl) submitIdeaBtnEl.addEventListener("click", function () {
+    openModal(
+      '<h3>Share an Idea 💡</h3>' +
+      '<div class="field"><label>Your idea</label><textarea id="idText" placeholder="What should we build/change/try?"></textarea></div>' +
+      '<div class="field"><label><input type="checkbox" id="idAnon" style="width:auto;margin-right:6px" />Submit anonymously</label></div>' +
+      '<div class="modal-err" id="idErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="idCancel">Cancel</button><button class="btn" id="idSave">Submit</button></div>'
+    );
+    document.getElementById("idCancel").addEventListener("click", closeModal);
+    document.getElementById("idSave").addEventListener("click", function () {
+      var text = document.getElementById("idText").value.trim();
+      var err = document.getElementById("idErr");
+      if (!text) { err.textContent = "Write your idea first."; return; }
+      var btn = document.getElementById("idSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Submitting…';
+      api("ideaSubmit", { doc_id: state.doer.doc_id, is_anonymous: document.getElementById("idAnon").checked, text: text }).then(function () {
+        toast("Thanks for the idea!"); closeModal(); renderIdeaBox();
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Submit"; });
+    });
+  });
+
+  // ---------- Team Calendar ----------
+  function renderTeamCalendar() {
+    var wrap = document.getElementById("teamCalendarWrap"), label = document.getElementById("calLabel");
+    if (!wrap) return;
+    var y = state.calYear, m = state.calMonth;
+    if (label) label.textContent = new Date(y, m, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    var firstDay = new Date(y, m, 1).getDay();
+    var daysInMonth = new Date(y, m + 1, 0).getDate();
+    var onLeaveByDay = {}, visitByDay = {};
+    (state.leaves || []).forEach(function (l) {
+      if (l.status !== "Approved") return;
+      var s = new Date(l.start_date), e = new Date(l.end_date);
+      for (var d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+        if (d.getFullYear() === y && d.getMonth() === m) {
+          (onLeaveByDay[d.getDate()] = onLeaveByDay[d.getDate()] || []).push(doerName(l.doc_id));
+        }
+      }
+    });
+    (state.buyerVisits || []).forEach(function (v) {
+      if (!v.visit_at) return;
+      var d = new Date(v.visit_at);
+      if (d.getFullYear() === y && d.getMonth() === m) {
+        (visitByDay[d.getDate()] = visitByDay[d.getDate()] || []).push(v.buyer_name || "Buyer visit");
+      }
+    });
+    var cells = "";
+    for (var i = 0; i < firstDay; i++) cells += '<div style="min-height:70px"></div>';
+    var today = new Date();
+    for (var day = 1; day <= daysInMonth; day++) {
+      var isToday = today.getFullYear() === y && today.getMonth() === m && today.getDate() === day;
+      var chips = "";
+      (onLeaveByDay[day] || []).slice(0, 2).forEach(function (n) { chips += '<div style="font-size:10px;background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 4px;margin-top:2px">🏖️ ' + esc(n) + '</div>'; });
+      (visitByDay[day] || []).slice(0, 2).forEach(function (n) { chips += '<div style="font-size:10px;background:#dbeafe;color:#1e40af;border-radius:4px;padding:1px 4px;margin-top:2px">🚪 ' + esc(n) + '</div>'; });
+      cells += '<div style="min-height:70px;border:1px solid #eee;border-radius:6px;padding:4px' + (isToday ? ";outline:2px solid var(--accent,#ff5000)" : "") + '"><div style="font-size:11px;font-weight:700">' + day + '</div>' + chips + '</div>';
+    }
+    var dowRow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(function (d) { return '<div style="font-size:11px;font-weight:700;text-align:center;color:var(--muted,#888)">' + d + '</div>'; }).join("");
+    wrap.innerHTML = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px">' + dowRow + '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">' + cells + '</div>';
+  }
+  function calShift(delta) {
+    state.calMonth += delta;
+    if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
+    if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+    renderTeamCalendar();
+  }
+  var calPrevBtnEl = document.getElementById("calPrevBtn"), calNextBtnEl = document.getElementById("calNextBtn");
+  if (calPrevBtnEl) calPrevBtnEl.addEventListener("click", function () { calShift(-1); });
+  if (calNextBtnEl) calNextBtnEl.addEventListener("click", function () { calShift(1); });
+  // Swipe left/right to change month (touch devices).
+  (function () {
+    var calView = document.getElementById("view-teamcalendar");
+    if (!calView) return;
+    var sx = null;
+    calView.addEventListener("touchstart", function (e) { sx = e.touches[0].clientX; }, { passive: true });
+    calView.addEventListener("touchend", function (e) {
+      if (sx == null) return;
+      var dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 60) calShift(dx < 0 ? 1 : -1);
+      sx = null;
+    }, { passive: true });
+  })();
+
+  // ---------- Salary ----------
+  function renderSalaryPage() {
+    var wrap = document.getElementById("salaryWrap");
+    if (!wrap) return;
+    wrap.innerHTML = '<div class="empty">Loading…</div>';
+    if (state.doer.is_admin) {
+      var opts = (state.doers || []).map(function (d) { return '<option value="' + esc(d.doc_id) + '">' + esc(d.delegation_name || d.name) + '</option>'; }).join("");
+      wrap.innerHTML = '<div class="field" style="max-width:320px"><label>View/upload for</label><select id="salDoerSel">' + opts + '</select></div>' +
+        '<button class="btn" id="salUploadBtn" style="margin-bottom:14px">+ Add Payslip</button>' +
+        '<div id="salAdminListWrap"></div>';
+      var sel = document.getElementById("salDoerSel");
+      function loadForSelected() {
+        api("salaryAdminListForDoer", { requester_doc_id: state.doer.doc_id, doc_id: sel.value }).then(function (rows) {
+          document.getElementById("salAdminListWrap").innerHTML = salaryRowsHtml(rows || []);
+        }).catch(function (e) { document.getElementById("salAdminListWrap").innerHTML = '<div class="empty">' + esc(e.message || "Salary module isn't set up yet.") + '</div>'; });
+      }
+      sel.addEventListener("change", loadForSelected);
+      document.getElementById("salUploadBtn").addEventListener("click", function () { openSalaryUploadModal(sel.value, loadForSelected); });
+      if (opts) loadForSelected();
+    } else {
+      api("salaryMyList", { doc_id: state.doer.doc_id }).then(function (rows) {
+        wrap.innerHTML = salaryRowsHtml(rows || []);
+      }).catch(function (e) { wrap.innerHTML = '<div class="empty">' + esc(e.message || "Salary module isn't set up yet.") + '</div>'; });
+    }
+  }
+  function salaryRowsHtml(rows) {
+    if (!rows.length) return '<div class="empty">No payslips yet.</div>';
+    return '<table><thead><tr><th>Month</th><th>Gross</th><th>Deductions</th><th>Net</th><th>Remarks</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        var ded = (r.deductions || []).map(function (d) { return esc(d.label) + ": ₹" + d.amount; }).join(", ");
+        return "<tr><td>" + esc(r.month) + "</td><td>₹" + r.gross + "</td><td>" + (ded || "—") + "</td><td><b>₹" + r.net + "</b></td><td>" + esc(r.remarks || "—") + "</td></tr>";
+      }).join("") + "</tbody></table>";
+  }
+  function openSalaryUploadModal(docId, onDone) {
+    openModal(
+      '<h3>Add Payslip</h3>' +
+      '<div class="field"><label>Month (YYYY-MM)</label><input id="slMonth" placeholder="2026-09" /></div>' +
+      '<div class="field"><label>Gross (₹)</label><input id="slGross" type="number" /></div>' +
+      '<div class="field"><label>Deductions (label:amount, one per line)</label><textarea id="slDed" placeholder="PF:1200\nTDS:800"></textarea></div>' +
+      '<div class="field"><label>Remarks (optional)</label><input id="slRemarks" /></div>' +
+      '<div class="modal-err" id="slErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="slCancel">Cancel</button><button class="btn" id="slSave">Save</button></div>'
+    );
+    document.getElementById("slCancel").addEventListener("click", closeModal);
+    document.getElementById("slSave").addEventListener("click", function () {
+      var month = document.getElementById("slMonth").value.trim();
+      var gross = Number(document.getElementById("slGross").value) || 0;
+      var err = document.getElementById("slErr");
+      if (!/^\d{4}-\d{2}$/.test(month)) { err.textContent = "Month must be in YYYY-MM format."; return; }
+      var deductions = document.getElementById("slDed").value.split("\n").map(function (line) {
+        var parts = line.split(":"); return parts.length === 2 ? { label: parts[0].trim(), amount: Number(parts[1]) || 0 } : null;
+      }).filter(Boolean);
+      var btn = document.getElementById("slSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      api("salaryUpsert", { requester_doc_id: state.doer.doc_id, doc_id: docId, month: month, gross: gross, deductions: deductions, remarks: document.getElementById("slRemarks").value.trim() }).then(function () {
+        toast("Payslip saved"); closeModal(); if (onDone) onDone();
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Save"; });
+    });
+  }
+
+  // ---------- Order Tracking ----------
+  var ORDER_STAGES = ["Order Received", "In Production", "QC", "Dispatched", "In Transit", "Delivered"];
+  function canManageOrderTracking() {
+    return state.doer.is_admin || ((state.doer.managed_modules || []).indexOf("ordertracking") !== -1);
+  }
+  function renderOrderTracking() {
+    var wrap = document.getElementById("orderTrackingWrap");
+    if (!wrap) return;
+    document.getElementById("newOrderTrackBtn").classList.toggle("hidden", !canManageOrderTracking());
+    wrap.innerHTML = '<div class="empty">Loading…</div>';
+    api("orderTrackingList", {}).then(function (rows) {
+      state.orderTracking = rows || [];
+      if (!state.orderTracking.length) { wrap.innerHTML = '<div class="empty">No orders being tracked yet.</div>'; return; }
+      wrap.innerHTML = state.orderTracking.map(function (o) {
+        var stepIdx = ORDER_STAGES.indexOf(o.stage);
+        var steps = ORDER_STAGES.map(function (s, i) {
+          return '<div style="flex:1;text-align:center"><div style="width:14px;height:14px;border-radius:50%;margin:0 auto 4px;background:' + (i <= stepIdx ? "var(--accent,#ff5000)" : "#e5e5e5") + '"></div><div style="font-size:10px">' + s + '</div></div>';
+        }).join('<div style="flex:1;height:2px;background:#e5e5e5;margin-top:6px"></div>');
+        var nextStage = ORDER_STAGES[stepIdx + 1];
+        return '<div class="card" style="margin-bottom:14px">' +
+          '<div style="display:flex;justify-content:space-between"><b>' + esc(o.order_ref) + '</b><span class="sub">' + esc(o.buyer_name || "") + '</span></div>' +
+          '<div style="display:flex;margin:14px 0 4px">' + steps + '</div>' +
+          (o.eta ? '<div class="sub">ETA: ' + esc(o.eta) + '</div>' : "") +
+          (canManageOrderTracking() && nextStage ? '<button class="btn secondary" data-advance="' + o.id + '" data-next="' + nextStage + '" style="margin-top:10px">Mark as ' + nextStage + '</button>' : "") +
+          '</div>';
+      }).join("");
+      wrap.querySelectorAll("[data-advance]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          api("orderTrackingAdvance", { requester_doc_id: state.doer.doc_id, id: b.dataset.advance, stage: b.dataset.next }).then(function () {
+            toast("Updated to " + b.dataset.next); renderOrderTracking();
+          }).catch(function (e) { toast(e.message, true); });
+        });
+      });
+    }).catch(function (e) { wrap.innerHTML = '<div class="empty">' + esc(e.message || "Order Tracking isn't set up yet — ask your admin to run the Gen-Z feature migration.") + '</div>'; });
+  }
+  var newOrderTrackBtnEl = document.getElementById("newOrderTrackBtn");
+  if (newOrderTrackBtnEl) newOrderTrackBtnEl.addEventListener("click", function () {
+    openModal(
+      '<h3>New Order</h3>' +
+      '<div class="field"><label>Order Ref</label><input id="otRef" /></div>' +
+      '<div class="field"><label>Buyer Name</label><input id="otBuyer" /></div>' +
+      '<div class="field"><label>ETA (optional)</label><input id="otEta" type="date" /></div>' +
+      '<div class="modal-err" id="otErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="otCancel">Cancel</button><button class="btn" id="otSave">Create</button></div>'
+    );
+    document.getElementById("otCancel").addEventListener("click", closeModal);
+    document.getElementById("otSave").addEventListener("click", function () {
+      var ref = document.getElementById("otRef").value.trim();
+      var err = document.getElementById("otErr");
+      if (!ref) { err.textContent = "Order Ref is required."; return; }
+      var btn = document.getElementById("otSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Creating…';
+      api("orderTrackingCreate", { requester_doc_id: state.doer.doc_id, order_ref: ref, buyer_name: document.getElementById("otBuyer").value.trim(), eta: document.getElementById("otEta").value || null }).then(function () {
+        toast("Order created"); closeModal(); renderOrderTracking();
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Create"; });
+    });
+  });
+
+  // ---------- FAQ "ask a question" keyword bot (uses existing deleg_faqs) ----------
+  var faqAskInputEl = document.getElementById("faqAskInput");
+  if (faqAskInputEl) {
+    faqAskInputEl.addEventListener("input", function () {
+      var q = faqAskInputEl.value.trim().toLowerCase();
+      var resultEl = document.getElementById("faqAskResult");
+      if (!q) { resultEl.classList.add("hidden"); return; }
+      var words = q.split(/\s+/).filter(function (w) { return w.length > 2; });
+      var scored = (state.faqs || []).map(function (f) {
+        var hay = (f.question + " " + f.answer).toLowerCase();
+        var score = words.reduce(function (s, w) { return s + (hay.indexOf(w) !== -1 ? 1 : 0); }, 0);
+        return { f: f, score: score };
+      }).filter(function (x) { return x.score > 0; }).sort(function (a, b) { return b.score - a.score; }).slice(0, 3);
+      resultEl.classList.remove("hidden");
+      if (!scored.length) { resultEl.innerHTML = '<div class="empty">No matching FAQ — try "+ Add FAQ" or ask in Team Chat.</div>'; return; }
+      resultEl.innerHTML = scored.map(function (x) {
+        return '<div class="faq-item"><div class="faq-q">' + esc(x.f.question) + '</div><div class="faq-a">' + esc(x.f.answer) + '</div></div>';
+      }).join("");
+    });
+  }
+
+  // ---------- PWA install prompt ----------
+  (function () {
+    var deferredPrompt = null;
+    window.addEventListener("beforeinstallprompt", function (e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      var already = false;
+      try { already = localStorage.getItem("rc_pwa_install_dismissed") === "1"; } catch (er) {}
+      if (already) return;
+      var bar = document.createElement("div");
+      bar.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:9998;background:#111;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px";
+      bar.innerHTML = '<span>📲 Install Rugs Creation Workspace on this device for faster access.</span>' +
+        '<span style="display:flex;gap:8px;flex-shrink:0"><button class="btn" id="pwaInstallBtn" style="padding:6px 12px">Install</button><button class="btn secondary" id="pwaDismissBtn" style="padding:6px 12px">Not now</button></span>';
+      document.body.appendChild(bar);
+      document.getElementById("pwaInstallBtn").addEventListener("click", function () {
+        bar.remove();
+        if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
+      });
+      document.getElementById("pwaDismissBtn").addEventListener("click", function () {
+        bar.remove();
+        try { localStorage.setItem("rc_pwa_install_dismissed", "1"); } catch (er) {}
+      });
+    });
+  })();
+
+  // ---------- QR quick-punch (deep-links back to this page — handy on a
+  // shared/kiosk tablet at the gate so people don't have to hunt for the app) ----------
+  var attendQrBtnEl = document.getElementById("attendQrBtn");
+  if (attendQrBtnEl) attendQrBtnEl.addEventListener("click", function () {
+    openModal(
+      '<h3>Quick-Punch QR</h3>' +
+      '<div class="sub" style="margin-bottom:10px">Scan this on your phone to jump straight to Attendance — handy if this device is shared.</div>' +
+      '<div id="attendQrCanvas" style="display:flex;justify-content:center;padding:12px"></div>' +
+      '<div class="modal-actions"><button class="btn" id="attendQrClose">Close</button></div>'
+    );
+    document.getElementById("attendQrClose").addEventListener("click", closeModal);
+    try {
+      var url = window.location.origin + window.location.pathname + "#attendance";
+      new QRCode(document.getElementById("attendQrCanvas"), { text: url, width: 180, height: 180 });
+    } catch (e) { document.getElementById("attendQrCanvas").textContent = "QR library didn't load."; }
+  });
+
+  // ================= Microsoft-365-style feature pack =================
+
+  // ---------- Notes ----------
+  var NOTE_COLORS = ["#fff9c4", "#ffd6e8", "#d6f5ff", "#d9ffd6", "#e6d9ff", "#ffe0cc"];
+  function renderNotes() {
+    var wrap = document.getElementById("notesGridWrap");
+    if (!wrap) return;
+    wrap.innerHTML = '<div class="empty">Loading…</div>';
+    api("notesList", { doc_id: state.doer.doc_id }).then(function (notes) {
+      state.notes = notes || [];
+      if (!state.notes.length) { wrap.innerHTML = '<div class="empty">No notes yet — tap + New Note.</div>'; return; }
+      wrap.innerHTML = state.notes.map(function (n) {
+        return '<div class="module-card" data-note="' + n.id + '" style="background:' + esc(n.color) + ';cursor:pointer;min-height:140px;display:flex;flex-direction:column">' +
+          (n.pinned ? '<div style="font-size:11px">📌 Pinned</div>' : "") +
+          '<b style="margin:4px 0 6px">' + esc(n.title || "Untitled") + '</b>' +
+          '<div style="font-size:12px;flex:1;white-space:pre-wrap;overflow:hidden">' + esc((n.body || "").slice(0, 180)) + '</div>' +
+          '<div class="sub" style="margin-top:6px">' + fmtDate(n.updated_at) + '</div></div>';
+      }).join("");
+      wrap.querySelectorAll("[data-note]").forEach(function (card) {
+        card.addEventListener("click", function () {
+          var n = state.notes.find(function (x) { return x.id === card.dataset.note; });
+          if (n) openNoteModal(n);
+        });
+      });
+    }).catch(function (e) { wrap.innerHTML = '<div class="empty">' + esc(e.message || "Notes aren't set up yet — ask your admin to run the office-features migration.") + '</div>'; });
+  }
+  function openNoteModal(existing) {
+    var n = existing || { title: "", body: "", color: NOTE_COLORS[0], pinned: false };
+    openModal(
+      '<h3>' + (existing ? "Edit Note" : "New Note") + '</h3>' +
+      '<div class="field"><label>Title</label><input id="noteTitle" value="' + esc(n.title) + '" /></div>' +
+      '<div class="field"><label>Body</label><textarea id="noteBody" style="min-height:120px">' + esc(n.body) + '</textarea></div>' +
+      '<div class="field"><label>Color</label><div id="noteColorRow" style="display:flex;gap:8px">' +
+      NOTE_COLORS.map(function (c) { return '<button type="button" data-color="' + c + '" style="width:24px;height:24px;border-radius:50%;background:' + c + ';border:2px solid ' + (n.color === c ? "#333" : "transparent") + ';cursor:pointer"></button>'; }).join("") +
+      '</div></div>' +
+      '<div class="field"><label><input type="checkbox" id="notePinned" style="width:auto;margin-right:6px"' + (n.pinned ? " checked" : "") + ' />Pin to top</label></div>' +
+      '<div class="modal-err" id="noteErr"></div>' +
+      '<div class="modal-actions">' +
+      (existing ? '<button class="btn secondary" id="noteDelete" style="margin-right:auto;color:#dc2626">Delete</button>' : "") +
+      '<button class="btn secondary" id="noteCancel">Cancel</button><button class="btn" id="noteSave">Save</button></div>'
+    );
+    var chosenColor = n.color;
+    document.querySelectorAll("#noteColorRow [data-color]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        chosenColor = b.dataset.color;
+        document.querySelectorAll("#noteColorRow [data-color]").forEach(function (x) { x.style.border = "2px solid transparent"; });
+        b.style.border = "2px solid #333";
+      });
+    });
+    document.getElementById("noteCancel").addEventListener("click", closeModal);
+    if (existing) {
+      document.getElementById("noteDelete").addEventListener("click", function () {
+        api("noteDelete", { doc_id: state.doer.doc_id, id: existing.id }).then(function () { toast("Note deleted"); closeModal(); renderNotes(); }).catch(function (e) { toast(e.message, true); });
+      });
+    }
+    document.getElementById("noteSave").addEventListener("click", function () {
+      var payload = { doc_id: state.doer.doc_id, title: document.getElementById("noteTitle").value.trim(), body: document.getElementById("noteBody").value, color: chosenColor, pinned: document.getElementById("notePinned").checked };
+      var btn = document.getElementById("noteSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      var call = existing ? api("noteUpdate", Object.assign({ id: existing.id }, payload)) : api("noteCreate", payload);
+      call.then(function () { toast("Note saved"); closeModal(); renderNotes(); }).catch(function (e) {
+        document.getElementById("noteErr").textContent = e.message; btn.disabled = false; btn.textContent = "Save";
+      });
+    });
+  }
+  var newNoteBtnEl = document.getElementById("newNoteBtn");
+  if (newNoteBtnEl) newNoteBtnEl.addEventListener("click", function () { openNoteModal(null); });
+
+  // ---------- To-Do (personal + shared lists) ----------
+  function renderTodoPage() {
+    var tabsWrap = document.getElementById("todoListTabs");
+    if (!tabsWrap) return;
+    api("todoListsMine", { doc_id: state.doer.doc_id }).then(function (lists) {
+      state.todoLists = lists || [];
+      var tabs = [{ id: null, name: "My Tasks" }].concat(state.todoLists.map(function (l) { return { id: l.id, name: l.name + (l.is_shared ? " 👥" : "") }; }));
+      if (state.activeTodoListId === undefined) state.activeTodoListId = null;
+      if (state.activeTodoListId && !tabs.find(function (t) { return t.id === state.activeTodoListId; })) state.activeTodoListId = null;
+      tabsWrap.innerHTML = tabs.map(function (t) {
+        return '<button class="tab' + (state.activeTodoListId === t.id ? " active" : "") + '" data-todolist="' + (t.id || "") + '">' + esc(t.name) + '</button>';
+      }).join("");
+      tabsWrap.querySelectorAll("[data-todolist]").forEach(function (b) {
+        b.addEventListener("click", function () { state.activeTodoListId = b.dataset.todolist || null; renderTodoPage(); });
+      });
+      renderTodoList();
+    }).catch(function () { tabsWrap.innerHTML = ""; renderTodoList(); });
+  }
+  function renderTodoList() {
+    var wrap = document.getElementById("todoListWrap");
+    if (!wrap) return;
+    wrap.innerHTML = '<div class="empty">Loading…</div>';
+    api("todosList", { doc_id: state.doer.doc_id, list_id: state.activeTodoListId || undefined }).then(function (todos) {
+      state.todos = todos || [];
+      if (!state.todos.length) { wrap.innerHTML = '<div class="empty">Nothing here yet — tap + Add Task.</div>'; return; }
+      wrap.innerHTML = '<ul class="mini-list">' + state.todos.map(function (t) {
+        var overdue = t.due_date && !t.done && new Date(t.due_date) < new Date(new Date().toDateString());
+        return '<li style="display:flex;align-items:center;gap:8px' + (t.done ? ";opacity:.55" : "") + '">' +
+          '<input type="checkbox" data-todo-toggle="' + t.id + '"' + (t.done ? " checked" : "") + ' style="width:auto" />' +
+          '<span style="flex:1;' + (t.done ? "text-decoration:line-through" : "") + '">' + esc(t.text) + '</span>' +
+          (t.due_date ? '<span class="sub" style="' + (overdue ? "color:#dc2626;font-weight:700" : "") + '">' + esc(t.due_date) + '</span>' : "") +
+          '<button type="button" data-todo-del="' + t.id + '" class="btn secondary" style="padding:2px 8px;font-size:11px">✕</button></li>';
+      }).join("") + '</ul>';
+      wrap.querySelectorAll("[data-todo-toggle]").forEach(function (cb) {
+        cb.addEventListener("change", function () {
+          api("todoToggle", { doc_id: state.doer.doc_id, id: cb.dataset.todoToggle, done: cb.checked }).then(function () { renderTodoList(); }).catch(function (e) { toast(e.message, true); });
+        });
+      });
+      wrap.querySelectorAll("[data-todo-del]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          api("todoDelete", { doc_id: state.doer.doc_id, id: b.dataset.todoDel }).then(function () { renderTodoList(); }).catch(function (e) { toast(e.message, true); });
+        });
+      });
+    }).catch(function (e) { wrap.innerHTML = '<div class="empty">' + esc(e.message || "To-Do isn't set up yet — ask your admin to run the office-features migration.") + '</div>'; });
+  }
+  var newTodoBtnEl = document.getElementById("newTodoBtn");
+  if (newTodoBtnEl) newTodoBtnEl.addEventListener("click", function () {
+    openModal(
+      '<h3>Add Task</h3>' +
+      '<div class="field"><label>Task</label><input id="ntText" /></div>' +
+      '<div class="field"><label>Due date (optional)</label><input id="ntDue" type="date" /></div>' +
+      '<div class="modal-err" id="ntErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="ntCancel">Cancel</button><button class="btn" id="ntSave">Add</button></div>'
+    );
+    document.getElementById("ntCancel").addEventListener("click", closeModal);
+    document.getElementById("ntSave").addEventListener("click", function () {
+      var text = document.getElementById("ntText").value.trim();
+      var err = document.getElementById("ntErr");
+      if (!text) { err.textContent = "Task text is required."; return; }
+      var btn = document.getElementById("ntSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Adding…';
+      api("todoCreate", { doc_id: state.doer.doc_id, list_id: state.activeTodoListId || undefined, text: text, due_date: document.getElementById("ntDue").value || null }).then(function () {
+        toast("Task added"); closeModal(); renderTodoList();
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Add"; });
+    });
+  });
+  var newTodoListBtnEl = document.getElementById("newTodoListBtn");
+  if (newTodoListBtnEl) newTodoListBtnEl.addEventListener("click", function () {
+    var opts = (state.doers || []).filter(function (d) { return d.doc_id !== state.doer.doc_id; })
+      .map(function (d) { return '<label style="display:block;padding:2px 0"><input type="checkbox" value="' + esc(d.doc_id) + '" style="width:auto;margin-right:6px" />' + esc(d.delegation_name || d.name) + '</label>'; }).join("");
+    openModal(
+      '<h3>New Shared List</h3>' +
+      '<div class="field"><label>List name</label><input id="tlName" placeholder="e.g. Diwali Event Planning" /></div>' +
+      '<div class="field"><label>Share with</label><div style="max-height:180px;overflow:auto" id="tlMembers">' + opts + '</div></div>' +
+      '<div class="modal-err" id="tlErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="tlCancel">Cancel</button><button class="btn" id="tlSave">Create</button></div>'
+    );
+    document.getElementById("tlCancel").addEventListener("click", closeModal);
+    document.getElementById("tlSave").addEventListener("click", function () {
+      var name = document.getElementById("tlName").value.trim();
+      var err = document.getElementById("tlErr");
+      if (!name) { err.textContent = "List name is required."; return; }
+      var members = Array.from(document.querySelectorAll("#tlMembers input:checked")).map(function (i) { return i.value; });
+      var btn = document.getElementById("tlSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Creating…';
+      api("todoListCreate", { doc_id: state.doer.doc_id, name: name, member_doc_ids: members }).then(function () {
+        toast("List created"); closeModal(); renderTodoPage();
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Create"; });
+    });
+  });
+
+  // ---------- Quick Links ----------
+  function renderQuickLinksCard() {
+    var wrap = document.getElementById("quickLinksCardWrap");
+    if (!wrap || !state.doer || !state.doer.is_admin) return;
+    var links = (state.settings && state.settings.quick_links) || [];
+    wrap.innerHTML = links.map(function (l, i) {
+      return '<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)"><span style="flex:1">' + esc(l.icon || "🔗") + " " + esc(l.label) + " — " + esc(l.url) + '</span><button type="button" data-rm-link="' + i + '" class="btn secondary" style="padding:2px 8px;font-size:11px">Remove</button></div>';
+    }).join("") + '<button class="btn secondary" id="addLinkBtn" style="margin-top:10px">+ Add Link</button>';
+    wrap.querySelectorAll("[data-rm-link]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var next = links.slice(); next.splice(Number(b.dataset.rmLink), 1);
+        api("updateSettings", { quick_links: next }).then(function () { state.settings.quick_links = next; renderQuickLinksCard(); renderQuickLinksHomeWidget(); }).catch(function (e) { toast(e.message, true); });
+      });
+    });
+    document.getElementById("addLinkBtn").addEventListener("click", function () {
+      openModal(
+        '<h3>Add Quick Link</h3>' +
+        '<div class="field"><label>Label</label><input id="qlLabel" /></div>' +
+        '<div class="field"><label>URL</label><input id="qlUrl" placeholder="https://..." /></div>' +
+        '<div class="field"><label>Icon (emoji, optional)</label><input id="qlIcon" placeholder="🔗" /></div>' +
+        '<div class="modal-err" id="qlErr"></div>' +
+        '<div class="modal-actions"><button class="btn secondary" id="qlCancel">Cancel</button><button class="btn" id="qlSave">Add</button></div>'
+      );
+      document.getElementById("qlCancel").addEventListener("click", closeModal);
+      document.getElementById("qlSave").addEventListener("click", function () {
+        var label = document.getElementById("qlLabel").value.trim(), url = document.getElementById("qlUrl").value.trim();
+        var err = document.getElementById("qlErr");
+        if (!label || !url) { err.textContent = "Label and URL are required."; return; }
+        var next = links.concat([{ label: label, url: url, icon: document.getElementById("qlIcon").value.trim() || "🔗" }]);
+        api("updateSettings", { quick_links: next }).then(function () { toast("Added"); closeModal(); state.settings.quick_links = next; renderQuickLinksCard(); renderQuickLinksHomeWidget(); }).catch(function (e) { err.textContent = e.message; });
+      });
+    });
+  }
+  function renderQuickLinksHomeWidget() {
+    var widget = document.getElementById("quickLinksHomeWidget"), row = document.getElementById("quickLinksHomeRow");
+    if (!widget || !row) return;
+    var links = (state.settings && state.settings.quick_links) || [];
+    if (!links.length) { widget.classList.add("hidden"); return; }
+    widget.classList.remove("hidden");
+    row.innerHTML = links.map(function (l) {
+      return '<a class="btn secondary" href="' + esc(l.url) + '" target="_blank" rel="noopener" style="text-decoration:none">' + esc(l.icon || "🔗") + " " + esc(l.label) + '</a>';
+    }).join("");
+  }
+
+  // ---------- Global search (Tasks / Notices / FAQ / Notes / To-Do) ----------
+  function runGlobalSearch(q) {
+    q = (q || "").trim().toLowerCase();
+    if (q.length < 2) return [];
+    var out = [];
+    (state.tasks || []).forEach(function (t) { if ((t.task || "").toLowerCase().indexOf(q) !== -1) out.push({ type: "Task", label: t.task, goto: "tasks" }); });
+    (state.notices || []).forEach(function (n) { if ((n.title || "").toLowerCase().indexOf(q) !== -1 || (n.body || "").toLowerCase().indexOf(q) !== -1) out.push({ type: "Notice", label: n.title || n.body, goto: "notices" }); });
+    (state.faqs || []).forEach(function (f) { if ((f.question || "").toLowerCase().indexOf(q) !== -1) out.push({ type: "FAQ", label: f.question, goto: "faq" }); });
+    (state.notes || []).forEach(function (n) { if ((n.title || "").toLowerCase().indexOf(q) !== -1 || (n.body || "").toLowerCase().indexOf(q) !== -1) out.push({ type: "Note", label: n.title || "(untitled note)", goto: "notes" }); });
+    (state.todos || []).forEach(function (t) { if ((t.text || "").toLowerCase().indexOf(q) !== -1) out.push({ type: "To-Do", label: t.text, goto: "todo" }); });
+    return out.slice(0, 30);
+  }
+  var globalSearchBtnEl = document.getElementById("globalSearchBtn");
+  if (globalSearchBtnEl) globalSearchBtnEl.addEventListener("click", function () {
+    openModal(
+      '<h3>Search Workspace</h3>' +
+      '<div class="field"><input id="gsInput" placeholder="Search tasks, notices, FAQs, notes, to-dos…" autofocus /></div>' +
+      '<div id="gsResults" style="max-height:320px;overflow:auto"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="gsClose">Close</button></div>'
+    );
+    document.getElementById("gsClose").addEventListener("click", closeModal);
+    var input = document.getElementById("gsInput");
+    input.addEventListener("input", function () {
+      var results = runGlobalSearch(input.value);
+      document.getElementById("gsResults").innerHTML = results.length ? results.map(function (r) {
+        return '<div class="online-popover-row" data-goto-result="' + r.goto + '"><span class="module-badge soon">' + r.type + '</span> ' + esc(r.label) + '</div>';
+      }).join("") : (input.value.trim().length >= 2 ? '<div class="empty">No matches.</div>' : "");
+      document.querySelectorAll("[data-goto-result]").forEach(function (row) {
+        row.style.cursor = "pointer";
+        row.addEventListener("click", function () { closeModal(); goToView(row.dataset.gotoResult); });
+      });
+    });
+  });
+
   // ---------- Score Report ----------
   var scoreMode = "week";
   document.querySelectorAll("#scoreModeTabs .tab").forEach(function (b) {
@@ -9347,13 +10364,22 @@
       byDoer[key][color]++;
       byDoer[key].tasks.push(Object.assign({ _color: color }, t));
     });
-    var names = Object.keys(byDoer).sort();
+    // Leaderboard ranking — highest score-% first (ties broken by name) so the
+    // top of the table doubles as this period's leaderboard; a small medal
+    // marks the top 3, Gen-Z-style.
+    var names = Object.keys(byDoer).sort(function (a, b) {
+      var sa = byDoer[a], sb = byDoer[b];
+      var ta = sa.green + sa.yellow + sa.red, tb = sb.green + sb.yellow + sb.red;
+      var pa = ta ? sa.green / ta : 0, pb = tb ? sb.green / tb : 0;
+      return pb - pa || a.localeCompare(b);
+    });
     if (!names.length) { wrap.innerHTML = '<div class="empty">No tasks in this period.</div>'; return; }
-    var rows = names.map(function (name) {
+    var MEDALS = ["🥇", "🥈", "🥉"];
+    var rows = names.map(function (name, i) {
       var s = byDoer[name], total = s.green + s.yellow + s.red;
       var pct = total ? Math.round((s.green / total) * 100) : 0;
       return "<tr>" +
-        "<td><b>" + esc(name) + "</b></td>" +
+        "<td><b>" + (MEDALS[i] ? MEDALS[i] + " " : "") + esc(name) + "</b></td>" +
         '<td style="color:var(--ok);font-weight:700">' + s.green + "</td>" +
         '<td style="color:var(--warn);font-weight:700">' + s.yellow + "</td>" +
         '<td style="color:var(--danger-ink);font-weight:700">' + s.red + "</td>" +
