@@ -1,4 +1,24 @@
 <meta charset="UTF-8" />
+<script>
+  // "Day Vibe" — the whole app's accent color, shape language, motion feel and
+  // heading typography shift automatically by day of week (see the --vibe-*
+  // tokens in the <style> block below). Runs as the very first thing on the
+  // page, before any CSS is parsed, so the right theme is applied with zero
+  // flash of the fallback (Tuesday) look.
+  //
+  // Computed from India Standard Time specifically (not the visitor's local
+  // clock) so every employee — whatever device/timezone they're on — sees the
+  // same theme on the same calendar day.
+  (function () {
+    try {
+      var VIBE_KEYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+      var now = new Date();
+      var istMs = now.getTime() + now.getTimezoneOffset() * 60000 + 5.5 * 3600000;
+      var istDay = new Date(istMs).getDay();
+      document.documentElement.setAttribute("data-vibe", VIBE_KEYS[istDay]);
+    } catch (e) { /* falls back to the default :root tokens */ }
+  })();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Rugs Creation Workspace</title>
 
@@ -16,7 +36,7 @@
 <link rel="icon" type="image/png" href="data:image/png;base64,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" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
@@ -34,6 +54,80 @@
     --sidebar-line:#1e1e20; --sidebar-hover:rgba(255,255,255,.06);
     --purple1:#ff5001; --purple2:#1a1a1a; --darkcard:#0b0b0c; --lavender:#ff5001;
   }
+
+  /* ============================================================
+     DAY VIBE — the whole app's accent color, corner-radius, motion
+     feel and heading typography shift by day of week, driven by
+     [data-vibe] on <html> (set by the boot script at the very top
+     of this file, in IST, before first paint). One flat set of
+     tokens per day; everything downstream just reads --brand /
+     --radius-* / --motion-* / --font-heading like it always did.
+     Falls back to the Tuesday ("Steady Build") tokens below if the
+     attribute is ever missing — that matches the app's original look.
+     ============================================================ */
+  :root{
+    --vibe-brand:#0f766e; --vibe-brand-rgb:15,118,110; --vibe-brand-ink:#ffffff; --vibe-brand-dark:#115e59;
+    --radius-btn:8px; --radius-card:16px; --radius-icon:12px;
+    --motion-dur:180ms; --motion-ease:ease;
+    --font-heading:'Plus Jakarta Sans',sans-serif; --heading-weight:700; --heading-tracking:-0.01em;
+    --icon-saturate:1; --icon-opacity:1;
+  }
+  [data-vibe="monday"]{ /* Sharp Start — crisp, fast, focused */
+    --vibe-brand:#1d4ed8; --vibe-brand-rgb:29,78,216; --vibe-brand-ink:#ffffff; --vibe-brand-dark:#1e3a8a;
+    --radius-btn:6px; --radius-card:10px; --radius-icon:8px;
+    --motion-dur:120ms; --motion-ease:cubic-bezier(.4,0,.2,1);
+    --font-heading:'Sora',sans-serif; --heading-weight:700; --heading-tracking:-0.01em;
+  }
+  [data-vibe="tuesday"]{ /* Steady Build — the neutral baseline day */
+    --vibe-brand:#0f766e; --vibe-brand-rgb:15,118,110; --vibe-brand-ink:#ffffff; --vibe-brand-dark:#115e59;
+    --radius-btn:8px; --radius-card:16px; --radius-icon:12px;
+    --motion-dur:180ms; --motion-ease:ease;
+    --font-heading:'Plus Jakarta Sans',sans-serif; --heading-weight:700; --heading-tracking:-0.01em;
+  }
+  [data-vibe="wednesday"]{ /* Push Mode — bold, punchy, midweek energy */
+    --vibe-brand:#f59e0b; --vibe-brand-rgb:245,158,11; --vibe-brand-ink:#3a2506; --vibe-brand-dark:#b45309;
+    --radius-btn:6px; --radius-card:10px; --radius-icon:8px;
+    --motion-dur:110ms; --motion-ease:cubic-bezier(.34,1.56,.64,1);
+    --font-heading:'Sora',sans-serif; --heading-weight:800; --heading-tracking:-0.02em;
+  }
+  [data-vibe="thursday"]{ /* Deep Focus — calm, soft, unhurried */
+    --vibe-brand:#6d28d9; --vibe-brand-rgb:109,40,217; --vibe-brand-ink:#ffffff; --vibe-brand-dark:#5b21b6;
+    --radius-btn:14px; --radius-card:20px; --radius-icon:16px;
+    --motion-dur:260ms; --motion-ease:cubic-bezier(.22,1,.36,1);
+    --font-heading:'Playfair Display',serif; --heading-weight:600; --heading-tracking:normal;
+  }
+  [data-vibe="friday"]{ /* Wind Down — soft, rounded, springy */
+    --vibe-brand:#be185d; --vibe-brand-rgb:190,24,93; --vibe-brand-ink:#ffffff; --vibe-brand-dark:#9d174d;
+    --radius-btn:999px; --radius-card:20px; --radius-icon:999px;
+    --motion-dur:280ms; --motion-ease:cubic-bezier(.34,1.56,.64,1);
+    --font-heading:'Plus Jakarta Sans',sans-serif; --heading-weight:500; --heading-tracking:0.01em;
+  }
+  [data-vibe="saturday"]{ /* Weekend Hustle — bold, lively, upbeat */
+    --vibe-brand:#15803d; --vibe-brand-rgb:21,128,61; --vibe-brand-ink:#ffffff; --vibe-brand-dark:#166534;
+    --radius-btn:10px; --radius-card:16px; --radius-icon:12px;
+    --motion-dur:140ms; --motion-ease:cubic-bezier(.34,1.56,.64,1);
+    --font-heading:'Sora',sans-serif; --heading-weight:800; --heading-tracking:-0.01em;
+  }
+  [data-vibe="sunday"]{ /* Rest — muted variant of Saturday: same shapes, quieter color/motion/icons */
+    --vibe-brand:#4b6b54; --vibe-brand-rgb:75,107,84; --vibe-brand-ink:#ffffff; --vibe-brand-dark:#374f3d;
+    --radius-btn:10px; --radius-card:16px; --radius-icon:12px;
+    --motion-dur:320ms; --motion-ease:ease;
+    --font-heading:'Sora',sans-serif; --heading-weight:600; --heading-tracking:-0.01em;
+    --icon-saturate:.55; --icon-opacity:.9;
+  }
+  /* --brand is the token the rest of the app already reads (57 existing
+     usages across buttons, badges, hovers) — repointing it at --vibe-brand
+     is what makes all of that react to the day's mood with no further
+     edits needed anywhere else. */
+  :root{
+    --brand:var(--vibe-brand); --brand-ink:var(--vibe-brand-ink); --brand-dark:var(--vibe-brand-dark); --sidebar-active:var(--vibe-brand);
+    /* --purple1/--purple2/--lavender feed the Home hero banner, the eyebrow
+       label color, ticket hover borders and the boot splash — all were
+       hardcoded to the old fixed orange; pointing them at the vibe tokens
+       makes all of that react to the day's mood too. */
+    --purple1:var(--vibe-brand); --purple2:var(--vibe-brand-dark); --lavender:var(--vibe-brand);
+  }
+
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       --bg:#14161c; --card:#1c1f27; --ink:#e8eaee; --sub:#9aa1ad; --line:#2b2f3a;
@@ -56,7 +150,8 @@
   input,select,textarea{font-family:inherit;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:14px}
   input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:-1px}
   input[type="checkbox"],input[type="radio"]{accent-color:var(--brand)}
-  .btn{background:var(--brand);color:var(--brand-ink);border:none;border-radius:8px;padding:9px 16px;font-size:14px;font-weight:600}
+  .btn{background:linear-gradient(135deg,var(--brand),var(--brand-dark,var(--brand)));color:var(--brand-ink);border:none;border-radius:min(var(--radius-btn,8px),18px);padding:9px 16px;font-size:14px;font-weight:600;box-shadow:0 3px 10px -3px rgba(var(--vibe-brand-rgb,0,0,0),.45);transition:opacity var(--motion-dur,180ms) var(--motion-ease,ease),transform var(--motion-dur,180ms) var(--motion-ease,ease),box-shadow var(--motion-dur,180ms) var(--motion-ease,ease),border-radius var(--motion-dur,180ms) var(--motion-ease,ease)}
+  .btn:active{transform:translateY(1px);box-shadow:0 1px 4px -2px rgba(var(--vibe-brand-rgb,0,0,0),.4)}
   .btn:hover{opacity:.9}
   .btn.secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}
   .btn.danger{background:var(--danger);color:#fff}
@@ -156,7 +251,11 @@
   /* App shell */
   #app{display:none;min-height:100vh}
   #app.active{display:flex}
-  .sidebar{width:230px;flex-shrink:0;background:var(--sidebar-bg);border-right:1px solid var(--sidebar-line);padding:20px 14px;display:flex;flex-direction:column;position:sticky;top:var(--topbar-offset);height:calc(100vh - var(--topbar-offset));overflow:hidden;transition:width .15s ease}
+  /* Menu/sidebar also leans into the day's color — a soft tint glow layered
+     over the near-black base (never a flat mood color), so nav text/icons
+     stay legible and it can only ever read as "tinted dark", never washed
+     out or hard to read. */
+  .sidebar{width:230px;flex-shrink:0;background:linear-gradient(160deg,rgba(var(--vibe-brand-rgb,0,0,0),.22),rgba(var(--vibe-brand-rgb,0,0,0),.05) 45%,transparent 75%),var(--sidebar-bg);border-right:1px solid var(--sidebar-line);padding:20px 14px;display:flex;flex-direction:column;position:sticky;top:var(--topbar-offset);height:calc(100vh - var(--topbar-offset));overflow:hidden;transition:width .15s ease,background var(--motion-dur,180ms) var(--motion-ease,ease)}
   .sidebar-nav{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
   .sidebar-toggle{align-self:flex-end;margin-bottom:10px;background:none;border:1px solid var(--sidebar-line);color:var(--sidebar-sub);border-radius:7px;width:26px;height:26px;font-size:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
   .sidebar-toggle:hover{color:#fff;border-color:var(--sidebar-sub)}
@@ -164,10 +263,10 @@
   .brand .logo-chip{height:32px;width:auto;flex-shrink:0}
   .brand small{display:block;font-weight:400;color:var(--sidebar-sub);font-size:11px;margin-top:2px}
   .nav-section-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--sidebar-sub);font-weight:700;padding:14px 12px 6px;white-space:nowrap;overflow:hidden}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:var(--sidebar-ink);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;background:none;border:none;width:100%;text-align:left}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-btn,8px);color:var(--sidebar-ink);text-decoration:none;font-size:14px;font-weight:500;margin-bottom:2px;background:none;border:none;width:100%;text-align:left;transition:background var(--motion-dur,180ms) var(--motion-ease,ease),border-radius var(--motion-dur,180ms) var(--motion-ease,ease)}
   .nav-item:hover{background:var(--sidebar-hover)}
-  .nav-item.active{background:rgba(255,80,1,.14);color:#fff;box-shadow:inset 3px 0 0 var(--sidebar-active)}
-  .nav-icon{flex-shrink:0;width:18px;text-align:center}
+  .nav-item.active{background:rgba(var(--vibe-brand-rgb,255,80,1),.14);color:#fff;box-shadow:inset 3px 0 0 var(--sidebar-active)}
+  .nav-icon{flex-shrink:0;width:18px;text-align:center;filter:saturate(var(--icon-saturate,1));opacity:var(--icon-opacity,1)}
   .nav-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .soon-badge{margin-left:auto;font-size:9px;background:rgba(255,255,255,.12);color:var(--sidebar-sub);padding:2px 6px;border-radius:99px;font-weight:700;letter-spacing:.02em}
   .sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid var(--sidebar-line)}
@@ -226,7 +325,7 @@
   body.embed-focus .embed-back-btn{margin:16px 0 12px 16px}
 
   /* News-bulletin style ticker for Notice Board + Holidays, always visible above the page content */
-  .ticker-bar{display:none;align-items:stretch;background:var(--sidebar-bg);border-radius:10px;margin-bottom:20px;overflow:hidden;box-shadow:0 6px 18px -10px rgba(0,0,0,.35);flex-shrink:0}
+  .ticker-bar{display:none;align-items:stretch;background:var(--sidebar-bg);border-radius:var(--radius-card,10px);margin-bottom:20px;overflow:hidden;box-shadow:0 6px 18px -10px rgba(0,0,0,.35);flex-shrink:0;transition:border-radius var(--motion-dur,150ms) var(--motion-ease,ease)}
   .ticker-bar.show{display:flex}
   .ticker-label{flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--brand);color:#fff;font-weight:800;font-size:11.5px;letter-spacing:.05em;padding:0 16px;text-transform:uppercase;white-space:nowrap}
   .ticker-viewport{flex:1;overflow:hidden;position:relative}
@@ -255,7 +354,7 @@
   body.embed-focus .ticker-bar, body.embed-focus .app-footer{display:none!important}
 
   .page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-  .page-head h2{margin:0;font-size:20px}
+  .page-head h2{margin:0;font-size:20px;font-family:var(--font-heading,inherit);font-weight:var(--heading-weight,700);letter-spacing:var(--heading-tracking,normal)}
   .page-sub{color:var(--sub);font-size:13px;margin:-12px 0 18px}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
   .tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px}
@@ -316,30 +415,35 @@
      invites are meant to plug into the same table/cards later). */
   .notif-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
   .notif-card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease}
-  .notif-card.unseen{border-left-color:var(--brand);box-shadow:0 4px 16px -8px rgba(255,80,1,.45);background:linear-gradient(0deg,rgba(255,80,1,.07),rgba(255,80,1,.07)),var(--card)}
+  .notif-card.unseen{border-left-color:var(--brand);box-shadow:0 4px 16px -8px rgba(var(--vibe-brand-rgb,255,80,1),.45);background:linear-gradient(0deg,rgba(var(--vibe-brand-rgb,255,80,1),.07),rgba(var(--vibe-brand-rgb,255,80,1),.07)),var(--card)}
   .notif-card .notif-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0}
   .notif-card:not(.unseen) .notif-dot{visibility:hidden}
   .notif-card .notif-body-wrap{flex:1;min-width:0}
   .notif-card .notif-title{font-weight:700;font-size:13.5px;color:var(--ink)}
   .notif-card .notif-sub{font-size:12px;color:var(--sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .notif-card .notif-countdown{flex-shrink:0;font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--brand-ink);background:rgba(255,80,1,.16);border-radius:99px;padding:5px 11px;white-space:nowrap}
+  .notif-card .notif-countdown{flex-shrink:0;font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--brand-ink);background:rgba(var(--vibe-brand-rgb,255,80,1),.16);border-radius:99px;padding:5px 11px;white-space:nowrap}
   .module-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px}
-  .module-card{position:relative;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;text-align:left;display:block;width:100%;text-decoration:none;color:inherit;box-shadow:0 4px 14px -8px rgba(0,0,0,.18);transition:border-color .15s ease,box-shadow .15s ease,transform .12s ease}
-  .module-card:hover{border-color:var(--brand);box-shadow:0 14px 30px -14px rgba(255,80,1,.5)}
+  .module-card{position:relative;background:var(--card);border:2px solid var(--line);border-radius:var(--radius-card,16px);padding:20px;cursor:pointer;text-align:left;display:block;width:100%;text-decoration:none;color:inherit;box-shadow:0 4px 14px -8px rgba(0,0,0,.18);transition:border-color var(--motion-dur,150ms) var(--motion-ease,ease),box-shadow var(--motion-dur,150ms) var(--motion-ease,ease),transform var(--motion-dur,120ms) var(--motion-ease,ease),border-radius var(--motion-dur,150ms) var(--motion-ease,ease)}
+  .module-card:hover{border-color:var(--brand);box-shadow:0 14px 30px -14px rgba(var(--vibe-brand-rgb,255,80,1),.5)}
   .module-card .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
-  .module-card .icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+  .module-card .icon{width:48px;height:48px;border-radius:var(--radius-icon,12px);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;filter:saturate(var(--icon-saturate,1));opacity:var(--icon-opacity,1);transition:border-radius var(--motion-dur,150ms) var(--motion-ease,ease)}
   .module-badge{font-size:10.5px;font-weight:800;letter-spacing:.03em;padding:4px 10px;border-radius:99px}
   .module-badge.live{background:rgba(255,80,1,.16);color:#c23e00}
   .module-badge.soon{background:var(--bg);color:var(--sub);border:1px solid var(--line)}
   :root[data-theme="dark"] .module-badge.live{color:#ff9a5c}
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .module-badge.live{color:#ff9a5c}}
-  .module-card .mt{font-weight:800;font-size:16.5px;margin-top:2px;letter-spacing:-.01em}
+  .module-card .mt{font-family:var(--font-heading,inherit);font-weight:var(--heading-weight,800);font-size:16.5px;margin-top:2px;letter-spacing:var(--heading-tracking,-.01em)}
   .module-card .mv{font-size:12px;color:var(--sub);margin-top:6px}
   /* Module cover art (Settings → Module Covers) — a background gradient behind
      the card content, with the icon chip and text switched to sit on top of it
      legibly instead of the flat --card background. */
   .module-card.has-cover{background-size:cover;background-position:center;position:relative;border-color:transparent}
-  .module-card.has-cover::before{content:"";position:absolute;inset:0;border-radius:14px;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55));pointer-events:none}
+  /* Day Vibe tile tint — layered UNDER the existing black darkening gradient
+     (first background = topmost), so every tile keeps its own identity/
+     gradient but leans toward that day's hue family. Stays composited with
+     the dark layer on top, so it can only ever get moodier/darker, never
+     wash out toward white/pale. */
+  .module-card.has-cover::before{content:"";position:absolute;inset:0;border-radius:calc(var(--radius-card,16px) - 2px);background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55)),linear-gradient(135deg,rgba(var(--vibe-brand-rgb,0,0,0),.38),rgba(var(--vibe-brand-rgb,0,0,0),.12));pointer-events:none;transition:border-radius var(--motion-dur,150ms) var(--motion-ease,ease),background var(--motion-dur,150ms) var(--motion-ease,ease)}
   .module-card.has-cover .top,.module-card.has-cover .mt{position:relative;z-index:1}
   .module-card.has-cover .mt{color:#fff}
   .module-card.has-cover .icon.lavender{background:rgba(255,255,255,.22);color:#fff}
@@ -349,6 +453,37 @@
      on you, attendance not yet punched in, ...). */
   .module-live-dot{position:absolute;top:14px;right:14px;width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.28);z-index:2;animation:moduleLivePop 1.7s ease-in-out infinite}
   @keyframes moduleLivePop{0%,100%{transform:scale(1);box-shadow:0 0 0 3px rgba(239,68,68,.28)}50%{transform:scale(1.15);box-shadow:0 0 0 6px rgba(239,68,68,.14)}}
+
+  /* Modules page — search bar + category chip filters above the grid. */
+  .module-search-row{margin-top:14px}
+  .module-search-input{width:100%;max-width:480px;display:block;padding:12px 16px;font-size:14.5px;border-radius:var(--radius-btn,10px);border:1px solid var(--line);background:var(--card)}
+  .module-cat-filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .module-cat-chip{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 13px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--sub);transition:background var(--motion-dur,150ms) var(--motion-ease,ease),color var(--motion-dur,150ms) var(--motion-ease,ease),border-color var(--motion-dur,150ms) var(--motion-ease,ease)}
+  .module-cat-chip:hover{border-color:var(--brand)}
+  .module-cat-chip.active{background:var(--brand);color:var(--brand-ink);border-color:transparent}
+  /* Category section headers inside the Modules grid. */
+  .module-cat-group{margin-bottom:6px}
+  .module-cat-head{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);margin:20px 0 10px}
+  .module-cat-group:first-child .module-cat-head{margin-top:4px}
+  /* Pin toggle — a small span (NOT a nested <button>, since .module-card
+     itself is a <button>) in the tile's top-right corner; its own click
+     handler stops propagation so it never triggers the card's navigation. */
+  .module-pin-btn{position:absolute;top:12px;right:14px;font-size:14px;opacity:.35;cursor:pointer;z-index:3;transition:opacity var(--motion-dur,150ms) var(--motion-ease,ease),transform var(--motion-dur,150ms) var(--motion-ease,ease)}
+  .module-pin-btn:hover{opacity:.9;transform:scale(1.15)}
+  .module-pin-btn.pinned{opacity:1}
+  .module-card.has-cover .module-pin-btn{filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+  /* "Team favorite" flame — top-left, only shown once the backend's usage
+     aggregate has loaded (see moduleUsageTeamTop in renderHome). */
+  .module-fav-badge{position:absolute;top:12px;left:14px;font-size:13px;z-index:2}
+  /* Icon wiggle on hover — a small personality touch, purely on the icon
+     child so it never fights with the tilt script's transform on the card. */
+  .module-card:hover .icon{animation:moduleIconWiggle .4s ease}
+  @keyframes moduleIconWiggle{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+  /* Attendance streak ring — a thin conic-gradient ring drawn around the
+     icon, filled proportionally toward a 7-day streak. */
+  .icon-ring{width:52px;height:52px;border-radius:50%;padding:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background var(--motion-dur,300ms) var(--motion-ease,ease)}
+  .icon-ring .icon{width:48px;height:48px}
+
   /* "Most used" quick-access strip — a personalized row of small pills for
      whichever live modules this person opens most, pinned above the full grid. */
   .module-quick-row{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
@@ -362,7 +497,7 @@
   .embed-back-btn:hover{border-color:var(--brand);color:var(--brand)}
   .notify-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
   .notify-row:last-of-type{border-bottom:none}
-  .icon.lavender{background:rgba(255,80,1,.12);color:var(--lavender)}
+  .icon.lavender{background:rgba(var(--vibe-brand-rgb,255,80,1),.12);color:var(--lavender);transition:background var(--motion-dur,180ms) var(--motion-ease,ease)}
   .banner-live{background:rgba(255,80,1,.1);border:1px solid rgba(255,80,1,.4);color:#c23e00;border-radius:12px;padding:12px 16px;font-size:13px;margin-bottom:20px}
   :root[data-theme="dark"] .banner-live{color:#ff9a5c}
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .banner-live{color:#ff9a5c}}
@@ -421,7 +556,7 @@
   .bv-chip:hover{border-color:var(--brand)}
   .bv-chip input{display:none}
   .bv-chip .bv-chip-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;color:transparent;flex-shrink:0;transition:background .12s ease,border-color .12s ease;background:var(--card)}
-  .bv-chip.checked{background:rgba(255,80,1,.1);border-color:var(--brand)}
+  .bv-chip.checked{background:rgba(var(--vibe-brand-rgb,255,80,1),.1);border-color:var(--brand)}
   .bv-chip.checked .bv-chip-dot{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
   .bv-picker-empty,.bv-picker-noresults{font-size:13px;color:var(--sub);padding:4px}
 
@@ -479,7 +614,7 @@
   .chat-thread-list{flex:1;overflow-y:auto}
   .chat-thread-row{display:flex;gap:10px;align-items:center;padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--line)}
   .chat-thread-row:hover{background:var(--bg)}
-  .chat-thread-row.active{background:rgba(255,80,1,.1)}
+  .chat-thread-row.active{background:rgba(var(--vibe-brand-rgb,255,80,1),.1)}
   .chat-thread-avatar{width:36px;height:36px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;object-fit:cover}
   .chat-thread-avatar.group{background:#7c3aed}
   .chat-thread-info{min-width:0;flex:1}
@@ -493,7 +628,7 @@
   .chat-main-head b{font-size:14px}
   .chat-main-head-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
   .chat-main-head-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
-  .chat-lock-badge{font-size:11px;font-weight:800;color:var(--brand-ink);background:rgba(255,80,1,.16);border-radius:99px;padding:4px 10px;white-space:nowrap}
+  .chat-lock-badge{font-size:11px;font-weight:800;color:var(--brand-ink);background:rgba(var(--vibe-brand-rgb,255,80,1),.16);border-radius:99px;padding:4px 10px;white-space:nowrap}
   .chat-locked-banner{padding:14px 18px;text-align:center;color:var(--sub);font-size:12.5px;border-top:1px solid var(--line);background:var(--card)}
   .pf-avatar-row{display:flex;align-items:center;gap:14px;margin-bottom:16px}
   .pf-avatar-preview{width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;flex-shrink:0}
@@ -587,7 +722,7 @@
   .chat-group-info-photo{width:72px;height:72px;border-radius:50%;object-fit:cover;background:#7c3aed;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;flex-shrink:0}
   .chat-group-member-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
   .chat-group-member-row:last-child{border-bottom:none}
-  .chat-group-admin-badge{font-size:10px;font-weight:800;color:var(--brand-ink);background:rgba(255,80,1,.16);border-radius:99px;padding:2px 8px;margin-left:6px}
+  .chat-group-admin-badge{font-size:10px;font-weight:800;color:var(--brand-ink);background:rgba(var(--vibe-brand-rgb,255,80,1),.16);border-radius:99px;padding:2px 8px;margin-left:6px}
   .chat-wallpaper-swatch{width:34px;height:34px;border-radius:8px;border:2px solid transparent;cursor:pointer;flex-shrink:0}
   .chat-wallpaper-swatch.active{border-color:var(--brand)}
   .chat-disappear-badge{font-size:10.5px;color:var(--sub);display:flex;align-items:center;gap:3px}
@@ -608,7 +743,7 @@
   .chat-emoji-btn:hover,.chat-thread-menu-btn:hover,.chat-bubble-toolbar button:hover{transform:scale(1.14)}
   .chat-emoji-btn:active,.chat-thread-menu-btn:active,.chat-bubble-toolbar button:active,.chat-input-row .btn:active{transform:scale(.9)}
   .chat-input-row textarea{transition:box-shadow .18s ease,border-color .18s ease}
-  .chat-input-row textarea:focus{box-shadow:0 0 0 3px rgba(255,80,1,.14);border-color:var(--brand)}
+  .chat-input-row textarea:focus{box-shadow:0 0 0 3px rgba(var(--vibe-brand-rgb,255,80,1),.14);border-color:var(--brand)}
   .chat-presence-dot.online{box-shadow:0 0 0 3px rgba(34,197,94,.22)}
   @keyframes chatBubbleIn{from{opacity:0;transform:translateY(6px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
   .chat-bubble-row.chat-anim-in{animation:chatBubbleIn .28s cubic-bezier(.22,1,.36,1) both}
@@ -725,7 +860,7 @@
   #introScreen.phase-warp .intro-cube-wrap{opacity:1;transform:scale(1)}
   #introScreen.phase-reveal .intro-cube-wrap{opacity:0;transform:scale(1.5)}
   .intro-cube{width:108px;height:108px;position:relative;margin:0 auto;transform-style:preserve-3d;animation:introCubeSpin 2.2s linear infinite}
-  .intro-cube .face{position:absolute;inset:0;width:108px;height:108px;background:linear-gradient(135deg,var(--purple1),var(--purple2));border:1px solid rgba(255,80,1,.55);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--brand);font-size:16px;border-radius:12px;box-shadow:0 0 40px -6px rgba(255,80,1,.5)}
+  .intro-cube .face{position:absolute;inset:0;width:108px;height:108px;background:linear-gradient(135deg,var(--purple1),var(--purple2));border:1px solid rgba(var(--vibe-brand-rgb,255,80,1),.55);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--brand);font-size:16px;border-radius:12px;box-shadow:0 0 40px -6px rgba(var(--vibe-brand-rgb,255,80,1),.5)}
   .intro-cube .face img{width:44%;height:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
   .intro-cube .face.front{transform:translateZ(54px)}
   .intro-cube .face.back{transform:rotateY(180deg) translateZ(54px)}
@@ -751,7 +886,7 @@
   .ws-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;text-align:left;width:100%;transition:border-color .15s ease,box-shadow .15s ease}
   .ws-card:hover{border-color:var(--brand);box-shadow:0 6px 18px -12px rgba(0,0,0,.25)}
   .ws-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-  .ws-role-chip{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.03em;padding:3px 9px;border-radius:99px;background:rgba(255,80,1,.14);color:#c23e00}
+  .ws-role-chip{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.03em;padding:3px 9px;border-radius:99px;background:rgba(var(--vibe-brand-rgb,255,80,1),.14);color:#c23e00}
   :root[data-theme="dark"] .ws-role-chip{color:#ff9a5c}
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ws-role-chip{color:#ff9a5c}}
   .ws-member-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:4px 12px 4px 4px;font-size:12.5px;background:var(--card);color:var(--ink)}
@@ -990,8 +1125,14 @@
     <div id="view-modules" class="hidden">
       <div class="page-head"><h2>Modules</h2></div>
       <div class="page-sub" style="margin-top:-12px">Everything you're set up to use, in one place. Visibility is controlled by your administrator.</div>
+      <div class="module-search-row">
+        <input type="text" id="moduleSearchInput" class="module-search-input" placeholder="🔍 What do you need today?" autocomplete="off" />
+      </div>
+      <div class="module-cat-filters" id="moduleCatFilters"></div>
+      <div class="module-quick-row hidden" id="modulePinnedRow"></div>
       <div class="module-quick-row hidden" id="moduleQuickRow"></div>
-      <div class="module-grid" id="moduleGrid" style="margin-top:16px"></div>
+      <div id="moduleGrid" style="margin-top:16px"></div>
+      <div id="moduleSearchEmpty" class="hidden" style="text-align:center;color:var(--sub);padding:30px 0">No modules match "<span id="moduleSearchEmptyTerm"></span>".</div>
       <div class="hidden" id="moduleDeclutterWrap" style="margin-top:6px">
         <button class="btn secondary module-declutter-toggle" id="moduleDeclutterToggle">Show Coming Soon (<span id="moduleDeclutterCount">0</span>)</button>
         <div class="module-grid hidden" id="moduleGridSoon" style="margin-top:12px"></div>
@@ -2615,7 +2756,12 @@
   (function () {
     var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reducedMotion) return;
-    var active = null;
+    var active = null, pressed = null;
+    function apply(el, px, py) {
+      var scale = el === pressed ? 0.97 : 1;
+      el.style.transform = "perspective(700px) rotateX(" + (-py * 9).toFixed(2) + "deg) rotateY(" + (px * 9).toFixed(2) + "deg) translateY(-2px) scale(" + scale + ")";
+    }
+    var lastPx = 0, lastPy = 0;
     document.addEventListener("mousemove", function (e) {
       var el = e.target && e.target.closest ? e.target.closest(".tilt") : null;
       if (el !== active) {
@@ -2624,13 +2770,35 @@
       }
       if (!el) return;
       var r = el.getBoundingClientRect();
-      var px = (e.clientX - r.left) / r.width - 0.5;
-      var py = (e.clientY - r.top) / r.height - 0.5;
-      el.style.transform = "perspective(700px) rotateX(" + (-py * 9).toFixed(2) + "deg) rotateY(" + (px * 9).toFixed(2) + "deg) translateY(-2px)";
+      lastPx = (e.clientX - r.left) / r.width - 0.5;
+      lastPy = (e.clientY - r.top) / r.height - 0.5;
+      apply(el, lastPx, lastPy);
     });
     document.addEventListener("scroll", function () {
       if (active) { active.style.transform = ""; active = null; }
     }, true);
+    // Press-squish — a subtle scale-down while a tile is being clicked/tapped,
+    // layered into the same transform string as the tilt (can't use a plain
+    // CSS :active transform here since the JS above already drives inline
+    // style.transform on these elements every frame, which would win anyway).
+    document.addEventListener("mousedown", function (e) {
+      var el = e.target && e.target.closest ? e.target.closest(".tilt") : null;
+      if (!el) return;
+      pressed = el;
+      apply(el, lastPx, lastPy);
+    });
+    document.addEventListener("mouseup", function () {
+      if (pressed) { var el = pressed; pressed = null; if (el === active) apply(el, lastPx, lastPy); }
+    });
+    document.addEventListener("touchstart", function (e) {
+      var el = e.target && e.target.closest ? e.target.closest(".tilt") : null;
+      if (!el) return;
+      pressed = el; active = el;
+      apply(el, 0, 0);
+    }, { passive: true });
+    document.addEventListener("touchend", function () {
+      if (pressed) { var el = pressed; pressed = null; active = null; el.style.transform = ""; }
+    });
   })();
 
   // ---------- Auth ----------
@@ -3519,31 +3687,42 @@
   // "admin" (Admin Control) is intentionally NOT listed here: it's gated
   // purely by is_admin, never by visible_modules.
   var MODULE_DEFS = [
-    { key: "delegation", icon: "✅", name: "Delegation", status: "live", goto: "tasks" },
-    { key: "chat", icon: "💬", name: "Team Chat", status: "live", goto: "chat" },
-    { key: "queries", icon: "📩", name: "Queries", status: "live", goto: "tickets" },
-    { key: "helpslip", icon: "🆘", name: "Help Slip", status: "live", goto: "helpslip" },
-    { key: "costing", icon: "🧮", name: "Costing Calculator", status: "live", goto: "costing" },
-    { key: "checklist", icon: "📋", name: "Checklist FMS", status: "live", goto: "checklist" },
-    { key: "cbm", icon: "📦", name: "CBM / Storage Planner", status: "live", goto: "cbm" },
-    { key: "buyerorder", icon: "🧾", name: "Buyer Order Dashboard", status: "live", goto: "buyerorder" },
-    { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit" },
-    { key: "inspection", icon: "🔍", name: "Inspection", status: "live", goto: "inspection" },
-    { key: "ordertracking", icon: "🚚", name: "Order Tracking", status: "live", goto: "ordertracking" },
-    { key: "teamworkspace", icon: "🗂️", name: "Team Workspace", status: "live", goto: "teamworkspace" },
-    { key: "samplingfms", icon: "🧵", name: "Sampling FMS", status: "live", goto: "samplingfms" },
-    { key: "leave", icon: "🏖️", name: "Leave Request", status: "live", goto: "leave" },
-    { key: "reimbursement", icon: "🧳", name: "Travel/Outstation Reimbursement", status: "live", goto: "reimbursement" },
-    { key: "attendance", icon: "🕒", name: "Attendance", status: "live", goto: "attendance" },
-    { key: "salary", icon: "💰", name: "Salary", status: "live", goto: "salary" },
-    { key: "rugsconnect", icon: "🔗", name: "Rugs Connect", status: "live", goto: "rugsconnect" },
-    { key: "counterroom", icon: "🔢", name: "Counter Room", status: "live", goto: "counterroom" },
-    { key: "kudos", icon: "🎉", name: "Kudos Wall", status: "live", goto: "kudos" },
-    { key: "polls", icon: "🗳️", name: "Polls", status: "live", goto: "polls" },
-    { key: "ideabox", icon: "💡", name: "Idea Box", status: "live", goto: "ideabox" },
-    { key: "teamcalendar", icon: "📅", name: "Team Calendar", status: "live", goto: "teamcalendar" },
-    { key: "notes", icon: "📝", name: "Notes", status: "live", goto: "notes" },
-    { key: "todo", icon: "✔️", name: "To-Do", status: "live", goto: "todo" }
+    { key: "delegation", icon: "✅", name: "Delegation", status: "live", goto: "tasks", category: "work" },
+    { key: "chat", icon: "💬", name: "Team Chat", status: "live", goto: "chat", category: "work" },
+    { key: "queries", icon: "📩", name: "Queries", status: "live", goto: "tickets", category: "work" },
+    { key: "helpslip", icon: "🆘", name: "Help Slip", status: "live", goto: "helpslip", category: "work" },
+    { key: "costing", icon: "🧮", name: "Costing Calculator", status: "live", goto: "costing", category: "production" },
+    { key: "checklist", icon: "📋", name: "Checklist FMS", status: "live", goto: "checklist", category: "production" },
+    { key: "cbm", icon: "📦", name: "CBM / Storage Planner", status: "live", goto: "cbm", category: "production" },
+    { key: "buyerorder", icon: "🧾", name: "Buyer Order Dashboard", status: "live", goto: "buyerorder", category: "production" },
+    { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit", category: "production" },
+    { key: "inspection", icon: "🔍", name: "Inspection", status: "live", goto: "inspection", category: "production" },
+    { key: "ordertracking", icon: "🚚", name: "Order Tracking", status: "live", goto: "ordertracking", category: "production" },
+    { key: "teamworkspace", icon: "🗂️", name: "Team Workspace", status: "live", goto: "teamworkspace", category: "work" },
+    { key: "samplingfms", icon: "🧵", name: "Sampling FMS", status: "live", goto: "samplingfms", category: "production" },
+    { key: "leave", icon: "🏖️", name: "Leave Request", status: "live", goto: "leave", category: "people" },
+    { key: "reimbursement", icon: "🧳", name: "Travel/Outstation Reimbursement", status: "live", goto: "reimbursement", category: "people" },
+    { key: "attendance", icon: "🕒", name: "Attendance", status: "live", goto: "attendance", category: "people" },
+    { key: "salary", icon: "💰", name: "Salary", status: "live", goto: "salary", category: "people" },
+    { key: "rugsconnect", icon: "🔗", name: "Rugs Connect", status: "live", goto: "rugsconnect", category: "production" },
+    { key: "counterroom", icon: "🔢", name: "Counter Room", status: "live", goto: "counterroom", category: "production" },
+    { key: "kudos", icon: "🎉", name: "Kudos Wall", status: "live", goto: "kudos", category: "culture" },
+    { key: "polls", icon: "🗳️", name: "Polls", status: "live", goto: "polls", category: "culture" },
+    { key: "ideabox", icon: "💡", name: "Idea Box", status: "live", goto: "ideabox", category: "culture" },
+    { key: "teamcalendar", icon: "📅", name: "Team Calendar", status: "live", goto: "teamcalendar", category: "work" },
+    { key: "notes", icon: "📝", name: "Notes", status: "live", goto: "notes", category: "work" },
+    { key: "todo", icon: "✔️", name: "To-Do", status: "live", goto: "todo", category: "work" }
+  ];
+
+  // Modules-page category grouping + the search/filter bar above the grid —
+  // order here is the on-screen section order. A module with no matching
+  // category (custom admin-added modules) falls into "more".
+  var MODULE_CATEGORIES = [
+    { key: "work", emoji: "🧭", label: "Work" },
+    { key: "production", emoji: "🏭", label: "Production" },
+    { key: "people", emoji: "👥", label: "People Ops" },
+    { key: "culture", emoji: "🎉", label: "Team & Culture" },
+    { key: "more", emoji: "🔗", label: "More" }
   ];
 
   // Admin-defined modules from Admin → Custom Modules (state.customModules,
@@ -3565,7 +3744,7 @@
       // with a direct link opens in a new tab (the normal case for any
       // outside site) or embeds ("html" pasted-content modules only).
       // `link` is kept on the def purely as data for that viewer to read.
-      var def = { key: "cm_" + m.module_key, icon: m.icon || "🔗", name: m.name, status: "live", customModuleKey: m.module_key, goto: "customModule" };
+      var def = { key: "cm_" + m.module_key, icon: m.icon || "🔗", name: m.name, status: "live", customModuleKey: m.module_key, goto: "customModule", category: "more" };
       var directUrl = m.content_type === "link" ? m.shared_link : (m.content_type === "per_user_link" ? m.my_link : null);
       if (directUrl) { def.link = directUrl; }
       return def;
@@ -4182,6 +4361,96 @@
       api("updateDoerAccess", { doc_id: state.doer.doc_id, dashboard_prefs: state.doer.dashboard_prefs }).catch(function () {});
     }, 1500);
   }
+  // Manual pin/unpin (dashboard_prefs.pinned_modules) — separate from the
+  // automatic "Your most used" row above; saves immediately since pinning is
+  // an infrequent, deliberate action (unlike usage tracking on every click).
+  function toggleModulePin(key) {
+    if (!state.doer || !key) return;
+    if (!state.doer.dashboard_prefs) state.doer.dashboard_prefs = {};
+    var pins = (state.doer.dashboard_prefs.pinned_modules || []).slice();
+    var idx = pins.indexOf(key);
+    if (idx === -1) pins.push(key); else pins.splice(idx, 1);
+    state.doer.dashboard_prefs.pinned_modules = pins;
+    api("updateDoerAccess", { doc_id: state.doer.doc_id, dashboard_prefs: state.doer.dashboard_prefs }).catch(function () {});
+    renderHome();
+  }
+  // Small once-a-day "welcome" burst on the first module opened each day —
+  // scoped to once per day (not once per module) so it reads as a pleasant
+  // surprise rather than confetti firing on every single click. Session-only
+  // (sessionStorage) — no new backend field needed for something this light.
+  function maybeFirstOpenConfettiToday() {
+    try {
+      var key = "rc_first_module_open_" + (state.doer ? state.doer.doc_id : "") + "_" + new Date().toISOString().slice(0, 10);
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+      fireConfetti();
+    } catch (e) { /* sessionStorage unavailable — skip, non-critical */ }
+  }
+  // Modules-page search box + category chips — wired once (guarded by
+  // moduleFiltersWired), re-applied on every renderHome() since the grid HTML
+  // is rebuilt each time. Typing anywhere on the Modules page (when no other
+  // input has focus) jumps straight into the search box.
+  var moduleFiltersWired = false;
+  function wireModuleFilters() {
+    var searchInput = document.getElementById("moduleSearchInput");
+    var chipsWrap = document.getElementById("moduleCatFilters");
+    if (!searchInput || !chipsWrap) return;
+    if (!moduleFiltersWired) {
+      moduleFiltersWired = true;
+      chipsWrap.innerHTML = '<button type="button" class="module-cat-chip active" data-catfilter="all">All</button>' +
+        MODULE_CATEGORIES.map(function (c) { return '<button type="button" class="module-cat-chip" data-catfilter="' + c.key + '">' + c.emoji + " " + c.label + "</button>"; }).join("");
+      chipsWrap.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-catfilter]");
+        if (!btn) return;
+        chipsWrap.querySelectorAll(".module-cat-chip").forEach(function (c) { c.classList.remove("active"); });
+        btn.classList.add("active");
+        applyModuleFilter();
+      });
+      searchInput.addEventListener("input", applyModuleFilter);
+      document.addEventListener("keydown", function (e) {
+        var vm = document.getElementById("view-modules");
+        if (!vm || vm.classList.contains("hidden")) return;
+        var active = document.activeElement;
+        var typingElsewhere = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable);
+        if (typingElsewhere) return;
+        if (e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) searchInput.focus();
+      });
+    } else {
+      // rebuild chip HTML fresh each render (grid keys can change per doer
+      // role) but preserve whichever filter was active
+      var prevActive = chipsWrap.querySelector(".module-cat-chip.active");
+      var prevKey = prevActive ? prevActive.dataset.catfilter : "all";
+      chipsWrap.innerHTML = '<button type="button" class="module-cat-chip' + (prevKey === "all" ? " active" : "") + '" data-catfilter="all">All</button>' +
+        MODULE_CATEGORIES.map(function (c) { return '<button type="button" class="module-cat-chip' + (prevKey === c.key ? " active" : "") + '" data-catfilter="' + c.key + '">' + c.emoji + " " + c.label + "</button>"; }).join("");
+    }
+    applyModuleFilter();
+  }
+  function applyModuleFilter() {
+    var searchInput = document.getElementById("moduleSearchInput");
+    var chipsWrap = document.getElementById("moduleCatFilters");
+    var term = searchInput ? searchInput.value.trim().toLowerCase() : "";
+    var activeChip = chipsWrap ? chipsWrap.querySelector(".module-cat-chip.active") : null;
+    var activeCat = activeChip ? activeChip.dataset.catfilter : "all";
+    var anyVisible = false;
+    document.querySelectorAll("#moduleGrid .module-cat-group").forEach(function (group) {
+      var catMatch = activeCat === "all" || group.dataset.cat === activeCat;
+      var groupHasVisible = false;
+      group.querySelectorAll(".module-card").forEach(function (card) {
+        var nameMatch = !term || (card.dataset.name || "").indexOf(term) !== -1;
+        var show = catMatch && nameMatch;
+        card.classList.toggle("hidden", !show);
+        if (show) groupHasVisible = true;
+      });
+      group.classList.toggle("hidden", !groupHasVisible);
+      if (groupHasVisible) anyVisible = true;
+    });
+    var emptyEl = document.getElementById("moduleSearchEmpty");
+    var emptyTerm = document.getElementById("moduleSearchEmptyTerm");
+    if (emptyEl) {
+      emptyEl.classList.toggle("hidden", anyVisible || !term);
+      if (emptyTerm) emptyTerm.textContent = searchInput ? searchInput.value.trim() : "";
+    }
+  }
   // "Personal profile update alerts" — a light, dismissible nudge (not a
   // blocking modal) when the basics an admin/HR or a teammate might need
   // (phone, email, department, designation) are missing. Dismissing hides it
@@ -4290,18 +4559,39 @@
           default: return false;
         }
       }
+      var pinnedKeys = (state.doer.dashboard_prefs && state.doer.dashboard_prefs.pinned_modules) || [];
       function moduleCardHtml(m) {
         var openAttrs = ' data-goto="' + m.goto + '"' + (m.customModuleKey ? ' data-cmkey="' + esc(m.customModuleKey) + '"' : "") + ' data-usekey="' + esc(m.key) + '"';
         var cover = moduleCovers[m.key];
         var coverAttr = "", coverClass = "";
         if (cover && cover.value) { coverClass = " has-cover"; coverAttr = ' style="background-image:' + esc(cover.value) + '"'; }
         var dot = m.status === "live" && moduleLiveDotActive(m.key) ? '<span class="module-live-dot" title="Needs your attention"></span>' : "";
-        return '<button class="module-card tilt' + coverClass + '"' + openAttrs + coverAttr + '>' + dot +
-          '<div class="top"><div class="icon lavender" style="margin-bottom:0">' + m.icon + '</div><span class="module-badge ' + (m.status === "live" ? "live" : "soon") + '">' + (m.status === "live" ? "Live" : "Coming Soon") + '</span></div>' +
+        var isPinned = pinnedKeys.indexOf(m.key) !== -1;
+        var pinBtn = '<span class="module-pin-btn' + (isPinned ? " pinned" : "") + '" data-pin="' + esc(m.key) + '" title="' + (isPinned ? "Unpin" : "Pin to top") + '">📌</span>';
+        var isFav = (state.teamFavoriteModules || []).indexOf(m.key) !== -1;
+        var favBadge = isFav ? '<span class="module-fav-badge" title="Popular with your team">🔥</span>' : "";
+        var iconHtml = '<div class="icon lavender" style="margin-bottom:0">' + m.icon + '</div>';
+        if (m.key === "attendance" && state.cachedAttendanceStreak) {
+          var pct = Math.min(state.cachedAttendanceStreak / 7, 1), deg = Math.round(pct * 360);
+          iconHtml = '<div class="icon-ring" style="background:conic-gradient(var(--brand) ' + deg + 'deg, rgba(0,0,0,.12) 0)" title="' + state.cachedAttendanceStreak + '-day streak">' + iconHtml + '</div>';
+        }
+        return '<button class="module-card tilt' + coverClass + '"' + openAttrs + coverAttr + ' data-name="' + esc(m.name.toLowerCase()) + '">' + dot + pinBtn + favBadge +
+          '<div class="top">' + iconHtml + '<span class="module-badge ' + (m.status === "live" ? "live" : "soon") + '">' + (m.status === "live" ? "Live" : "Coming Soon") + '</span></div>' +
           '<div class="mt">' + esc(m.name) + '</div>' +
           '</button>';
       }
-      mg.innerHTML = liveModules.map(moduleCardHtml).join("");
+      // Category-grouped grid — each MODULE_CATEGORIES section only renders
+      // if it actually has modules this person can see.
+      var byCat = {};
+      liveModules.forEach(function (m) { var c = m.category || "more"; (byCat[c] = byCat[c] || []).push(m); });
+      mg.innerHTML = MODULE_CATEGORIES.map(function (c) {
+        var items = byCat[c.key];
+        if (!items || !items.length) return "";
+        return '<div class="module-cat-group" data-cat="' + c.key + '">' +
+          '<h3 class="module-cat-head">' + c.emoji + " " + c.label + '</h3>' +
+          '<div class="module-grid">' + items.map(moduleCardHtml).join("") + '</div>' +
+          '</div>';
+      }).join("");
       var soonWrap = document.getElementById("moduleGridSoon");
       var declutterWrap = document.getElementById("moduleDeclutterWrap");
       var declutterCount = document.getElementById("moduleDeclutterCount");
@@ -4309,6 +4599,22 @@
         declutterWrap.classList.toggle("hidden", !soonModules.length);
         if (declutterCount) declutterCount.textContent = soonModules.length;
         soonWrap.innerHTML = soonModules.map(moduleCardHtml).join("");
+      }
+      // Manually pinned row (dashboard_prefs.pinned_modules) — separate from
+      // the automatic "Your most used" row just below it.
+      var pinnedRow = document.getElementById("modulePinnedRow");
+      if (pinnedRow) {
+        var pinnedMods = pinnedKeys.map(function (k) { return liveModules.find(function (m) { return m.key === k; }); }).filter(Boolean);
+        if (pinnedMods.length) {
+          pinnedRow.classList.remove("hidden");
+          pinnedRow.innerHTML = '<div class="module-quick-label" style="width:100%">📌 Pinned</div>' + pinnedMods.map(function (m) {
+            var openAttrs = ' data-goto="' + m.goto + '"' + (m.customModuleKey ? ' data-cmkey="' + esc(m.customModuleKey) + '"' : "") + ' data-usekey="' + esc(m.key) + '"';
+            return '<button class="module-quick-pill"' + openAttrs + '>' + m.icon + " " + esc(m.name) + "</button>";
+          }).join("");
+        } else {
+          pinnedRow.classList.add("hidden");
+          pinnedRow.innerHTML = "";
+        }
       }
       // "Most used apps, per user" — a small pinned Quick Access row above the
       // grid for whichever live modules THIS person opens most often. Usage
@@ -4340,16 +4646,34 @@
           declutterToggleBtn.textContent = (showing ? "Show" : "Hide") + " Coming Soon (" + soonModules.length + ")";
         };
       }
-      [mg, soonWrap, quickRow].forEach(function (container) {
+      [mg, soonWrap, quickRow, pinnedRow].forEach(function (container) {
         if (!container) return;
         container.querySelectorAll("[data-goto]").forEach(function (b) {
           b.addEventListener("click", function () {
             if (b.dataset.cmkey) state.activeCustomModuleKey = b.dataset.cmkey;
-            if (b.dataset.usekey) trackModuleUsage(b.dataset.usekey);
+            if (b.dataset.usekey) { trackModuleUsage(b.dataset.usekey); maybeFirstOpenConfettiToday(); }
             goToView(b.dataset.goto);
           });
         });
       });
+      mg.querySelectorAll(".module-pin-btn").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          toggleModulePin(btn.dataset.pin);
+        });
+      });
+      wireModuleFilters();
+      // Team-favorite (🔥) badge — fetched once per session from a lightweight
+      // read-only aggregate over every doer's module_usage. Fails silently
+      // (older deleg-api deploys won't have this action yet) — the badge
+      // simply doesn't show until the backend update ships.
+      if (!state.teamFavoriteFetched) {
+        state.teamFavoriteFetched = true;
+        api("moduleUsageTeamTop", {}).then(function (res) {
+          state.teamFavoriteModules = (res && res.top) || [];
+          if (state.teamFavoriteModules.length) renderHome();
+        }).catch(function () {});
+      }
     }
 
     var upcoming = scope.filter(function (t) { return t.status === "Pending"; })
@@ -9631,6 +9955,11 @@
     if (!widget || !body || !state.doer) return;
     api("attendanceMyHistory", { doc_id: state.doer.doc_id, limit: 60 }).then(function (rows) {
       var streak = computeAttendanceStreak(rows);
+      // cached so the Modules-page Attendance tile can draw its streak ring
+      // without a second network round-trip.
+      var streakChanged = state.cachedAttendanceStreak !== streak;
+      state.cachedAttendanceStreak = streak;
+      if (streakChanged) { var mgEl = document.getElementById("moduleGrid"); if (mgEl && mgEl.innerHTML) renderHome(); }
       var earned = (state.doer.dashboard_prefs && state.doer.dashboard_prefs.badges) || [];
       var ctx = { streak: streak, kudosReceived: (state.kudos || []).filter(function (k) { return k.to_doc_id === state.doer.doc_id; }).length, scorePct: 0, scoreTotal: 0 };
       var newlyEarned = [];
