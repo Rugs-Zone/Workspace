@@ -1584,6 +1584,7 @@
         <button class="tab" data-settab="buyer">📇 Buyer Directory</button>
         <button class="tab" data-settab="alerts">🔔 Alerts &amp; Notify Lists</button>
         <button class="tab" data-settab="staff">🧑‍💼 Staff Access</button>
+        <button class="tab hidden" data-settab="developer" id="devTabBtn">🛠️ Developer</button>
       </div>
 
       <div id="stPane-overview" class="settings-pane">
@@ -1666,6 +1667,23 @@
           </div>
         </div>
         <div class="card"><div id="adminTableWrap"></div></div>
+        <div class="page-head" style="margin-top:22px"><h2 style="font-size:16px">Developer Mode Access</h2></div>
+        <div class="page-sub" style="margin-top:-12px">One level above Admin — lets a person change workflow rules and thresholds, rename module tiles, and tweak the brand color without a code change. Any admin can grant or revoke it; only admins appear in this list.</div>
+        <div class="card" style="padding:18px;margin-bottom:6px"><div id="devAccessCardWrap"></div></div>
+      </div>
+
+      <div id="stPane-developer" class="settings-pane hidden">
+        <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Developer Mode</h2></div>
+        <div class="page-sub" style="margin-top:-12px">Things that used to need a code change — now a setting. Changes here are workspace-wide and take effect immediately.</div>
+        <div class="page-head" style="margin-top:22px"><h2 style="font-size:16px">Module Names &amp; Icons</h2></div>
+        <div class="page-sub" style="margin-top:-12px">Rename or re-icon any built-in module tile. Leave a field blank to keep the shipped default. (Custom modules already have their own name/icon on the Modules tab.)</div>
+        <div class="card" style="padding:18px;margin-bottom:6px"><div id="devModuleOverridesWrap"></div></div>
+        <div class="page-head" style="margin-top:22px"><h2 style="font-size:16px">Workflow Rules</h2></div>
+        <div class="page-sub" style="margin-top:-12px">Thresholds that drive app behavior.</div>
+        <div class="card" style="padding:18px;margin-bottom:6px"><div id="devWorkflowRulesWrap"></div></div>
+        <div class="page-head" style="margin-top:22px"><h2 style="font-size:16px">Appearance</h2></div>
+        <div class="page-sub" style="margin-top:-12px">Override the workspace's brand color. Note: this sits on top of the day-of-week "vibe" theme (Sat/Sun look different on purpose) — setting a color here takes priority every day.</div>
+        <div class="card" style="padding:18px;margin-bottom:6px"><div id="devAppearanceWrap"></div></div>
       </div>
     </div>
 
@@ -1930,13 +1948,13 @@
           }
           case "getSettings":
             resolve(Object.assign(
-              { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {}, module_open_modes: {} },
+              { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {}, module_open_modes: {}, developer_doc_ids: [], module_overrides: {}, stuck_task_window_days: 3, brand_color: null },
               state.settings || {},
               { notification_types_registry: DEMO_NOTIF_TYPES }
             ));
             break;
           case "updateSettings": {
-            if (!state.settings) state.settings = { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {}, module_open_modes: {} };
+            if (!state.settings) state.settings = { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {}, module_open_modes: {}, developer_doc_ids: [], module_overrides: {}, stuck_task_window_days: 3, brand_color: null };
             if (p.notifications_enabled !== undefined) state.settings.notifications_enabled = !!p.notifications_enabled;
             if (p.notification_types !== undefined) state.settings.notification_types = p.notification_types;
             if (p.disabled_modules !== undefined) state.settings.disabled_modules = p.disabled_modules;
@@ -1944,6 +1962,10 @@
             if (p.ticker_show_holidays !== undefined) state.settings.ticker_show_holidays = !!p.ticker_show_holidays;
             if (p.module_covers !== undefined) state.settings.module_covers = p.module_covers;
             if (p.module_open_modes !== undefined) state.settings.module_open_modes = p.module_open_modes;
+            if (p.developer_doc_ids !== undefined) state.settings.developer_doc_ids = p.developer_doc_ids;
+            if (p.module_overrides !== undefined) state.settings.module_overrides = p.module_overrides;
+            if (p.stuck_task_window_days !== undefined) state.settings.stuck_task_window_days = p.stuck_task_window_days;
+            if (p.brand_color !== undefined) state.settings.brand_color = p.brand_color;
             resolve({});
             break;
           }
@@ -1953,6 +1975,12 @@
             if (!state.notices) state.notices = [];
             state.notices.unshift({ id: nid, title: p.title, body: p.body || "", pinned: !!p.pinned, created_by: p.created_by || "Admin", created_at: new Date().toISOString() });
             resolve({ id: nid });
+            break;
+          }
+          case "updateNotice": {
+            var ntc = (state.notices || []).find(function (n) { return n.id === p.id; });
+            if (ntc) { ntc.title = p.title; ntc.body = p.body || ""; ntc.pinned = !!p.pinned; }
+            resolve({ id: p.id });
             break;
           }
           case "deleteNotice": {
@@ -1966,6 +1994,12 @@
             if (!state.holidays) state.holidays = [];
             state.holidays.push({ id: hid, name: p.name, holiday_date: p.holiday_date, created_by: p.created_by || "Admin", created_at: new Date().toISOString() });
             resolve({ id: hid });
+            break;
+          }
+          case "updateHoliday": {
+            var hol = (state.holidays || []).find(function (h) { return h.id === p.id; });
+            if (hol) { hol.name = p.name; hol.holiday_date = p.holiday_date; }
+            resolve({ id: p.id });
             break;
           }
           case "deleteHoliday": {
@@ -3100,8 +3134,10 @@
 
   function loadAll() {
     if (state.demo) {
+      applyBrandColorOverride(); // workspace-wide, every viewer — not admin-gated
+      applyModuleOverrides(); // renames/re-icons built-in MODULE_DEFS tiles in place, before anything renders them
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
-      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderLeavePage(); renderReimbursementPage(); renderHomeExtras();
+      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDevAccessCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderLeavePage(); renderReimbursementPage(); renderHomeExtras();
       api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
       loadNotifications();
       return;
@@ -3125,6 +3161,8 @@
       // even though only an admin can change any of them (Settings page is admin-only).
       state.tasks = r[0]; state.allDoers = r[1] || []; state.doers = state.allDoers.filter(function (d) { return !d.is_deleted; }); state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8]; state.inspections = r[9]; state.inspectionAlertStaff = r[10]; state.birthdays = r[11];
       state.teams = r[12] || []; state.leaves = r[13] || []; state.reimbursements = r[14] || []; state.customModules = r[15] || []; state.buyerEmails = r[16] || [];
+      applyBrandColorOverride(); // workspace-wide, every viewer — not admin-gated
+      applyModuleOverrides(); // renames/re-icons built-in MODULE_DEFS tiles in place, before anything renders them
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
       // Re-sync my own record from the just-fetched staff list. Without this, a
       // session restored from localStorage (see boot() below) keeps whatever
@@ -3144,7 +3182,7 @@
         renderAdmin();
         api("getBuyerNotifyList").then(function (list) { state.buyerNotifyList = list; renderNotifyList(); }).catch(function () {});
         api("getInspectionNotifyList").then(function (list) { state.inspectionNotifyList = list; renderInspectionNotifyList(); }).catch(function () {});
-        renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderCustomModulesCard(); renderBuyerEmailsCard();
+        renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDevAccessCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderCustomModulesCard(); renderBuyerEmailsCard();
       }
       if (state.doer.can_view_audit || state.doer.is_admin) {
         api("getAudits").then(function (a) { state.audits = a; renderAudits(); renderHome(); });
@@ -5696,7 +5734,7 @@
     if (!sorted.length) {
       wrap.innerHTML = '<div class="empty">' + (showDeleted ? "No removed staff." : "No staff match this search/filter.") + '</div>';
       renderNotifyList(); renderBvAlertStaffList(); renderInspectionNotifyList(); renderInspectionAlertStaffList();
-      renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
+      renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDevAccessCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
       return;
     }
     var rows = sorted.map(function (d) {
@@ -5805,7 +5843,7 @@
     renderBvAlertStaffList();
     renderInspectionNotifyList();
     renderInspectionAlertStaffList();
-    renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
+    renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDevAccessCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
   }
 
   // ---------- Manage Visibility for one module (from Settings → Modules) ----------
@@ -6178,6 +6216,187 @@
     });
   }
 
+  // ---------- Developer Mode ----------
+  // One level above plain Admin (there are several admins; this is meant
+  // for one, or a couple, of them). Storage is a doc_id allowlist in the
+  // same generic deleg_meta settings table as everything else here — no
+  // new column/table, so it needed no migration. Granting/revoking it is
+  // gated server-side to admins only (see updateSettings' developer_doc_ids
+  // handling); everything ELSE a developer changes (module renames, the
+  // stuck-task window, brand color) uses the same trust model as every
+  // other setting in this file — the frontend is what restricts who sees
+  // the controls.
+  function isDeveloperMode() {
+    if (!state.doer || !state.doer.is_admin) return false;
+    var ids = (state.settings && state.settings.developer_doc_ids) || [];
+    return ids.indexOf(state.doer.doc_id) !== -1;
+  }
+  function updateDevTabVisibility() {
+    var btn = document.getElementById("devTabBtn");
+    if (!btn) return;
+    var show = isDeveloperMode();
+    btn.classList.toggle("hidden", !show);
+    // If this viewer lost Developer Mode (someone revoked it) while sitting
+    // on that tab, bounce them back to Overview rather than leaving a
+    // hidden-tab's pane showing with no way to get back to it via the bar.
+    if (!show && state.settingsTab === "developer") { state.settingsTab = "overview"; renderSettingsTabs(); }
+  }
+  // Admins-only card (Staff Access tab) for granting/revoking Developer
+  // Mode. Deliberately lists only current admins — Developer Mode without
+  // Admin doesn't mean anything here (isDeveloperMode() requires both).
+  function renderDevAccessCard() {
+    var wrap = document.getElementById("devAccessCardWrap");
+    if (!wrap || !state.doer || !state.doer.is_admin) return;
+    var devIds = (state.settings && state.settings.developer_doc_ids) || [];
+    var admins = (state.doers || []).filter(function (d) { return d.is_admin; });
+    if (!admins.length) { wrap.innerHTML = '<div class="empty">No admins found.</div>'; return; }
+    wrap.innerHTML = admins.map(function (d, i) {
+      var borderStyle = i < admins.length - 1 ? "border-bottom:1px solid var(--line);" : "";
+      return '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:9px 0;' + borderStyle + '">' +
+        '<input type="checkbox" class="dev-access-cb" data-doc="' + esc(d.doc_id) + '" style="width:auto" ' + (devIds.indexOf(d.doc_id) !== -1 ? "checked" : "") + ' /> ' +
+        '<span>' + esc(d.delegation_name || d.name) + '</span></label>';
+    }).join("");
+    wrap.querySelectorAll(".dev-access-cb").forEach(function (cb) {
+      cb.addEventListener("click", function () {
+        var next = devIds.slice();
+        var idx = next.indexOf(cb.dataset.doc);
+        if (cb.checked && idx === -1) next.push(cb.dataset.doc);
+        if (!cb.checked && idx !== -1) next.splice(idx, 1);
+        cb.disabled = true;
+        api("updateSettings", { developer_doc_ids: next, requester_doc_id: state.doer.doc_id }).then(function () {
+          state.settings.developer_doc_ids = next;
+          updateDevTabVisibility();
+          toast("Developer Mode " + (cb.checked ? "granted" : "revoked"));
+        }).catch(function (e) {
+          cb.checked = !cb.checked;
+          toast(e.message, true);
+        }).finally(function () { cb.disabled = false; });
+      });
+    });
+  }
+  // Renders the 3 Developer Mode sub-cards. No-ops (leaves the tab hidden)
+  // for anyone who isn't a developer, same guard as every other admin card.
+  function renderDeveloperPane() {
+    if (!isDeveloperMode()) return;
+    renderDevModuleOverridesCard();
+    renderDevWorkflowRulesCard();
+    renderDevAppearanceCard();
+  }
+  function renderDevModuleOverridesCard() {
+    var wrap = document.getElementById("devModuleOverridesWrap");
+    if (!wrap) return;
+    if (!MODULE_DEFS_BASE) applyModuleOverrides();
+    var overrides = (state.settings && state.settings.module_overrides) || {};
+    var liveDefs = MODULE_DEFS_BASE.filter(function (m) { return m.status === "live"; });
+    wrap.innerHTML = liveDefs.map(function (m, i) {
+      var ov = overrides[m.key] || {};
+      var borderStyle = i < liveDefs.length - 1 ? "border-bottom:1px solid var(--line);" : "";
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;' + borderStyle + '">' +
+        '<span style="width:170px;flex-shrink:0;font-size:13px;color:var(--sub)">' + m.icon + " " + esc(m.name) + '</span>' +
+        '<input class="dmo-icon" data-mkey="' + esc(m.key) + '" value="' + esc(ov.icon || "") + '" placeholder="' + esc(m.icon) + '" maxlength="4" style="max-width:64px" />' +
+        '<input class="dmo-name" data-mkey="' + esc(m.key) + '" value="' + esc(ov.name || "") + '" placeholder="' + esc(m.name) + '" style="flex:1" />' +
+      "</div>";
+    }).join("") + '<button class="btn secondary" id="dmoSaveBtn" style="margin-top:12px">Save Names &amp; Icons</button>';
+    document.getElementById("dmoSaveBtn").addEventListener("click", function () {
+      var next = {};
+      liveDefs.forEach(function (m) {
+        var iconEl = wrap.querySelector('.dmo-icon[data-mkey="' + m.key + '"]');
+        var nameEl = wrap.querySelector('.dmo-name[data-mkey="' + m.key + '"]');
+        var icon = iconEl.value.trim(), name = nameEl.value.trim();
+        if (icon || name) next[m.key] = Object.assign({}, icon ? { icon: icon } : {}, name ? { name: name } : {});
+      });
+      var btn = document.getElementById("dmoSaveBtn"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      api("updateSettings", { module_overrides: next }).then(function () {
+        state.settings.module_overrides = next;
+        applyModuleOverrides();
+        renderHome();
+        toast("Module names & icons updated");
+      }).catch(function (e) { toast(e.message, true); }).finally(function () { btn.disabled = false; btn.textContent = "Save Names & Icons"; });
+    });
+  }
+  function renderDevWorkflowRulesCard() {
+    var wrap = document.getElementById("devWorkflowRulesWrap");
+    if (!wrap) return;
+    var days = (state.settings && state.settings.stuck_task_window_days) || 3;
+    wrap.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+        '<span style="font-size:13px;font-weight:600;min-width:220px">Home "Stuck Tasks" window</span>' +
+        '<input id="devStuckDays" type="number" min="1" max="30" value="' + days + '" style="max-width:80px" />' +
+        '<span class="sub">days with no update before a task shows up there</span>' +
+        '<button class="btn secondary" id="devStuckSaveBtn">Save</button>' +
+      "</div>";
+    document.getElementById("devStuckSaveBtn").addEventListener("click", function () {
+      var n = Number(document.getElementById("devStuckDays").value);
+      if (!Number.isInteger(n) || n < 1 || n > 30) { toast("Enter a whole number between 1 and 30", true); return; }
+      var btn = document.getElementById("devStuckSaveBtn"); btn.disabled = true;
+      api("updateSettings", { stuck_task_window_days: n }).then(function () {
+        state.settings.stuck_task_window_days = n;
+        renderHomeExtras();
+        toast("Saved");
+      }).catch(function (e) { toast(e.message, true); }).finally(function () { btn.disabled = false; });
+    });
+  }
+  function renderDevAppearanceCard() {
+    var wrap = document.getElementById("devAppearanceWrap");
+    if (!wrap) return;
+    var color = (state.settings && state.settings.brand_color) || "";
+    wrap.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+        '<span style="font-size:13px;font-weight:600;min-width:220px">Brand color</span>' +
+        '<input id="devBrandColor" type="color" value="' + (color || "#F05023") + '" style="width:52px;height:34px;padding:2px;cursor:pointer" />' +
+        '<button class="btn secondary" id="devBrandSaveBtn">Save</button>' +
+        '<button class="btn secondary" id="devBrandClearBtn">Reset to default</button>' +
+      "</div>";
+    document.getElementById("devBrandSaveBtn").addEventListener("click", function () {
+      var val = document.getElementById("devBrandColor").value;
+      var btn = document.getElementById("devBrandSaveBtn"); btn.disabled = true;
+      api("updateSettings", { brand_color: val }).then(function () {
+        state.settings.brand_color = val;
+        applyBrandColorOverride();
+        toast("Brand color updated");
+      }).catch(function (e) { toast(e.message, true); }).finally(function () { btn.disabled = false; });
+    });
+    document.getElementById("devBrandClearBtn").addEventListener("click", function () {
+      var btn = document.getElementById("devBrandClearBtn"); btn.disabled = true;
+      api("updateSettings", { brand_color: null }).then(function () {
+        state.settings.brand_color = null;
+        applyBrandColorOverride();
+        renderDevAppearanceCard();
+        toast("Back to the default brand color");
+      }).catch(function (e) { toast(e.message, true); }).finally(function () { btn.disabled = false; });
+    });
+  }
+  // Injects (or removes) a <style> tag overriding the CSS custom properties
+  // the app's buttons/badges/sidebar read. Sits on top of the day-of-week
+  // "vibe" theme (which repoints --brand at --vibe-brand) by using
+  // !important — a set brand_color wins every day of the week, on purpose.
+  // Runs for every viewer right after settings load, not just admins/
+  // developers: this is workspace-wide appearance, not a personal setting.
+  function applyBrandColorOverride() {
+    var color = state.settings && state.settings.brand_color;
+    var tag = document.getElementById("devBrandColorStyle");
+    if (!color) { if (tag) tag.remove(); return; }
+    if (!tag) { tag = document.createElement("style"); tag.id = "devBrandColorStyle"; document.head.appendChild(tag); }
+    tag.textContent = ":root{ --brand:" + color + " !important; --brand-dark:" + color + " !important; --sidebar-active:" + color + " !important; }";
+  }
+  // MODULE_DEFS is mutated in place with any name/icon override so every
+  // existing consumer (module tiles, the admin module grid, this same
+  // Developer card) picks it up with no other code change. MODULE_DEFS_BASE
+  // keeps the shipped defaults around so the Developer form always has the
+  // real placeholder to show/clear back to, even after an override is
+  // applied and the live array's own values change.
+  var MODULE_DEFS_BASE = null;
+  function applyModuleOverrides() {
+    if (!MODULE_DEFS_BASE) MODULE_DEFS_BASE = MODULE_DEFS.map(function (m) { return Object.assign({}, m); });
+    var overrides = (state.settings && state.settings.module_overrides) || {};
+    MODULE_DEFS.forEach(function (m, i) {
+      var base = MODULE_DEFS_BASE[i];
+      var ov = overrides[m.key] || {};
+      m.name = ov.name || base.name;
+      m.icon = ov.icon || base.icon;
+    });
+  }
+
   function renderSettingsCard() {
     var wrap = document.getElementById("settingsCardWrap");
     if (!wrap || !state.doer || !state.doer.is_admin) return;
@@ -6346,8 +6565,13 @@
         : m.content_type === "per_user_link"
         ? (m.link_count || 0) + " " + ((m.link_count || 0) === 1 ? "person" : "people") + " assigned a link"
         : "Pasted HTML page";
-      var opensLabel = m.content_type === "html" ? "—" : (cmCurrentOpenMode(m) === "embed" ? "Inside Workspace" : "New tab");
-      return "<tr><td>" + m.icon + " " + esc(m.name) + "</td><td>" + CUSTOM_MODULE_TYPE_LABELS[m.content_type] + '</td><td style="font-size:12.5px;color:var(--sub)">' + detail + '</td><td style="font-size:12.5px;color:var(--sub);white-space:nowrap">' + opensLabel + "</td>" +
+      var curMode = cmCurrentOpenMode(m);
+      var opensCell = m.content_type === "html" ? '<span style="font-size:12.5px;color:var(--sub)">—</span>' :
+        '<select class="cm-opens-select" data-key="' + esc(m.module_key) + '" style="width:auto;padding:5px 8px;font-size:12.5px">' +
+          '<option value="redirect"' + (curMode === "redirect" ? " selected" : "") + '>New tab</option>' +
+          '<option value="embed"' + (curMode === "embed" ? " selected" : "") + '>Inside Workspace</option>' +
+        "</select>";
+      return "<tr><td>" + m.icon + " " + esc(m.name) + "</td><td>" + CUSTOM_MODULE_TYPE_LABELS[m.content_type] + '</td><td style="font-size:12.5px;color:var(--sub)">' + detail + '</td><td style="white-space:nowrap">' + opensCell + "</td>" +
         '<td style="white-space:nowrap">' +
         (m.content_type === "per_user_link" ? '<button class="btn secondary cm-links-btn" data-key="' + esc(m.module_key) + '" style="padding:5px 10px;font-size:12px">Manage links</button> ' : "") +
         '<button class="btn secondary cm-edit-btn" data-key="' + esc(m.module_key) + '" style="padding:5px 10px;font-size:12px">Edit</button> ' +
@@ -6358,6 +6582,25 @@
     wrap.querySelectorAll(".cm-edit-btn").forEach(function (b) { b.addEventListener("click", function () { openEditCustomModuleModal(b.dataset.key); }); });
     wrap.querySelectorAll(".cm-del-btn").forEach(function (b) { b.addEventListener("click", function () { confirmDeleteCustomModule(b.dataset.key); }); });
     wrap.querySelectorAll(".cm-links-btn").forEach(function (b) { b.addEventListener("click", function () { openManageLinksModal(b.dataset.key); }); });
+    // One-click change right from the table, no need to open Edit just to
+    // flip this — same module_open_modes settings map the Edit modal and
+    // the built-in-modules card both read/write.
+    wrap.querySelectorAll(".cm-opens-select").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        var key = sel.dataset.key, val = sel.value;
+        var modes = (state.settings && state.settings.module_open_modes) || {};
+        var next = Object.assign({}, modes);
+        next[key] = val;
+        sel.disabled = true;
+        api("updateSettings", { module_open_modes: next }).then(function () {
+          state.settings.module_open_modes = next;
+          toast("Saved — takes effect next time that module is opened");
+        }).catch(function (e) {
+          sel.value = modes[key] === "embed" ? "embed" : "redirect";
+          toast(e.message, true);
+        }).finally(function () { sel.disabled = false; });
+      });
+    });
   }
   // Custom modules store their open mode in the same workspace-wide
   // module_open_modes map as the built-in modules (see moduleOpenMode()),
@@ -7983,9 +8226,15 @@
             (n.body ? '<div class="notice-body">' + esc(n.body) + '</div>' : "") +
             '<div class="notice-meta">by ' + esc(n.created_by || "Admin") + " · " + fmtDate(n.created_at) + '</div>' +
             '</div>' +
-            (canNotices ? '<button class="btn secondary notice-del" data-id="' + esc(n.id) + '" style="padding:6px 10px;font-size:12px">Delete</button>' : "") +
+            (canNotices ? '<button class="btn secondary notice-edit" data-id="' + esc(n.id) + '" style="padding:6px 10px;font-size:12px">Edit</button> <button class="btn secondary notice-del" data-id="' + esc(n.id) + '" style="padding:6px 10px;font-size:12px">Delete</button>' : "") +
             '</div>';
         }).join("");
+        nWrap.querySelectorAll(".notice-edit").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var n = state.notices.find(function (x) { return x.id === b.dataset.id; });
+            if (n) openNoticeModal(n);
+          });
+        });
         nWrap.querySelectorAll(".notice-del").forEach(function (b) {
           b.addEventListener("click", function () {
             api("deleteNotice", { id: b.dataset.id, requester_doc_id: state.doer.doc_id }).then(function () {
@@ -8006,9 +8255,15 @@
         hWrap.innerHTML = holidays.map(function (h) {
           return '<div class="holiday-row"><div class="holiday-date">' + fmtHolidayDate(h.holiday_date) + '</div>' +
             '<div style="flex:1">' + esc(h.name) + '</div>' +
-            (canHolidays ? '<button class="btn secondary holiday-del" data-id="' + esc(h.id) + '" style="padding:6px 10px;font-size:12px">Delete</button>' : "") +
+            (canHolidays ? '<button class="btn secondary holiday-edit" data-id="' + esc(h.id) + '" style="padding:6px 10px;font-size:12px">Edit</button> <button class="btn secondary holiday-del" data-id="' + esc(h.id) + '" style="padding:6px 10px;font-size:12px">Delete</button>' : "") +
             '</div>';
         }).join("");
+        hWrap.querySelectorAll(".holiday-edit").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var h = state.holidays.find(function (x) { return x.id === b.dataset.id; });
+            if (h) openHolidayModal(h);
+          });
+        });
         hWrap.querySelectorAll(".holiday-del").forEach(function (b) {
           b.addEventListener("click", function () {
             api("deleteHoliday", { id: b.dataset.id, requester_doc_id: state.doer.doc_id }).then(function () {
@@ -8066,15 +8321,17 @@
       requestAnimationFrame(function () { window.scrollTo(0, returnY); });
     }
   });
-  var addNoticeBtn = document.getElementById("addNoticeBtn");
-  if (addNoticeBtn) addNoticeBtn.addEventListener("click", function () {
+  // Shared by "+ Add Notice" and the per-notice "Edit" button — pass an
+  // existing notice to edit it in place (updateNotice), or nothing to post
+  // a new one (createNotice).
+  function openNoticeModal(existing) {
     openModal(
-      "<h3>Add Notice</h3>" +
-      '<div class="field"><label>Title</label><input id="ntcTitle" /></div>' +
-      '<div class="field"><label>Details (optional)</label><textarea id="ntcBody"></textarea></div>' +
-      '<div class="field"><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="ntcPinned" style="width:auto" /> Pin to top</label></div>' +
+      "<h3>" + (existing ? "Edit Notice" : "Add Notice") + "</h3>" +
+      '<div class="field"><label>Title</label><input id="ntcTitle" value="' + (existing ? esc(existing.title) : "") + '" /></div>' +
+      '<div class="field"><label>Details (optional)</label><textarea id="ntcBody">' + (existing ? esc(existing.body || "") : "") + '</textarea></div>' +
+      '<div class="field"><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="ntcPinned" style="width:auto" ' + (existing && existing.pinned ? "checked" : "") + ' /> Pin to top</label></div>' +
       '<div class="modal-err" id="ntcErr"></div>' +
-      '<div class="modal-actions"><button class="btn secondary" id="ntcCancel">Cancel</button><button class="btn" id="ntcSave">Post Notice</button></div>'
+      '<div class="modal-actions"><button class="btn secondary" id="ntcCancel">Cancel</button><button class="btn" id="ntcSave">' + (existing ? "Save Changes" : "Post Notice") + "</button></div>"
     );
     document.getElementById("ntcCancel").addEventListener("click", closeModal);
     document.getElementById("ntcSave").addEventListener("click", function () {
@@ -8083,22 +8340,27 @@
       var pinned = document.getElementById("ntcPinned").checked;
       var err = document.getElementById("ntcErr");
       if (!title) { err.textContent = "Title is required."; return; }
-      var btn = document.getElementById("ntcSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Posting…';
-      api("createNotice", { title: title, body: body, pinned: pinned, created_by: myKey(), requester_doc_id: state.doer.doc_id }).then(function () {
-        toast("Notice posted");
+      var btn = document.getElementById("ntcSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>' + (existing ? "Saving…" : "Posting…");
+      var payload = { title: title, body: body, pinned: pinned, requester_doc_id: state.doer.doc_id };
+      if (existing) payload.id = existing.id; else payload.created_by = myKey();
+      api(existing ? "updateNotice" : "createNotice", payload).then(function () {
+        toast(existing ? "Notice updated" : "Notice posted");
         closeModal();
         return api("getNotices").then(function (ns) { state.notices = ns; renderNoticeBoard(); });
-      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Post Notice"; });
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = existing ? "Save Changes" : "Post Notice"; });
     });
-  });
-  var addHolidayBtn = document.getElementById("addHolidayBtn");
-  if (addHolidayBtn) addHolidayBtn.addEventListener("click", function () {
+  }
+  var addNoticeBtn = document.getElementById("addNoticeBtn");
+  if (addNoticeBtn) addNoticeBtn.addEventListener("click", function () { openNoticeModal(null); });
+  // Same pattern for Holidays — pass an existing holiday to edit it, or
+  // nothing to add a new one.
+  function openHolidayModal(existing) {
     openModal(
-      "<h3>Add Holiday</h3>" +
-      '<div class="field"><label>Holiday name</label><input id="holName" /></div>' +
-      '<div class="field"><label>Date</label><input id="holDate" type="date" /></div>' +
+      "<h3>" + (existing ? "Edit Holiday" : "Add Holiday") + "</h3>" +
+      '<div class="field"><label>Holiday name</label><input id="holName" value="' + (existing ? esc(existing.name) : "") + '" /></div>' +
+      '<div class="field"><label>Date</label><input id="holDate" type="date" value="' + (existing ? esc(existing.holiday_date) : "") + '" /></div>' +
       '<div class="modal-err" id="holErr"></div>' +
-      '<div class="modal-actions"><button class="btn secondary" id="holCancel">Cancel</button><button class="btn" id="holSave">Add Holiday</button></div>'
+      '<div class="modal-actions"><button class="btn secondary" id="holCancel">Cancel</button><button class="btn" id="holSave">' + (existing ? "Save Changes" : "Add Holiday") + "</button></div>"
     );
     document.getElementById("holCancel").addEventListener("click", closeModal);
     document.getElementById("holSave").addEventListener("click", function () {
@@ -8107,13 +8369,17 @@
       var err = document.getElementById("holErr");
       if (!name || !date) { err.textContent = "Name and date are required."; return; }
       var btn = document.getElementById("holSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
-      api("createHoliday", { name: name, holiday_date: date, created_by: myKey(), requester_doc_id: state.doer.doc_id }).then(function () {
-        toast("Holiday added");
+      var payload = { name: name, holiday_date: date, requester_doc_id: state.doer.doc_id };
+      if (existing) payload.id = existing.id; else payload.created_by = myKey();
+      api(existing ? "updateHoliday" : "createHoliday", payload).then(function () {
+        toast(existing ? "Holiday updated" : "Holiday added");
         closeModal();
         return api("getHolidays").then(function (hs) { state.holidays = hs; renderNoticeBoard(); });
-      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Add Holiday"; });
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = existing ? "Save Changes" : "Add Holiday"; });
     });
-  });
+  }
+  var addHolidayBtn = document.getElementById("addHolidayBtn");
+  if (addHolidayBtn) addHolidayBtn.addEventListener("click", function () { openHolidayModal(null); });
 
   var addBirthdayBtn = document.getElementById("addBirthdayBtn");
   if (addBirthdayBtn) addBirthdayBtn.addEventListener("click", function () {
@@ -8157,7 +8423,7 @@
   // a proper menu" request. Each pane just show/hides the same wrap divs
   // the existing render*Card() functions already fill in, so none of that
   // rendering logic needed to change.
-  var SETTINGS_TABS = ["overview", "general", "modules", "teams", "buyer", "alerts", "staff"];
+  var SETTINGS_TABS = ["overview", "general", "modules", "teams", "buyer", "alerts", "staff", "developer"];
   function renderSettingsTabs() {
     var cur = SETTINGS_TABS.indexOf(state.settingsTab) !== -1 ? state.settingsTab : "overview";
     document.querySelectorAll("#settingsTabs .tab").forEach(function (b) { b.classList.toggle("active", b.dataset.settab === cur); });
@@ -10274,7 +10540,10 @@
     var widget = document.getElementById("triageHomeWidget"), list = document.getElementById("triageHomeList");
     if (!widget || !list || !state.doer) return;
     var mine = myKey();
-    var threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    var windowDays = (state.settings && state.settings.stuck_task_window_days) || 3; // Developer Mode setting; was a hardcoded 3
+    var threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - windowDays);
+    var titleEl = widget.querySelector("h3");
+    if (titleEl) titleEl.textContent = "⏳ Stuck Tasks (no update in " + windowDays + "+ days)";
     // Only a true admin should see every stuck task company-wide. Everyone
     // else — including managers with can_assign, which is a broad flag held
     // by most department heads (Sampling, Production, HR, ...) — should
@@ -10840,7 +11109,7 @@
     if (!wrap || !state.doer || !state.doer.is_admin) return;
     var links = (state.settings && state.settings.quick_links) || [];
     wrap.innerHTML = links.map(function (l, i) {
-      return '<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)"><span style="flex:1">' + esc(l.icon || "🔗") + " " + esc(l.label) + " — " + esc(l.url) + '</span><button type="button" data-rm-link="' + i + '" class="btn secondary" style="padding:2px 8px;font-size:11px">Remove</button></div>';
+      return '<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)"><span style="flex:1">' + esc(l.icon || "🔗") + " " + esc(l.label) + " — " + esc(l.url) + '</span><button type="button" data-edit-link="' + i + '" class="btn secondary" style="padding:2px 8px;font-size:11px">Edit</button> <button type="button" data-rm-link="' + i + '" class="btn secondary" style="padding:2px 8px;font-size:11px">Remove</button></div>';
     }).join("") + '<button class="btn secondary" id="addLinkBtn" style="margin-top:10px">+ Add Link</button>';
     wrap.querySelectorAll("[data-rm-link]").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -10848,24 +11117,35 @@
         api("updateSettings", { quick_links: next }).then(function () { state.settings.quick_links = next; renderQuickLinksCard(); renderQuickLinksHomeWidget(); }).catch(function (e) { toast(e.message, true); });
       });
     });
-    document.getElementById("addLinkBtn").addEventListener("click", function () {
+    wrap.querySelectorAll("[data-edit-link]").forEach(function (b) {
+      b.addEventListener("click", function () { openQuickLinkModal(Number(b.dataset.editLink)); });
+    });
+    document.getElementById("addLinkBtn").addEventListener("click", function () { openQuickLinkModal(null); });
+    // Shared by "+ Add Link" (idx null) and each row's "Edit" (idx is that
+    // link's position in the array) — quick_links has no per-item id, it's
+    // just an array under one settings key, so editing means replacing the
+    // entry at that index and saving the whole array back.
+    function openQuickLinkModal(idx) {
+      var existing = idx === null ? null : links[idx];
       openModal(
-        '<h3>Add Quick Link</h3>' +
-        '<div class="field"><label>Label</label><input id="qlLabel" /></div>' +
-        '<div class="field"><label>URL</label><input id="qlUrl" placeholder="https://..." /></div>' +
-        '<div class="field"><label>Icon (emoji, optional)</label><input id="qlIcon" placeholder="🔗" /></div>' +
+        '<h3>' + (existing ? "Edit Quick Link" : "Add Quick Link") + '</h3>' +
+        '<div class="field"><label>Label</label><input id="qlLabel" value="' + (existing ? esc(existing.label) : "") + '" /></div>' +
+        '<div class="field"><label>URL</label><input id="qlUrl" placeholder="https://..." value="' + (existing ? esc(existing.url) : "") + '" /></div>' +
+        '<div class="field"><label>Icon (emoji, optional)</label><input id="qlIcon" placeholder="🔗" value="' + (existing ? esc(existing.icon || "") : "") + '" /></div>' +
         '<div class="modal-err" id="qlErr"></div>' +
-        '<div class="modal-actions"><button class="btn secondary" id="qlCancel">Cancel</button><button class="btn" id="qlSave">Add</button></div>'
+        '<div class="modal-actions"><button class="btn secondary" id="qlCancel">Cancel</button><button class="btn" id="qlSave">' + (existing ? "Save Changes" : "Add") + '</button></div>'
       );
       document.getElementById("qlCancel").addEventListener("click", closeModal);
       document.getElementById("qlSave").addEventListener("click", function () {
         var label = document.getElementById("qlLabel").value.trim(), url = document.getElementById("qlUrl").value.trim();
         var err = document.getElementById("qlErr");
         if (!label || !url) { err.textContent = "Label and URL are required."; return; }
-        var next = links.concat([{ label: label, url: url, icon: document.getElementById("qlIcon").value.trim() || "🔗" }]);
-        api("updateSettings", { quick_links: next }).then(function () { toast("Added"); closeModal(); state.settings.quick_links = next; renderQuickLinksCard(); renderQuickLinksHomeWidget(); }).catch(function (e) { err.textContent = e.message; });
+        var entry = { label: label, url: url, icon: document.getElementById("qlIcon").value.trim() || "🔗" };
+        var next = links.slice();
+        if (existing) next[idx] = entry; else next.push(entry);
+        api("updateSettings", { quick_links: next }).then(function () { toast(existing ? "Saved" : "Added"); closeModal(); state.settings.quick_links = next; renderQuickLinksCard(); renderQuickLinksHomeWidget(); }).catch(function (e) { err.textContent = e.message; });
       });
-    });
+    }
   }
   function renderQuickLinksHomeWidget() {
     var widget = document.getElementById("quickLinksHomeWidget"), row = document.getElementById("quickLinksHomeRow");
