@@ -1657,8 +1657,8 @@
             <input class="search" id="staffSearch" placeholder="Search staff by name, department or designation…" style="flex:1;min-width:220px" />
             <select id="staffFilterRole" style="min-width:150px">
               <option value="">All roles</option>
-              <option value="super_admin">Super Admin</option>
-              <option value="admin">Admin</option>
+              <option value="super_admin">Developer / Super Admin</option>
+              <option value="admin">Head</option>
               <option value="manager">Manager</option>
               <option value="employee">Employee</option>
             </select>
@@ -1667,9 +1667,6 @@
           </div>
         </div>
         <div class="card"><div id="adminTableWrap"></div></div>
-        <div class="page-head" style="margin-top:22px"><h2 style="font-size:16px">Developer Mode Access</h2></div>
-        <div class="page-sub" style="margin-top:-12px">One level above Admin — lets a person change workflow rules and thresholds, rename module tiles, and tweak the brand color without a code change. Any admin can grant or revoke it; only admins appear in this list.</div>
-        <div class="card" style="padding:18px;margin-bottom:6px"><div id="devAccessCardWrap"></div></div>
       </div>
 
       <div id="stPane-developer" class="settings-pane hidden">
@@ -1948,13 +1945,13 @@
           }
           case "getSettings":
             resolve(Object.assign(
-              { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {}, module_open_modes: {}, developer_doc_ids: [], module_overrides: {}, stuck_task_window_days: 3, brand_color: null },
+              { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {}, module_open_modes: {}, module_overrides: {}, stuck_task_window_days: 3, brand_color: null },
               state.settings || {},
               { notification_types_registry: DEMO_NOTIF_TYPES }
             ));
             break;
           case "updateSettings": {
-            if (!state.settings) state.settings = { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {}, module_open_modes: {}, developer_doc_ids: [], module_overrides: {}, stuck_task_window_days: 3, brand_color: null };
+            if (!state.settings) state.settings = { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {}, module_open_modes: {}, module_overrides: {}, stuck_task_window_days: 3, brand_color: null };
             if (p.notifications_enabled !== undefined) state.settings.notifications_enabled = !!p.notifications_enabled;
             if (p.notification_types !== undefined) state.settings.notification_types = p.notification_types;
             if (p.disabled_modules !== undefined) state.settings.disabled_modules = p.disabled_modules;
@@ -1962,7 +1959,6 @@
             if (p.ticker_show_holidays !== undefined) state.settings.ticker_show_holidays = !!p.ticker_show_holidays;
             if (p.module_covers !== undefined) state.settings.module_covers = p.module_covers;
             if (p.module_open_modes !== undefined) state.settings.module_open_modes = p.module_open_modes;
-            if (p.developer_doc_ids !== undefined) state.settings.developer_doc_ids = p.developer_doc_ids;
             if (p.module_overrides !== undefined) state.settings.module_overrides = p.module_overrides;
             if (p.stuck_task_window_days !== undefined) state.settings.stuck_task_window_days = p.stuck_task_window_days;
             if (p.brand_color !== undefined) state.settings.brand_color = p.brand_color;
@@ -3137,7 +3133,7 @@
       applyBrandColorOverride(); // workspace-wide, every viewer — not admin-gated
       applyModuleOverrides(); // renames/re-icons built-in MODULE_DEFS tiles in place, before anything renders them
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
-      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDevAccessCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderLeavePage(); renderReimbursementPage(); renderHomeExtras();
+      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderLeavePage(); renderReimbursementPage(); renderHomeExtras();
       api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
       loadNotifications();
       return;
@@ -3182,7 +3178,7 @@
         renderAdmin();
         api("getBuyerNotifyList").then(function (list) { state.buyerNotifyList = list; renderNotifyList(); }).catch(function () {});
         api("getInspectionNotifyList").then(function (list) { state.inspectionNotifyList = list; renderInspectionNotifyList(); }).catch(function () {});
-        renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDevAccessCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderCustomModulesCard(); renderBuyerEmailsCard();
+        renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderCustomModulesCard(); renderBuyerEmailsCard();
       }
       if (state.doer.can_view_audit || state.doer.is_admin) {
         api("getAudits").then(function (a) { state.audits = a; renderAudits(); renderHome(); });
@@ -3866,16 +3862,20 @@
   }
 
   // ---------- Workspace-wide 4-tier role hierarchy ----------
-  // Super Admin > Admin > Manager > Employee. Separate from moduleRole() above,
-  // which is per-embedded-module (Checklist FMS etc); this one is the
-  // Workspace-wide rank set from Staff Access / Add Staff / Staff Controls,
-  // backed by the `role` column on deleg_doers (kept in sync server-side with
-  // is_admin/can_assign so older code reading those flags directly never goes
-  // stale). Falls back to is_admin ? "admin" : "employee" for any doer that
-  // predates the role column, so nobody's access looks different until an
-  // admin explicitly sets a role for them.
+  // Developer/Super Admin > Head > Manager > Employee (stored as the enum
+  // values "super_admin" > "admin" > "manager" > "employee" for backward
+  // compatibility — only the DISPLAY LABELS below changed; nothing in the
+  // database or the grant-hierarchy logic needed to move). Separate from
+  // moduleRole() above, which is per-embedded-module (Checklist FMS etc);
+  // this one is the Workspace-wide rank set from Staff Access / Add Staff /
+  // Staff Controls, backed by the `role` column on deleg_doers (kept in
+  // sync server-side with is_admin/can_assign so older code reading those
+  // flags directly never goes stale). Falls back to is_admin ? "admin" :
+  // "employee" for any doer that predates the role column, so nobody's
+  // access looks different until someone explicitly sets a role for them.
+  // The top rung ("super_admin") IS Developer Mode — see isDeveloperMode().
   var WS_ROLES = ["super_admin", "admin", "manager", "employee"];
-  var WS_ROLE_LABELS = { super_admin: "Super Admin", admin: "Admin", manager: "Manager", employee: "Employee" };
+  var WS_ROLE_LABELS = { super_admin: "Developer / Super Admin", admin: "Head", manager: "Manager", employee: "Employee" };
   function wsRole(d) {
     if (d && d.role && WS_ROLES.indexOf(d.role) !== -1) return d.role;
     return d && d.is_admin ? "admin" : "employee";
@@ -3906,7 +3906,7 @@
   function wsRoleCellHtml(d, selectId) {
     var cur = wsRole(d);
     if (!canEditWsRole(d)) {
-      var whyTitle = d.doc_id === state.doer.doc_id ? "You can't change your own rank here" : "Only a Super Admin can change this person's rank";
+      var whyTitle = d.doc_id === state.doer.doc_id ? "You can't change your own rank here" : "Only a Developer / Super Admin can change this person's rank";
       return '<span class="module-badge live" title="' + esc(whyTitle) + '">' + esc(WS_ROLE_LABELS[cur] || cur) + "</span>";
     }
     var options = grantableWsRoles().slice();
@@ -5734,7 +5734,7 @@
     if (!sorted.length) {
       wrap.innerHTML = '<div class="empty">' + (showDeleted ? "No removed staff." : "No staff match this search/filter.") + '</div>';
       renderNotifyList(); renderBvAlertStaffList(); renderInspectionNotifyList(); renderInspectionAlertStaffList();
-      renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDevAccessCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
+      renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
       return;
     }
     var rows = sorted.map(function (d) {
@@ -5843,7 +5843,7 @@
     renderBvAlertStaffList();
     renderInspectionNotifyList();
     renderInspectionAlertStaffList();
-    renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDevAccessCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
+    renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
   }
 
   // ---------- Manage Visibility for one module (from Settings → Modules) ----------
@@ -5975,9 +5975,9 @@
                 return opts.map(function (r) { return '<option value="' + r + '"' + (r === cur ? " selected" : "") + ">" + WS_ROLE_LABELS[r] + "</option>"; }).join("");
               })() +
             "</select>" +
-            (myWsRole() !== "super_admin" ? '<div class="sub" style="margin-top:4px">Only a Super Admin can promote someone to Admin or Super Admin.</div>' : "")
+            (myWsRole() !== "super_admin" ? '<div class="sub" style="margin-top:4px">Only a Developer / Super Admin can promote someone to Head or Developer / Super Admin.</div>' : "")
           : '<div><span class="module-badge live">' + esc(WS_ROLE_LABELS[wsRole(d)] || wsRole(d)) + '</span>' +
-            '<div class="sub" style="margin-top:4px">' + (isSelf ? "You can't change your own rank here." : "Only a Super Admin can change this person's rank.") + '</div></div>') +
+            '<div class="sub" style="margin-top:4px">' + (isSelf ? "You can't change your own rank here." : "Only a Developer / Super Admin can change this person's rank.") + '</div></div>') +
         "</div>" +
         '<div class="field" style="margin-top:10px"><label>Team</label><select id="scTeam"><option value="">— No team —</option>' +
           (state.teams || []).map(function (t) { return '<option value="' + esc(t.id) + '"' + (d.team_id === t.id ? " selected" : "") + ">" + esc(t.name) + "</option>"; }).join("") +
@@ -5985,7 +5985,7 @@
       "</div>" +
       '<div class="card" style="padding:18px;margin-bottom:16px">' +
         '<div class="page-head" style="margin:0 0 4px"><h2 style="font-size:15px">Delegated module access</h2></div>' +
-        '<div class="page-sub" style="margin:0 0 10px">Let this person manage a specific area (add/edit/delete) without making them a Workspace Admin — e.g. hand Birthday Registry to HR. Has no effect if they\'re already an Admin/Super Admin, since those already manage everything.</div>' +
+        '<div class="page-sub" style="margin:0 0 10px">Let this person manage a specific area (add/edit/delete) without making them a Workspace Admin — e.g. hand Birthday Registry to HR. Has no effect if they\'re already a Head or Developer/Super Admin, since those already manage everything.</div>' +
         moduleAccessCheckboxesHtml(d, "scMod_") +
       "</div>" +
       '<div class="card" style="padding:18px;margin-bottom:16px">' +
@@ -6217,65 +6217,29 @@
   }
 
   // ---------- Developer Mode ----------
-  // One level above plain Admin (there are several admins; this is meant
-  // for one, or a couple, of them). Storage is a doc_id allowlist in the
-  // same generic deleg_meta settings table as everything else here — no
-  // new column/table, so it needed no migration. Granting/revoking it is
-  // gated server-side to admins only (see updateSettings' developer_doc_ids
-  // handling); everything ELSE a developer changes (module renames, the
-  // stuck-task window, brand color) uses the same trust model as every
-  // other setting in this file — the frontend is what restricts who sees
-  // the controls.
+  // Developer Mode is the top rung of the workspace-wide 4-tier role
+  // hierarchy (WS_ROLES above: Employee < Manager < Head < Developer/Super
+  // Admin) — it's simply the "super_admin" rank, granted/revoked the same
+  // way every other rank change is: from the Role column in Staff Access
+  // (wsRoleCellHtml) or Staff Controls, which already enforces "only a
+  // Super Admin can hand out Super Admin or Admin (Head)". No separate
+  // allowlist, no separate UI — one role field, one place to manage it.
   function isDeveloperMode() {
-    if (!state.doer || !state.doer.is_admin) return false;
-    var ids = (state.settings && state.settings.developer_doc_ids) || [];
-    return ids.indexOf(state.doer.doc_id) !== -1;
+    return myWsRole() === "super_admin";
   }
   function updateDevTabVisibility() {
     var btn = document.getElementById("devTabBtn");
     if (!btn) return;
     var show = isDeveloperMode();
     btn.classList.toggle("hidden", !show);
-    // If this viewer lost Developer Mode (someone revoked it) while sitting
+    // If this viewer lost Developer Mode (their rank changed) while sitting
     // on that tab, bounce them back to Overview rather than leaving a
     // hidden-tab's pane showing with no way to get back to it via the bar.
     if (!show && state.settingsTab === "developer") { state.settingsTab = "overview"; renderSettingsTabs(); }
   }
-  // Admins-only card (Staff Access tab) for granting/revoking Developer
-  // Mode. Deliberately lists only current admins — Developer Mode without
-  // Admin doesn't mean anything here (isDeveloperMode() requires both).
-  function renderDevAccessCard() {
-    var wrap = document.getElementById("devAccessCardWrap");
-    if (!wrap || !state.doer || !state.doer.is_admin) return;
-    var devIds = (state.settings && state.settings.developer_doc_ids) || [];
-    var admins = (state.doers || []).filter(function (d) { return d.is_admin; });
-    if (!admins.length) { wrap.innerHTML = '<div class="empty">No admins found.</div>'; return; }
-    wrap.innerHTML = admins.map(function (d, i) {
-      var borderStyle = i < admins.length - 1 ? "border-bottom:1px solid var(--line);" : "";
-      return '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:9px 0;' + borderStyle + '">' +
-        '<input type="checkbox" class="dev-access-cb" data-doc="' + esc(d.doc_id) + '" style="width:auto" ' + (devIds.indexOf(d.doc_id) !== -1 ? "checked" : "") + ' /> ' +
-        '<span>' + esc(d.delegation_name || d.name) + '</span></label>';
-    }).join("");
-    wrap.querySelectorAll(".dev-access-cb").forEach(function (cb) {
-      cb.addEventListener("click", function () {
-        var next = devIds.slice();
-        var idx = next.indexOf(cb.dataset.doc);
-        if (cb.checked && idx === -1) next.push(cb.dataset.doc);
-        if (!cb.checked && idx !== -1) next.splice(idx, 1);
-        cb.disabled = true;
-        api("updateSettings", { developer_doc_ids: next, requester_doc_id: state.doer.doc_id }).then(function () {
-          state.settings.developer_doc_ids = next;
-          updateDevTabVisibility();
-          toast("Developer Mode " + (cb.checked ? "granted" : "revoked"));
-        }).catch(function (e) {
-          cb.checked = !cb.checked;
-          toast(e.message, true);
-        }).finally(function () { cb.disabled = false; });
-      });
-    });
-  }
   // Renders the 3 Developer Mode sub-cards. No-ops (leaves the tab hidden)
-  // for anyone who isn't a developer, same guard as every other admin card.
+  // for anyone who isn't a Developer/Super Admin, same guard as every other
+  // admin card.
   function renderDeveloperPane() {
     if (!isDeveloperMode()) return;
     renderDevModuleOverridesCard();
@@ -7264,7 +7228,7 @@
       '<select id="asRole">' +
         grantableWsRoles().map(function (r) { return '<option value="' + r + '"' + (r === "employee" ? " selected" : "") + ">" + WS_ROLE_LABELS[r] + "</option>"; }).join("") +
       "</select>" +
-      (myWsRole() !== "super_admin" ? '<div class="sub" style="margin-top:4px">Only a Super Admin can create an Admin or Super Admin account.</div>' : "") +
+      (myWsRole() !== "super_admin" ? '<div class="sub" style="margin-top:4px">Only a Developer / Super Admin can create a Head or Developer / Super Admin account.</div>' : "") +
       "</div>" +
       '<div class="field"><label>Extra permissions</label>' +
       '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="asAssign" style="width:auto" /> Can assign tasks</label>' +
