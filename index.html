@@ -1610,8 +1610,11 @@
         <div class="page-head" style="margin-top:6px"><h2 style="font-size:16px">Module visibility</h2></div>
         <div class="page-sub" style="margin-top:-12px">Click a module to see — and change — exactly who it's visible to, without going staff member by staff member.</div>
         <div class="module-grid" id="adminModuleGrid"></div>
+        <div class="page-head" style="margin-top:22px"><h2 style="font-size:16px">Module Open Behavior</h2></div>
+        <div class="page-sub" style="margin-top:-12px">Costing Calculator, Rugs Connect and Buyer Order Dashboard are separate external sites. Choose whether each one redirects to a new browser tab or opens framed inside Workspace — if a site refuses to be framed, a small "Open in new tab" link still appears as a fallback.</div>
+        <div class="card" style="padding:18px;margin-bottom:6px"><div id="moduleOpenModesCardWrap"></div></div>
         <div class="page-head" style="margin-top:22px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="font-size:16px">Custom Modules</h2><button class="btn secondary" id="newCustomModuleBtn" style="padding:8px 12px;font-size:13px">+ New Module</button></div>
-        <div class="page-sub" style="margin-top:-12px">Add a module tile without a code change — one link for everyone, a different link per person (e.g. each merchant's own dashboard), or paste in a block of HTML. It opens inside the app like any other module. Show/hide it per staff member from Staff Controls → Visibility, or above.</div>
+        <div class="page-sub" style="margin-top:-12px">Add a module tile without a code change — one link for everyone, a different link per person (e.g. each merchant's own dashboard), or paste in a block of HTML. Choose, per module, whether it redirects to a new tab or opens inside the app. Show/hide it per staff member from Staff Controls → Visibility, or above.</div>
         <div class="card" style="padding:18px;margin-bottom:6px"><div id="customModulesCardWrap"></div></div>
       </div>
 
@@ -1927,19 +1930,20 @@
           }
           case "getSettings":
             resolve(Object.assign(
-              { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {} },
+              { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {}, module_open_modes: {} },
               state.settings || {},
               { notification_types_registry: DEMO_NOTIF_TYPES }
             ));
             break;
           case "updateSettings": {
-            if (!state.settings) state.settings = { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {} };
+            if (!state.settings) state.settings = { notifications_enabled: true, notification_types: {}, disabled_modules: [], ticker_show_notices: true, ticker_show_holidays: true, module_covers: {}, module_open_modes: {} };
             if (p.notifications_enabled !== undefined) state.settings.notifications_enabled = !!p.notifications_enabled;
             if (p.notification_types !== undefined) state.settings.notification_types = p.notification_types;
             if (p.disabled_modules !== undefined) state.settings.disabled_modules = p.disabled_modules;
             if (p.ticker_show_notices !== undefined) state.settings.ticker_show_notices = !!p.ticker_show_notices;
             if (p.ticker_show_holidays !== undefined) state.settings.ticker_show_holidays = !!p.ticker_show_holidays;
             if (p.module_covers !== undefined) state.settings.module_covers = p.module_covers;
+            if (p.module_open_modes !== undefined) state.settings.module_open_modes = p.module_open_modes;
             resolve({});
             break;
           }
@@ -3097,7 +3101,7 @@
   function loadAll() {
     if (state.demo) {
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
-      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard(); renderModuleCoversCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderLeavePage(); renderReimbursementPage(); renderHomeExtras();
+      renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderLeavePage(); renderReimbursementPage(); renderHomeExtras();
       api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
       loadNotifications();
       return;
@@ -3140,7 +3144,7 @@
         renderAdmin();
         api("getBuyerNotifyList").then(function (list) { state.buyerNotifyList = list; renderNotifyList(); }).catch(function () {});
         api("getInspectionNotifyList").then(function (list) { state.inspectionNotifyList = list; renderInspectionNotifyList(); }).catch(function () {});
-        renderSettingsCard(); renderModuleCoversCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderCustomModulesCard(); renderBuyerEmailsCard();
+        renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderCustomModulesCard(); renderBuyerEmailsCard();
       }
       if (state.doer.can_view_audit || state.doer.is_admin) {
         api("getAudits").then(function (a) { state.audits = a; renderAudits(); renderHome(); });
@@ -4189,18 +4193,33 @@
   });
 
   var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "ideabox", "teamcalendar", "notes", "todo"];
+  // Per-module choice of whether an external-URL-backed module opens in a
+  // real new browser tab ("redirect") or is framed inside Workspace
+  // ("embed") — Settings → Modules → Module Open Behavior for the 3
+  // built-ins below, and the "How should this open?" field on each custom
+  // "link"/"per_user_link" module. Missing/unrecognized -> "redirect", so
+  // every module already in use keeps exactly its current behavior until an
+  // admin explicitly switches it — nothing changes for anyone by default.
+  function moduleOpenMode(key) {
+    var modes = (state.settings && state.settings.module_open_modes) || {};
+    return modes[key] === "embed" ? "embed" : "redirect";
+  }
   function goToView(view) {
     // External URL-backed modules (Costing Calculator, Rugs Connect, Buyer
-    // Order Dashboard, and any custom "link"/"per_user_link" module) now
-    // open in a real new browser tab — full page — instead of being framed
-    // inside the app. Framing them was fragile (a site that refuses to be
-    // iframed just sits blank), so these route straight out to the browser
-    // and the app's own view never changes. Self-contained sub-apps
-    // (Checklist FMS, CBM, Sampling FMS — not external links, just embedded
-    // HTML that ships with this app) are unaffected and still open in place.
-    if (view === "costing") { window.open("https://rugs-creation.github.io/costing-dashboard/", "_blank", "noopener"); return; }
-    if (view === "rugsconnect") { window.open("https://rugsconnect.com/login?next=%2F", "_blank", "noopener"); return; }
-    if (view === "buyerorder") {
+    // Order Dashboard, and any custom "link"/"per_user_link" module) default
+    // to opening in a real new browser tab — full page — rather than being
+    // framed inside the app, because framing is fragile (a site that
+    // refuses to be iframed via X-Frame-Options just sits blank). An admin
+    // can flip any of them to open inside Workspace instead via
+    // moduleOpenMode() above; when that's set, control falls through below
+    // instead of leaving for a new tab, and the matching view (with its
+    // existing iframe + "Open in new tab" fallback) renders in place.
+    // Self-contained sub-apps (Checklist FMS, CBM, Sampling FMS — not
+    // external links, just embedded HTML that ships with this app) are
+    // unaffected either way and always open in place.
+    if (view === "costing" && moduleOpenMode("costing") !== "embed") { window.open("https://rugs-creation.github.io/costing-dashboard/", "_blank", "noopener"); return; }
+    if (view === "rugsconnect" && moduleOpenMode("rugsconnect") !== "embed") { window.open("https://rugsconnect.com/login?next=%2F", "_blank", "noopener"); return; }
+    if (view === "buyerorder" && moduleOpenMode("buyerorder") !== "embed") {
       if (BUYER_ORDER_DASHBOARD_URL) { window.open(BUYER_ORDER_DASHBOARD_URL, "_blank", "noopener"); }
       else { toast("Buyer Order Dashboard isn't connected yet."); }
       return;
@@ -4208,9 +4227,11 @@
     if (view === "customModule") {
       var cmForLink = (state.customModules || []).find(function (x) { return x.module_key === state.activeCustomModuleKey; });
       var cmDirectUrl = cmForLink ? (cmForLink.content_type === "link" ? cmForLink.shared_link : (cmForLink.content_type === "per_user_link" ? cmForLink.my_link : null)) : null;
-      if (cmDirectUrl) { window.open(cmDirectUrl, "_blank", "noopener"); return; }
-      // "html" modules (pasted content, not an external link) and modules
-      // with no link assigned yet fall through and still render in-app below.
+      if (cmDirectUrl && moduleOpenMode(cmForLink.module_key) !== "embed") { window.open(cmDirectUrl, "_blank", "noopener"); return; }
+      // "html" modules (pasted content, not an external link), modules with
+      // no link assigned yet, and any module explicitly set to "embed" all
+      // fall through and render in-app below (renderCustomModuleView()
+      // handles the actual framing for the embed case).
     }
     document.querySelectorAll(".nav-item[data-view]").forEach(function (b) { b.classList.toggle("active", b.dataset.view === view); });
     state.view = view;
@@ -4233,6 +4254,12 @@
     if (view === "cbm") loadCbmFrame();
     if (view === "samplingfms") loadSamplingFmsFrame();
     if (view === "counterroom") loadCounterRoomFrame();
+    // costing / rugsconnect / buyerorder only ever reach this line when an
+    // admin has switched that module to "embed" above — the redirect case
+    // already returned before getting here.
+    if (view === "costing") loadCostingFrame();
+    if (view === "rugsconnect") loadRugsConnectFrame();
+    if (view === "buyerorder") loadBuyerOrderFrame();
     if (view === "teamworkspace") renderWorkspaces();
     if (view === "salary") renderSalaryPage();
     if (view === "ordertracking") renderOrderTracking();
@@ -4242,9 +4269,10 @@
     if (view === "teamcalendar") renderTeamCalendar();
     if (view === "notes") renderNotes();
     if (view === "todo") renderTodoPage();
-    // costing / buyerorder / rugsconnect never reach here — intercepted
-    // above and sent straight to a new browser tab instead. Counter Room,
-    // like Checklist/CBM/Sampling FMS, is embedded in place below.
+    // costing / buyerorder / rugsconnect only reach past the switch above
+    // when set to "embed" mode; otherwise they're intercepted and sent
+    // straight to a new browser tab instead. Counter Room, like
+    // Checklist/CBM/Sampling FMS, is always embedded in place below.
     document.body.classList.toggle("embed-focus", view === "checklist" || view === "cbm" || view === "samplingfms" || view === "counterroom");
     applySidebarState();
     ALL_VIEWS.forEach(function (v) {
@@ -5668,7 +5696,7 @@
     if (!sorted.length) {
       wrap.innerHTML = '<div class="empty">' + (showDeleted ? "No removed staff." : "No staff match this search/filter.") + '</div>';
       renderNotifyList(); renderBvAlertStaffList(); renderInspectionNotifyList(); renderInspectionAlertStaffList();
-      renderSettingsCard(); renderModuleCoversCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
+      renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
       return;
     }
     var rows = sorted.map(function (d) {
@@ -5777,7 +5805,7 @@
     renderBvAlertStaffList();
     renderInspectionNotifyList();
     renderInspectionAlertStaffList();
-    renderSettingsCard(); renderModuleCoversCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
+    renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard();
   }
 
   // ---------- Manage Visibility for one module (from Settings → Modules) ----------
@@ -6024,13 +6052,29 @@
       frame.style.cssText = "width:100%;height:75vh;border:1px solid var(--line);border-radius:10px;background:#fff;";
       body.appendChild(frame);
       frame.srcdoc = m.html_content || "";
+    } else if (directUrl && moduleOpenMode(m.module_key) === "embed") {
+      // Admin has set this module to open inside Workspace — frame the URL
+      // directly, same pattern as the built-in Rugs Connect embed: not
+      // sandboxed (it's a real external site the module owner controls, not
+      // pasted HTML), with a fallback "Open in new tab" link that only
+      // appears after a few seconds in case the site refuses to be framed
+      // (X-Frame-Options / CSP frame-ancestors — outside our control) and
+      // the iframe just sits blank.
+      body.innerHTML = "";
+      var linkFrame = document.createElement("iframe");
+      linkFrame.style.cssText = "width:100%;height:75vh;border:1px solid var(--line);border-radius:10px;background:#fff;";
+      linkFrame.src = directUrl;
+      body.appendChild(linkFrame);
+      if (openBtn) {
+        openBtn.href = directUrl;
+        setTimeout(function () { openBtn.classList.remove("hidden"); }, 6000);
+      }
     } else if (directUrl) {
-      // A "link" / "per_user_link" module now always opens in a real new
-      // browser tab, full page — goToView() already intercepts this before
-      // ever reaching this view for that reason, so in normal use this
-      // branch never runs. It stays here only as a defensive fallback (e.g.
-      // this function ever gets called directly) and just opens the tab
-      // itself rather than framing the URL in-app.
+      // Redirect mode (the default) — goToView() already intercepts this
+      // before ever reaching this view, so in normal use this branch never
+      // runs. It stays here only as a defensive fallback (e.g. this function
+      // ever gets called directly) and just opens the tab itself rather
+      // than framing the URL in-app.
       body.innerHTML = '<div class="empty">Opening ' + esc(m.name) + ' in a new tab…</div>';
       window.open(directUrl, "_blank", "noopener");
       if (openBtn) { openBtn.href = directUrl; openBtn.classList.remove("hidden"); }
@@ -6089,6 +6133,47 @@
           renderHome();
           toast("Module cover updated");
         }).catch(function (e) { toast(e.message, true); });
+      });
+    });
+  }
+
+  // The 3 built-in modules that are really just a link to an external site
+  // (as opposed to Checklist/CBM/Sampling FMS/Counter Room, which are
+  // self-contained HTML embedded straight into this app and always open in
+  // place). These are the ones "redirect vs open inside Workspace" applies
+  // to — see moduleOpenMode()/goToView() above.
+  var BUILTIN_LINK_MODULES = [
+    { key: "costing", icon: "🧮", name: "Costing Calculator" },
+    { key: "rugsconnect", icon: "🔗", name: "Rugs Connect" },
+    { key: "buyerorder", icon: "🧾", name: "Buyer Order Dashboard" }
+  ];
+  function renderModuleOpenModesCard() {
+    var wrap = document.getElementById("moduleOpenModesCardWrap");
+    if (!wrap || !state.doer || !state.doer.is_admin) return;
+    var modes = (state.settings && state.settings.module_open_modes) || {};
+    wrap.innerHTML = BUILTIN_LINK_MODULES.map(function (m, i) {
+      var cur = modes[m.key] === "embed" ? "embed" : "redirect";
+      var borderStyle = i < BUILTIN_LINK_MODULES.length - 1 ? "border-bottom:1px solid var(--line);" : "";
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;' + borderStyle + '">' +
+        '<span style="font-size:13px;font-weight:600">' + m.icon + " " + esc(m.name) + "</span>" +
+        '<select class="mom-select" data-mkey="' + esc(m.key) + '" style="width:auto;padding:6px 10px">' +
+          '<option value="redirect"' + (cur === "redirect" ? " selected" : "") + '>Redirect to a new tab</option>' +
+          '<option value="embed"' + (cur === "embed" ? " selected" : "") + '>Open inside Workspace</option>' +
+        "</select></div>";
+    }).join("");
+    wrap.querySelectorAll(".mom-select").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        var key = sel.dataset.mkey, val = sel.value;
+        var next = Object.assign({}, modes);
+        next[key] = val;
+        sel.disabled = true;
+        api("updateSettings", { module_open_modes: next }).then(function () {
+          state.settings.module_open_modes = next;
+          toast("Saved — takes effect next time that module is opened");
+        }).catch(function (e) {
+          sel.value = modes[key] === "embed" ? "embed" : "redirect";
+          toast(e.message, true);
+        }).finally(function () { sel.disabled = false; });
       });
     });
   }
@@ -6261,17 +6346,24 @@
         : m.content_type === "per_user_link"
         ? (m.link_count || 0) + " " + ((m.link_count || 0) === 1 ? "person" : "people") + " assigned a link"
         : "Pasted HTML page";
-      return "<tr><td>" + m.icon + " " + esc(m.name) + "</td><td>" + CUSTOM_MODULE_TYPE_LABELS[m.content_type] + '</td><td style="font-size:12.5px;color:var(--sub)">' + detail + "</td>" +
+      var opensLabel = m.content_type === "html" ? "—" : (cmCurrentOpenMode(m) === "embed" ? "Inside Workspace" : "New tab");
+      return "<tr><td>" + m.icon + " " + esc(m.name) + "</td><td>" + CUSTOM_MODULE_TYPE_LABELS[m.content_type] + '</td><td style="font-size:12.5px;color:var(--sub)">' + detail + '</td><td style="font-size:12.5px;color:var(--sub);white-space:nowrap">' + opensLabel + "</td>" +
         '<td style="white-space:nowrap">' +
         (m.content_type === "per_user_link" ? '<button class="btn secondary cm-links-btn" data-key="' + esc(m.module_key) + '" style="padding:5px 10px;font-size:12px">Manage links</button> ' : "") +
         '<button class="btn secondary cm-edit-btn" data-key="' + esc(m.module_key) + '" style="padding:5px 10px;font-size:12px">Edit</button> ' +
         '<button class="btn secondary cm-del-btn" data-key="' + esc(m.module_key) + '" style="padding:5px 10px;font-size:12px">Delete</button>' +
         "</td></tr>";
     }).join("");
-    wrap.innerHTML = "<table><thead><tr><th>Module</th><th>Type</th><th>Detail</th><th></th></tr></thead><tbody>" + rows + "</tbody></table>";
+    wrap.innerHTML = "<table><thead><tr><th>Module</th><th>Type</th><th>Detail</th><th>Opens</th><th></th></tr></thead><tbody>" + rows + "</tbody></table>";
     wrap.querySelectorAll(".cm-edit-btn").forEach(function (b) { b.addEventListener("click", function () { openEditCustomModuleModal(b.dataset.key); }); });
     wrap.querySelectorAll(".cm-del-btn").forEach(function (b) { b.addEventListener("click", function () { confirmDeleteCustomModule(b.dataset.key); }); });
     wrap.querySelectorAll(".cm-links-btn").forEach(function (b) { b.addEventListener("click", function () { openManageLinksModal(b.dataset.key); }); });
+  }
+  // Custom modules store their open mode in the same workspace-wide
+  // module_open_modes map as the built-in modules (see moduleOpenMode()),
+  // keyed by module_key — not a column on the module row itself.
+  function cmCurrentOpenMode(m) {
+    return moduleOpenMode(m.module_key);
   }
   function customModuleModalHtml(m) {
     var ct = m ? m.content_type : "link";
@@ -6283,6 +6375,10 @@
       "</select></div>" +
       '<div class="field" id="cmLinkField"><label>Link (opens for everyone who can see this tile)</label><input id="cmLink" value="' + (m ? esc(m.shared_link || "") : "") + '" placeholder="https://…" /></div>' +
       '<div class="field" id="cmPerUserNote"><div class="sub">' + (m ? 'Use "Manage links" on the module row to set each person\'s individual link.' : 'After you create this module, use "Manage links" on its row to set each person\'s individual link.') + "</div></div>" +
+      '<div class="field" id="cmOpenModeField"><label>How should this open?</label><select id="cmOpenMode">' +
+        '<option value="redirect"' + ((m ? cmCurrentOpenMode(m) : "redirect") === "redirect" ? " selected" : "") + '>Redirect to a new tab</option>' +
+        '<option value="embed"' + ((m ? cmCurrentOpenMode(m) : "redirect") === "embed" ? " selected" : "") + '>Open inside Workspace</option>' +
+      "</select><div class=\"sub\" style=\"margin-top:4px\">\"Open inside Workspace\" frames the link in place; if that site refuses to be framed, a fallback \"Open in new tab\" link appears automatically.</div></div>" +
       '<div class="field" id="cmHtmlField"><label>HTML</label><textarea id="cmHtml" rows="8" style="font-family:monospace;font-size:12px" placeholder="&lt;html&gt;…&lt;/html&gt;">' + (m ? esc(m.html_content || "") : "") + "</textarea><div class=\"sub\" style=\"margin-top:4px\">Rendered in a sandboxed frame — scripts inside it can't reach the rest of Workspace.</div></div>" +
       '<div class="modal-err" id="cmErr"></div>' +
       '<div class="modal-actions"><button class="btn secondary" id="cmCancel">Cancel</button><button class="btn" id="cmSaveBtn">' + (m ? "Save Changes" : "Create Module") + "</button></div>";
@@ -6292,6 +6388,10 @@
     document.getElementById("cmLinkField").classList.toggle("hidden", ct !== "link");
     document.getElementById("cmPerUserNote").classList.toggle("hidden", ct !== "per_user_link");
     document.getElementById("cmHtmlField").classList.toggle("hidden", ct !== "html");
+    // "How should this open?" only applies to modules backed by a real URL
+    // (link / per_user_link) — a pasted-HTML module is always framed in
+    // place, there's nothing to redirect.
+    document.getElementById("cmOpenModeField").classList.toggle("hidden", ct === "html");
   }
   function wireCustomModuleModal(m) {
     document.getElementById("cmCancel").addEventListener("click", closeModal);
@@ -6303,6 +6403,7 @@
       var content_type = document.getElementById("cmType").value;
       var shared_link = document.getElementById("cmLink").value.trim();
       var html_content = document.getElementById("cmHtml").value;
+      var open_mode = document.getElementById("cmOpenMode").value;
       if (!name) { document.getElementById("cmErr").textContent = "Module name required."; return; }
       if (content_type === "link" && !shared_link) { document.getElementById("cmErr").textContent = "A link is required for this content type."; return; }
       var btn = document.getElementById("cmSaveBtn"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
@@ -6310,10 +6411,26 @@
       if (m) payload.module_key = m.module_key;
       api(m ? "customModuleUpdate" : "customModuleCreate", payload).then(function (row) {
         if (m) { Object.assign(m, row); } else { state.customModules.push(Object.assign({ my_link: null, link_count: 0 }, row)); }
-        closeModal();
-        renderCustomModulesCard();
-        renderHome();
-        toast(m ? "Module updated." : "Module created." + (content_type === "per_user_link" ? ' Click "Manage links" to assign each person\'s link.' : ""));
+        var savedKey = m ? m.module_key : row.module_key;
+        // Open mode lives in the shared module_open_modes settings map (same
+        // place the built-in modules' choice lives), not on the module row
+        // itself — see cmCurrentOpenMode(). Only relevant for link-backed
+        // types; harmless to skip for "html" (field is hidden for it, so
+        // open_mode is whatever was left selected and never applies).
+        var openModesNext = Object.assign({}, (state.settings && state.settings.module_open_modes) || {});
+        var saveOpenMode = content_type === "html" ? Promise.resolve() : (function () {
+          if (openModesNext[savedKey] === open_mode || (open_mode === "redirect" && !openModesNext[savedKey])) return Promise.resolve();
+          openModesNext[savedKey] = open_mode;
+          return api("updateSettings", { module_open_modes: openModesNext }).then(function () {
+            state.settings.module_open_modes = openModesNext;
+          });
+        })();
+        saveOpenMode.catch(function () { /* module itself is already saved — surface this as a soft failure only */ toast("Module saved, but its open-mode setting failed to save — try changing it again.", true); }).then(function () {
+          closeModal();
+          renderCustomModulesCard();
+          renderHome();
+          toast(m ? "Module updated." : "Module created." + (content_type === "per_user_link" ? ' Click "Manage links" to assign each person\'s link.' : ""));
+        });
       }).catch(function (e) {
         document.getElementById("cmErr").textContent = e.message;
         btn.disabled = false; btn.textContent = m ? "Save Changes" : "Create Module";
