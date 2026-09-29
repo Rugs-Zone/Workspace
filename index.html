@@ -1927,7 +1927,7 @@
   var ANON_KEY = "sb_publishable_puw8o_XzDvXmitIaNZvCtQ_5UGjXTBB";
   var FN_URL = SUPABASE_URL + "/functions/v1/deleg-api";
   var ADMIN_FN_URL = SUPABASE_URL + "/functions/v1/deleg-admin";
-  var ADMIN_FN_ACTIONS = ["adminRecordUpdate", "adminRecordDelete", "pressList", "pressCreate", "createNotification", "getMyNotifications", "markNotificationSeen"];
+  var ADMIN_FN_ACTIONS = ["adminRecordUpdate", "adminRecordDelete", "pressList", "pressCreate", "createNotification", "getMyNotifications", "markNotificationSeen", "leaveRequestCreateWithApprover"];
 
   // Mirrors the backend's NOTIF_TYPES registry (index.ts) — used only as the
   // demo-mode fallback so the Settings UI has something to render before a
@@ -4607,7 +4607,7 @@
     });
   });
   var newLeaveBtnEl = document.getElementById("newLeaveBtn");
-  if (newLeaveBtnEl) newLeaveBtnEl.addEventListener("click", openNewLeaveModal);
+  if (newLeaveBtnEl) newLeaveBtnEl.addEventListener("click", function () { openNewLeaveModal(); }); // no args = brand-new request (passing the click event made it think it was an Edit)
   var newReimbBtnEl = document.getElementById("newReimbBtn");
   if (newReimbBtnEl) newReimbBtnEl.addEventListener("click", openNewReimbModal);
 
@@ -8227,7 +8227,8 @@
   function renderLeavePage() {
     var wrap = document.getElementById("leaveListWrap");
     if (!wrap || !state.doer) return;
-    var canApprove = state.doer.is_admin || isTLOfAnyTeam(state.doer.doc_id);
+    var canApprove = state.doer.is_admin || isTLOfAnyTeam(state.doer.doc_id) ||
+      (state.leaves || []).some(function (l) { return l.tl_doc_id === state.doer.doc_id; });
     var approvalsTabEl = document.getElementById("leaveTabApprovals");
     if (approvalsTabEl) approvalsTabEl.classList.toggle("hidden", !canApprove);
     var allTabEl = document.getElementById("leaveTabAll");
@@ -8294,12 +8295,24 @@
       }).catch(function (e) { document.getElementById("leaveRejectErr").textContent = e.message; btn.disabled = false; btn.textContent = "Reject"; });
     });
   }
+  // Someone with no team TL picks their own approver — but only from people
+  // at manager level (team TLs, admins, or a senior designation such as
+  // Manager / Director / Head / Sr. / DMM). The server checks this again.
+  var MANAGER_DESIGNATION_RE = /manager|director|head|\bsr\.?\b|senior|\btl\b|team lead|dmm/i;
+  function isManagerLevelDoer(d) {
+    return !!d && !d.is_deleted && (d.is_admin || MANAGER_DESIGNATION_RE.test(d.designation || "") || isTLOfAnyTeam(d.doc_id));
+  }
+  function myLeaveTL() {
+    var t = (state.teams || []).find(function (x) { return x.id === state.doer.team_id; });
+    return t && t.tl_doc_id ? t.tl_doc_id : null;
+  }
   // Same modal for both "New Leave Request" and "Edit" — pass an existing
   // leave row to edit it in place (leaveEdit on the backend), or nothing for
   // a brand-new request (leaveRequestCreate). Editing a request that was
   // already Approved/Rejected quietly puts it back to Pending on save — the
   // modal says so up front so it's never a surprise.
   function openNewLeaveModal(existing) {
+    if (!existing || !existing.id) existing = null;
     var isEdit = !!existing;
     var wasDecided = isEdit && (existing.status === "Approved" || existing.status === "Rejected");
     openModal(
@@ -8310,6 +8323,13 @@
             : '<div class="sub" style="margin:-4px 0 10px">Editing your Pending request.</div>')
         : '<div class="sub" style="margin:-4px 0 10px">Leave balance: <b>NA</b> — not tracked yet.</div>') +
       '<div class="field"><label>Leave type</label><select id="lvType"><option>Casual</option><option>Sick</option><option>Short Leave</option><option>Other</option></select></div>' +
+      (!isEdit && !myLeaveTL()
+        ? '<div class="field"><label>Approver (your manager)</label><select id="lvApprover"><option value="">— Select your manager —</option>' +
+          (state.doers || []).filter(function (d) { return d.doc_id !== state.doer.doc_id && isManagerLevelDoer(d); })
+            .sort(function (a, b) { return (a.delegation_name || a.name || "").localeCompare(b.delegation_name || b.name || ""); })
+            .map(function (d) { return '<option value="' + esc(d.doc_id) + '">' + esc(d.delegation_name || d.name) + (d.designation ? " — " + esc(d.designation) : "") + "</option>"; }).join("") +
+          '</select><div class="sub" style="margin-top:4px">You\'re not in a team yet, so pick who should approve this. Only manager-level people are listed.</div></div>'
+        : "") +
       '<div id="lvDatesWrap"></div>' +
       '<div class="field"><label>Reason</label><textarea id="lvReason" rows="3" placeholder="Why are you taking this leave?"></textarea></div>' +
       '<div class="modal-err" id="lvErr"></div>' +
@@ -8360,11 +8380,16 @@
         payload.start_date = start; payload.end_date = end;
       }
       if (!reason) { errEl.textContent = "Reason is required."; return; }
+      var apSel = document.getElementById("lvApprover");
+      if (apSel) {
+        if (!apSel.value) { errEl.textContent = "Please select your manager as the approver."; return; }
+        payload.approver_doc_id = apSel.value;
+      }
       var btn = document.getElementById("lvSubmit"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>' + (isEdit ? "Saving…" : "Submitting…");
-      api(isEdit ? "leaveEdit" : "leaveRequestCreate", payload).then(function () {
+      api(isEdit ? "leaveEdit" : (payload.approver_doc_id ? "leaveRequestCreateWithApprover" : "leaveRequestCreate"), payload).then(function () {
         return api("leaveList").then(function (v) {
           state.leaves = v; closeModal(); renderLeavePage();
-          toast(isEdit ? (wasDecided ? "Leave updated — sent back for re-approval." : "Leave request updated.") : "Leave request submitted — your TL has been emailed.");
+          toast(isEdit ? (wasDecided ? "Leave updated — sent back for re-approval." : "Leave request updated.") : "Leave request submitted — your " + (payload.approver_doc_id ? "manager" : "TL") + " has been emailed.");
         });
       }).catch(function (e) { errEl.textContent = e.message; btn.disabled = false; btn.textContent = isEdit ? "Save Changes" : "Submit Request"; });
     });
