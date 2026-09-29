@@ -163,6 +163,31 @@
   .btn.ghost{background:none;border:1px dashed var(--line);color:var(--sub)}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .hidden{display:none!important}
+  /* Admin Edit/Delete buttons (every module) — small and quiet so they
+     don't crowd the normal row actions. */
+  .adm-actions{display:inline-flex;gap:4px;margin-left:4px;vertical-align:middle;flex-wrap:wrap}
+  .adm-btn{font:inherit;font-size:11.5px;font-weight:600;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--sub);cursor:pointer;line-height:1.2}
+  .adm-btn:hover{color:var(--ink);border-color:var(--sub)}
+  .adm-btn.adm-del:hover{color:#fff;background:var(--danger);border-color:var(--danger)}
+  /* Press & Blogs */
+  .press-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .press-card{display:flex;flex-direction:column;gap:8px;padding:16px;overflow:hidden}
+  .press-img{width:calc(100% + 32px);margin:-16px -16px 4px;height:170px;object-fit:cover;display:block}
+  .press-top{display:flex;gap:6px;flex-wrap:wrap}
+  .press-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(var(--vibe-brand-rgb,255,80,1),.12);color:var(--brand)}
+  .press-title{font-weight:700;font-size:15px;line-height:1.35}
+  .press-summary{font-size:13px;color:var(--sub);line-height:1.5;white-space:pre-line}
+  .press-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:auto}
+  .press-actions .btn{padding:6px 12px;font-size:12.5px;text-decoration:none}
+  .press-embed iframe{width:100%;height:520px;border:0;border-radius:10px;background:#fff}
+  /* Sidebar — tighter so the menu gets the space, not the footer */
+  .sidebar .sidebar-nav .nav-item{padding:8px 12px}
+  .sidebar .attend-widget{display:flex;align-items:center;gap:8px;padding:7px 8px 7px 10px}
+  .sidebar .attend-widget .attend-status{flex:1;min-width:0;font-size:11.5px;line-height:1.25}
+  .attend-widget .attend-status small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #attendActionBtn{width:auto!important;margin-top:0!important;padding:6px 10px;font-size:12px;white-space:nowrap;flex-shrink:0}
+  .sidebar .sidebar-footer{gap:6px}
+
 
   /* Landing — the very first screen a signed-out visitor sees, before the
      login screen. Nav bar + hero + an abstract floating-shapes illustration
@@ -351,15 +376,30 @@
   .nav-icon{flex-shrink:0;width:18px;text-align:center;filter:saturate(var(--icon-saturate,1));opacity:var(--icon-opacity,1)}
   .nav-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .soon-badge{margin-left:auto;font-size:9px;background:rgba(255,255,255,.12);color:var(--sidebar-sub);padding:2px 6px;border-radius:99px;font-weight:700;letter-spacing:.02em}
-  .sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid var(--sidebar-line)}
-  .who{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden}
-  .who small{display:block;color:var(--sidebar-sub);font-weight:400;font-size:12px}
-  .online-badge-wrap{position:relative;margin-bottom:10px}
-  .online-badge{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--sidebar-sub);background:rgba(255,255,255,.05);border:1px solid var(--sidebar-line);border-radius:99px;padding:5px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;width:100%;text-align:left;font-family:inherit}
-  .online-badge:hover{border-color:var(--sidebar-sub)}
-  .online-badge span{color:#fff}
-  .sidebar.collapsed .online-badge{padding:5px;justify-content:center}
-  .sidebar.collapsed .online-badge span{display:none}
+  /* Sidebar footer — one quiet stack, not a pile of separate bordered
+     cards. Only the punch-in/out status keeps a card treatment (it's the
+     one item that's actually an action); everything else below it is
+     plain rows with icon-only buttons, grouped by a single divider line
+     each, same pattern as a Google Workspace or Slack account footer. */
+  .sidebar-footer{margin-top:auto;padding-top:12px;border-top:1px solid var(--sidebar-line);display:flex;flex-direction:column;gap:10px}
+  .who{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .who small{display:block;color:var(--sidebar-sub);font-weight:400;font-size:11px;overflow:hidden;text-overflow:ellipsis}
+  .attend-widget{background:rgba(255,255,255,.04);border:1px solid var(--sidebar-line);border-radius:var(--radius-card,10px);padding:9px 10px}
+  .attend-status{font-size:12px;font-weight:600;color:var(--sidebar-ink);display:flex;align-items:center;gap:6px}
+  .attend-status .dot{width:8px;height:8px;border-radius:50%;background:var(--sidebar-sub);flex-shrink:0}
+  .attend-status.in .dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25);animation:attendPulse 1.6s ease-in-out infinite}
+  .attend-status.out .dot{background:var(--sidebar-sub)}
+  .attend-status small{display:block;color:var(--sidebar-sub);font-weight:400;margin-top:1px}
+  @keyframes attendPulse{0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,.25)}50%{box-shadow:0 0 0 6px rgba(34,197,94,.12)}}
+  .sidebar.collapsed .attend-widget{display:none}
+
+  /* Plain utility row — online count + search, no pill, no border, no bg. */
+  .footer-utility-row{display:flex;align-items:center;gap:6px}
+  .online-badge-wrap{position:relative;flex:1;min-width:0}
+  .online-badge{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--sidebar-sub);background:none;border:none;padding:6px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;width:100%;text-align:left;font-family:inherit;border-radius:7px}
+  .online-badge:hover{color:#fff;background:var(--sidebar-hover)}
+  .online-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0}
+  .sidebar.collapsed .online-badge span:not(.online-dot){display:none}
   /* Click-to-see-who's-online popover — a hover tooltip alone isn't
      discoverable enough, per "they can see who are online". */
   .online-popover{position:absolute;bottom:calc(100% + 8px);left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 34px -12px rgba(0,0,0,.45);padding:8px;max-height:220px;overflow-y:auto;z-index:60}
@@ -369,18 +409,15 @@
   .online-popover-row .dot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0}
   .online-popover-empty{color:var(--sub);font-size:12px;padding:8px 6px}
   .sidebar.collapsed .online-popover{left:calc(100% + 10px);bottom:0}
-  .attend-widget{background:rgba(255,255,255,.05);border:1px solid var(--sidebar-line);border-radius:10px;padding:9px 10px;margin-bottom:10px}
-  .attend-status{font-size:12px;font-weight:600;color:var(--sidebar-ink);display:flex;align-items:center;gap:6px}
-  .attend-status .dot{width:8px;height:8px;border-radius:50%;background:var(--sidebar-sub);flex-shrink:0}
-  .attend-status.in .dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25);animation:attendPulse 1.6s ease-in-out infinite}
-  .attend-status.out .dot{background:var(--sidebar-sub)}
-  .attend-status small{display:block;color:var(--sidebar-sub);font-weight:400;margin-top:1px}
-  @keyframes attendPulse{0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,.25)}50%{box-shadow:0 0 0 6px rgba(34,197,94,.12)}}
-  .sidebar.collapsed .attend-widget{display:none}
-  /* Sidebar is always dark, so its logout button must use sidebar tokens, not the
-     theme-dependent global --ink/--line (which turn near-black-on-black in light mode). */
-  .sidebar-footer .btn.secondary{color:var(--sidebar-ink);border-color:var(--sidebar-line);background:rgba(255,255,255,.04)}
-  .sidebar-footer .btn.secondary:hover{color:#fff;border-color:var(--sidebar-sub);background:var(--sidebar-hover)}
+
+  /* Icon-only utility buttons (search, theme, logout) — a tooltip via
+     title="" carries the label instead of always-visible button text, so
+     these read as one compact cluster rather than three separate
+     full-width bordered buttons. */
+  .footer-icon-btn{flex-shrink:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:7px;color:var(--sidebar-sub);font-size:14px;cursor:pointer;font-family:inherit}
+  .footer-icon-btn:hover{color:#fff;background:var(--sidebar-hover)}
+  .account-row{display:flex;align-items:center;gap:4px}
+  .account-row .who{flex:1;cursor:pointer}
 
   /* Collapsed sidebar rail */
   .sidebar.collapsed{width:64px;padding:20px 10px}
@@ -392,9 +429,9 @@
   .sidebar.collapsed .soon-badge{display:none}
   .sidebar.collapsed .nav-item{justify-content:center;padding:10px 0}
   .sidebar.collapsed .who-text{display:none}
-  .sidebar.collapsed .sidebar-footer{display:flex;flex-direction:column;align-items:center}
-  .sidebar.collapsed #logoutBtn .btn-label,.sidebar.collapsed #themeToggleBtn .btn-label{display:none}
-  .sidebar.collapsed #logoutBtn,.sidebar.collapsed #themeToggleBtn{padding:9px;width:auto}
+  .sidebar.collapsed .sidebar-footer{align-items:center}
+  .sidebar.collapsed .footer-utility-row,.sidebar.collapsed .account-row{flex-direction:column;gap:8px}
+  .sidebar.collapsed .online-badge-wrap{flex:none}
   @media (max-width:820px){ .sidebar-toggle{display:none} }
 
   main{flex:1;padding:26px 34px;min-width:0}
@@ -1162,16 +1199,20 @@
     <div class="sidebar-footer">
       <div class="attend-widget hidden" id="attendWidget">
         <div class="attend-status" id="attendStatusText">—</div>
-        <button class="btn" id="attendActionBtn" style="width:100%;margin-top:6px">Punch In</button>
+        <button class="btn" id="attendActionBtn" style="width:100%;margin-top:8px">Punch In</button>
       </div>
-      <div class="online-badge-wrap">
-        <button type="button" class="online-badge" id="onlineBadge" title="Click to see who's online">🟢 <span id="onlineCount">–</span> online now</button>
-        <div class="online-popover hidden" id="onlinePopover"></div>
+      <div class="footer-utility-row">
+        <div class="online-badge-wrap">
+          <button type="button" class="online-badge" id="onlineBadge" title="Click to see who's online"><span class="online-dot"></span><span id="onlineCount">–</span><span> online now</span></button>
+          <div class="online-popover hidden" id="onlinePopover"></div>
+        </div>
+        <button type="button" class="footer-icon-btn" id="globalSearchBtn" title="Search Workspace">🔎</button>
       </div>
-      <button class="btn secondary" id="globalSearchBtn" style="width:100%;margin-bottom:10px">🔎<span class="btn-label"> Search Workspace</span></button>
-      <div class="who who-text" id="whoName" title="My Profile" style="cursor:pointer">—</div>
-      <button class="btn secondary" id="themeToggleBtn" title="Switch theme (system / light / dark)" style="margin-top:10px;width:100%">🖥️<span class="btn-label"> Theme</span></button>
-      <button class="btn secondary" id="logoutBtn" style="margin-top:8px;width:100%">🚪<span class="btn-label"> Log out</span></button>
+      <div class="account-row">
+        <div class="who who-text" id="whoName" title="My Profile">—</div>
+        <button class="footer-icon-btn" id="themeToggleBtn" title="Switch theme (system / light / dark)">🖥️</button>
+        <button class="footer-icon-btn" id="logoutBtn" title="Log out">🚪</button>
+      </div>
     </div>
   </div>
   <main>
@@ -1344,6 +1385,22 @@
         <button class="btn hidden" id="newPollBtn">+ New Poll</button>
       </div>
       <div class="card"><div id="pollsListWrap"></div></div>
+    </div>
+
+    <div id="view-press" class="hidden">
+      <div class="page-head">
+        <h2>📰 Press &amp; Blogs</h2>
+        <button class="btn hidden" id="newPressBtn">+ Add Post</button>
+      </div>
+      <div class="page-sub" style="margin-top:-14px">Our LinkedIn &amp; Instagram posts, news coverage and blog articles — all in one place.</div>
+      <div class="tabs" id="pressTabs" style="margin-bottom:14px">
+        <button class="tab active" data-pf="All">All</button>
+        <button class="tab" data-pf="LinkedIn">💼 LinkedIn</button>
+        <button class="tab" data-pf="Instagram">📸 Instagram</button>
+        <button class="tab" data-pf="Blog">✍️ Blogs</button>
+        <button class="tab" data-pf="Press / News">📰 Press</button>
+      </div>
+      <div id="pressListWrap"></div>
     </div>
 
     <div id="view-ideabox" class="hidden">
@@ -1869,6 +1926,8 @@
   var SUPABASE_URL = "https://asbgfjngxsabnnzgxugu.supabase.co";
   var ANON_KEY = "sb_publishable_puw8o_XzDvXmitIaNZvCtQ_5UGjXTBB";
   var FN_URL = SUPABASE_URL + "/functions/v1/deleg-api";
+  var ADMIN_FN_URL = SUPABASE_URL + "/functions/v1/deleg-admin";
+  var ADMIN_FN_ACTIONS = ["adminRecordUpdate", "adminRecordDelete", "pressList", "pressCreate", "createNotification", "getMyNotifications", "markNotificationSeen"];
 
   // Mirrors the backend's NOTIF_TYPES registry (index.ts) — used only as the
   // demo-mode fallback so the Settings UI has something to render before a
@@ -1911,7 +1970,10 @@
   function api(action, payload) {
     if (state.demo) return demoApi(action, payload || {});
     var body = Object.assign({ action: action }, payload || {});
-    return fetch(FN_URL, {
+    // Newer actions (admin Edit/Delete, Press & Blogs, notifications) live in
+    // the small companion function "deleg-admin"; everything else in deleg-api.
+    var url = ADMIN_FN_ACTIONS.indexOf(action) !== -1 ? ADMIN_FN_URL : FN_URL;
+    return fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
       body: JSON.stringify(body)
@@ -2693,6 +2755,14 @@
             break;
           }
 
+          case "pressList": resolve((state.press || []).slice()); break;
+          case "pressCreate": {
+            if (!state.press) state.press = [];
+            var prId = "PR" + Math.random().toString(36).slice(2, 8).toUpperCase();
+            state.press.unshift({ id: prId, title: p.title, platform: p.platform, url: p.url, summary: p.summary, image_url: p.image_url, published_on: p.published_on, pinned: !!p.pinned, created_at: new Date().toISOString() });
+            resolve({ id: prId }); break;
+          }
+          case "adminRecordUpdate": case "adminRecordDelete": resolve({ id: p.id }); break;
           default: resolve(null);
         }
       }, 250);
@@ -3053,7 +3123,9 @@
     if (!btn) return;
     var icon = theme === "dark" ? "🌙" : theme === "light" ? "☀️" : "🖥️";
     var label = theme === "dark" ? "Dark" : theme === "light" ? "Light" : "System";
-    btn.innerHTML = icon + '<span class="btn-label"> ' + label + '</span>';
+    // Icon-only button now (see .footer-icon-btn) — the label lives in the
+    // tooltip instead of always-visible text next to three other buttons.
+    btn.textContent = icon;
     btn.title = "Theme: " + label + " (click to change)";
   }
   applyTheme(getStoredTheme());
@@ -3851,9 +3923,9 @@
       if (!rows || !rows.length) { wrap.innerHTML = '<div class="empty">No attendance recorded for this range.</div>'; return; }
       var trs = rows.map(function (r) {
         var missing = r.punch_in_at && !r.punch_out_at;
-        return "<tr><td>" + esc(fmtDate(r.date)) + "</td><td>" + esc(doerName(r.doc_id)) + "</td><td>" + fmtClockTime(r.punch_in_at) + "</td><td>" + (r.punch_out_at ? fmtClockTime(r.punch_out_at) : (missing ? '<span style="color:var(--danger)">Not punched out</span>' : "—")) + "</td><td>" + attendanceHoursLabel(r) + "</td></tr>";
+        return "<tr><td>" + esc(fmtDate(r.date)) + "</td><td>" + esc(doerName(r.doc_id)) + "</td><td>" + fmtClockTime(r.punch_in_at) + "</td><td>" + (r.punch_out_at ? fmtClockTime(r.punch_out_at) : (missing ? '<span style="color:var(--danger)">Not punched out</span>' : "—")) + "</td><td>" + attendanceHoursLabel(r) + "</td>" + (state.doer.is_admin ? "<td>" + admBtns("attendance", r) + "</td>" : "") + "</tr>";
       }).join("");
-      wrap.innerHTML = "<table><thead><tr><th>Date</th><th>Staff</th><th>Punch In</th><th>Punch Out</th><th>Hours</th></tr></thead><tbody>" + trs + "</tbody></table>";
+      wrap.innerHTML = "<table><thead><tr><th>Date</th><th>Staff</th><th>Punch In</th><th>Punch Out</th><th>Hours</th>" + (state.doer.is_admin ? "<th></th>" : "") + "</tr></thead><tbody>" + trs + "</tbody></table>";
     }).catch(function (e) { wrap.innerHTML = '<div class="empty">' + esc(e.message || "Couldn't load team attendance.") + "</div>"; });
   }
   function renderAttendancePage() {
@@ -3928,6 +4000,7 @@
     { key: "counterroom", icon: "🔢", name: "Counter Room", status: "live", goto: "counterroom", category: "production" },
     { key: "kudos", icon: "🎉", name: "Kudos Wall", status: "live", goto: "kudos", category: "culture" },
     { key: "polls", icon: "🗳️", name: "Polls", status: "live", goto: "polls", category: "culture" },
+    { key: "press", icon: "📰", name: "Press & Blogs", status: "live", goto: "press", category: "culture" },
     { key: "ideabox", icon: "💡", name: "Idea Box", status: "live", goto: "ideabox", category: "culture" },
     { key: "teamcalendar", icon: "📅", name: "Team Calendar", status: "live", goto: "teamcalendar", category: "work" },
     { key: "notes", icon: "📝", name: "Notes", status: "live", goto: "notes", category: "work" },
@@ -4361,7 +4434,7 @@
     }
   });
 
-  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "ideabox", "teamcalendar", "notes", "todo"];
+  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "ideabox", "teamcalendar", "notes", "todo"];
   // Per-module choice of whether an external-URL-backed module opens in a
   // real new browser tab ("redirect") or is framed inside Workspace
   // ("embed") — Settings → Modules → Module Open Behavior for the 3
@@ -4434,6 +4507,7 @@
     if (view === "ordertracking") renderOrderTracking();
     if (view === "kudos") renderKudosWall();
     if (view === "polls") renderPolls();
+    if (view === "press") { renderPress(); loadPress(); }
     if (view === "ideabox") renderIdeaBox();
     if (view === "teamcalendar") renderTeamCalendar();
     if (view === "notes") renderNotes();
@@ -5216,6 +5290,7 @@
       if (canManage) {
         actions += '<button class="btn secondary" data-act="edit" data-id="' + esc(t.id) + '">Edit</button>';
       }
+      if (state.doer.is_admin) actions += admBtns("task", t);
       var remarkSrc = t.completion_remarks || t.history || "";
       var remarkPreview = "";
       if (remarkSrc) {
@@ -5729,7 +5804,7 @@
         "<td>" + fmtDate(a.valid_from) + "</td>" +
         '<td class="' + (soon ? "overdue" : "") + '">' + fmtDate(a.valid_to) + "</td>" +
         "<td>" + esc(a.notes || "—") + "</td>" +
-        (canEdit ? '<td><button class="btn secondary" data-sno="' + esc(a.sno) + '" data-act="editAudit">Update</button></td>' : "") +
+        (canEdit ? '<td><button class="btn secondary" data-sno="' + esc(a.sno) + '" data-act="editAudit">Update</button>' + admBtns("audit", a) + '</td>' : "") +
         "</tr>";
     }).join("");
     wrap.innerHTML = '<table><thead><tr><th>Audit / Certificate</th><th>Frequency</th><th>Valid From</th><th>Valid To</th><th>Notes</th>' + (canEdit ? "<th></th>" : "") + "</tr></thead><tbody>" + rows + "</tbody></table>";
@@ -7664,7 +7739,7 @@
         '<td style="text-align:center">' + esc(v.num_persons) + "</td>" +
         "<td>" + esc(v.created_by || "—") + (attendeeNames ? ' <span class="sub">+ ' + attendeeNames + "</span>" : "") + "</td>" +
         '<td><span class="module-badge ' + (upcoming ? "live" : "soon") + '">' + (upcoming ? "Upcoming" : "Past") + "</span></td>" +
-        '<td><button class="btn secondary bv-add-attendee-btn" data-id="' + esc(v.id) + '" style="padding:5px 10px;font-size:12px">+ Add</button></td></tr>';
+        '<td><button class="btn secondary bv-add-attendee-btn" data-id="' + esc(v.id) + '" style="padding:5px 10px;font-size:12px">+ Add</button>' + admBtns("buyervisit", v) + '</td></tr>';
     }).join("");
     wrap.innerHTML = "<table><thead><tr><th>Buyer</th><th>When</th><th>Persons</th><th>Attending</th><th>Status</th><th></th></tr></thead><tbody>" + rows + "</tbody></table>";
     wrap.querySelectorAll(".bv-add-attendee-btn").forEach(function (btn) {
@@ -7809,9 +7884,9 @@
         "<td>" + d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + "</td>" +
         "<td>" + esc(v.reason || "—") + "</td>" +
         "<td>" + esc(v.created_by || "—") + "</td>" +
-        '<td><span class="module-badge ' + (upcoming ? "live" : "soon") + '">' + (upcoming ? "Upcoming" : "Past") + "</span></td></tr>";
+        '<td><span class="module-badge ' + (upcoming ? "live" : "soon") + '">' + (upcoming ? "Upcoming" : "Past") + "</span></td>" + (state.doer.is_admin ? "<td>" + admBtns("inspection", v) + "</td>" : "") + "</tr>";
     }).join("");
-    wrap.innerHTML = "<table><thead><tr><th>Person</th><th>Buyer</th><th>When</th><th>Reason</th><th>Logged by</th><th>Status</th></tr></thead><tbody>" + rows + "</tbody></table>";
+    wrap.innerHTML = "<table><thead><tr><th>Person</th><th>Buyer</th><th>When</th><th>Reason</th><th>Logged by</th><th>Status</th>" + (state.doer.is_admin ? "<th></th>" : "") + "</tr></thead><tbody>" + rows + "</tbody></table>";
   }
   var inspSaveBtn = document.getElementById("inspSaveBtn");
   if (inspSaveBtn) {
@@ -7839,6 +7914,270 @@
       });
     });
   }
+
+  // ---------- Admin: Edit / Delete on every module ----------
+  // Every list below (Leave, Reimbursement, Buyer Visit, Inspection, Queries,
+  // Help Slips, Tasks, Audits, FAQ, Kudos, Polls, Ideas, Order Tracking,
+  // Salary, Attendance, Press & Blogs) calls admBtns(kind, row) to get a small
+  // "Edit" + "Delete" pair — rendered ONLY for admins. One shared modal edits
+  // the fields listed in ADM_DEFS; the backend (adminRecordUpdate /
+  // adminRecordDelete) re-checks is_admin and only allows the same columns.
+  var ADM_ROWS = {};
+  var PRESS_PLATFORMS = ["LinkedIn", "Instagram", "Blog", "Press / News", "YouTube", "Other"];
+  function admDt(v) { // ISO -> value for <input type="datetime-local">
+    if (!v) return ""; var d = new Date(v); if (isNaN(d)) return "";
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + "T" + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  function admReloadLeaves() { return api("leaveList").then(function (v) { state.leaves = v; renderLeavePage(); renderHome(); }); }
+  var ADM_DEFS = {
+    leave: { label: "leave request", stateKey: "leaves", reload: admReloadLeaves, fields: [
+      { k: "leave_type", label: "Leave type", type: "select", options: ["Casual", "Sick", "Short Leave", "Other"] },
+      { k: "start_date", label: "Start date", type: "date" }, { k: "end_date", label: "End date", type: "date" },
+      { k: "start_time", label: "From time (short leave)", type: "time" }, { k: "end_time", label: "To time (short leave)", type: "time" },
+      { k: "reason", label: "Reason", type: "textarea" },
+      { k: "status", label: "Status", type: "select", options: ["Pending", "Approved", "Rejected"] },
+      { k: "decision_note", label: "Decision note", type: "textarea" }] },
+    reimbursement: { label: "reimbursement", stateKey: "reimbursements", reload: function () { return api("reimbursementList").then(function (v) { state.reimbursements = v; renderReimbursementPage(); renderHome(); }); }, fields: [
+      { k: "purpose", label: "Purpose / trip", type: "text" }, { k: "total_amount", label: "Total amount (₹)", type: "number" },
+      { k: "status", label: "Status", type: "select", options: ["Pending", "Approved", "Rejected", "Paid"] },
+      { k: "stage", label: "Stage", type: "select", options: ["tl", "second", "final", "accounts", "done"] },
+      { k: "payment_ref", label: "Payment reference", type: "text" }, { k: "accounts_note", label: "Accounts note", type: "textarea" }] },
+    buyervisit: { label: "buyer visit", stateKey: "buyerVisits", reload: function () { return api("getBuyerVisits", { requester_doc_id: state.doer.doc_id }).then(function (v) { state.buyerVisits = v; renderBuyerVisits(); renderHome(); }); }, fields: [
+      { k: "buyer_name", label: "Buyer name", type: "text" }, { k: "visit_at", label: "Visit date & time", type: "datetime" },
+      { k: "num_persons", label: "Number of persons", type: "number" }, { k: "location", label: "Location", type: "text" }] },
+    inspection: { label: "inspection", stateKey: "inspections", reload: function () { return api("getInspections").then(function (v) { state.inspections = v; renderInspections(); renderHome(); }); }, fields: [
+      { k: "visitor_name", label: "Person's name", type: "text" }, { k: "buyer_name", label: "Buyer name", type: "text" },
+      { k: "visit_at", label: "Visit date & time", type: "datetime" }, { k: "reason", label: "Reason", type: "text" }, { k: "location", label: "Location", type: "text" }] },
+    ticket: { label: "query / help slip", stateKey: "tickets", reload: function () { return api("listTickets").then(function (v) { state.tickets = v; renderTickets(); renderHelpSlips(); renderHome(); }); }, fields: [
+      { k: "subject", label: "Subject", type: "text" }, { k: "problem", label: "Problem", type: "textarea" }, { k: "department", label: "Department", type: "text" },
+      { k: "status", label: "Status", type: "select", options: ["Open", "Acknowledged", "In Progress", "Resolved", "Closed"] }] },
+    task: { label: "task", stateKey: "tasks", reload: function () { return api("listTasks").then(function (v) { state.tasks = v; renderTasks(); renderHome(); }); }, fields: [
+      { k: "task", label: "Task", type: "textarea" }, { k: "assignee", label: "Assignee", type: "text" }, { k: "deadline", label: "Deadline", type: "datetime" },
+      { k: "status", label: "Status", type: "select", options: ["Pending", "Completed"] }, { k: "admin_notes", label: "Admin notes", type: "textarea" }] },
+    audit: { label: "audit record", stateKey: "audits", idOf: function (r) { return r.sno; }, reload: function () { return api("getAudits").then(function (v) { state.audits = v; renderAudits(); renderHome(); }); }, fields: [
+      { k: "name", label: "Audit / certificate", type: "text" }, { k: "freq", label: "Frequency", type: "text" },
+      { k: "valid_from", label: "Valid from", type: "dateTs" }, { k: "valid_to", label: "Valid to", type: "dateTs" }, { k: "notes", label: "Notes", type: "textarea" }] },
+    faq: { label: "FAQ", stateKey: "faqs", reload: function () { return api("getFaqs").then(function (v) { state.faqs = v; renderFaqs(); }); }, fields: [
+      { k: "question", label: "Question", type: "text" }, { k: "answer", label: "Answer", type: "textarea" }] },
+    kudos: { label: "kudos", stateKey: "kudos", reload: function () { renderKudosWall(); if (typeof renderKudosHomeWidget === "function") renderKudosHomeWidget(); return Promise.resolve(); }, fields: [
+      { k: "emoji", label: "Emoji", type: "text" }, { k: "message", label: "Message", type: "textarea" }] },
+    poll: { label: "poll", stateKey: "polls", reload: function () { renderPolls(); return Promise.resolve(); }, fields: [
+      { k: "question", label: "Question", type: "text" }, { k: "is_closed", label: "Poll is closed", type: "checkbox" }] },
+    idea: { label: "idea", stateKey: "ideas", reload: function () { renderIdeaBox(); return Promise.resolve(); }, fields: [
+      { k: "text", label: "Idea", type: "textarea" }, { k: "status", label: "Status", type: "select", options: ["New", "Under review", "Actioned", "Declined"] },
+      { k: "admin_note", label: "Admin note", type: "textarea" }] },
+    ordertracking: { label: "order", stateKey: "orderTracking", reload: function () { renderOrderTracking(); return Promise.resolve(); }, fields: [
+      { k: "order_ref", label: "Order ref", type: "text" }, { k: "buyer_name", label: "Buyer", type: "text" },
+      { k: "stage", label: "Stage", type: "select", options: ["Order Received", "In Production", "QC", "Dispatched", "In Transit", "Delivered"] },
+      { k: "eta", label: "ETA", type: "date" }, { k: "notes", label: "Notes", type: "textarea" }] },
+    salary: { label: "payslip", reload: function () { var sel = document.getElementById("salDoerSel"); if (sel) sel.dispatchEvent(new Event("change")); else renderSalaryPage(); return Promise.resolve(); }, fields: [
+      { k: "month", label: "Month (YYYY-MM)", type: "text" }, { k: "gross", label: "Gross (₹)", type: "number" }, { k: "net", label: "Net (₹)", type: "number" },
+      { k: "remarks", label: "Remarks", type: "text" }] },
+    attendance: { label: "attendance entry", idOf: function (r) { return r.doc_id + "|" + r.date; }, reload: function () { renderAttendanceTeamView(); return Promise.resolve(); }, fields: [
+      { k: "punch_in_at", label: "Punch in", type: "datetime" }, { k: "punch_out_at", label: "Punch out", type: "datetime" }] },
+    press: { label: "post", stateKey: "press", reload: function () { return loadPress(); }, fields: [
+      { k: "title", label: "Title", type: "text" }, { k: "platform", label: "Platform", type: "select", options: PRESS_PLATFORMS },
+      { k: "url", label: "Link to the post", type: "text" }, { k: "summary", label: "Short summary", type: "textarea" },
+      { k: "image_url", label: "Image link (optional)", type: "text" }, { k: "published_on", label: "Published on", type: "date" },
+      { k: "pinned", label: "Pin to top", type: "checkbox" }] }
+  };
+  function admIdOf(kind, row) { var def = ADM_DEFS[kind]; return def && def.idOf ? def.idOf(row) : row.id; }
+  // Returns the Edit + Delete buttons (admins only; "" for everyone else).
+  function admBtns(kind, row) {
+    if (!state.doer || !state.doer.is_admin || !row || !ADM_DEFS[kind]) return "";
+    var id = admIdOf(kind, row);
+    ADM_ROWS[kind + "::" + id] = row;
+    return '<span class="adm-actions"><button type="button" class="adm-btn adm-edit" data-kind="' + kind + '" data-id="' + esc(id) + '" title="Edit (admin)">✏️ Edit</button>' +
+      '<button type="button" class="adm-btn adm-del" data-kind="' + kind + '" data-id="' + esc(id) + '" title="Delete (admin)">🗑️ Delete</button></span>';
+  }
+  function admRemoveFromState(kind, id) {
+    var def = ADM_DEFS[kind];
+    if (def.stateKey && Array.isArray(state[def.stateKey])) {
+      state[def.stateKey] = state[def.stateKey].filter(function (r) { return String(admIdOf(kind, r)) !== String(id); });
+    }
+  }
+  function admOpenEdit(kind, id) {
+    var def = ADM_DEFS[kind], row = ADM_ROWS[kind + "::" + id];
+    if (!def || !row) return;
+    var html = "<h3>Edit " + esc(def.label) + '</h3><div class="sub" style="margin:-4px 0 10px">Admin edit — changes save straight away, no approval emails are sent.</div>';
+    def.fields.forEach(function (f, i) {
+      var v = row[f.k], fid = "admF" + i, input;
+      if (f.type === "textarea") input = '<textarea id="' + fid + '" rows="3">' + esc(v == null ? "" : v) + "</textarea>";
+      else if (f.type === "select") {
+        var opts = f.options.slice(); if (v && opts.indexOf(v) === -1) opts.unshift(v);
+        input = '<select id="' + fid + '">' + opts.map(function (o) { return '<option' + (o === v ? " selected" : "") + ">" + esc(o) + "</option>"; }).join("") + "</select>";
+      }
+      else if (f.type === "checkbox") input = '<label style="display:flex;gap:8px;align-items:center"><input id="' + fid + '" type="checkbox" style="width:auto"' + (v ? " checked" : "") + " /> " + esc(f.label) + "</label>";
+      else if (f.type === "datetime") input = '<input id="' + fid + '" type="datetime-local" value="' + admDt(v) + '" />';
+      else if (f.type === "dateTs" || f.type === "date") input = '<input id="' + fid + '" type="date" value="' + esc(v ? String(v).slice(0, 10) : "") + '" />';
+      else if (f.type === "time") input = '<input id="' + fid + '" type="time" value="' + esc(v || "") + '" />';
+      else if (f.type === "number") input = '<input id="' + fid + '" type="number" value="' + esc(v == null ? "" : v) + '" />';
+      else input = '<input id="' + fid + '" value="' + esc(v == null ? "" : v) + '" />';
+      html += '<div class="field">' + (f.type === "checkbox" ? "" : "<label>" + esc(f.label) + "</label>") + input + "</div>";
+    });
+    html += '<div class="modal-err" id="admErr"></div><div class="modal-actions"><button class="btn secondary" id="admCancel">Cancel</button><button class="btn" id="admSave">Save</button></div>';
+    openModal(html);
+    document.getElementById("admCancel").addEventListener("click", closeModal);
+    document.getElementById("admSave").addEventListener("click", function () {
+      var patch = {};
+      def.fields.forEach(function (f, i) {
+        var el = document.getElementById("admF" + i), val;
+        if (f.type === "checkbox") val = el.checked;
+        else if (f.type === "datetime") val = el.value ? new Date(el.value).toISOString() : null;
+        else if (f.type === "dateTs") val = el.value ? new Date(el.value + "T00:00:00").toISOString() : null;
+        else if (f.type === "number") val = el.value === "" ? null : Number(el.value);
+        else val = el.value.trim() === "" ? null : el.value.trim();
+        patch[f.k] = val;
+      });
+      if (kind === "leave") patch.is_short_leave = patch.leave_type === "Short Leave";
+      var btn = document.getElementById("admSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      api("adminRecordUpdate", { requester_doc_id: state.doer.doc_id, kind: kind, id: id, patch: patch }).then(function () {
+        Object.keys(patch).forEach(function (k) { if (patch[k] !== undefined) row[k] = patch[k]; });
+        closeModal(); toast("Saved.");
+        return def.reload();
+      }).catch(function (e) { document.getElementById("admErr").textContent = e.message; btn.disabled = false; btn.textContent = "Save"; });
+    });
+  }
+  function admOpenDelete(kind, id) {
+    var def = ADM_DEFS[kind];
+    if (!def) return;
+    openModal("<h3>Delete this " + esc(def.label) + "?</h3>" +
+      '<div class="sub">This removes it for everyone and can\'t be undone.</div>' +
+      '<div class="modal-err" id="admDelErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="admDelCancel">Cancel</button><button class="btn" id="admDelOk" style="background:var(--danger);color:#fff">Delete</button></div>');
+    document.getElementById("admDelCancel").addEventListener("click", closeModal);
+    document.getElementById("admDelOk").addEventListener("click", function () {
+      var btn = document.getElementById("admDelOk"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Deleting…';
+      api("adminRecordDelete", { requester_doc_id: state.doer.doc_id, kind: kind, id: id }).then(function () {
+        admRemoveFromState(kind, id);
+        closeModal(); toast("Deleted.");
+        return def.reload();
+      }).catch(function (e) { document.getElementById("admDelErr").textContent = e.message; btn.disabled = false; btn.textContent = "Delete"; });
+    });
+  }
+  // Capture phase so a click on Edit/Delete inside a clickable card (e.g. a
+  // query card that opens its detail view) never also opens that card.
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest(".adm-btn");
+    if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    if (b.classList.contains("adm-edit")) admOpenEdit(b.dataset.kind, b.dataset.id);
+    else admOpenDelete(b.dataset.kind, b.dataset.id);
+  }, true);
+
+  // ---------- Press & Blogs ----------
+  // Company posts from LinkedIn / Instagram, press coverage and blog articles,
+  // all in one place. Admins (or anyone given "press" in managed modules)
+  // add posts; everyone can view. Instagram posts show an embedded preview.
+  var PRESS_ICONS = { "LinkedIn": "💼", "Instagram": "📸", "Blog": "✍️", "Press / News": "📰", "YouTube": "▶️", "Other": "🔗" };
+  function canManagePress() { return state.doer && (state.doer.is_admin || ((state.doer.managed_modules || []).indexOf("press") !== -1)); }
+  function pressEmbedUrl(p) {
+    var u = p.url || "";
+    var ig = u.match(/instagram\.com\/(?:[^\/]+\/)?(p|reel|tv)\/([A-Za-z0-9_-]+)/);
+    if (ig) return "https://www.instagram.com/" + ig[1] + "/" + ig[2] + "/embed";
+    var li = u.match(/urn:li:(share|activity|ugcPost):(\d+)/) || u.match(/activity-(\d+)/);
+    if (li) return "https://www.linkedin.com/embed/feed/update/urn:li:" + (li[2] ? li[1] + ":" + li[2] : "activity:" + li[1]);
+    return null;
+  }
+  function safeHttpUrl(u) { return /^https?:\/\//i.test(u || "") ? u : ""; }
+  function safeImgSrc(u) { return /^(https?:\/\/|data:image\/(png|jpe?g|webp|gif);base64,)/i.test(u || "") ? u : ""; }
+  // Shrinks a picked photo to max 1000px wide JPEG so it saves quickly.
+  function pressShrinkImage(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          var scale = Math.min(1, 1000 / img.width), c = document.createElement("canvas");
+          c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+          c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+          resolve(c.toDataURL("image/jpeg", 0.8));
+        };
+        img.onerror = reject; img.src = r.result;
+      };
+      r.onerror = reject; r.readAsDataURL(file);
+    });
+  }
+  function loadPress() {
+    return api("pressList").then(function (rows) { state.press = rows || []; renderPress(); }).catch(function (e) {
+      var wrap = document.getElementById("pressListWrap"); if (wrap) wrap.innerHTML = '<div class="empty">' + esc(e.message) + "</div>";
+    });
+  }
+  function renderPress() {
+    var wrap = document.getElementById("pressListWrap");
+    if (!wrap || !state.doer) return;
+    var addBtn = document.getElementById("newPressBtn");
+    if (addBtn) addBtn.classList.toggle("hidden", !canManagePress());
+    var filter = state.pressFilter || "All";
+    var list = (state.press || []).filter(function (p) { return filter === "All" || p.platform === filter; });
+    document.querySelectorAll("#pressTabs .tab").forEach(function (t) { t.classList.toggle("active", t.dataset.pf === filter); });
+    if (!list.length) { wrap.innerHTML = '<div class="empty">No posts here yet.' + (canManagePress() ? " Tap “+ Add Post” to add a LinkedIn / Instagram post or an article." : "") + "</div>"; return; }
+    wrap.innerHTML = '<div class="press-grid">' + list.map(function (p) {
+      var url = safeHttpUrl(p.url), img = safeImgSrc(p.image_url), embed = pressEmbedUrl(p);
+      return '<div class="card press-card">' +
+        (img ? '<img class="press-img" src="' + esc(img) + '" alt="" loading="lazy" />' : "") +
+        '<div class="press-top"><span class="press-badge">' + (PRESS_ICONS[p.platform] || "🔗") + " " + esc(p.platform) + "</span>" + (p.pinned ? '<span class="press-badge">📌 Pinned</span>' : "") + "</div>" +
+        '<div class="press-title">' + esc(p.title) + "</div>" +
+        (p.summary ? '<div class="press-summary">' + esc(p.summary) + "</div>" : "") +
+        '<div class="sub">' + (p.published_on ? esc(fmtHolidayDate(p.published_on)) : fmtDate(p.created_at)) + "</div>" +
+        '<div class="press-actions">' + (url ? '<a class="btn secondary" href="' + esc(url) + '" target="_blank" rel="noopener">Open post ↗</a>' : "") +
+        (embed ? '<button type="button" class="btn secondary press-embed-btn" data-embed="' + esc(embed) + '">Preview</button>' : "") +
+        admBtns("press", p) + "</div>" +
+        '<div class="press-embed"></div></div>';
+    }).join("") + "</div>";
+    wrap.querySelectorAll(".press-embed-btn").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var box = b.closest(".press-card").querySelector(".press-embed");
+        if (box.innerHTML) { box.innerHTML = ""; b.textContent = "Preview"; return; }
+        box.innerHTML = '<iframe src="' + esc(b.dataset.embed) + '" loading="lazy" allowfullscreen></iframe>';
+        b.textContent = "Hide preview";
+      });
+    });
+  }
+  function openNewPressModal() {
+    openModal("<h3>Add a post</h3>" +
+      '<div class="sub" style="margin:-4px 0 10px">Paste the link of a LinkedIn / Instagram post, a news article or a blog.</div>' +
+      '<div class="field"><label>Platform</label><select id="prPlatform">' + PRESS_PLATFORMS.map(function (o) { return "<option>" + o + "</option>"; }).join("") + "</select></div>" +
+      '<div class="field"><label>Link to the post</label><input id="prUrl" placeholder="https://www.linkedin.com/posts/…" /></div>' +
+      '<div class="field"><label>Title</label><input id="prTitle" placeholder="e.g. Rugs Creation at Domotex 2026" /></div>' +
+      '<div class="field"><label>Short summary (optional)</label><textarea id="prSummary" rows="3"></textarea></div>' +
+      '<div class="field"><label>Picture (optional)</label><input id="prImageFile" type="file" accept="image/*" /><div class="sub" style="margin:6px 0">…or paste an image link:</div><input id="prImage" placeholder="https://…jpg" /><img id="prImgPreview" alt="" style="display:none;max-width:100%;max-height:160px;margin-top:8px;border-radius:8px" /></div>' +
+      '<div class="field"><label>Published on (optional)</label><input id="prDate" type="date" /></div>' +
+      '<div class="field"><label style="display:flex;gap:8px;align-items:center"><input id="prPinned" type="checkbox" style="width:auto" /> Pin to top</label></div>' +
+      '<div class="modal-err" id="prErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="prCancel">Cancel</button><button class="btn" id="prSave">Add Post</button></div>');
+    document.getElementById("prUrl").addEventListener("change", function () {
+      var u = this.value.toLowerCase(), sel = document.getElementById("prPlatform");
+      if (u.indexOf("linkedin.com") !== -1) sel.value = "LinkedIn";
+      else if (u.indexOf("instagram.com") !== -1) sel.value = "Instagram";
+      else if (u.indexOf("youtube.com") !== -1 || u.indexOf("youtu.be") !== -1) sel.value = "YouTube";
+    });
+    var prPhoto = "";
+    document.getElementById("prImageFile").addEventListener("change", function () {
+      var f = this.files && this.files[0]; if (!f) return;
+      pressShrinkImage(f).then(function (d) {
+        prPhoto = d; var pv = document.getElementById("prImgPreview"); pv.src = d; pv.style.display = "block";
+      }).catch(function () { document.getElementById("prErr").textContent = "Couldn't read that picture."; });
+    });
+    document.getElementById("prCancel").addEventListener("click", closeModal);
+    document.getElementById("prSave").addEventListener("click", function () {
+      var title = document.getElementById("prTitle").value.trim(), url = document.getElementById("prUrl").value.trim();
+      var err = document.getElementById("prErr");
+      if (!title) { err.textContent = "Give the post a title."; return; }
+      if (url && !safeHttpUrl(url)) { err.textContent = "The link should start with https://"; return; }
+      var btn = document.getElementById("prSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      api("pressCreate", { requester_doc_id: state.doer.doc_id, title: title, url: url, platform: document.getElementById("prPlatform").value,
+        summary: document.getElementById("prSummary").value.trim(), image_url: prPhoto || document.getElementById("prImage").value.trim(),
+        published_on: document.getElementById("prDate").value || null, pinned: document.getElementById("prPinned").checked }).then(function () {
+        closeModal(); toast("Post added."); return loadPress();
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = "Add Post"; });
+    });
+  }
+  var newPressBtnEl = document.getElementById("newPressBtn");
+  if (newPressBtnEl) newPressBtnEl.addEventListener("click", openNewPressModal);
+  document.querySelectorAll("#pressTabs .tab").forEach(function (t) {
+    t.addEventListener("click", function () { state.pressFilter = t.dataset.pf; renderPress(); });
+  });
 
   // ---------- Shared status badge (Leave + Reimbursement) ----------
   function statusBadgeHtml(status) {
@@ -7897,6 +8236,7 @@
       state.leaveTab = "mine";
       document.querySelectorAll("#leaveTabs .tab").forEach(function (b) { b.classList.toggle("active", b.dataset.ltab === "mine"); });
     }
+    document.querySelectorAll("#leaveTabs .tab").forEach(function (b) { b.classList.toggle("active", b.dataset.ltab === (state.leaveTab || "mine")); });
     var list = leavesForTab(state.leaveTab).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
     if (!list.length) { wrap.innerHTML = '<div class="empty">No leave requests here yet.</div>'; return; }
     var showRequester = state.leaveTab !== "mine";
@@ -7908,7 +8248,8 @@
       // (see leaveEdit on the backend).
       var canEdit = l.doc_id === state.doer.doc_id || state.doer.is_admin;
       var actions = (canDecide ? '<button class="btn secondary leave-approve-btn" data-id="' + esc(l.id) + '" style="padding:5px 10px;font-size:12px">Approve</button> <button class="btn secondary leave-reject-btn" data-id="' + esc(l.id) + '" style="padding:5px 10px;font-size:12px">Reject</button> ' : "") +
-        (canEdit ? '<button class="btn secondary leave-edit-btn" data-id="' + esc(l.id) + '" style="padding:5px 10px;font-size:12px">Edit</button>' : "");
+        (canEdit && !state.doer.is_admin ? '<button class="btn secondary leave-edit-btn" data-id="' + esc(l.id) + '" style="padding:5px 10px;font-size:12px">Edit</button>' : "") +
+        admBtns("leave", l);
       return "<tr><td>" + (showRequester ? esc(doerName(l.doc_id)) + '<div class="sub">' + esc(l.leave_type) + (l.is_short_leave ? " · Short" : "") + "</div>" : esc(l.leave_type) + (l.is_short_leave ? '<div class="sub">Short leave</div>' : "")) + "</td>" +
         "<td>" + esc(leaveRange(l)) + "</td>" +
         "<td>" + esc((l.reason || "").slice(0, 80)) + "</td>" +
@@ -7928,8 +8269,13 @@
   }
   function decideLeave(id, decision) {
     api("leaveDecide", { id: id, decider_doc_id: state.doer.doc_id, decision: decision }).then(function () {
-      return api("leaveList").then(function (v) { state.leaves = v; renderLeavePage(); toast("Leave " + decision.toLowerCase() + "."); });
-    }).catch(function (e) { toast(e.message, true); });
+      return api("leaveList").then(function (v) { state.leaves = v; renderLeavePage(); renderHome(); toast("Leave " + decision.toLowerCase() + "."); });
+    }).catch(function (e) {
+      toast("Couldn't update the leave: " + e.message, true);
+      // The list on screen may be out of date (someone else already decided
+      // it) — reload so the buttons match reality.
+      admReloadLeaves().catch(function () {});
+    });
   }
   function promptRejectLeave(id) {
     openModal(
@@ -8096,7 +8442,7 @@
         "<td>" + statusBadgeHtml(r.status) + '<div class="sub" style="margin-top:2px">' + reimbStageLabel(r) + "</div></td>" +
         "<td>" + reimbTatHtml(r) + "</td>" +
         "<td>" + (billsHtml || "—") + "</td>" +
-        "<td><button class=\"btn secondary reimb-view-btn\" data-id=\"" + esc(r.id) + "\" style=\"padding:5px 10px;font-size:12px\">Details</button>" + (canAct ? " " + reimbActionButtonsHtml(r) : "") + "</td></tr>";
+        "<td><button class=\"btn secondary reimb-view-btn\" data-id=\"" + esc(r.id) + "\" style=\"padding:5px 10px;font-size:12px\">Details</button>" + (canAct ? " " + reimbActionButtonsHtml(r) : "") + admBtns("reimbursement", r) + "</td></tr>";
     }).join("");
     wrap.innerHTML = "<table><thead><tr><th>" + (showRequester ? "Requester" : "Request") + "</th><th>Amount</th><th>Status / Stage</th><th>TAT</th><th>Bills</th><th></th></tr></thead><tbody>" + rows + "</tbody></table>";
     wrap.querySelectorAll(".reimb-approve-btn").forEach(function (b) { b.addEventListener("click", function () { decideReimb(b.dataset.id, b.dataset.stage, "Approved"); }); });
@@ -8584,6 +8930,7 @@
         '</div>' +
         '<div class="ticket-problem">' + esc((t.problem || "").slice(0, 140)) + ((t.problem || "").length > 140 ? "…" : "") + '</div>' +
         '<div class="ticket-meta">Raised by ' + esc(t.raised_by) + ' · ' + esc(t.department || "—") + ' · ' + fmtDate(t.created_at) + '</div>' +
+        (state.doer.is_admin ? '<div style="margin-top:8px">' + admBtns("ticket", t) + '</div>' : "") +
         '</div>';
     }).join("");
     wrap.querySelectorAll(".ticket-card").forEach(function (card) {
@@ -10367,7 +10714,7 @@
     var wrap = document.getElementById("faqListWrap");
     if (!state.faqs.length) { wrap.innerHTML = '<div class="empty">No FAQs yet.</div>'; return; }
     wrap.innerHTML = state.faqs.map(function (f) {
-      return '<div class="faq-item"><div class="faq-q">' + esc(f.question) + '</div><div class="faq-a">' + esc(f.answer) + '</div><div class="faq-meta">by ' + esc(f.author) + " · " + fmtDate(f.created_at) + "</div></div>";
+      return '<div class="faq-item"><div class="faq-q">' + esc(f.question) + '</div><div class="faq-a">' + esc(f.answer) + '</div><div class="faq-meta">by ' + esc(f.author) + " · " + fmtDate(f.created_at) + " " + admBtns("faq", f) + "</div></div>";
     }).join("");
   }
   document.getElementById("addFaqBtn").addEventListener("click", function () {
@@ -10464,7 +10811,7 @@
     return list.map(function (k) {
       return '<li>' + k.emoji + ' <b>' + esc(doerName(k.from_doc_id)) + '</b> → <b>' + esc(doerName(k.to_doc_id)) + '</b>' +
         (k.message ? ': "' + esc(k.message) + '"' : '') +
-        '<span class="sub" style="margin-left:6px">' + fmtDate(k.created_at) + '</span></li>';
+        '<span class="sub" style="margin-left:6px">' + fmtDate(k.created_at) + '</span>' + admBtns("kudos", k) + '</li>';
     }).join("");
   }
   function renderKudosWall() {
@@ -10714,7 +11061,7 @@
         }).join("");
         return '<div class="card" style="margin-bottom:14px">' +
           '<div style="display:flex;justify-content:space-between"><b>' + esc(p.question) + '</b>' + (p.is_closed ? '<span class="module-badge soon">Closed</span>' : "") + '</div>' +
-          '<div class="sub" style="margin:4px 0 10px">' + totalVotes + ' vote' + (totalVotes === 1 ? "" : "s") + (state.doer.is_admin && !p.is_closed ? ' · <a href="#" data-close-poll="' + p.id + '">Close poll</a>' : "") + '</div>' +
+          '<div class="sub" style="margin:4px 0 10px">' + totalVotes + ' vote' + (totalVotes === 1 ? "" : "s") + (state.doer.is_admin && !p.is_closed ? ' · <a href="#" data-close-poll="' + p.id + '">Close poll</a>' : "") + ' ' + admBtns("poll", p) + '</div>' +
           optsHtml + '</div>';
       }).join("");
       wrap.querySelectorAll("[data-poll]").forEach(function (b) {
@@ -10770,7 +11117,7 @@
           (idea.admin_note ? '<div class="sub" style="margin-top:4px">Admin note: ' + esc(idea.admin_note) + '</div>' : "") +
           (state.doer.is_admin ? '<div style="margin-top:8px"><select data-idea-status="' + idea.id + '">' +
             ["New", "Under review", "Actioned", "Declined"].map(function (s) { return '<option value="' + s + '"' + (s === idea.status ? " selected" : "") + '>' + s + '</option>'; }).join("") +
-            '</select></div>' : "") +
+            '</select> ' + admBtns("idea", idea) + '</div>' : "") +
           '</div>';
       }).join("");
       wrap.querySelectorAll("[data-idea-status]").forEach(function (sel) {
@@ -10890,10 +11237,11 @@
   }
   function salaryRowsHtml(rows) {
     if (!rows.length) return '<div class="empty">No payslips yet.</div>';
-    return '<table><thead><tr><th>Month</th><th>Gross</th><th>Deductions</th><th>Net</th><th>Remarks</th></tr></thead><tbody>' +
+    var salAdm = state.doer && state.doer.is_admin;
+    return '<table><thead><tr><th>Month</th><th>Gross</th><th>Deductions</th><th>Net</th><th>Remarks</th>' + (salAdm ? "<th></th>" : "") + '</tr></thead><tbody>' +
       rows.map(function (r) {
         var ded = (r.deductions || []).map(function (d) { return esc(d.label) + ": ₹" + d.amount; }).join(", ");
-        return "<tr><td>" + esc(r.month) + "</td><td>₹" + r.gross + "</td><td>" + (ded || "—") + "</td><td><b>₹" + r.net + "</b></td><td>" + esc(r.remarks || "—") + "</td></tr>";
+        return "<tr><td>" + esc(r.month) + "</td><td>₹" + r.gross + "</td><td>" + (ded || "—") + "</td><td><b>₹" + r.net + "</b></td><td>" + esc(r.remarks || "—") + "</td>" + (salAdm ? "<td>" + admBtns("salary", r) + "</td>" : "") + "</tr>";
       }).join("") + "</tbody></table>";
   }
   function openSalaryUploadModal(docId, onDone) {
@@ -10946,6 +11294,7 @@
           '<div style="display:flex;margin:14px 0 4px">' + steps + '</div>' +
           (o.eta ? '<div class="sub">ETA: ' + esc(o.eta) + '</div>' : "") +
           (canManageOrderTracking() && nextStage ? '<button class="btn secondary" data-advance="' + o.id + '" data-next="' + nextStage + '" style="margin-top:10px">Mark as ' + nextStage + '</button>' : "") +
+          (state.doer.is_admin ? '<div style="margin-top:10px">' + admBtns("ordertracking", o) + '</div>' : "") +
           '</div>';
       }).join("");
       wrap.querySelectorAll("[data-advance]").forEach(function (b) {
