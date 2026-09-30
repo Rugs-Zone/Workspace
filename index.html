@@ -1170,6 +1170,75 @@
   </main>
 </div>
 <script>
+// Shared card renderers for the Buyer Portal (?buyer / ?sampling / ?invite)
+// AND the staff-side Buyer Dashboard in Workspace, so both always show a
+// sample or an order exactly the same way.
+window.RCBuyerUI = (function () {
+  var STEPS = ["Order received", "In development", "Quality check", "Ready to ship", "Dispatched"];
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function fd(d) { if (!d) return ""; var x = new Date(d); return isNaN(x) ? "" : x.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
+  function trackUrl(courier, no) {
+    var c = String(courier || "").toLowerCase(), n = encodeURIComponent(no);
+    if (c.indexOf("dhl") !== -1) return "https://www.dhl.com/global-en/home/tracking.html?tracking-id=" + n;
+    if (c.indexOf("fedex") !== -1) return "https://www.fedex.com/fedextrack/?trknbr=" + n;
+    if (c.indexOf("ups") !== -1) return "https://www.ups.com/track?tracknum=" + n;
+    if (c.indexOf("aramex") !== -1) return "https://www.aramex.com/track/results?ShipmentNumber=" + n;
+    return "";
+  }
+  function ioDone(io) { return io.skus.length && io.skus.every(function (s) { return s.step >= 4; }); }
+  function stageChip(label, st) {
+    if (!st || st === "N/A") return "";
+    var cls = st === "Completed" ? "done" : (st === "Running" ? "run" : "");
+    return '<span class="bs-stage ' + cls + '">' + label + (st === "Completed" ? " ✓" : st === "Running" ? " …" : "") + "</span>";
+  }
+  function sampleCard(io, multi) {
+    var done = ioDone(io);
+    return '<section class="bs-card"><div class="bs-card-head"><div><div class="bs-io">IO ' + esc(io.io) + (multi && io.buyer ? ' <span class="bs-code">' + esc(io.buyer) + '</span>' : "") + '</div>' +
+      '<div class="bs-meta">Requested ' + esc(fd(io.created_at)) + (io.target_date && !done ? ' · Target ' + esc(fd(io.target_date)) : "") + (io.merchant ? ' · Merchant: ' + esc(io.merchant) : "") + '</div></div>' +
+      '<span class="bs-pill ' + (done ? "done" : "open") + '">' + (done ? "Dispatched" : "In progress") + '</span></div>' +
+      io.skus.map(function (s) {
+        var steps = STEPS.map(function (label, i) {
+          var cls = i < s.step || (s.step === 4 && i === 4) ? "done" : (i === s.step ? "cur" : "");
+          var d = (i < s.step || s.step === 4) ? fd(s.dates[i]) : "";
+          return '<div class="bs-step ' + cls + '"><span class="bs-dot"></span><span class="bs-sl">' + label + '</span>' + (d ? '<span class="bs-sd">' + d + '</span>' : "") + '</div>';
+        }).join("");
+        var ships = (s.shipments || []).map(function (sh) {
+          var url = sh.tracking ? trackUrl(sh.courier, sh.tracking) : "";
+          return '<div class="bs-ship">🚚 ' + esc(fd(sh.date)) + ' · ' + esc(sh.qty) + ' pcs' + (sh.courier ? ' · ' + esc(sh.courier) : "") +
+            (sh.tracking ? ' · Tracking: ' + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(sh.tracking) + ' ↗</a>' : '<b>' + esc(sh.tracking) + '</b>') : "") + '</div>';
+        }).join("");
+        return '<div class="bs-sku"><div class="bs-sku-top"><b>' + esc(s.desc || "Sample") + '</b><span>' + esc(s.qty) + ' pcs' + (s.sent ? ' · ' + esc(s.sent) + ' sent' : "") + '</span></div>' +
+          '<div class="bs-status">' + esc(s.label) + '</div><div class="bs-track">' + steps + '</div>' + ships + '</div>';
+      }).join("") + '</section>';
+  }
+  function orderCard(o, multi) {
+    var pct = Math.max(0, Math.min(100, Number(o.progress_pct) || 0));
+    return '<section class="bs-card"><div class="bs-card-head"><div><div class="bs-io">' + (/^po/i.test(String(o.buyer_po || "")) ? "" : "PO ") + esc(o.buyer_po || "—") + (multi ? ' <span class="bs-code">' + esc(o._buyer) + "</span>" : "") + "</div>" +
+      '<div class="bs-meta">' + esc(o.buyer_article_no || "") + (o.category ? " · " + esc(o.category) : "") + (o.ship_date ? " · Ship date " + esc(o.ship_date) : "") + "</div></div>" +
+      '<span class="bs-pill ' + (o.order_status === "Completed" ? "done" : "open") + '">' + (o.order_status === "Completed" ? "Ready to ship" : "In production") + "</span></div>" +
+      '<div class="bs-qty"><span>Qty <b>' + esc(o.qty) + '</b></span><span>Produced <b>' + esc(o.produced_qty) + '</b></span><span>Shipped <b>' + esc(o.shipped_qty) + '</b></span><span>Balance <b>' + esc(o.balance_qty) + "</b></span></div>" +
+      '<div class="bs-bar"><div style="width:' + pct + '%"></div></div><div class="bs-meta" style="margin:4px 0 8px">' + pct + "% of production stages complete</div>" +
+      '<div class="bs-stages">' + stageChip("Yarn", o.purchase_yarn) + stageChip("Dyeing", o.dyeing_status) + stageChip("Weaving", o.weaving_status) +
+        stageChip("Stitching", o.stitch_applies ? o.stitching_status : "N/A") + stageChip("Latexing", o.latex_applies ? o.latexing_status : "N/A") + stageChip("Packing", o.packing_status) +
+        '<span class="bs-stage ' + (o.packaging_status === "In-House" ? "done" : "") + '">Packaging: ' + esc(o.packaging_status || "—") + "</span>" +
+      "</div></section>";
+  }
+  // Flattens {byBuyer:{CODE:{orders,asOf,live}}} into one list.
+  function flattenOrders(byBuyer) {
+    var rows = [], asOf = null, live = true, codes = Object.keys(byBuyer || {});
+    codes.forEach(function (code) {
+      var b = byBuyer[code];
+      (b.orders || []).forEach(function (o) { o._buyer = code; rows.push(o); });
+      if (b.asOf && (!asOf || b.asOf < asOf)) asOf = b.asOf;
+      if (!b.live) live = false;
+    });
+    rows.sort(function (a, b) { return String(a.ship_date_iso || "9999").localeCompare(String(b.ship_date_iso || "9999")); });
+    return { rows: rows, asOf: asOf, live: live, multi: codes.length > 1 };
+  }
+  return { esc: esc, fd: fd, ioDone: ioDone, sampleCard: sampleCard, orderCard: orderCard, flattenOrders: flattenOrders };
+})();
+</script>
+<script>
 (function () {
   var qs = new URLSearchParams(location.search);
   var linkToken = qs.get("sampling"), inviteToken = qs.get("invite"), portal = qs.has("buyer");
@@ -1207,26 +1276,7 @@
       return !q || (io.io + " " + io.skus.map(function (s) { return s.desc; }).join(" ")).toLowerCase().indexOf(q) !== -1;
     });
     if (!list.length) { $("bsList").innerHTML = '<div class="bs-empty">' + (DATA.ios.length ? "No samples match." : "No samples yet.") + "</div>"; return; }
-    $("bsList").innerHTML = list.map(function (io) {
-      var done = ioDone(io);
-      return '<section class="bs-card"><div class="bs-card-head"><div><div class="bs-io">IO ' + esc(io.io) + (multi && io.buyer ? ' <span class="bs-code">' + esc(io.buyer) + '</span>' : "") + '</div>' +
-        '<div class="bs-meta">Requested ' + esc(fd(io.created_at)) + (io.target_date && !done ? ' · Target ' + esc(fd(io.target_date)) : "") + (io.merchant ? ' · Merchant: ' + esc(io.merchant) : "") + '</div></div>' +
-        '<span class="bs-pill ' + (done ? "done" : "open") + '">' + (done ? "Dispatched" : "In progress") + '</span></div>' +
-        io.skus.map(function (s) {
-          var steps = STEPS.map(function (label, i) {
-            var cls = i < s.step || (s.step === 4 && i === 4) ? "done" : (i === s.step ? "cur" : "");
-            var d = (i < s.step || s.step === 4) ? fd(s.dates[i]) : "";
-            return '<div class="bs-step ' + cls + '"><span class="bs-dot"></span><span class="bs-sl">' + label + '</span>' + (d ? '<span class="bs-sd">' + d + '</span>' : "") + '</div>';
-          }).join("");
-          var ships = (s.shipments || []).map(function (sh) {
-            var url = sh.tracking ? trackUrl(sh.courier, sh.tracking) : "";
-            return '<div class="bs-ship">🚚 ' + esc(fd(sh.date)) + ' · ' + esc(sh.qty) + ' pcs' + (sh.courier ? ' · ' + esc(sh.courier) : "") +
-              (sh.tracking ? ' · Tracking: ' + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(sh.tracking) + ' ↗</a>' : '<b>' + esc(sh.tracking) + '</b>') : "") + '</div>';
-          }).join("");
-          return '<div class="bs-sku"><div class="bs-sku-top"><b>' + esc(s.desc || "Sample") + '</b><span>' + esc(s.qty) + ' pcs' + (s.sent ? ' · ' + esc(s.sent) + ' sent' : "") + '</span></div>' +
-            '<div class="bs-status">' + esc(s.label) + '</div><div class="bs-track">' + steps + '</div>' + ships + '</div>';
-        }).join("") + '</section>';
-    }).join("");
+    $("bsList").innerHTML = list.map(function (io) { return RCBuyerUI.sampleCard(io, multi); }).join("");
   }
   function showData(d) {
     DATA = d;
@@ -1252,14 +1302,7 @@
     if (ORD) { renderOrders(); return; }
     pane.innerHTML = '<div class="bs-empty">Loading your orders… (this can take a few seconds)</div>';
     call("buyerMyOrders", { session: getS() }).then(function (d) {
-      var rows = [], asOf = null, live = true;
-      Object.keys(d.byBuyer || {}).forEach(function (code) {
-        var b = d.byBuyer[code];
-        (b.orders || []).forEach(function (o) { o._buyer = code; rows.push(o); });
-        if (b.asOf && (!asOf || b.asOf < asOf)) asOf = b.asOf;
-        if (!b.live) live = false;
-      });
-      ORD = { rows: rows, asOf: asOf, live: live, multi: Object.keys(d.byBuyer || {}).length > 1 };
+      ORD = RCBuyerUI.flattenOrders(d.byBuyer);
       renderOrders();
     }).catch(function (e) { pane.innerHTML = '<div class="bs-empty">' + esc(e.message) + "</div>"; });
   }
@@ -1288,18 +1331,7 @@
     }).sort(function (a, b) { return String(a.ship_date_iso || "9999").localeCompare(String(b.ship_date_iso || "9999")); });
     if (!rows.length) { $("bsOrdList").innerHTML = '<div class="bs-empty">No open orders right now.</div>'; return; }
     if (!list.length) { $("bsOrdList").innerHTML = '<div class="bs-empty">No orders match.</div>'; return; }
-    $("bsOrdList").innerHTML = list.map(function (o) {
-      var pct = Math.max(0, Math.min(100, Number(o.progress_pct) || 0));
-      return '<section class="bs-card"><div class="bs-card-head"><div><div class="bs-io">' + (/^po/i.test(String(o.buyer_po || "")) ? "" : "PO ") + esc(o.buyer_po || "—") + (ORD.multi ? ' <span class="bs-code">' + esc(o._buyer) + "</span>" : "") + "</div>" +
-        '<div class="bs-meta">' + esc(o.buyer_article_no || "") + (o.category ? " · " + esc(o.category) : "") + (o.ship_date ? " · Ship date " + esc(o.ship_date) : "") + "</div></div>" +
-        '<span class="bs-pill ' + (o.order_status === "Completed" ? "done" : "open") + '">' + (o.order_status === "Completed" ? "Ready to ship" : "In production") + "</span></div>" +
-        '<div class="bs-qty"><span>Qty <b>' + esc(o.qty) + '</b></span><span>Produced <b>' + esc(o.produced_qty) + '</b></span><span>Shipped <b>' + esc(o.shipped_qty) + '</b></span><span>Balance <b>' + esc(o.balance_qty) + "</b></span></div>" +
-        '<div class="bs-bar"><div style="width:' + pct + '%"></div></div><div class="bs-meta" style="margin:4px 0 8px">' + pct + "% of production stages complete</div>" +
-        '<div class="bs-stages">' + stageChip("Yarn", o.purchase_yarn) + stageChip("Dyeing", o.dyeing_status) + stageChip("Weaving", o.weaving_status) +
-          stageChip("Stitching", o.stitch_applies ? o.stitching_status : "N/A") + stageChip("Latexing", o.latex_applies ? o.latexing_status : "N/A") + stageChip("Packing", o.packing_status) +
-          '<span class="bs-stage ' + (o.packaging_status === "In-House" ? "done" : "") + '">Packaging: ' + esc(o.packaging_status || "—") + "</span>" +
-        "</div></section>";
-    }).join("");
+    $("bsOrdList").innerHTML = list.map(function (o) { return RCBuyerUI.orderCard(o, ORD.multi); }).join("");
   }
   document.querySelectorAll("#bsTabs .bs-tab").forEach(function (t) {
     t.addEventListener("click", function () {
@@ -1713,9 +1745,10 @@
     </div>
 
     <div id="view-buyersampling" class="hidden">
-      <div class="page-head"><h2>🧵 Buyer Sampling Dashboard</h2></div>
-      <div class="page-sub" style="margin-top:-14px">Give each buyer a private link to track their own samples live — from development to dispatch, with courier tracking. Buyers only ever see their own samples (no costing, photos or internal notes).</div>
-      <div class="card">
+      <div class="page-head"><h2>🤝 Buyer Dashboard</h2></div>
+      <div class="page-sub" style="margin-top:-14px">Every buyer in one place — their sample requests (Sampling FMS) and open orders (production sheet). Click <b>📊 Open</b> on a buyer to see exactly what they see in their Buyer Portal. Buyers only ever see their own data (no costing, photos or internal notes).</div>
+      <div id="bsDetail" class="hidden"></div>
+      <div class="card" id="bsListCard" style="padding:18px;overflow-x:auto">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
           <input id="bsAdminSearch" placeholder="Search buyer code…" style="max-width:320px;margin:0" />
           <button class="btn" id="bsInviteAllBtn" type="button">📨 Invite all buyers to the portal</button>
@@ -2266,7 +2299,7 @@
   var ANON_KEY = "sb_publishable_puw8o_XzDvXmitIaNZvCtQ_5UGjXTBB";
   var FN_URL = SUPABASE_URL + "/functions/v1/deleg-api";
   var ADMIN_FN_URL = SUPABASE_URL + "/functions/v1/deleg-admin";
-  var ADMIN_FN_ACTIONS = ["adminRecordUpdate", "adminRecordDelete", "pressList", "pressCreate", "createNotification", "getMyNotifications", "markNotificationSeen", "leaveRequestCreateWithApprover", "samplingBuyerSummary", "samplingBuyerLinkCreate", "samplingBuyerLinkEmail", "buyerInviteSend", "buyerAccountsList"];
+  var ADMIN_FN_ACTIONS = ["adminRecordUpdate", "adminRecordDelete", "pressList", "pressCreate", "createNotification", "getMyNotifications", "markNotificationSeen", "leaveRequestCreateWithApprover", "samplingBuyerSummary", "samplingBuyerLinkCreate", "samplingBuyerLinkEmail", "buyerInviteSend", "buyerAccountsList", "staffBuyerDashboard"];
 
   // Mirrors the backend's NOTIF_TYPES registry (index.ts) — used only as the
   // demo-mode fallback so the Settings UI has something to render before a
@@ -4331,7 +4364,7 @@
     { key: "ordertracking", icon: "🚚", name: "Order Tracking", status: "live", goto: "ordertracking", category: "production" },
     { key: "teamworkspace", icon: "🗂️", name: "Team Workspace", status: "live", goto: "teamworkspace", category: "work" },
     { key: "samplingfms", icon: "🧵", name: "Sampling FMS", status: "live", goto: "samplingfms", category: "production" },
-    { key: "buyersampling", icon: "📦", name: "Buyer Sampling Dashboard", status: "live", goto: "buyersampling", category: "production" },
+    { key: "buyersampling", icon: "🤝", name: "Buyer Dashboard", status: "live", goto: "buyersampling", category: "production" },
     { key: "leave", icon: "🏖️", name: "Leave Request", status: "live", goto: "leave", category: "people" },
     { key: "reimbursement", icon: "🧳", name: "Travel/Outstation Reimbursement", status: "live", goto: "reimbursement", category: "people" },
     { key: "attendance", icon: "🕒", name: "Attendance", status: "live", goto: "attendance", category: "people" },
@@ -8461,7 +8494,7 @@
     else admOpenDelete(b.dataset.kind, b.dataset.id);
   }, true);
 
-  // ---------- Buyer Sampling Dashboard (internal: share links) ----------
+  // ---------- Buyer Dashboard (internal: every buyer, samples + orders, portal links) ----------
   // Lists every buyer that has samples in Sampling FMS, with a private
   // tracking link per buyer (the page the buyer sees is the
   // ?sampling=<token> view at the top of this file). Admins and Sampling
@@ -8471,6 +8504,7 @@
   function renderBuyerSamplingAdmin() {
     var wrap = document.getElementById("bsAdminWrap");
     if (!wrap || !state.doer) return;
+    bsCloseBuyer();
     wrap.innerHTML = '<div class="empty">Loading buyers…</div>';
     // Emailing buyers (portal invites / tracking links) is admin-only —
     // the server enforces this too (requireAdmin in deleg-admin).
@@ -8486,7 +8520,7 @@
     var q = ((document.getElementById("bsAdminSearch") || {}).value || "").toLowerCase();
     var rows = (state.bsRows || []).filter(function (r) { return !q || (r.buyer_code + " " + (r.buyer_name || "")).toLowerCase().indexOf(q) !== -1; });
     if (!rows.length) { wrap.innerHTML = '<div class="empty">No buyers found.</div>'; return; }
-    wrap.innerHTML = "<table><thead><tr><th>Buyer</th><th>Sample requests</th><th>Dispatched</th><th>Last update</th><th>Buyer email</th><th>Portal login</th><th></th></tr></thead><tbody>" +
+    wrap.innerHTML = "<table><thead><tr><th>Buyer</th><th>Sample requests</th><th>Samples dispatched</th><th>Last update</th><th>Buyer email</th><th>Portal login</th><th></th></tr></thead><tbody>" +
       rows.map(function (r) {
         var pct = r.samples ? Math.round((r.dispatched / r.samples) * 100) : 0;
         return "<tr><td><b>" + esc(r.buyer_code) + "</b>" + (r.buyer_name ? '<div class="sub">' + esc(r.buyer_name) + "</div>" : "") + "</td>" +
@@ -8495,7 +8529,7 @@
           "<td>" + fmtDate(r.last_update) + "</td>" +
           '<td style="max-width:220px;word-break:break-word">' + (r.email ? '<span class="sub">' + esc(r.email) + "</span>" : '<span class="sub" style="color:var(--danger)">No email — add in Settings → Buyer Email Directory</span>') + "</td>" +
           "<td>" + (r.registered ? '<span class="module-badge live">✓ ' + r.registered + " registered</span>" : '<span class="sub">Not yet</span>') + "</td>" +
-          '<td style="white-space:nowrap"><button class="btn secondary bs-act" data-act="copy" data-code="' + esc(r.buyer_code) + '" style="padding:5px 10px;font-size:12px">🔗 Copy link</button> ' +
+          '<td style="white-space:nowrap"><button class="btn bs-act" data-act="dash" data-code="' + esc(r.buyer_code) + '" style="padding:5px 10px;font-size:12px">📊 Open</button> <button class="btn secondary bs-act" data-act="copy" data-code="' + esc(r.buyer_code) + '" style="padding:5px 10px;font-size:12px">🔗 Copy link</button> ' +
           '<button class="btn secondary bs-act" data-act="open" data-code="' + esc(r.buyer_code) + '" style="padding:5px 10px;font-size:12px">👁 Preview</button> ' +
           (r.email && state.doer.is_admin ? '<button class="btn bs-act" data-act="invite" data-code="' + esc(r.buyer_code) + '" style="padding:5px 10px;font-size:12px" title="Emails every contact of this buyer a link to create their portal login">📨 Send portal invite</button> ' +
             '<button class="btn secondary bs-act" data-act="email" data-code="' + esc(r.buyer_code) + '" style="padding:5px 10px;font-size:12px" title="Emails a no-login tracking link">✉️ Email tracking link</button> ' : "") +
@@ -8505,6 +8539,49 @@
     wrap.querySelectorAll(".bs-act").forEach(function (b) {
       b.addEventListener("click", function () { bsAction(b.dataset.act, b.dataset.code, b); });
     });
+  }
+  // ---- One buyer's full dashboard (what they see in their portal) ----
+  function bsOpenBuyer(code) {
+    var det = document.getElementById("bsDetail"), listCard = document.getElementById("bsListCard");
+    listCard.classList.add("hidden"); det.classList.remove("hidden");
+    det.innerHTML = '<button class="btn secondary" id="bsBack" type="button">← All buyers</button><div class="empty">Loading ' + esc(code) + '… (orders can take a few seconds)</div>';
+    document.getElementById("bsBack").onclick = bsCloseBuyer;
+    api("staffBuyerDashboard", { requester_doc_id: state.doer.doc_id, buyer_code: code }).then(function (d) {
+      var ord = RCBuyerUI.flattenOrders(d.byBuyer);
+      var skus = [].concat.apply([], d.ios.map(function (io) { return io.skus; }));
+      var sent = skus.filter(function (x) { return x.step >= 4; }).length;
+      var ready = ord.rows.filter(function (o) { return o.order_status === "Completed"; }).length;
+      var pos = {}; ord.rows.forEach(function (o) { if (o.buyer_po) pos[o.buyer_po] = 1; });
+      var tabs = [["samples", "🧵 Samples (" + d.ios.length + ")"], ["orders", "📦 Orders (" + ord.rows.length + ")"], ["logins", "👤 Portal logins (" + d.accounts.length + ")"]];
+      det.innerHTML = '<button class="btn secondary" id="bsBack" type="button">← All buyers</button>' +
+        '<div class="card" style="margin-top:12px;padding:18px"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">' + esc(d.buyer_code) + (d.buyer_name ? " — " + esc(d.buyer_name) : "") + '</h3>' +
+        '<div class="sub" style="margin-top:4px;word-break:break-word">' + esc(d.email || "No email saved") + '</div></div></div>' +
+        '<div class="bs-stats" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-top:14px">' +
+          '<div class="bs-stat"><span>Sample requests</span><b>' + d.ios.length + '</b></div><div class="bs-stat"><span>Samples in progress</span><b>' + (skus.length - sent) + '</b></div><div class="bs-stat ok"><span>Samples dispatched</span><b>' + sent + '</b></div>' +
+          '<div class="bs-stat"><span>Open POs</span><b>' + Object.keys(pos).length + '</b></div><div class="bs-stat"><span>Items in production</span><b>' + (ord.rows.length - ready) + '</b></div><div class="bs-stat ok"><span>Ready to ship</span><b>' + ready + '</b></div></div>' +
+        '<div class="bs-tabs" id="bsStaffTabs">' + tabs.map(function (t, i) { return '<button class="bs-tab' + (i ? "" : " active") + '" data-t="' + t[0] + '" type="button">' + t[1] + "</button>"; }).join("") + '</div>' +
+        '<div class="bs-staff-pane" data-p="samples">' + (d.ios.length ? d.ios.map(function (io) { return RCBuyerUI.sampleCard(io, false); }).join("") : '<div class="bs-empty">No sample requests for this buyer.</div>') + "</div>" +
+        '<div class="bs-staff-pane hidden" data-p="orders"><div class="bs-note" style="margin:0 0 10px">' + (ord.live ? "Live from the production sheet." : (ord.asOf ? "From the last snapshot (" + RCBuyerUI.fd(ord.asOf) + ") — becomes live once the Apps Script update is deployed." : "")) + "</div>" +
+          (ord.rows.length ? ord.rows.map(function (o) { return RCBuyerUI.orderCard(o, false); }).join("") : '<div class="bs-empty">No open orders found for this buyer.</div>') + "</div>" +
+        '<div class="bs-staff-pane hidden" data-p="logins">' + (d.accounts.length ? "<table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Registered</th><th>Last sign-in</th></tr></thead><tbody>" +
+          d.accounts.map(function (a) { return "<tr><td>" + esc(a.name || "—") + "</td><td>" + esc(a.email) + "</td><td>" + esc(a.phone || "—") + "</td><td>" + fmtDate(a.created_at) + "</td><td>" + (a.last_login_at ? fmtDate(a.last_login_at) : "—") + "</td></tr>"; }).join("") + "</tbody></table>"
+          : '<div class="bs-empty">Nobody from this buyer has registered yet.' + (state.doer.is_admin && d.email ? " Use 📨 Send portal invite on the buyer list." : "") + "</div>") + "</div>" +
+        "</div>";
+      document.getElementById("bsBack").onclick = bsCloseBuyer;
+      det.querySelectorAll("#bsStaffTabs .bs-tab").forEach(function (t) {
+        t.addEventListener("click", function () {
+          det.querySelectorAll("#bsStaffTabs .bs-tab").forEach(function (x) { x.classList.toggle("active", x === t); });
+          det.querySelectorAll(".bs-staff-pane").forEach(function (p) { p.classList.toggle("hidden", p.dataset.p !== t.dataset.t); });
+        });
+      });
+    }).catch(function (e) {
+      det.innerHTML = '<button class="btn secondary" id="bsBack" type="button">← All buyers</button><div class="empty">' + esc(e.message) + "</div>";
+      document.getElementById("bsBack").onclick = bsCloseBuyer;
+    });
+  }
+  function bsCloseBuyer() {
+    document.getElementById("bsDetail").classList.add("hidden");
+    document.getElementById("bsListCard").classList.remove("hidden");
   }
   function bsGetToken(code, regenerate) {
     var row = (state.bsRows || []).find(function (r) { return r.buyer_code === code; });
@@ -8523,6 +8600,7 @@
     }).catch(function (e) { toast(e.message, true); }).finally(function () { if (btn) btn.disabled = false; });
   }
   function bsAction(act, code, btn) {
+    if (act === "dash") { bsOpenBuyer(code); return; }
     if (act === "invite") { bsInvite(code, btn); return; }
     if (act === "open") {
       var w = window.open("about:blank", "_blank");
