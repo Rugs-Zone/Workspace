@@ -495,6 +495,61 @@
   .ba-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media (max-width:900px){.ba-grid2{grid-template-columns:1fr}}
   .ba-code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--sub)}
+  /* ================= Tech Support ================= */
+  .ts-fab{position:fixed;right:18px;bottom:18px;z-index:90;display:flex;align-items:center;gap:6px;background:#0b0b0b;color:#fff;border:1px solid #2a2a2a;border-left:3px solid #ff5a0a;border-radius:99px;padding:9px 15px;font:600 13px/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 8px 24px -8px rgba(0,0,0,.45);opacity:.9}
+  .ts-fab:hover{opacity:1;transform:translateY(-1px)}
+  .ts-fab-badge{background:#dc2626;color:#fff;border-radius:99px;font-size:11px;font-weight:800;min-width:18px;padding:2px 6px;text-align:center}
+  @media (max-width:700px){.ts-fab .ts-fab-t{display:none}.ts-fab{padding:10px 12px;bottom:14px;right:12px}}
+  @media print{.ts-fab{display:none}}
+  .ts-chip{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);white-space:nowrap}
+  .ts-count{display:inline-block;min-width:18px;padding:0 6px;margin-left:4px;border-radius:99px;background:#dc2626;color:#fff;font-size:11px;font-weight:800;line-height:18px}
+  .ts-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+  .ts-filters label{display:block;font-size:11.5px;color:var(--sub);margin-bottom:3px}
+  .ts-filters select,.ts-filters input{margin:0}
+  .ts-list{display:flex;flex-direction:column;gap:8px}
+  .ts-row{display:flex;justify-content:space-between;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer}
+  .ts-row:hover{border-color:#ff5a0a}
+  .ts-row-main{min-width:0}
+  .ts-row-top{font-size:14px;margin-bottom:3px}
+  .ts-id{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--sub);margin-right:4px}
+  .ts-row-side{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;text-align:right}
+  @media (max-width:640px){.ts-row{flex-direction:column}.ts-row-side{align-items:flex-start;flex-direction:row;flex-wrap:wrap}}
+  .ts-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .ts-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  @media (max-width:640px){.ts-grid2,.ts-grid3{grid-template-columns:1fr}}
+  .ts-sev{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  @media (max-width:560px){.ts-sev{grid-template-columns:1fr}}
+  .ts-sev-opt{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer;font-weight:500;margin:0}
+  .ts-sev-opt input{width:16px!important;height:16px;margin:0!important;flex:0 0 auto}
+  label.ts-sev-opt{display:flex!important;flex-direction:row!important}
+  .ts-row .sub,.ts-row-side .sub{font-size:12px;color:var(--sub);line-height:1.5}
+  .ts-list .ts-row-top{font-weight:600}
+  .ts-shots{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .ts-shot{position:relative}
+  .ts-shot img{width:96px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;display:block}
+  .ts-shot button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:0;background:#dc2626;color:#fff;font-size:13px;line-height:20px;padding:0;cursor:pointer}
+  .ts-env{margin:12px 0;font-size:12.5px}
+  .ts-env summary{cursor:pointer;color:var(--sub);font-weight:600}
+  .ts-env pre{white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.04);border-radius:8px;padding:10px;font-size:11.5px;max-height:220px;overflow:auto}
+  .ts-envt{font-size:12.5px;margin:8px 0}.ts-envt td{padding:3px 10px 3px 0;vertical-align:top}.ts-envt td:first-child{color:var(--sub);white-space:nowrap}
+  .ts-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .ts-block{margin-top:12px;font-size:13.5px}
+  .ts-pre{white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.035);border-radius:8px;padding:10px 12px;margin:4px 0 10px}
+  .ts-fix .ts-pre{background:rgba(22,163,74,.09)}
+  .ts-ctrl{border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;background:rgba(255,90,10,.035)}
+  .ts-thread{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow:auto}
+  .ts-msg{max-width:85%;border-radius:12px;padding:9px 12px;font-size:13.5px;background:rgba(0,0,0,.045);align-self:flex-start}
+  .ts-msg.staff{background:rgba(37,99,235,.09)}
+  .ts-msg.internal{background:rgba(234,179,8,.14);border:1px dashed rgba(161,98,7,.45)}
+  .ts-msg.mine{align-self:flex-end}
+  .ts-msg-h{font-size:11.5px;color:var(--sub);margin-bottom:3px}
+  .ts-msg-b{white-space:pre-wrap;word-break:break-word}
+  .ts-hist{margin:8px 0 0;padding-left:18px;font-size:12.5px;line-height:1.7}
+  .ts-team{max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:4px}
+  .ts-team label{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:500;margin:0}
+  .ts-team input{width:auto;margin:0}
+  .ts-lightbox{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.85);display:grid;place-items:center;cursor:zoom-out;padding:20px}
+  .ts-lightbox img{max-width:100%;max-height:100%;border-radius:8px}
   /* Custom-module header buttons sit on a dark card — keep them readable */
   #view-customModule .hero-card.dark .btn.secondary{color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.35);text-decoration:none}
   #view-customModule .hero-card.dark .btn.secondary:hover{background:rgba(255,255,255,.18)}
@@ -2063,6 +2118,7 @@ window.RCBuyerUI = (function () {
 </div>
 
 <div id="app">
+<button id="tsFab" class="ts-fab" type="button" title="Report a technical problem">🛠️<span class="ts-fab-t"> Report a problem</span><span id="tsFabBadge" class="ts-fab-badge hidden"></span></button>
   <div class="sidebar">
     <button class="sidebar-toggle" id="sidebarToggle" title="Collapse sidebar">⮜</button>
     <div class="brand"><img class="logo-chip" id="rcLogoSidebar" alt="Rugs Creation" /><script>document.getElementById("rcLogoSidebar").src=RUGS_LOGO_DATA_URI;</script><span class="brand-text">Rugs Creation Workspace<small>People &amp; Operations</small></span></div>
@@ -2297,6 +2353,16 @@ window.RCBuyerUI = (function () {
         <div id="baBody"></div>
       </div>
     </div>
+    <div id="view-techsupport" class="hidden">
+      <div class="page-head">
+        <h2>🛠️ Tech Support</h2>
+        <button class="btn" id="tsNewBtn" type="button">+ Report a problem</button>
+      </div>
+      <div class="page-sub" style="margin-top:-14px">Something not working in the Workspace? Report it here — the support team is emailed instantly and you can follow every step until it's fixed.</div>
+      <div class="toolbar"><div class="tabs" id="tsTabs"></div></div>
+      <div id="tsBody"></div>
+    </div>
+
     <div id="view-press" class="hidden">
       <div class="page-head">
         <h2>📰 Press &amp; Blogs</h2>
@@ -2742,8 +2808,8 @@ window.RCBuyerUI = (function () {
             <input class="search" id="staffSearch" placeholder="Search staff by name, department or designation…" style="flex:1;min-width:220px" />
             <select id="staffFilterRole" style="min-width:150px">
               <option value="">All roles</option>
-              <option value="super_admin">Developer / Super Admin</option>
-              <option value="admin">Head</option>
+              <option value="super_admin">Developer</option>
+              <option value="admin">Director</option>
               <option value="manager">Manager</option>
               <option value="employee">Employee</option>
             </select>
@@ -2892,7 +2958,7 @@ window.RCBuyerUI = (function () {
         if (!r.ok || !j.ok) throw new Error(j.error || ("HTTP " + r.status));
         return j.data;
       });
-    });
+    }).catch(function (e) { if (typeof tsRecordErr === "function") tsRecordErr("api " + action, e && e.message); throw e; });
   }
 
   // ---------- Demo (sample data) API shim ----------
@@ -3775,7 +3841,7 @@ window.RCBuyerUI = (function () {
   function toast(msg, isErr) {
     var el = document.createElement("div");
     el.className = "toast";
-    if (isErr) el.style.background = "#dc2626";
+    if (isErr) { el.style.background = "#dc2626"; if (typeof tsRecordErr === "function") tsRecordErr("message shown", msg); }
     el.textContent = msg;
     document.getElementById("toastRoot").appendChild(el);
     setTimeout(function () { el.remove(); }, 3500);
@@ -4893,6 +4959,7 @@ window.RCBuyerUI = (function () {
     { key: "chat", icon: "💬", name: "Team Chat", status: "live", goto: "chat", category: "work" },
     { key: "queries", icon: "📩", name: "Queries", status: "live", goto: "tickets", category: "work" },
     { key: "helpslip", icon: "🆘", name: "Help Slip", status: "live", goto: "helpslip", category: "work" },
+    { key: "techsupport", icon: "🛠️", name: "Tech Support", status: "live", goto: "techsupport", category: "work" },
     { key: "costing", icon: "🧮", name: "Costing Calculator", status: "live", goto: "costing", category: "production" },
     { key: "checklist", icon: "📋", name: "Checklist FMS", status: "live", goto: "checklist", category: "production" },
     { key: "cbm", icon: "📦", name: "CBM / Storage Planner", status: "live", goto: "cbm", category: "production" },
@@ -4977,7 +5044,7 @@ window.RCBuyerUI = (function () {
   }
 
   // ---------- Workspace-wide 4-tier role hierarchy ----------
-  // Developer/Super Admin > Head > Manager > Employee (stored as the enum
+  // Developer > Head > Manager > Employee (stored as the enum
   // values "super_admin" > "admin" > "manager" > "employee" for backward
   // compatibility — only the DISPLAY LABELS below changed; nothing in the
   // database or the grant-hierarchy logic needed to move). Separate from
@@ -4990,7 +5057,7 @@ window.RCBuyerUI = (function () {
   // access looks different until someone explicitly sets a role for them.
   // The top rung ("super_admin") IS Developer Mode — see isDeveloperMode().
   var WS_ROLES = ["super_admin", "admin", "manager", "employee"];
-  var WS_ROLE_LABELS = { super_admin: "Developer / Super Admin", admin: "Head", manager: "Manager", employee: "Employee" };
+  var WS_ROLE_LABELS = { super_admin: "Developer", admin: "Director", manager: "Manager", employee: "Employee" };
   function wsRole(d) {
     if (d && d.role && WS_ROLES.indexOf(d.role) !== -1) return d.role;
     return d && d.is_admin ? "admin" : "employee";
@@ -5021,7 +5088,7 @@ window.RCBuyerUI = (function () {
   function wsRoleCellHtml(d, selectId) {
     var cur = wsRole(d);
     if (!canEditWsRole(d)) {
-      var whyTitle = d.doc_id === state.doer.doc_id ? "You can't change your own rank here" : "Only a Developer / Super Admin can change this person's rank";
+      var whyTitle = d.doc_id === state.doer.doc_id ? "You can't change your own rank here" : "Only a Developer can change this person's rank";
       return '<span class="module-badge live" title="' + esc(whyTitle) + '">' + esc(WS_ROLE_LABELS[cur] || cur) + "</span>";
     }
     var options = grantableWsRoles().slice();
@@ -5374,7 +5441,7 @@ window.RCBuyerUI = (function () {
     }
   });
 
-  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "teamcalendar", "notes", "todo"];
+  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "teamcalendar", "notes", "todo", "techsupport"];
   // Per-module choice of whether an external-URL-backed module opens in a
   // real new browser tab ("redirect") or is framed inside Workspace
   // ("embed") — Settings → Modules → Module Open Behavior for the 3
@@ -5471,6 +5538,7 @@ window.RCBuyerUI = (function () {
     if (state.view === "customModule") renderCustomModuleView();
     if (state.view === "tickets") renderTickets();
     if (state.view === "helpslip") renderHelpSlips();
+    if (state.view === "techsupport") renderTechSupport();
     if (state.view === "chat") openChatView();
     else stopChatPolling();
   }
@@ -7172,9 +7240,9 @@ window.RCBuyerUI = (function () {
                 return opts.map(function (r) { return '<option value="' + r + '"' + (r === cur ? " selected" : "") + ">" + WS_ROLE_LABELS[r] + "</option>"; }).join("");
               })() +
             "</select>" +
-            (myWsRole() !== "super_admin" ? '<div class="sub" style="margin-top:4px">Only a Developer / Super Admin can promote someone to Head or Developer / Super Admin.</div>' : "")
+            (myWsRole() !== "super_admin" ? '<div class="sub" style="margin-top:4px">Only a Developer can promote someone to Director or Developer.</div>' : "")
           : '<div><span class="module-badge live">' + esc(WS_ROLE_LABELS[wsRole(d)] || wsRole(d)) + '</span>' +
-            '<div class="sub" style="margin-top:4px">' + (isSelf ? "You can't change your own rank here." : "Only a Developer / Super Admin can change this person's rank.") + '</div></div>') +
+            '<div class="sub" style="margin-top:4px">' + (isSelf ? "You can't change your own rank here." : "Only a Developer can change this person's rank.") + '</div></div>') +
         "</div>" +
         '<div class="field" style="margin-top:10px"><label>Team</label><select id="scTeam"><option value="">— No team —</option>' +
           (state.teams || []).map(function (t) { return '<option value="' + esc(t.id) + '"' + (d.team_id === t.id ? " selected" : "") + ">" + esc(t.name) + "</option>"; }).join("") +
@@ -7182,7 +7250,7 @@ window.RCBuyerUI = (function () {
       "</div>" +
       '<div class="card" style="padding:18px;margin-bottom:16px">' +
         '<div class="page-head" style="margin:0 0 4px"><h2 style="font-size:15px">Delegated module access</h2></div>' +
-        '<div class="page-sub" style="margin:0 0 10px">Let this person manage a specific area (add/edit/delete) without making them a Workspace Admin — e.g. hand Birthday Registry to HR. Has no effect if they\'re already a Head or Developer/Super Admin, since those already manage everything.</div>' +
+        '<div class="page-sub" style="margin:0 0 10px">Let this person manage a specific area (add/edit/delete) without making them a Workspace Admin — e.g. hand Birthday Registry to HR. Has no effect if they\'re already a Director or Developer, since those already manage everything.</div>' +
         moduleAccessCheckboxesHtml(d, "scMod_") +
       "</div>" +
       '<div class="card" style="padding:18px;margin-bottom:16px">' +
@@ -7440,7 +7508,7 @@ window.RCBuyerUI = (function () {
     if (!show && state.settingsTab === "developer") { state.settingsTab = "overview"; renderSettingsTabs(); }
   }
   // Renders the 3 Developer Mode sub-cards. No-ops (leaves the tab hidden)
-  // for anyone who isn't a Developer/Super Admin, same guard as every other
+  // for anyone who isn't a Developer, same guard as every other
   // admin card.
   function renderDeveloperPane() {
     if (!isDeveloperMode()) return;
@@ -8430,7 +8498,7 @@ window.RCBuyerUI = (function () {
       '<select id="asRole">' +
         grantableWsRoles().map(function (r) { return '<option value="' + r + '"' + (r === "employee" ? " selected" : "") + ">" + WS_ROLE_LABELS[r] + "</option>"; }).join("") +
       "</select>" +
-      (myWsRole() !== "super_admin" ? '<div class="sub" style="margin-top:4px">Only a Developer / Super Admin can create a Head or Developer / Super Admin account.</div>' : "") +
+      (myWsRole() !== "super_admin" ? '<div class="sub" style="margin-top:4px">Only a Developer can create a Director or Developer account.</div>' : "") +
       "</div>" +
       '<div class="field"><label>Extra permissions</label>' +
       '<label style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" id="asAssign" style="width:auto" /> Can assign tasks</label>' +
@@ -9500,6 +9568,303 @@ window.RCBuyerUI = (function () {
       document.querySelectorAll("#baBody [data-u]").forEach(function (b) { b.onclick = function () { userModal(users.find(function (x) { return x.username === b.dataset.u; })); }; });
     }).catch(baFail);
   }
+
+  // ---------- 🛠️ Tech Support (report a technical problem) ----------
+  // Every signed-in person can report a problem from the floating button
+  // (bottom-right, on every screen) or from Modules → Tech Support. Browser /
+  // device / page details and recent error messages are attached
+  // automatically. The support team (Workspace admins + anyone added in the
+  // Settings tab) sees all issues, assigns, replies and resolves. Backend:
+  // the "tech-support" edge function (table deleg_tech_issues).
+  var TS_FN = SUPABASE_URL + "/functions/v1/tech-support";
+  var TS = { meta: null, tab: "mine", filter: { status: "active", severity: "", assignee: "" }, rows: [] };
+  var TS_ERRS = [];
+  function tsRecordErr(kind, msg) {
+    try { TS_ERRS.push({ at: new Date().toISOString(), kind: kind, msg: String(msg || "").slice(0, 300), view: state.view || "" }); if (TS_ERRS.length > 15) TS_ERRS.shift(); } catch (e) { /* ignore */ }
+  }
+  window.addEventListener("error", function (e) { tsRecordErr("js", (e.message || "") + (e.filename ? " @" + String(e.filename).split("/").pop() + ":" + e.lineno : "")); });
+  window.addEventListener("unhandledrejection", function (e) { tsRecordErr("promise", e.reason && e.reason.message ? e.reason.message : e.reason); });
+  var TS_SEV = { Low: "Low — small thing, I can still work", Medium: "Medium — it slows me down", High: "High — part of my work is blocked", Critical: "Critical — I can't work at all" };
+  var TS_SEV_COLOR = { Low: "#64748b", Medium: "#2563eb", High: "#ea580c", Critical: "#dc2626" };
+  var TS_STATUS_COLOR = { "Open": "#ea580c", "In progress": "#2563eb", "Waiting for you": "#7c3aed", "Resolved": "#16a34a", "Closed": "#64748b" };
+  var TS_CATS = ["Something is not working", "Error message", "Page is slow / not loading", "Login / password", "Wrong data shown", "Email not received", "Mobile / display problem", "Feature request", "Other"];
+
+  function tsCall(action, payload) {
+    if (state.demo) return Promise.reject(new Error("Tech Support isn't available in Preview Mode."));
+    return fetch(TS_FN, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY }, body: JSON.stringify(Object.assign({ action: action, requester_doc_id: (state.doer || {}).doc_id }, payload || {})) })
+      .then(function (r) { return r.json().then(function (j) { if (!j.ok) throw new Error(j.error || ("HTTP " + r.status)); return j.data; }); });
+  }
+  function tsChip(text, color) { return '<span class="ts-chip" style="--c:' + (color || "#64748b") + '">' + esc(text) + "</span>"; }
+  function tsWhen(iso) { if (!iso) return "—"; var d = new Date(iso), m = (Date.now() - d) / 60000; if (m < 1) return "just now"; if (m < 60) return Math.round(m) + " min ago"; if (m < 1440) return Math.round(m / 60) + " h ago"; return fmtDate(iso); }
+  function tsModuleList() {
+    var names = ["Home / Dashboard", "Login / Sign-in", "Tasks", "Sidebar / Navigation", "Notifications / Emails"];
+    (typeof MODULE_DEFS !== "undefined" ? MODULE_DEFS : []).forEach(function (m) { if (m && m.name && names.indexOf(m.name) === -1) names.push(m.name); });
+    (state.customModules || []).forEach(function (m) { var n = m && (m.name || m.title); if (n && names.indexOf(n) === -1) names.push(n); });
+    names.push("Whole Workspace", "Other");
+    return names;
+  }
+  function tsCurrentModule() {
+    var v = state.view;
+    if (v === "home" || v === "modules") return "Home / Dashboard";
+    if (v === "tasks") return "Tasks";
+    var m = (typeof MODULE_DEFS !== "undefined" ? MODULE_DEFS : []).find(function (x) { return x.goto === v || x.key === v; });
+    return m ? m.name : "Other";
+  }
+  function tsEnv() {
+    var nav = navigator || {};
+    return {
+      page: location.origin + location.pathname, view: state.view || "", module_guess: tsCurrentModule(),
+      browser: nav.userAgent || "", language: nav.language || "", online: nav.onLine !== false,
+      screen: (screen.width || 0) + "×" + (screen.height || 0), window: window.innerWidth + "×" + window.innerHeight, pixel_ratio: window.devicePixelRatio || 1,
+      touch: ("ontouchstart" in window), time: new Date().toString(), timezone: (Intl.DateTimeFormat().resolvedOptions() || {}).timeZone || "",
+      user: { doc_id: (state.doer || {}).doc_id, name: (state.doer || {}).delegation_name || (state.doer || {}).name, admin: !!(state.doer || {}).is_admin },
+      recent_errors: TS_ERRS.slice(-10)
+    };
+  }
+  function tsDevice(ua) {
+    ua = ua || ""; var os = /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac OS/.test(ua) ? "Mac" : /Linux/.test(ua) ? "Linux" : "";
+    var br = /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "";
+    return [br, os].filter(Boolean).join(" on ") || "Unknown";
+  }
+  function tsShrink(file) {
+    return new Promise(function (res) {
+      var fr = new FileReader();
+      fr.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          var max = 1400, w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
+          var c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k);
+          c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+          res(c.toDataURL("image/jpeg", 0.8));
+        };
+        img.onerror = function () { res(null); };
+        img.src = fr.result;
+      };
+      fr.onerror = function () { res(null); };
+      fr.readAsDataURL(file);
+    });
+  }
+  // Shared picker: file input + Ctrl+V paste → up to 3 shrunk screenshots.
+  function tsWireShots(scope, inputId, prevId, store) {
+    function add(files) {
+      var list = Array.prototype.slice.call(files || []).filter(function (f) { return /^image\//.test(f.type); });
+      if (!list.length) return;
+      Promise.all(list.map(tsShrink)).then(function (urls) {
+        urls.forEach(function (u) { if (u && store.length < 3) store.push(u); });
+        draw();
+        if (list.length && store.length >= 3) toast("Up to 3 screenshots.");
+      });
+    }
+    function draw() {
+      var p = document.getElementById(prevId); if (!p) return;
+      p.innerHTML = store.map(function (s, i) { return '<div class="ts-shot"><img src="' + s + '" alt="" /><button type="button" data-rm="' + i + '" title="Remove">×</button></div>'; }).join("");
+      p.querySelectorAll("[data-rm]").forEach(function (b) { b.onclick = function () { store.splice(+b.dataset.rm, 1); draw(); }; });
+    }
+    var inp = document.getElementById(inputId);
+    if (inp) inp.onchange = function () { add(this.files); this.value = ""; };
+    if (scope) scope.addEventListener("paste", function (e) {
+      var items = (e.clipboardData && e.clipboardData.items) || [], files = [];
+      for (var i = 0; i < items.length; i++) if (items[i].kind === "file") { var f = items[i].getAsFile(); if (f) files.push(f); }
+      if (files.length) { e.preventDefault(); add(files); }
+    });
+    return draw;
+  }
+  function tsLightbox(src) { var d = document.createElement("div"); d.className = "ts-lightbox"; d.innerHTML = '<img src="' + src + '" alt="" />'; d.onclick = function () { d.remove(); }; document.body.appendChild(d); }
+
+  // ---------- report form ----------
+  function openTsReport() {
+    if (!state.doer) return;
+    var shots = [], cur = tsCurrentModule();
+    openModal('<h3 style="margin-top:0">🛠️ Report a technical problem</h3>' +
+      '<div class="sub" style="margin-bottom:12px">Tell us what went wrong — the support team gets it instantly. Your browser, device and the page you were on are attached automatically.</div>' +
+      '<div class="ts-grid2"><div class="field"><label>Where is the problem?</label><select id="tsMod">' + tsModuleList().map(function (n) { return "<option" + (n === cur ? " selected" : "") + ">" + esc(n) + "</option>"; }).join("") + "</select></div>" +
+      '<div class="field"><label>What kind of problem?</label><select id="tsCat">' + TS_CATS.map(function (c) { return "<option>" + esc(c) + "</option>"; }).join("") + "</select></div></div>" +
+      '<div class="field"><label>Short title</label><input id="tsTitle" maxlength="150" placeholder="e.g. Sampling FMS shows a blank page" /></div>' +
+      '<div class="field"><label>What happened?</label><textarea id="tsDesc" rows="4" placeholder="What did you see? Copy any error message exactly."></textarea></div>' +
+      '<div class="field"><label>Steps to repeat it <span class="sub">(optional)</span></label><textarea id="tsSteps" rows="2" placeholder="1. Opened Modules → …  2. Clicked …  3. …"></textarea></div>' +
+      '<div class="field"><label>How urgent is it?</label><div class="ts-sev" id="tsSev">' + Object.keys(TS_SEV).map(function (k) { return '<label class="ts-sev-opt" style="--c:' + TS_SEV_COLOR[k] + '"><input type="radio" name="tsSev" value="' + k + '"' + (k === "Medium" ? " checked" : "") + " /><span>" + esc(TS_SEV[k]) + "</span></label>"; }).join("") + "</div></div>" +
+      '<div class="field"><label>Screenshots <span class="sub">(up to 3 — or press Ctrl+V to paste one)</span></label><input id="tsFiles" type="file" accept="image/*" multiple /><div class="ts-shots" id="tsPrev"></div></div>' +
+      '<details class="ts-env"><summary>Technical details that will be attached</summary><pre>' + esc(JSON.stringify(tsEnv(), null, 2)) + "</pre></details>" +
+      '<div class="modal-err" id="tsErr"></div><div class="modal-actions"><button class="btn secondary" id="tsCancel" type="button">Cancel</button><button class="btn" id="tsSend" type="button">Send to Tech Support</button></div>', "wide");
+    var modal = document.querySelector("#modalRoot .modal");
+    tsWireShots(modal, "tsFiles", "tsPrev", shots);
+    document.getElementById("tsCancel").onclick = closeModal;
+    document.getElementById("tsSend").onclick = function () {
+      var b = this, err = document.getElementById("tsErr"); err.textContent = "";
+      var sev = (document.querySelector('input[name="tsSev"]:checked') || {}).value || "Medium";
+      var payload = { module: document.getElementById("tsMod").value, category: document.getElementById("tsCat").value, title: document.getElementById("tsTitle").value.trim(), description: document.getElementById("tsDesc").value.trim(), steps: document.getElementById("tsSteps").value.trim(), severity: sev, screenshots: shots, env: tsEnv() };
+      if (!payload.title) { err.textContent = "Please give it a short title."; return; }
+      if (payload.description.length < 5) { err.textContent = "Please describe what happened."; return; }
+      b.disabled = true; b.textContent = "Sending…";
+      tsCall("tsCreate", payload).then(function (r) {
+        closeModal();
+        toast("Reported as " + r.id + " — the support team has been emailed.");
+        if (state.view === "techsupport") { TS.tab = "mine"; renderTechSupport(); }
+        tsRefreshBadge();
+      }).catch(function (e) { err.textContent = e.message; b.disabled = false; b.textContent = "Send to Tech Support"; });
+    };
+  }
+
+  // ---------- page ----------
+  function tsRefreshBadge() {
+    if (!state.doer || state.demo) return;
+    tsCall("tsMeta").then(function (m) {
+      TS.meta = m;
+      var n = m.isHandler ? m.openCount : m.needsMe, fab = document.getElementById("tsFabBadge");
+      if (fab) { fab.textContent = n || ""; fab.classList.toggle("hidden", !n); fab.title = m.isHandler ? n + " open issue(s) for the support team" : n + " of your issues need a look"; }
+    }).catch(function () {});
+  }
+  function renderTechSupport() {
+    var body = document.getElementById("tsBody");
+    if (!body) return;
+    if (state.demo) { body.innerHTML = '<div class="empty">Tech Support isn\'t available in Preview Mode.</div>'; return; }
+    body.innerHTML = '<div class="empty">Loading…</div>';
+    (TS.meta ? Promise.resolve(TS.meta) : tsCall("tsMeta")).then(function (m) {
+      TS.meta = m;
+      if (!m.isHandler && TS.tab !== "mine") TS.tab = "mine";
+      var tabs = [["mine", "📋 My issues"]];
+      if (m.isHandler) tabs.push(["all", "🗂️ All issues" + (m.openCount ? ' <span class="ts-count">' + m.openCount + "</span>" : "")], ["settings", "⚙️ Settings"]);
+      document.getElementById("tsTabs").innerHTML = tabs.map(function (t) { return '<button class="tab' + (TS.tab === t[0] ? " active" : "") + '" data-ts="' + t[0] + '" type="button">' + t[1] + "</button>"; }).join("");
+      document.querySelectorAll("#tsTabs [data-ts]").forEach(function (b) { b.onclick = function () { TS.tab = b.dataset.ts; renderTechSupport(); }; });
+      if (TS.tab === "settings") return tsSettings();
+      tsList();
+    }).catch(function (e) { body.innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; });
+  }
+  function tsList() {
+    var body = document.getElementById("tsBody"), all = TS.tab === "all", f = TS.filter, m = TS.meta || {};
+    var filters = '<div class="ts-filters"><div><label>Status</label><select id="tsFSt"><option value="active">Not finished</option><option value="">All</option>' + ["Open", "In progress", "Waiting for you", "Resolved", "Closed"].map(function (s) { return '<option value="' + s + '">' + s + "</option>"; }).join("") + "</select></div>" +
+      (all ? '<div><label>Urgency</label><select id="tsFSev"><option value="">Any</option>' + Object.keys(TS_SEV).map(function (s) { return '<option value="' + s + '">' + s + "</option>"; }).join("") + "</select></div>" +
+        '<div><label>Assigned to</label><select id="tsFAs"><option value="">Anyone</option><option value="__none">Not assigned</option>' + (m.team || []).map(function (t) { return '<option value="' + esc(t.doc_id) + '">' + esc(t.name) + "</option>"; }).join("") + "</select></div>" : "") +
+      '<div style="flex:1;min-width:160px"><label>Search</label><input id="tsFQ" placeholder="ID, title, person, module" /></div></div>';
+    body.innerHTML = filters + '<div id="tsRows"><div class="empty">Loading…</div></div>';
+    document.getElementById("tsFSt").value = f.status;
+    if (all) { document.getElementById("tsFSev").value = f.severity; document.getElementById("tsFAs").value = f.assignee; }
+    function load() {
+      f.status = document.getElementById("tsFSt").value;
+      if (all) { f.severity = document.getElementById("tsFSev").value; f.assignee = document.getElementById("tsFAs").value; }
+      document.getElementById("tsRows").innerHTML = '<div class="empty">Loading…</div>';
+      tsCall("tsList", { scope: all ? "all" : "mine", status: f.status, severity: all ? f.severity : "", assignee: all ? f.assignee : "" }).then(function (rows) { TS.rows = rows; draw(); })
+        .catch(function (e) { document.getElementById("tsRows").innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; });
+    }
+    function draw() {
+      var q = (document.getElementById("tsFQ").value || "").toLowerCase();
+      var rows = TS.rows.filter(function (r) { return !q || [r.id, r.title, r.reporter_name, r.module, r.assignee_name, r.category].join(" ").toLowerCase().indexOf(q) !== -1; });
+      if (!rows.length) {
+        document.getElementById("tsRows").innerHTML = '<div class="empty">' + (all ? "No issues match these filters." : 'You haven\'t reported any problems' + (f.status === "active" ? " that are still open" : "") + '. Something not working? <a href="javascript:void(0)" id="tsEmptyNew">Report it here</a>.') + "</div>";
+        var en = document.getElementById("tsEmptyNew"); if (en) en.onclick = openTsReport;
+        return;
+      }
+      document.getElementById("tsRows").innerHTML = '<div class="ts-list">' + rows.map(function (r) {
+        return '<div class="ts-row" data-id="' + esc(r.id) + '"><div class="ts-row-main"><div class="ts-row-top"><b class="ts-id">' + esc(r.id) + "</b> " + esc(r.title) + "</div>" +
+          '<div class="sub">' + esc(r.module) + " · " + esc(r.category) + (all ? " · by " + esc(r.reporter_name) : "") + " · reported " + tsWhen(r.created_at) + (r.comment_count ? " · 💬 " + r.comment_count + (r.last_comment_by ? " (last: " + esc(r.last_comment_by) + ")" : "") : "") + "</div></div>" +
+          '<div class="ts-row-side">' + tsChip(r.status, TS_STATUS_COLOR[r.status]) + tsChip(r.severity, TS_SEV_COLOR[r.severity]) + '<div class="sub">' + (r.assignee_name ? "👤 " + esc(r.assignee_name) : (all ? "Not assigned" : "")) + "</div><div class=\"sub\">updated " + tsWhen(r.updated_at) + "</div></div></div>";
+      }).join("") + "</div>";
+      document.querySelectorAll("#tsRows .ts-row").forEach(function (el) { el.onclick = function () { openTsIssue(el.dataset.id); }; });
+    }
+    ["tsFSt", "tsFSev", "tsFAs"].forEach(function (id) { var el = document.getElementById(id); if (el) el.onchange = load; });
+    document.getElementById("tsFQ").oninput = draw;
+    load();
+  }
+
+  // ---------- one issue ----------
+  function openTsIssue(id) {
+    openModal('<div class="empty">Loading ' + esc(id) + "…</div>", "wide");
+    Promise.all([tsCall("tsGet", { id: id }), TS.meta ? Promise.resolve(TS.meta) : tsCall("tsMeta")]).then(function (res) {
+      var i = res[0]; TS.meta = res[1];
+      var m = TS.meta || {}, handler = !!m.isHandler, own = i.reporter_doc_id === (state.doer || {}).doc_id, env = i.env || {}, replyShots = [];
+      var comments = (i.comments || []).map(function (c) {
+        var mine = c.by === (state.doer || {}).doc_id;
+        return '<div class="ts-msg ' + (c.internal ? "internal" : c.staff ? "staff" : "user") + (mine ? " mine" : "") + '"><div class="ts-msg-h"><b>' + esc(c.name) + "</b>" + (c.staff ? " · Tech Support" : "") + (c.internal ? " · 🔒 private note" : "") + " · " + tsWhen(c.at) + "</div>" +
+          (c.body ? '<div class="ts-msg-b">' + esc(c.body) + "</div>" : "") + ((c.images || []).length ? '<div class="ts-shots">' + c.images.map(function (s) { return '<div class="ts-shot"><img src="' + s + '" alt="" /></div>'; }).join("") + "</div>" : "") + "</div>";
+      }).join("");
+      var controls = "";
+      if (handler) {
+        controls = '<div class="ts-ctrl"><div class="ts-grid3">' +
+          '<div class="field"><label>Status</label><select id="tsUSt">' + ["Open", "In progress", "Waiting for you", "Resolved", "Closed"].map(function (s) { return "<option" + (s === i.status ? " selected" : "") + ">" + s + "</option>"; }).join("") + "</select></div>" +
+          '<div class="field"><label>Assigned to</label><select id="tsUAs"><option value="">— nobody —</option>' + (m.team || []).map(function (t) { return '<option value="' + esc(t.doc_id) + '"' + (t.doc_id === i.assignee_doc_id ? " selected" : "") + ">" + esc(t.name) + "</option>"; }).join("") + "</select></div>" +
+          '<div class="field"><label>Urgency</label><select id="tsUSev">' + Object.keys(TS_SEV).map(function (s) { return "<option" + (s === i.severity ? " selected" : "") + ">" + s + "</option>"; }).join("") + "</select></div></div>" +
+          '<div class="field"><label>How it was fixed <span class="sub">(the reporter sees this)</span></label><textarea id="tsURes" rows="2" placeholder="e.g. Cleared the stuck session; asked user to press Ctrl+F5">' + esc(i.resolution || "") + "</textarea></div>" +
+          '<button class="btn" id="tsUSave" type="button">Save changes</button> <span class="sub">The reporter is emailed when the status changes.</span></div>';
+      } else if (own) {
+        controls = '<div class="ts-ctrl" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+          (i.status === "Resolved" || i.status === "Closed" ? '<button class="btn secondary" id="tsReopen" type="button">↩ Still not working — Reopen</button>' : "") +
+          (i.status !== "Closed" ? '<button class="btn secondary" id="tsClose" type="button">✓ Problem is fixed — Close</button>' : "") + "</div>";
+      }
+      var envRows = [["Device", tsDevice(env.browser)], ["Page", (env.view || "") + (env.module_guess ? " (" + env.module_guess + ")" : "")], ["Screen / window", (env.screen || "") + " / " + (env.window || "")], ["Time on their computer", env.time || ""], ["Online", env.online === false ? "No" : "Yes"]];
+      var errs = (env.recent_errors || []);
+      openModal('<div class="ts-head"><div><div class="sub">' + esc(i.id) + " · " + esc(i.module) + " · " + esc(i.category) + '</div><h3 style="margin:4px 0 0">' + esc(i.title) + '</h3></div><button class="btn secondary" id="tsX" type="button">✕</button></div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">' + tsChip(i.status, TS_STATUS_COLOR[i.status]) + tsChip("Urgency: " + i.severity, TS_SEV_COLOR[i.severity]) + (i.assignee_name ? tsChip("👤 " + i.assignee_name, "#0f766e") : "") + "</div>" +
+        '<div class="sub">Reported by <b>' + esc(i.reporter_name) + "</b> · " + fmtDate(i.created_at) + " (" + tsWhen(i.created_at) + ")" + (i.resolved_at ? " · finished " + tsWhen(i.resolved_at) : "") + "</div>" +
+        '<div class="ts-block"><b>What happened</b><div class="ts-pre">' + esc(i.description) + "</div>" + (i.steps ? "<b>Steps to repeat</b><div class=\"ts-pre\">" + esc(i.steps) + "</div>" : "") + "</div>" +
+        ((i.screenshots || []).length ? '<div class="ts-shots">' + i.screenshots.map(function (s) { return '<div class="ts-shot"><img src="' + s + '" alt="" /></div>'; }).join("") + "</div>" : "") +
+        (i.resolution ? '<div class="ts-block ts-fix"><b>✅ How it was fixed</b><div class="ts-pre">' + esc(i.resolution) + "</div></div>" : "") +
+        '<details class="ts-env"><summary>🖥️ Technical details' + (errs.length ? " · " + errs.length + " recent error(s)" : "") + "</summary>" +
+        '<table class="ts-envt">' + envRows.map(function (r) { return "<tr><td>" + esc(r[0]) + "</td><td>" + esc(r[1]) + "</td></tr>"; }).join("") + "</table>" +
+        (errs.length ? "<b>Recent errors</b><pre>" + esc(errs.map(function (e) { return e.at.slice(11, 19) + " [" + e.kind + (e.view ? " · " + e.view : "") + "] " + e.msg; }).join("\n")) + "</pre>" : "") +
+        "<pre>" + esc(env.browser || "") + "</pre></details>" +
+        controls +
+        '<h4 style="margin:18px 0 8px">Conversation</h4><div class="ts-thread">' + (comments || '<div class="sub">No messages yet.</div>') + "</div>" +
+        (i.status !== "Closed" || handler ? '<div class="field" style="margin-top:10px"><textarea id="tsRep" rows="3" placeholder="' + (handler && !own ? "Reply to " + esc(i.reporter_name) + " (they get an email)" : "Add more details or answer the support team") + '"></textarea></div>' +
+          '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><label class="btn secondary" style="cursor:pointer">📎 Screenshot<input id="tsRepFiles" type="file" accept="image/*" multiple style="display:none" /></label>' +
+          (handler ? '<label class="sub" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="tsInternal" style="width:auto" /> Private note (support team only)</label>' : "") +
+          '<button class="btn" id="tsRepGo" type="button" style="margin-left:auto">Send</button></div><div class="ts-shots" id="tsRepPrev"></div>' : '<div class="sub" style="margin-top:8px">This issue is closed. Use <b>Reopen</b> if the problem came back.</div>') +
+        (handler && (i.history || []).length ? '<details class="ts-env" style="margin-top:14px"><summary>📜 History (' + i.history.length + ")</summary><ul class=\"ts-hist\">" + i.history.map(function (h) { return "<li>" + fmtDate(h.at) + " " + new Date(h.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) + " — <b>" + esc(h.by) + "</b>: " + esc(h.what) + "</li>"; }).join("") + "</ul></details>" : ""), "wide");
+      var modal = document.querySelector("#modalRoot .modal");
+      document.getElementById("tsX").onclick = closeModal;
+      modal.querySelectorAll(".ts-shot img").forEach(function (im) { im.onclick = function () { tsLightbox(im.src); }; });
+      var tb = modal.querySelector(".ts-thread"); if (tb) tb.scrollTop = tb.scrollHeight;
+      if (document.getElementById("tsRepFiles")) {
+        var repDraw = tsWireShots(modal, "tsRepFiles", "tsRepPrev", replyShots);
+        document.getElementById("tsRepGo").onclick = function () {
+          var b = this, text = document.getElementById("tsRep").value.trim();
+          if (!text && !replyShots.length) return;
+          b.disabled = true;
+          tsCall("tsComment", { id: i.id, body: text, images: replyShots, internal: !!(document.getElementById("tsInternal") || {}).checked })
+            .then(function () { toast("Sent."); openTsIssue(i.id); tsAfterChange(); }).catch(function (e) { toast(e.message, true); b.disabled = false; });
+        };
+        void repDraw;
+      }
+      function upd(payload, msg) { return tsCall("tsUpdate", Object.assign({ id: i.id }, payload)).then(function (r) { toast(r && r.unchanged ? "Nothing changed." : msg); openTsIssue(i.id); tsAfterChange(); }).catch(function (e) { toast(e.message, true); }); }
+      var sv = document.getElementById("tsUSave");
+      if (sv) sv.onclick = function () {
+        var st = document.getElementById("tsUSt").value, res = document.getElementById("tsURes").value.trim();
+        if (st === "Resolved" && !res) { toast("Please write how it was fixed before marking it Resolved.", true); return; }
+        this.disabled = true;
+        upd({ status: st, assignee_doc_id: document.getElementById("tsUAs").value, severity: document.getElementById("tsUSev").value, resolution: res }, "Saved.");
+      };
+      var ro = document.getElementById("tsReopen"); if (ro) ro.onclick = function () { upd({ status: "Open" }, "Reopened — the support team has been told."); };
+      var cl = document.getElementById("tsClose"); if (cl) cl.onclick = function () { upd({ status: "Closed" }, "Closed. Thanks!"); };
+    }).catch(function (e) { openModal('<div class="empty">' + esc(e.message) + '</div><div class="modal-actions"><button class="btn secondary" onclick="document.getElementById(\'modalRoot\').innerHTML=\'\'">Close</button></div>'); });
+  }
+  function tsAfterChange() { tsRefreshBadge(); if (state.view === "techsupport" && TS.tab !== "settings") tsList(); }
+
+  // ---------- settings (support team) ----------
+  function tsSettings() {
+    var body = document.getElementById("tsBody"), admin = !!(TS.meta || {}).isAdmin;
+    body.innerHTML = '<div class="empty">Loading…</div>';
+    tsCall("tsSettings").then(function (s) {
+      var people = (state.doers || []).filter(function (d) { return !d.is_admin && !d.is_deleted; }).sort(function (a, b) { return String(a.delegation_name || a.name).localeCompare(String(b.delegation_name || b.name)); });
+      body.innerHTML = '<div class="ts-grid2"><div class="card" style="padding:18px"><h3 style="margin-top:0">📬 Who gets new-issue emails</h3><div class="sub" style="margin-bottom:8px">Emailed the moment someone reports a problem or replies to an unassigned issue. One email per line.</div>' +
+        '<textarea id="tsNE" rows="5"' + (admin ? "" : " disabled") + ">" + esc((s.notify_emails || []).join("\n")) + "</textarea></div>" +
+        '<div class="card" style="padding:18px"><h3 style="margin-top:0">🧑‍🔧 Support team</h3><div class="sub" style="margin-bottom:8px">Workspace admins are always on the team. Tick anyone else who should see <b>all</b> issues and be able to fix / assign them (for example your IT person).</div>' +
+        '<input id="tsTeamQ" placeholder="Search staff" style="margin-bottom:8px" /><div class="ts-team" id="tsTeamList">' + people.map(function (d) { var n = d.delegation_name || d.name; return '<label data-n="' + esc(String(n).toLowerCase()) + '"><input type="checkbox" value="' + esc(d.doc_id) + '"' + ((s.team || []).indexOf(d.doc_id) !== -1 ? " checked" : "") + (admin ? "" : " disabled") + " /> " + esc(n) + "</label>"; }).join("") + "</div></div></div>" +
+        (admin ? '<button class="btn" id="tsSetSave" type="button" style="margin-top:14px">Save settings</button>' : '<div class="sub" style="margin-top:12px">Only a Workspace admin can change these settings.</div>');
+      document.getElementById("tsTeamQ").oninput = function () { var q = this.value.toLowerCase(); document.querySelectorAll("#tsTeamList label").forEach(function (l) { l.style.display = !q || l.dataset.n.indexOf(q) !== -1 ? "" : "none"; }); };
+      var sv = document.getElementById("tsSetSave");
+      if (sv) sv.onclick = function () {
+        var b = this; b.disabled = true;
+        var team = Array.prototype.map.call(document.querySelectorAll("#tsTeamList input:checked"), function (x) { return x.value; });
+        tsCall("tsSettings", { set: true, notify_emails: document.getElementById("tsNE").value.split(/[\n,;]+/).map(function (x) { return x.trim(); }).filter(Boolean), team: team })
+          .then(function () { toast("Settings saved."); TS.meta = null; b.disabled = false; }).catch(function (e) { toast(e.message, true); b.disabled = false; });
+      };
+    }).catch(function (e) { body.innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; });
+  }
+  (function () {
+    var fab = document.getElementById("tsFab"); if (fab) fab.addEventListener("click", openTsReport);
+    var nb = document.getElementById("tsNewBtn"); if (nb) nb.addEventListener("click", openTsReport);
+    setInterval(function () { if (state.doer && !document.hidden) tsRefreshBadge(); }, 180000);
+    setTimeout(function tick() { if (state.doer && !state.demo) tsRefreshBadge(); else setTimeout(tick, 5000); }, 4000);
+  })();
 
   // ---------- Press & Blogs ----------
   // Company posts from LinkedIn / Instagram, press coverage and blog articles,
