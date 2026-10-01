@@ -1699,7 +1699,7 @@ window.RCBuyerUI = (function () {
   // ---------------- The app ----------------
   var SECTIONS = [
     ["overview", "🏠 Overview"], ["samples", "🧵 Samples"], ["orders", "📦 Orders"], ["approvals", "✅ Approvals"],
-    ["messages", "💬 Messages"], ["request", "✨ Request a sample"], ["account", "👤 My account"]
+    ["messages", "💬 Messages"], ["request", "✨ Request a sample"], ["inspect", "🔍 Book an inspection"], ["account", "👤 My account"]
   ];
   function drawNav() {
     var h = S.home || {};
@@ -1719,7 +1719,7 @@ window.RCBuyerUI = (function () {
     try { history.replaceState(null, "", location.pathname + "?buyer#" + section); } catch (e) {}
     drawNav();
     track("view_section", { section: section });
-    ({ overview: vOverview, samples: vSamples, orders: vOrders, approvals: vApprovals, messages: vMessages, request: vRequest, account: vAccount }[section] || vOverview)();
+    ({ overview: vOverview, samples: vSamples, orders: vOrders, approvals: vApprovals, messages: vMessages, request: vRequest, inspect: vInspect, account: vAccount }[section] || vOverview)();
   }
   document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden" && getS() && !$("bpApp").classList.contains("bp-hidden")) { leaveSection(); S.sectionStart = Date.now(); } });
   function main(html) { $("bpMain").innerHTML = html; }
@@ -1757,7 +1757,7 @@ window.RCBuyerUI = (function () {
         (h.recent_samples.length ? h.recent_samples.slice(0, 3).map(function (io) { return UI.sampleCard(io, h.buyer_codes.length > 1); }).join("") + '<button class="bp-btn sec" data-s="samples" type="button">See all samples →</button>' : '<div class="bs-empty">No samples yet.</div>') +
       '</div></div><div><div class="bp-panel"><h3>Quick actions</h3><div class="bp-quick">' +
         '<button data-s="orders" type="button"><i>📦</i>Track my orders</button><button data-s="request" type="button"><i>✨</i>Request a new sample</button>' +
-        '<button data-s="messages" type="button"><i>💬</i>Message my merchant</button><button data-s="account" type="button"><i>👥</i>Invite a colleague</button>' +
+        '<button data-s="inspect" type="button"><i>🔍</i>Book an inspection</button><button data-s="messages" type="button"><i>💬</i>Message my merchant</button><button data-s="account" type="button"><i>👥</i>Invite a colleague</button>' +
       '</div></div><div class="bp-panel"><h3>Your account</h3><div style="font-size:13px;color:#5B5E66;line-height:1.8">' + esc(h.email) + "<br/>Buyer code: <b>" + esc(h.buyer_codes.join(", ")) + "</b><br/>Member since " + esc(fd(h.member_since)) + "</div></div></div></div>");
     $("bpMain").querySelectorAll("[data-s]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); go(b.dataset.s); }); });
   }
@@ -1885,6 +1885,48 @@ window.RCBuyerUI = (function () {
   }
 
   // Request a sample
+  // 🔍 Book an inspection — saved straight into Rugs Creation's Inspection module
+  var ENGAGE_FN = "https://asbgfjngxsabnnzgxugu.supabase.co/functions/v1/engage-api";
+  function ecall(action, payload) {
+    return fetch(ENGAGE_FN, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + KEY, "apikey": KEY }, body: JSON.stringify(Object.assign({ action: action, session: getS() }, payload || {})) })
+      .then(function (r) { return r.json().then(function (j) {
+        if (!j.ok) { if (r.status === 401) { setS(""); showAuth("login", "Your session has ended — please sign in again."); } var e = new Error(j.error || "Something went wrong."); e.status = r.status; throw e; }
+        return j.data; }); });
+  }
+  function vInspect() {
+    var h = S.home || { buyer_codes: [] };
+    var now = new Date(Date.now() + 864e5 - new Date().getTimezoneOffset() * 60000); now.setUTCHours(5, 30, 0, 0);
+    main(head("🔍 Book an inspection", "Tell us when your inspector is coming — it goes straight to our QA and production teams.") +
+      '<div class="bp-grid2"><div class="bp-panel bp-form"><h3>New inspection</h3>' +
+      (h.buyer_codes.length > 1 ? '<label>Buyer code</label><select id="bpICode">' + h.buyer_codes.map(function (c) { return "<option>" + esc(c) + "</option>"; }).join("") + "</select>" : "") +
+      '<div class="row"><div><label>Date &amp; time *</label><input id="bpIWhen" type="datetime-local" value="' + now.toISOString().slice(0, 16) + '" /></div>' +
+      '<div><label>Inspector / agency *</label><input id="bpIWho" placeholder="e.g. QIMA – Rahul Mehta" /></div></div>' +
+      '<label>What will be inspected? (PO, style, quantity, type)</label><textarea id="bpIWhat" placeholder="e.g. Final random inspection – PO 4521, 1,200 pcs"></textarea>' +
+      '<button class="bp-btn" id="bpIGo" type="button" style="margin-top:8px">Book inspection</button><div class="bp-err2" id="bpIErr"></div><div class="bp-ok2" id="bpIOk"></div></div>' +
+      '<div class="bp-panel"><h3>Your inspections</h3><div id="bpIList"><div class="bs-empty">Loading…</div></div></div></div>');
+    $("bpIGo").onclick = function () {
+      var b = this; $("bpIErr").textContent = ""; $("bpIOk").textContent = "";
+      if (!$("bpIWhen").value) { $("bpIErr").textContent = "Pick the date and time."; return; }
+      if (!$("bpIWho").value.trim()) { $("bpIErr").textContent = "Enter the inspector or agency name."; return; }
+      b.disabled = true;
+      ecall("portalBookInspection", { buyer_code: $("bpICode") ? $("bpICode").value : (h.buyer_codes[0] || ""), visit_at: new Date($("bpIWhen").value).toISOString(), visitor_name: $("bpIWho").value.trim(), reason: $("bpIWhat").value.trim() })
+        .then(function () { track("inspection_booked", {}); $("bpIOk").textContent = "✓ Booked — our team has been notified."; $("bpIWho").value = ""; $("bpIWhat").value = ""; b.disabled = false; loadInsp(); })
+        .catch(function (e) { $("bpIErr").textContent = e.message; b.disabled = false; });
+    };
+    function loadInsp() {
+      ecall("portalInspections").then(function (d) {
+        var list = d.inspections || [];
+        $("bpIList").innerHTML = list.length ? list.map(function (v) {
+          var when = new Date(v.visit_at), past = when.getTime() < Date.now();
+          return '<div class="bs-card" style="padding:12px"><div class="bs-card-head"><div><b>' + esc(when.toLocaleString("en-GB", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })) + '</b>' +
+            '<div class="bs-meta">' + esc(v.visitor_name || "") + (v.reason ? " · " + esc(String(v.reason).replace(" · booked by buyer", "")) : "") + '</div></div>' +
+            '<span class="bs-pill" style="' + (past ? "" : "background:#DCFCE7;color:#166534") + '">' + (past ? "Done" : "Booked") + "</span></div></div>";
+        }).join("") : '<div class="bs-empty">No inspections yet. Book your first one on the left.</div>';
+      }).catch(function (e) { $("bpIList").innerHTML = '<div class="bs-empty">' + esc(e.message) + "</div>"; });
+    }
+    loadInsp();
+  }
+
   function vRequest() {
     var h = S.home || { buyer_codes: [] }, photos = [];
     main(head("✨ Request a sample", "Tell us what you'd like developed — our sampling team will confirm and you can follow it in Samples.") +
@@ -2178,6 +2220,7 @@ window.RCBuyerUI = (function () {
       </div>
       <div class="stat-grid" id="statGrid"></div>
       <div class="notif-wrap hidden" id="notifHomeWrap"></div>
+      <div class="card hidden" id="pollHomeWidget" style="padding:18px;margin-bottom:20px"></div>
       <div class="profile-nudge hidden" id="profileNudgeWrap"></div>
       <div class="birthday-banner hidden" id="birthdayHomeWidget"><div class="birthday-poster-row" id="birthdayPosterRow"></div></div>
       <div class="card hidden" id="anniversaryHomeWidget" style="padding:18px;margin-bottom:20px;background:#fff7e6;border:1px solid #ffe2a8"></div>
@@ -2520,16 +2563,17 @@ window.RCBuyerUI = (function () {
         .dir-card:hover{border-color:var(--brand);transform:translateY(-1px);}
         .dir-av{width:52px;height:52px;border-radius:50%;object-fit:cover;display:grid;place-items:center;font-weight:800;font-size:17px;color:#fff;background:hsl(var(--h,20) 65% 48%);}
         .dir-info{min-width:0;}
-        .dir-name{font-weight:800;font-size:14.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-        .dir-code{margin-left:6px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--brand);color:var(--brand-ink,#fff);vertical-align:1px;}
+        .dir-name{font-weight:800;font-size:14.5px;line-height:1.25;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}
+        .dir-code{display:inline-block;margin-top:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--brand);color:var(--brand-ink,#fff);white-space:nowrap;}
         .dir-role{font-size:12px;color:var(--sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-        .dir-phone{font-size:13px;font-weight:700;color:var(--ink);margin-top:6px;font-variant-numeric:tabular-nums;}
+        .dir-phone{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:var(--ink);margin-top:6px;font-variant-numeric:tabular-nums;}
+        .dir-phone svg,.dir-mail svg{flex:none;color:var(--sub);}
         .dir-phone.muted{color:var(--sub);font-weight:500;}
-        .dir-mail{font-size:12px;color:var(--sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .dir-mail{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
         .dir-acts{display:flex;flex-direction:column;gap:6px;}
-        .dir-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;text-decoration:none;font-size:17px;background:var(--bg);border:1px solid var(--line);}
-        .dir-btn:hover{border-color:var(--brand);}
-        .dir-btn.wa:hover{border-color:#25D366;}
+        .dir-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;text-decoration:none;background:var(--brand);color:var(--brand-ink,#fff);border:0;transition:transform .12s;}
+        .dir-btn:hover{transform:scale(1.08);}
+        .dir-btn.wa{background:#1FAF5A;color:#fff;}
         .dir-empty{padding:30px 16px;text-align:center;color:var(--sub);background:var(--card);border:1px dashed var(--line);border-radius:var(--radius-card,16px);}
         .dir-table-wrap{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card,16px);}
         .dir-table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -2970,6 +3014,55 @@ window.RCBuyerUI = (function () {
   </main>
 </div>
 
+<style>
+/* ---- polls v2 ---- */
+.pv-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card,16px);padding:16px 18px;margin-bottom:14px;}
+.pv-card.compact{padding:14px 16px;margin:10px 0 0;background:var(--bg);}
+.pv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.pv-q{font-weight:800;font-size:15px;color:var(--ink);}
+.pv-new{flex:none;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--brand);color:var(--brand-ink,#fff);animation:pvPulse 1.6s ease-in-out infinite;}
+@keyframes pvPulse{50%{opacity:.6}}
+.pv-sub{font-size:12px;color:var(--sub);margin:4px 0 10px;}
+.pv-opts{display:flex;flex-direction:column;gap:6px;}
+.pv-opt{position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:600 13.5px/1.3 inherit;cursor:pointer;transition:border-color .15s;}
+.pv-opt:hover:not([disabled]){border-color:var(--brand);}
+.pv-opt.on{border-color:var(--brand);}
+.pv-opt[disabled]{cursor:default;}
+.pv-box{position:relative;z-index:1;flex:none;width:20px;height:20px;border-radius:6px;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:900;color:var(--brand-ink,#fff);}
+.pv-opt.on .pv-box{background:var(--brand);border-color:var(--brand);}
+.pv-label{position:relative;z-index:1;flex:1;}
+.pv-count{position:relative;z-index:1;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;}
+.pv-bar{position:absolute;left:0;top:0;bottom:0;background:rgba(var(--vibe-brand-rgb,255,80,1),.10);z-index:0;transition:width .5s;}
+.pv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;}
+.pv-msg{font-size:12px;color:var(--danger-ink);}
+.pv-home-head{display:flex;justify-content:space-between;align-items:center;}
+
+/* ---- what's new ---- */
+.modal.wn-modal{max-width:520px;}
+.wn-hero{text-align:center;padding:6px 0 12px;}
+.wn-spark{font-size:40px;line-height:1;animation:wnPop .6s cubic-bezier(.34,1.56,.64,1);}
+@keyframes wnPop{from{transform:scale(.3) rotate(-30deg);opacity:0}}
+.wn-hero h3{margin:8px 0 2px;font-family:var(--font-heading);font-size:21px;}
+.wn-hero p{margin:0;color:var(--sub);font-size:13px;}
+.wn-list{display:flex;flex-direction:column;gap:8px;margin:8px 0 6px;max-height:55vh;overflow:auto;}
+.wn-item{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:12px;text-align:left;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer;transition:border-color .15s,transform .15s;}
+.wn-item:hover{border-color:var(--brand);transform:translateY(-1px);}
+.wn-ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:var(--card);border:1px solid var(--line);}
+.wn-txt b{display:block;font-size:14px;}
+.wn-txt small{display:block;color:var(--sub);font-size:12.5px;margin-top:2px;line-height:1.35;}
+.wn-go{font-size:12.5px;font-weight:800;color:var(--brand);white-space:nowrap;}
+
+/* ---- guided tour ---- */
+.tour-ov{position:fixed;inset:0;z-index:1000;}
+.tour-spot{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(10,10,20,.62),0 0 0 3px var(--brand);transition:all .3s cubic-bezier(.2,.7,.2,1);pointer-events:none;}
+.tour-tip{position:fixed;width:330px;max-width:calc(100vw - 24px);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:0 18px 50px rgba(0,0,0,.35);transition:left .3s,top .3s;}
+.tour-step{font-size:11.5px;font-weight:700;color:var(--brand);}
+.tour-tip h4{margin:4px 0 6px;font-size:16px;font-family:var(--font-heading);}
+.tour-tip p{margin:0;font-size:13.5px;color:var(--sub);line-height:1.5;}
+.tour-btns{display:flex;gap:8px;margin-top:14px;align-items:center;}
+.tour-btns .btn{padding:7px 14px;}
+@media (prefers-reduced-motion: reduce){.tour-spot,.tour-tip,.pv-new,.wn-spark{transition:none;animation:none;}}
+</style>
 <div id="modalRoot"></div>
 <div id="avatarLightboxRoot"></div>
 <div id="toastRoot"></div>
@@ -4405,6 +4498,7 @@ window.RCBuyerUI = (function () {
       applyBrandColorOverride(); // workspace-wide, every viewer — not admin-gated
       applyModuleOverrides(); // renames/re-icons built-in MODULE_DEFS tiles in place, before anything renders them
       if (typeof ppcMaybePreload === "function") ppcMaybePreload();
+      if (typeof engageAfterLoad === "function") engageAfterLoad();
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
       renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderLeavePage(); renderReimbursementPage(); renderHomeExtras();
       api("getTodaysBirthdays").then(function (b) { state.todaysBirthdays = b || []; renderHome(); }).catch(function () {});
@@ -4433,6 +4527,7 @@ window.RCBuyerUI = (function () {
       applyBrandColorOverride(); // workspace-wide, every viewer — not admin-gated
       applyModuleOverrides(); // renames/re-icons built-in MODULE_DEFS tiles in place, before anything renders them
       if (typeof ppcMaybePreload === "function") ppcMaybePreload();
+      if (typeof engageAfterLoad === "function") engageAfterLoad();
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
       // Re-sync my own record from the just-fetched staff list. Without this, a
       // session restored from localStorage (see boot() below) keeps whatever
@@ -4572,10 +4667,8 @@ window.RCBuyerUI = (function () {
     var dismiss = function () { el.remove(); };
     el.querySelector(".dp-close").addEventListener("click", function (e) { e.stopPropagation(); dismiss(); });
     el.addEventListener("click", function () {
-      api("markNotificationSeen", { ids: [n.id] }).catch(function () {});
-      n.seen_at = new Date().toISOString();
-      renderNotifications();
-      goToView("home");
+      if (!n._local) { api("markNotificationSeen", { ids: [n.id] }).catch(function () {}); n.seen_at = new Date().toISOString(); renderNotifications(); }
+      goToView(n._goto || "home");
       dismiss();
     });
     root.appendChild(el);
@@ -4592,12 +4685,17 @@ window.RCBuyerUI = (function () {
       list = list || [];
       if (notifKnownIds === null) {
         notifKnownIds = {};
+        // unseen notifications from the last 2 days pop up once after sign-in
+        var recentUnseen = list.filter(function (n) { return !n.seen_at && Date.now() - new Date(n.created_at || n.event_at || 0).getTime() < 2 * 864e5; }).slice(0, 3);
+        recentUnseen.forEach(function (n, i) { setTimeout(function () { showDashboardPopup(n); }, 1200 + i * 700); });
+        if (recentUnseen.length) setTimeout(function () { playNotificationSound(); systemNotify("\uD83D\uDD14 " + (recentUnseen[0].title || "New notification"), recentUnseen.length > 1 ? "+" + (recentUnseen.length - 1) + " more in Workspace" : (recentUnseen[0].body || "")); }, 1200);
         list.forEach(function (n) { notifKnownIds[n.id] = true; });
       } else {
         list.filter(function (n) { return !n.seen_at && !notifKnownIds[n.id]; }).forEach(function (n) {
           notifKnownIds[n.id] = true;
           showDashboardPopup(n);
           playNotificationSound();
+          systemNotify("\uD83D\uDD14 " + (n.title || "New notification"), n.body || "");
         });
         list.forEach(function (n) { notifKnownIds[n.id] = true; });
       }
@@ -5645,6 +5743,12 @@ window.RCBuyerUI = (function () {
       body.innerHTML = '<div class="dir-empty" style="color:var(--danger-ink)">Couldn\'t load the directory: ' + esc(e.message) + '. Check your connection and tap Refresh.</div>';
     });
   }
+  var DIR_ICON = {
+    phone: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>',
+    wa: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.4.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>',
+    mob: '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M16 1H8a3 3 0 0 0-3 3v16a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V4a3 3 0 0 0-3-3zm-4 21a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5-5H7V4h10z"/></svg>',
+    mail: '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5z"/></svg>'
+  };
   function dirDigits(p) { return String(p || "").replace(/[^0-9]/g, ""); }
   function dirWa(p) { var d = dirDigits(p); if (d.length === 10) d = "91" + d; return d.length >= 11 ? "https://wa.me/" + d : ""; }
   function dirInitials(n) { return String(n || "?").replace(/[-–].*$/, "").trim().split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0); }).join("").toUpperCase(); }
@@ -5685,13 +5789,14 @@ window.RCBuyerUI = (function () {
           : '<span class="dir-av" style="--h:' + dirHue(p.name) + '">' + esc(dirInitials(p.name)) + "</span>";
         var wa = dirWa(p.phone);
         return '<div class="dir-card">' + av +
-          '<div class="dir-info"><div class="dir-name">' + esc(p.name) + (admin && p.emp_code ? '<span class="dir-code">#' + esc(p.emp_code) + "</span>" : "") + "</div>" +
+          '<div class="dir-info"><div class="dir-name" title="' + esc(p.name) + '">' + esc(p.name) + "</div>" +
+          (admin && p.emp_code ? '<div class="dir-code">Emp code ' + esc(p.emp_code) + "</div>" : "") +
           '<div class="dir-role">' + esc([p.designation, p.department].filter(Boolean).join(" · ") || "—") + "</div>" +
-          (p.phone ? '<div class="dir-phone">📱 ' + esc(p.phone) + "</div>" : '<div class="dir-phone muted">No number saved</div>') +
-          (admin && p.email ? '<div class="dir-mail">✉️ ' + esc(p.email) + "</div>" : "") +
+          (p.phone ? '<div class="dir-phone">' + DIR_ICON.mob + ' ' + esc(p.phone) + "</div>" : '<div class="dir-phone muted">No number saved</div>') +
+          (admin && p.email ? '<div class="dir-mail" title="' + esc(p.email) + '">' + DIR_ICON.mail + ' ' + esc(p.email) + "</div>" : "") +
           '</div><div class="dir-acts">' +
-          (p.phone ? '<a class="dir-btn" href="tel:' + esc(dirDigits(p.phone)) + '" title="Call ' + esc(p.name) + '">📞</a>' : "") +
-          (wa ? '<a class="dir-btn wa" href="' + esc(wa) + '" target="_blank" rel="noopener" title="WhatsApp ' + esc(p.name) + '">💬</a>' : "") +
+          (p.phone ? '<a class="dir-btn" href="tel:' + esc(dirDigits(p.phone)) + '" title="Call ' + esc(p.name) + '">' + DIR_ICON.phone + '</a>' : "") +
+          (wa ? '<a class="dir-btn wa" href="' + esc(wa) + '" target="_blank" rel="noopener" title="WhatsApp ' + esc(p.name) + '">' + DIR_ICON.wa + '</a>' : "") +
           "</div></div>";
       }).join("") + "</div>";
     }
@@ -5722,6 +5827,401 @@ window.RCBuyerUI = (function () {
       })).join("\n");
       (navigator.clipboard ? navigator.clipboard.writeText(tsv) : Promise.reject()).then(function () { toast("Copied " + rows.length + " rows — paste into Excel or Sheets."); }, function () { toast("Couldn't copy — select the table and copy it instead.", true); });
     });
+  }
+
+
+  // =====================================================================
+  // Engagement pack: polls v2 (+ Home widget), better notifications,
+  // "What's new" pop-up, guided tutorial, Buyer Admin inspections.
+  // =====================================================================
+  var ENGAGE_FN_URL = SUPABASE_URL + "/functions/v1/engage-api";
+  function engageApi(action, payload) {
+    if (state.demo) return Promise.reject(new Error("Not available in demo mode."));
+    return fetch(ENGAGE_FN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
+      body: JSON.stringify(Object.assign({ action: action, requester_doc_id: (state.doer || {}).doc_id }, payload || {}))
+    }).then(function (r) { return r.json().then(function (j) { if (!r.ok || !j.ok) throw new Error(j.error || ("HTTP " + r.status)); return j.data; }); });
+  }
+  function myPrefs() { if (!state.doer.dashboard_prefs) state.doer.dashboard_prefs = {}; return state.doer.dashboard_prefs; }
+  function saveMyPrefs(patch) {
+    Object.assign(myPrefs(), patch);
+    return api("updateDoerAccess", { doc_id: state.doer.doc_id, dashboard_prefs: state.doer.dashboard_prefs }).catch(function () {});
+  }
+  function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  // ---------- Polls v2 ----------
+  // Pick one or more options, or "None of these"; change it any time until the poll closes.
+  function pollCardHtml(p, opts) {
+    opts = opts || {};
+    var showResults = p.voted || p.is_closed || (state.doer && state.doer.is_admin);
+    var maxCount = Math.max.apply(null, [1].concat(p.counts || []).concat([p.none_count || 0]));
+    function row(label, count, picked, attrs) {
+      var pct = p.voters ? Math.round(100 * count / p.voters) : 0;
+      return '<button type="button" class="pv-opt' + (picked ? " on" : "") + '" ' + attrs + (p.is_closed ? " disabled" : "") + '>' +
+        '<span class="pv-box" aria-hidden="true">' + (picked ? "✓" : "") + '</span><span class="pv-label">' + esc(label) + '</span>' +
+        (showResults ? '<span class="pv-count">' + count + ' · ' + pct + '%</span><span class="pv-bar" style="width:' + Math.round(100 * count / maxCount) + '%"></span>' : "") +
+        '</button>';
+    }
+    var html = (p.options || []).map(function (o, i) { return row(o, (p.counts || [])[i] || 0, p.my_choices.indexOf(i) !== -1, 'data-pv-opt="' + i + '"'); }).join("") +
+      row("None of these", p.none_count || 0, p.my_none, 'data-pv-none="1"');
+    return '<div class="pv-card' + (opts.compact ? " compact" : "") + '" data-pv="' + esc(p.id) + '">' +
+      '<div class="pv-head"><div class="pv-q">🗳️ ' + esc(p.question) + '</div>' + (p.is_closed ? '<span class="module-badge soon">Closed</span>' : (!p.voted ? '<span class="pv-new">Vote now</span>' : "")) + '</div>' +
+      '<div class="pv-sub">' + p.voters + ' voted · tick one or more, or "None of these"' + (state.doer.is_admin && !p.is_closed && !opts.compact ? ' · <a href="#" data-close-poll="' + esc(p.id) + '">Close poll</a> ' + admBtns("poll", p) : "") + '</div>' +
+      '<div class="pv-opts">' + html + '</div>' +
+      (p.is_closed ? "" : '<div class="pv-actions"><button type="button" class="btn pv-save" disabled>' + (p.voted ? "Update my vote" : "Submit vote") + '</button>' +
+        (p.voted ? '<button type="button" class="btn secondary pv-withdraw">Remove my vote</button>' : "") + '<span class="pv-msg"></span></div>') +
+      '</div>';
+  }
+  function wirePollCards(root, onDone) {
+    root.querySelectorAll(".pv-card").forEach(function (card) {
+      var id = card.getAttribute("data-pv");
+      var poll = (state.polls2 || []).find(function (x) { return x.id === id; });
+      if (!poll || poll.is_closed) return;
+      var sel = { choices: poll.my_choices.slice(), none: poll.my_none };
+      var save = card.querySelector(".pv-save");
+      function paint() {
+        card.querySelectorAll("[data-pv-opt]").forEach(function (b) { var on = sel.choices.indexOf(Number(b.dataset.pvOpt)) !== -1; b.classList.toggle("on", on); b.querySelector(".pv-box").textContent = on ? "✓" : ""; });
+        var nb = card.querySelector("[data-pv-none]"); nb.classList.toggle("on", sel.none); nb.querySelector(".pv-box").textContent = sel.none ? "✓" : "";
+        var changed = sel.none !== poll.my_none || sel.choices.slice().sort().join() !== poll.my_choices.slice().sort().join();
+        save.disabled = !changed || (!sel.none && !sel.choices.length);
+      }
+      card.querySelectorAll("[data-pv-opt]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var i = Number(b.dataset.pvOpt), k = sel.choices.indexOf(i);
+          if (k === -1) sel.choices.push(i); else sel.choices.splice(k, 1);
+          sel.none = false; paint();
+        });
+      });
+      card.querySelector("[data-pv-none]").addEventListener("click", function () { sel.none = !sel.none; if (sel.none) sel.choices = []; paint(); });
+      function send(payload, okMsg) {
+        save.disabled = true; card.querySelector(".pv-msg").textContent = "Saving…";
+        engageApi("pollVote2", Object.assign({ poll_id: id }, payload)).then(function () { toast(okMsg); onDone && onDone(); })
+          .catch(function (e) { card.querySelector(".pv-msg").textContent = e.message; save.disabled = false; });
+      }
+      save.addEventListener("click", function () { send({ choices: sel.choices, none: sel.none }, poll.voted ? "Vote updated 👍" : "Thanks for voting 🙌"); });
+      var wd = card.querySelector(".pv-withdraw");
+      if (wd) wd.addEventListener("click", function () { send({ choices: [], none: false }, "Your vote was removed."); });
+    });
+    root.querySelectorAll("[data-close-poll]").forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        api("pollClose", { requester_doc_id: state.doer.doc_id, poll_id: a.getAttribute("data-close-poll") }).then(function () { onDone && onDone(); }).catch(function (e2) { toast(e2.message, true); });
+      });
+    });
+  }
+  function loadPolls2() { return engageApi("pollsList2", {}).then(function (list) { state.polls2 = list || []; return state.polls2; }); }
+  function renderPolls() {
+    var wrap = document.getElementById("pollsListWrap");
+    if (!wrap) return;
+    document.getElementById("newPollBtn").classList.toggle("hidden", !state.doer.is_admin);
+    wrap.innerHTML = '<div class="empty">Loading…</div>';
+    loadPolls2().then(function (polls) {
+      if (!polls.length) { wrap.innerHTML = '<div class="empty">No polls yet.' + (state.doer.is_admin ? " Tap + New Poll to ask the team something." : "") + '</div>'; return; }
+      wrap.innerHTML = polls.map(function (p) { return pollCardHtml(p); }).join("");
+      wirePollCards(wrap, function () { renderPolls(); renderPollHomeWidget(); });
+    }).catch(function (e) { wrap.innerHTML = '<div class="empty">Couldn\'t load polls: ' + esc(e.message) + '</div>'; });
+  }
+  // Home: every open poll shows here until it's closed.
+  function renderPollHomeWidget() {
+    var host = document.getElementById("pollHomeWidget");
+    if (!host || !state.doer) return;
+    loadPolls2().then(function (polls) {
+      var open = polls.filter(function (p) { return !p.is_closed; }).slice(0, 3);
+      if (!open.length) { host.classList.add("hidden"); host.innerHTML = ""; return; }
+      host.classList.remove("hidden");
+      host.innerHTML = '<div class="pv-home-head"><h3 style="margin:0">🗳️ Polls</h3><button type="button" class="btn secondary" data-goto-polls style="padding:4px 10px;font-size:12px">All polls</button></div>' +
+        open.map(function (p) { return pollCardHtml(p, { compact: true }); }).join("");
+      host.querySelector("[data-goto-polls]").addEventListener("click", function () { goToView("polls"); });
+      wirePollCards(host, function () { renderPollHomeWidget(); });
+      ppcNotePollsSeen(polls);
+    }).catch(function () { host.classList.add("hidden"); });
+  }
+  // A new open poll you haven't voted on pops up once (with sound).
+  function pollSeenKey() { return "rc_polls_seen_" + state.doer.doc_id; }
+  function ppcNotePollsSeen(polls) {
+    var seen = lsGet(pollSeenKey());
+    var first = !seen; seen = seen || {};
+    polls.forEach(function (p) {
+      if (seen[p.id]) return;
+      seen[p.id] = 1;
+      if (!first && !p.is_closed && !p.voted) {
+        showDashboardPopup({ id: "poll-" + p.id, title: "New poll: " + p.question, body: "Tap to vote — it takes 2 seconds.", _goto: "home", _local: true });
+        playNotificationSound(); systemNotify("🗳️ New poll", p.question);
+      }
+    });
+    lsSet(pollSeenKey(), seen);
+  }
+
+  // ---------- Desktop (Windows / phone) notifications ----------
+  function systemNotify(title, body) {
+    try {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      if (!document.hidden && document.hasFocus()) return; // already looking at the app: the in-app pop-up is enough
+      var opts = { body: body || "", icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "rc-" + Date.now() };
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+        navigator.serviceWorker.getRegistration().then(function (reg) {
+          if (reg && reg.showNotification) reg.showNotification(title, opts); else new Notification(title, opts);
+        }).catch(function () { try { new Notification(title, opts); } catch (e) {} });
+      } else { new Notification(title, opts); }
+    } catch (e) {}
+  }
+  function askForAlerts(fromButton) {
+    if (!("Notification" in window)) { if (fromButton) toast("This browser doesn't support desktop alerts."); return; }
+    unlockSoundAudio();
+    Notification.requestPermission().then(function (p) {
+      if (p === "granted") { toast("Desktop alerts are on 🔔"); playNotificationSound(); systemNotify("Rugs Creation Workspace", "Alerts are on — you'll hear and see new updates."); }
+      else if (fromButton) toast("Alerts are blocked. Click the 🔒 next to the address bar → Notifications → Allow.", true);
+    });
+  }
+  function maybeShowAlertsPrompt() {
+    if (!("Notification" in window) || Notification.permission !== "default") return;
+    var k = "rc_alerts_prompt_" + state.doer.doc_id, last = lsGet(k);
+    if (last && Date.now() - last < 3 * 864e5) return;
+    lsSet(k, Date.now());
+    var root = document.getElementById("popupRoot"); if (!root) return;
+    var el = document.createElement("div");
+    el.className = "dash-popup";
+    el.innerHTML = '<div class="dp-title">🔔 Turn on alerts?</div><div class="dp-body">Get a sound and a desktop pop-up for new tasks, polls and notices — even when Workspace is minimised.</div>' +
+      '<div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn" data-yes style="padding:6px 12px">Turn on</button><button type="button" class="btn secondary" data-no style="padding:6px 12px">Later</button></div>';
+    el.querySelector("[data-yes]").addEventListener("click", function (e) { e.stopPropagation(); el.remove(); askForAlerts(true); });
+    el.querySelector("[data-no]").addEventListener("click", function (e) { e.stopPropagation(); el.remove(); });
+    root.appendChild(el);
+  }
+
+  // ---------- What's new ----------
+  // Shown once per person after sign-in. Every module added later (built-in or a
+  // custom module an admin creates) is picked up automatically, with an Open button.
+  var RELEASES = [
+    { id: "2026-10-01", items: [
+      { key: "cm_" + "cm_production-planning-dashborad_gag8a", icon: "🏭", title: "Production Planning, inside Workspace", text: "Your PPC dashboard now opens right here — faster, with a fresh look and your own view.", open: { custom: "cm_production-planning-dashborad_gag8a" } },
+      { key: "directory", icon: "📇", title: "Directory", text: "Find anyone and call or WhatsApp them in one tap.", open: { view: "directory" } },
+      { key: "polls", icon: "🗳️", title: "Polls on Home", text: "Vote straight from Home — pick one, several, or \"None of these\".", open: { view: "home" } },
+      { key: "buyersampling", icon: "🔍", title: "Log inspections from Buyer Admin", text: "Buyer Admin has a new Inspections tab; entries land in the Inspection module.", open: { view: "buyersampling" } },
+      { key: "_alerts", icon: "🔔", title: "Sound + desktop alerts", text: "Never miss a notice, poll or task — turn on alerts.", open: { alerts: true } }
+    ] }
+  ];
+  function myModuleKeys() {
+    var all = MODULE_DEFS.concat(customModuleDefs());
+    var vis = state.doer.visible_modules;
+    var keys = (Array.isArray(vis) ? all.filter(function (m) { return vis.indexOf(m.key) !== -1; }) : all).map(function (m) { return m.key; });
+    if (keys.indexOf("directory") === -1) keys.push("directory");
+    if (typeof canSeeFairVisits === "function" && canSeeFairVisits() && keys.indexOf("fairvisit") === -1) keys.push("fairvisit");
+    return keys;
+  }
+  function canOpenItem(it) {
+    if (it.key === "_alerts") return "Notification" in window && Notification.permission !== "granted";
+    if (it.key === "polls" || it.key === "directory") return true;
+    if (it.open && it.open.custom) {
+      var m = (state.customModules || []).find(function (x) { return x.module_key === it.open.custom; });
+      return !!(m && (m.my_link || state.doer.is_admin));
+    }
+    return myModuleKeys().indexOf(it.key) !== -1 || !!state.doer.is_admin;
+  }
+  function openWhatsNewItem(it) {
+    closeModal();
+    var o = it.open || {};
+    if (o.alerts) { askForAlerts(true); return; }
+    if (o.custom) { state.activeCustomModuleKey = o.custom; goToView("customModule"); return; }
+    if (o.view) goToView(o.view);
+  }
+  function whatsNewItemsDue() {
+    var prefs = myPrefs(), items = [];
+    var latest = RELEASES[RELEASES.length - 1];
+    if (prefs.seen_release !== latest.id) items = latest.items.filter(canOpenItem);
+    // modules that appeared since this person last looked (auto, for anything added later)
+    var known = prefs.known_modules;
+    var now = myModuleKeys();
+    if (Array.isArray(known)) {
+      var all = MODULE_DEFS.concat(customModuleDefs());
+      now.filter(function (k) { return known.indexOf(k) === -1; }).forEach(function (k) {
+        if (items.some(function (x) { return x.key === k; })) return;
+        var d = all.find(function (m) { return m.key === k; }); if (!d) return;
+        items.push({ key: k, icon: d.icon || "✨", title: d.name, text: "New module added for you.", open: d.customModuleKey ? { custom: d.customModuleKey } : { view: d.goto } });
+      });
+    }
+    return { items: items, latest: latest.id, now: now };
+  }
+  function showWhatsNew(force, done) {
+    var due = whatsNewItemsDue();
+    var items = force ? RELEASES[RELEASES.length - 1].items.filter(canOpenItem) : due.items;
+    if (!items.length) { saveMyPrefs({ seen_release: due.latest, known_modules: due.now }); done && done(); return; }
+    openModal('<div class="wn-hero"><div class="wn-spark">✨</div><h3>What\'s new in Workspace</h3><p>Tap any card to jump straight in.</p></div>' +
+      '<div class="wn-list">' + items.map(function (it, i) {
+        return '<button type="button" class="wn-item" data-wn="' + i + '"><span class="wn-ico">' + it.icon + '</span><span class="wn-txt"><b>' + esc(it.title) + '</b><small>' + esc(it.text) + '</small></span><span class="wn-go">Open ›</span></button>';
+      }).join("") + '</div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="wnTour">Take the tour</button><button class="btn" id="wnClose">Got it</button></div>', "wn-modal");
+    saveMyPrefs({ seen_release: due.latest, known_modules: due.now });
+    document.querySelectorAll("[data-wn]").forEach(function (b) { b.addEventListener("click", function () { openWhatsNewItem(items[Number(b.dataset.wn)]); }); });
+    document.getElementById("wnClose").addEventListener("click", function () { closeModal(); done && done(); });
+    document.getElementById("wnTour").addEventListener("click", function () { closeModal(); startTour(true); });
+  }
+
+  // ---------- Guided tutorial ----------
+  // Everyone gets it from Monday 5 Oct 2026; after that, every new joiner on first sign-in.
+  // Anyone can replay it from the FAQ page ("Take the tour").
+  var TOUR_FOR_ALL_FROM = new Date("2026-10-05T00:00:00+05:30").getTime();
+  var TOUR_STEPS = [
+    { sel: null, title: "Welcome to Rugs Creation Workspace 👋", text: "A 1-minute tour of where everything lives. You can skip any time and replay it from FAQ." },
+    { sel: '.nav-item[data-view="home"]', title: "🏠 Home", text: "Your day at a glance — tasks, notifications, polls, birthdays and kudos.", view: "home" },
+    { sel: "#statGrid", title: "📊 Your numbers", text: "Pending and overdue work. Tap any tile to see the list behind it.", view: "home" },
+    { sel: "#notifHomeWrap:not(.hidden)", title: "🔔 Notifications", text: "New notices and alerts show here and pop up at the top-right, with a sound.", view: "home" },
+    { sel: "#navModules", title: "🧩 Modules", text: "Every app you can use — Delegation, Leave, Attendance, Directory, Production Planning and more." },
+    { sel: "#navChat", title: "💬 Team Chat", text: "Message anyone or your team. Unread chats show a badge here." },
+    { sel: "#navNotices", title: "📣 Notice Board", text: "Company announcements. Check it daily." },
+    { sel: "#attendWidget:not(.hidden)", title: "🕒 Punch in / out", text: "Mark your attendance here every day." },
+    { sel: "#onlineBadge", title: "🟢 Who's online", text: "See who's online right now and set your own status (Busy, In a meeting…)." },
+    { sel: "#globalSearchBtn", title: "🔎 Search", text: "Find any person, task or module in one go." },
+    { sel: "#themeToggleBtn", title: "🌗 Light / dark", text: "Switch between light, dark or your system setting." },
+    { sel: "#tsFab", title: "🛠️ Something not working?", text: "Tap Report a problem — the tech team gets it straight away." },
+    { sel: "#navFaq", title: "❓ FAQ", text: "Answers to common questions — and the button to replay this tour. You're all set! 🎉" }
+  ];
+  function tourDue() {
+    var prefs = myPrefs();
+    if (prefs.tour_done) return false;
+    if (Date.now() >= TOUR_FOR_ALL_FROM) return true;
+    var joined = state.doer.created_at ? new Date(state.doer.created_at).getTime() : 0;
+    return joined && Date.now() - joined < 14 * 864e5;   // new joiners before Monday too
+  }
+  function visibleEl(sel) {
+    if (!sel) return null;
+    var el = document.querySelector(sel);
+    if (!el || el.offsetParent === null) return null;
+    var r = el.getBoundingClientRect();
+    return r.width && r.height ? el : null;
+  }
+  function startTour(force, done) {
+    if (!force && !tourDue()) { done && done(); return; }
+    goToView("home");
+    var i = 0, ov = document.createElement("div");
+    ov.className = "tour-ov";
+    ov.innerHTML = '<div class="tour-spot"></div><div class="tour-tip" role="dialog" aria-live="polite"><div class="tour-step"></div><h4></h4><p></p>' +
+      '<div class="tour-btns"><button type="button" class="btn secondary" data-t="skip">Skip</button><span style="flex:1"></span><button type="button" class="btn secondary" data-t="back">Back</button><button type="button" class="btn" data-t="next">Next</button></div></div>';
+    document.body.appendChild(ov);
+    var spot = ov.querySelector(".tour-spot"), tip = ov.querySelector(".tour-tip");
+    var steps = TOUR_STEPS;
+    function finish() {
+      ov.remove(); window.removeEventListener("resize", place);
+      saveMyPrefs({ tour_done: new Date().toISOString() });
+      done && done();
+    }
+    function place() {
+      var s = steps[i], el = visibleEl(s.sel);
+      tip.querySelector(".tour-step").textContent = "Step " + (i + 1) + " of " + steps.length;
+      tip.querySelector("h4").textContent = s.title;
+      tip.querySelector("p").textContent = s.text;
+      tip.querySelector('[data-t="back"]').style.visibility = i ? "visible" : "hidden";
+      tip.querySelector('[data-t="next"]').textContent = i === steps.length - 1 ? "Finish 🎉" : "Next";
+      if (!el) {
+        spot.style.cssText = "left:50%;top:50%;width:0;height:0";
+        tip.style.cssText = "left:50%;top:50%;transform:translate(-50%,-50%)";
+        return;
+      }
+      el.scrollIntoView({ block: "nearest" });
+      var r = el.getBoundingClientRect(), pad = 6;
+      spot.style.cssText = "left:" + (r.left - pad) + "px;top:" + (r.top - pad) + "px;width:" + (r.width + pad * 2) + "px;height:" + (r.height + pad * 2) + "px";
+      var tw = Math.min(330, window.innerWidth - 24), th = tip.offsetHeight || 170;
+      var left = r.right + 16 + tw < window.innerWidth ? r.right + 16 : Math.max(12, Math.min(r.left, window.innerWidth - tw - 12));
+      var top = r.right + 16 + tw < window.innerWidth ? Math.max(12, Math.min(r.top, window.innerHeight - th - 12)) : (r.bottom + 12 + th < window.innerHeight ? r.bottom + 12 : Math.max(12, r.top - th - 12));
+      tip.style.cssText = "left:" + left + "px;top:" + top + "px;width:" + tw + "px";
+    }
+    function go(d) {
+      var n = i + d;
+      while (n > 0 && n < steps.length && steps[n].sel && !visibleEl(steps[n].sel)) n += d;   // skip things this person doesn't have
+      if (n >= steps.length) { finish(); return; }
+      i = Math.max(0, n);
+      if (steps[i].view && state.view !== steps[i].view) goToView(steps[i].view);
+      setTimeout(place, 60);
+    }
+    ov.addEventListener("click", function (e) {
+      var t = e.target.getAttribute && e.target.getAttribute("data-t");
+      if (t === "skip") finish(); else if (t === "next") go(1); else if (t === "back") go(-1);
+    });
+    document.addEventListener("keydown", function k(e) {
+      if (!document.body.contains(ov)) { document.removeEventListener("keydown", k); return; }
+      if (e.key === "Escape") finish(); else if (e.key === "ArrowRight" || e.key === "Enter") go(1); else if (e.key === "ArrowLeft") go(-1);
+    });
+    window.addEventListener("resize", place);
+    place();
+  }
+  // "Take the tour" + "What's new" buttons on the FAQ page
+  (function () {
+    var head = document.querySelector("#view-faq .page-head");
+    if (!head) return;
+    var b = document.createElement("button");
+    b.className = "btn secondary"; b.type = "button"; b.textContent = "🧭 Take the tour"; b.style.marginLeft = "auto";
+    b.addEventListener("click", function () { startTour(true); });
+    var w = document.createElement("button");
+    w.className = "btn secondary"; w.type = "button"; w.textContent = "✨ What's new";
+    w.addEventListener("click", function () { showWhatsNew(true); });
+    head.insertBefore(w, head.querySelector("#addFaqBtn"));
+    head.insertBefore(b, w);
+  })();
+
+  // ---------- after sign-in: tour → what's new → alerts prompt ----------
+  var engageStarted = false;
+  function engageAfterLoad() {
+    if (engageStarted || !state.doer || state.demo) return;
+    engageStarted = true;
+    renderPollHomeWidget();
+    setInterval(function () { if (state.doer) renderPollHomeWidget(); }, 60000);
+    function whenNoModal(fn, tries) {
+      tries = tries || 0;
+      var busy = document.getElementById("modalRoot").innerHTML.trim() || document.querySelector(".tour-ov");
+      if (busy) { if (tries < 120) setTimeout(function () { whenNoModal(fn, tries + 1); }, 1000); return; }   // never cover another pop-up; try again next sign-in
+      fn();
+    }
+    setTimeout(function () {
+      whenNoModal(function () {
+        startTour(false, function () {
+          whenNoModal(function () { showWhatsNew(false, function () { setTimeout(maybeShowAlertsPrompt, 1500); }); });
+        });
+      });
+    }, 2500);
+  }
+
+  // ---------- Buyer Admin → Inspections ----------
+  function baInspect() {
+    baLoading();
+    Promise.all([BA.buyers ? Promise.resolve(BA.buyers) : baCall("adminBuyers"), api("getInspections").catch(function () { return []; })]).then(function (r) {
+      BA.buyers = r[0] || []; var list = r[1] || [];
+      var now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      var buyerOpts = BA.buyers.map(function (b) { var label = b.buyer_code + (b.buyer_name ? " — " + b.buyer_name : ""); return '<option value="' + esc(b.buyer_name || b.buyer_code) + '">' + esc(label) + "</option>"; }).join("");
+      var recent = list.slice(0, 15).map(function (v) {
+        return "<tr><td>" + esc(String(v.visit_at || "").replace("T", " ").slice(0, 16)) + "</td><td><b>" + esc(v.buyer_name || "—") + "</b></td><td>" + esc(v.visitor_name || "") + "</td><td>" + esc(v.reason || "") + "</td><td>" + esc(v.created_by || "") + "</td></tr>";
+      }).join("");
+      baBody('<div class="card" style="padding:18px;margin-bottom:16px"><h3 style="margin-top:0">🔍 Log an inspection</h3>' +
+        '<div class="sub" style="margin-bottom:12px">Saves straight into Workspace → Inspection, and emails the usual inspection alert list.</div>' +
+        '<div style="display:flex;gap:12px;flex-wrap:wrap">' +
+          '<div class="field" style="flex:1.4;min-width:220px"><label>Buyer</label><select id="baInBuyer"><option value="">Choose a buyer…</option>' + buyerOpts + '<option value="__other">Other (type below)</option></select><input id="baInBuyerOther" class="hidden" placeholder="Buyer name" style="margin-top:6px" /></div>' +
+          '<div class="field" style="flex:1;min-width:200px"><label>Inspector / agency</label><input id="baInVisitor" placeholder="e.g. QIMA – Rahul" /></div>' +
+          '<div class="field" style="flex:1;min-width:190px"><label>Date &amp; time</label><input id="baInWhen" type="datetime-local" value="' + now + '" /></div>' +
+        '</div>' +
+        '<div class="field"><label>What is being inspected? <span class="sub">(optional)</span></label><input id="baInReason" placeholder="e.g. Final inspection – PO 4521, 1,200 pcs" /></div>' +
+        '<button class="btn" id="baInSave" type="button">Log inspection</button><span class="modal-err" id="baInErr" style="margin-left:10px"></span></div>' +
+        '<div class="card" style="padding:16px"><h3 style="margin-top:0">Recent inspections</h3>' +
+        (recent ? '<div style="overflow:auto"><table class="ba-table" style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left">When</th><th style="text-align:left">Buyer</th><th style="text-align:left">Inspector</th><th style="text-align:left">Details</th><th style="text-align:left">Logged by</th></tr></thead><tbody>' + recent + "</tbody></table></div>" : '<div class="sub">None logged yet.</div>') + "</div>");
+      var sel = document.getElementById("baInBuyer"), other = document.getElementById("baInBuyerOther");
+      sel.addEventListener("change", function () { other.classList.toggle("hidden", sel.value !== "__other"); });
+      document.getElementById("baInSave").addEventListener("click", function () {
+        var err = document.getElementById("baInErr"); err.textContent = "";
+        var buyer = sel.value === "__other" ? other.value.trim() : sel.value;
+        var visitor = document.getElementById("baInVisitor").value.trim();
+        var when = document.getElementById("baInWhen").value;
+        if (!buyer) { err.textContent = "Choose the buyer."; return; }
+        if (!visitor) { err.textContent = "Enter who is inspecting."; return; }
+        if (!when) { err.textContent = "Pick the date and time."; return; }
+        var b = this; b.disabled = true; b.innerHTML = '<span class="spinner"></span>Saving…';
+        api("createInspection", { visit_at: new Date(when).toISOString(), visitor_name: visitor, buyer_name: buyer, reason: document.getElementById("baInReason").value.trim(),
+          department: (state.doer && state.doer.department) || "Buyer Admin", created_by: state.doer ? myKey() : ((BA.me && (BA.me.name || BA.me.username)) || "Buyer Admin") })
+          .then(function () {
+            toast("Inspection logged — it's in the Inspection module now ✅");
+            return api("getInspections").then(function (v) { state.inspections = v; try { renderInspections(); renderHome(); } catch (e) {} });
+          }).then(function () { baInspect(); })
+          .catch(function (e) { err.textContent = e.message; b.disabled = false; b.textContent = "Log inspection"; });
+      });
+    }).catch(function (e) { baBody('<div class="card" style="padding:16px;color:var(--danger-ink)">' + esc(e.message) + "</div>"); });
   }
 
   var samplingfmsFrameLoaded = false;
@@ -9877,7 +10377,7 @@ window.RCBuyerUI = (function () {
         .catch(function (e) { err.textContent = e.message; b.disabled = false; });
     };
   }
-  var BA_TABS = [["overview", "📊 Overview"], ["buyers", "🤝 Buyers"], ["accounts", "👤 Buyer logins"], ["approvals", "✅ Approvals"], ["messages", "💬 Messages"], ["requests", "✨ Sample requests"], ["activity", "🧾 Activity log"], ["orderdash", "📦 Order dashboard"], ["settings", "⚙️ Settings"]];
+  var BA_TABS = [["overview", "📊 Overview"], ["buyers", "🤝 Buyers"], ["accounts", "👤 Buyer logins"], ["approvals", "✅ Approvals"], ["messages", "💬 Messages"], ["requests", "✨ Sample requests"], ["activity", "🧾 Activity log"], ["inspect", "🔍 Inspections"], ["orderdash", "📦 Order dashboard"], ["settings", "⚙️ Settings"]];
   function baOpen() {
     document.getElementById("baLock").classList.add("hidden"); document.getElementById("baApp").classList.remove("hidden");
     document.getElementById("baWho").textContent = "Signed in as " + (BA.me.name || BA.me.username) + " (" + BA.me.username + ", " + BA.me.role + ") · locks after " + BA.idleMin + " min idle";
@@ -9893,7 +10393,7 @@ window.RCBuyerUI = (function () {
   }
   function baGo(tab, arg) {
     BA.tab = tab; baDrawTabs();
-    ({ overview: baOverview, buyers: baBuyers, accounts: baAccounts, approvals: baApprovals, messages: baMessages, requests: baRequests, activity: baActivity, orderdash: baOrderDash, settings: baSettings, buyer: baBuyerDetail }[tab] || baOverview)(arg);
+    ({ overview: baOverview, buyers: baBuyers, accounts: baAccounts, approvals: baApprovals, messages: baMessages, requests: baRequests, activity: baActivity, inspect: baInspect, orderdash: baOrderDash, settings: baSettings, buyer: baBuyerDetail }[tab] || baOverview)(arg);
   }
 
   function baOverview() {
@@ -13499,10 +13999,11 @@ window.RCBuyerUI = (function () {
     renderTriageHomeWidget();
     renderAnniversaryHomeWidget();
     renderQuickLinksHomeWidget();
+    if (typeof renderPollHomeWidget === "function") renderPollHomeWidget();
   }
 
   // ---------- Polls ----------
-  function renderPolls() {
+  function renderPollsLegacy_() {
     var wrap = document.getElementById("pollsListWrap");
     if (!wrap) return;
     document.getElementById("newPollBtn").classList.toggle("hidden", !state.doer.is_admin);
