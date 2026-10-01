@@ -2124,6 +2124,17 @@ window.RCBuyerUI = (function () {
             </div>
           </div>
 
+          <div class="login-field" id="captchaField">
+            <div class="login-field-head">
+              <label for="loginCaptcha">Security check</label>
+              <a class="login-link" id="captchaRefresh">New code</a>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <div id="captchaImg" style="flex:0 0 auto;width:180px;height:60px;border-radius:10px;overflow:hidden;background:#fff4ec;display:flex;align-items:center;justify-content:center;font-size:12px;color:#8a6a5a">Loading…</div>
+              <input type="text" id="loginCaptcha" placeholder="Type the 5 characters" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" style="text-transform:uppercase;letter-spacing:.12em;min-width:0;flex:1" />
+            </div>
+          </div>
+
           <div id="loginError" class="login-error"></div>
 
           <button type="submit" class="btn login-submit" id="loginBtn"><span id="btnLabel">Sign in</span></button>
@@ -3124,6 +3135,7 @@ window.RCBuyerUI = (function () {
   function api(action, payload) {
     if (state.demo) return demoApi(action, payload || {});
     var body = Object.assign({ action: action }, payload || {});
+    if (state.doer && state.doer.doc_id && body.requester_doc_id === undefined) body.requester_doc_id = state.doer.doc_id;
     // Newer actions (admin Edit/Delete, Press & Blogs, notifications) live in
     // the small companion function "deleg-admin"; everything else in deleg-api.
     var url = ADMIN_FN_ACTIONS.indexOf(action) !== -1 ? ADMIN_FN_URL : FN_URL;
@@ -3133,11 +3145,88 @@ window.RCBuyerUI = (function () {
       body: JSON.stringify(body)
     }).then(function (r) {
       return r.json().then(function (j) {
-        if (!r.ok || !j.ok) throw new Error(j.error || ("HTTP " + r.status));
+        if (!r.ok || !j.ok) { var err = new Error(j.error || ("HTTP " + r.status)); err.code = j.code || ""; err.status = r.status; throw err; }
         return j.data;
       });
     }).catch(function (e) { if (typeof tsRecordErr === "function") tsRecordErr("api " + action, e && e.message); throw e; });
   }
+
+  // ---------- Secure sessions ----------
+  // login returns a session_token (server-side session, revocable). It is
+  // added to EVERY call to our Supabase functions (deleg-api, deleg-admin,
+  // ppc-api, directory-api, engage-api, tech-support, buyer-hub) by this
+  // fetch wrapper, and any 401 SESSION_EXPIRED answer (admin used "Log out
+  // everywhere", session expired, account removed) signs this browser out.
+  var RC_FN_PREFIX = SUPABASE_URL + "/functions/v1/";
+  var rcSessionEnding = false;
+  function rcSessionEnded(msg) {
+    if (rcSessionEnding || !state.doer || state.demo) return;
+    rcSessionEnding = true;
+    performLogout(msg || "Your session has ended — please sign in again.");
+  }
+  (function installSessionFetch() {
+    if (window.__rcSessionFetch) return;
+    window.__rcSessionFetch = true;
+    var origFetch = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+      try {
+        var url = typeof input === "string" ? input : (input && input.url) || "";
+        if (url.indexOf(RC_FN_PREFIX) === 0 && !state.demo) {
+          var tok = state.doer && state.doer.session_token;
+          if (tok && init && typeof init.body === "string" && init.body.charAt(0) === "{") {
+            var b = JSON.parse(init.body);
+            if (b && typeof b === "object" && !b.session_token) {
+              b.session_token = tok;
+              init = Object.assign({}, init, { body: JSON.stringify(b) });
+            }
+          }
+          return origFetch(input, init).then(function (res) {
+            if (res.status === 401 && state.doer && !state.demo) {
+              res.clone().json().then(function (j) { if (j && j.code === "SESSION_EXPIRED") rcSessionEnded(j.error); }).catch(function () {});
+            }
+            return res;
+          });
+        }
+      } catch (e) { /* fall through to a plain fetch */ }
+      return origFetch(input, init);
+    };
+  })();
+  var rcSessionPingTimer = null;
+  function startSessionPing() {
+    if (rcSessionPingTimer || state.demo) return;
+    rcSessionPingTimer = setInterval(function () { if (state.doer && !document.hidden) api("sessionPing").catch(function () {}); }, 60000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden && state.doer && !state.demo) api("sessionPing").catch(function () {}); });
+  }
+  function rcDeviceName(ua) {
+    ua = String(ua || "");
+    var os = /Android/i.test(ua) ? "Android" : /iPhone|iPad/i.test(ua) ? "iPhone/iPad" : /Windows/i.test(ua) ? "Windows" : /Mac OS/i.test(ua) ? "Mac" : /Linux/i.test(ua) ? "Linux" : "Device";
+    var br = /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "Browser";
+    return br + " on " + os;
+  }
+  function rcWhen(iso) {
+    try { return new Date(iso).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch (e) { return String(iso || ""); }
+  }
+  // Login CAPTCHA (server-generated, single use). Reloaded after every failed try.
+  var loginCaptchaId = null, loginCaptchaTimer = null;
+  function loadLoginCaptcha() {
+    var box = document.getElementById("captchaImg");
+    if (!box) return;
+    // Codes expire after 5 minutes — quietly swap in a fresh one while the login page is open.
+    if (loginCaptchaTimer) clearTimeout(loginCaptchaTimer);
+    loginCaptchaTimer = setTimeout(function () { if (!state.doer) loadLoginCaptcha(); }, 270000);
+    loginCaptchaId = null;
+    box.textContent = "Loading…";
+    var inp = document.getElementById("loginCaptcha");
+    if (inp) inp.value = "";
+    api("captchaNew").then(function (c) {
+      loginCaptchaId = c.captcha_id;
+      box.innerHTML = '<img alt="Security code" style="width:100%;height:100%;display:block" src="data:image/svg+xml;base64,' + btoa(c.svg) + '" />';
+    }).catch(function () { box.textContent = "Tap “New code”"; });
+  }
+  var captchaRefreshEl = document.getElementById("captchaRefresh");
+  if (captchaRefreshEl) captchaRefreshEl.addEventListener("click", function (e) { e.preventDefault(); loadLoginCaptcha(); });
+  var loginCaptchaEl = document.getElementById("loginCaptcha");
+  if (loginCaptchaEl) loginCaptchaEl.addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
 
   // ---------- Demo (sample data) API shim ----------
   function demoApi(action, p) {
@@ -4207,6 +4296,10 @@ window.RCBuyerUI = (function () {
     var errEl = document.getElementById("loginError");
     errEl.textContent = "";
     if (!id || !pass) { errEl.textContent = "Enter your ID and password."; return; }
+    var capEl = document.getElementById("loginCaptcha");
+    var capAnswer = capEl ? capEl.value.trim() : "";
+    if (!loginCaptchaId) { errEl.textContent = "Security code is still loading — tap “New code” if it doesn't appear."; loadLoginCaptcha(); return; }
+    if (!capAnswer) { errEl.textContent = "Type the 5 characters shown in the security check."; if (capEl) capEl.focus(); return; }
     var btn = document.getElementById("loginBtn");
     var btnLabel = document.getElementById("btnLabel");
     // The button carries decorative markup (meteor track, light sweep) that
@@ -4217,7 +4310,7 @@ window.RCBuyerUI = (function () {
     // window.__loomSubmitStart is a no-op if that scene never started
     // (WebGL unavailable, THREE failed to load, etc).
     if (window.__loomSubmitStart) window.__loomSubmitStart();
-    api("login", { loginId: id, pass: pass }).then(function (doer) {
+    api("login", { loginId: id, pass: pass, captcha_id: loginCaptchaId, captcha_answer: capAnswer }).then(function (doer) {
       state.doer = doer;
       state.demo = false;
       try { localStorage.setItem("deleg_doer", JSON.stringify(doer)); } catch (e) {}
@@ -4226,6 +4319,7 @@ window.RCBuyerUI = (function () {
       setTimeout(enterApp, 1400);
     }).catch(function (e) {
       errEl.textContent = e.message || "Login failed";
+      loadLoginCaptcha(); // every code is single-use
       if (window.__loomSubmitFail) window.__loomSubmitFail();
       btn.disabled = false; if (btnLabel) btnLabel.textContent = "SIGN IN TO WORKSPACE";
     });
@@ -4293,7 +4387,15 @@ window.RCBuyerUI = (function () {
     });
   }
 
-  function performLogout() {
+  function performLogout(reason) {
+    var endingToken = state.doer && !state.demo ? state.doer.session_token : "";
+    if (endingToken) {
+      try {
+        fetch(FN_URL, { method: "POST", keepalive: true, headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
+          body: JSON.stringify({ action: "sessionLogout", session_token: endingToken }) }).catch(function () {});
+      } catch (e) {}
+    }
+    if (rcSessionPingTimer) { clearInterval(rcSessionPingTimer); rcSessionPingTimer = null; }
     stopNotifPolling();
     stopChatPresenceHeartbeat();
     stopOnlineCountPolling();
@@ -4315,6 +4417,7 @@ window.RCBuyerUI = (function () {
       doomed.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
     } catch (e) {}
     try { sessionStorage.clear(); } catch (e) {}
+    if (typeof reason === "string" && reason) { try { sessionStorage.setItem("rc_logout_reason", reason); } catch (e) {} }
     // A full reload guarantees the entire in-memory JS state (every array
     // and cached object in `state`, plus whatever the embedded sub-apps
     // hold internally) is thrown away, not just the few fields we could
@@ -4523,6 +4626,7 @@ window.RCBuyerUI = (function () {
       // ticker toggles, and who gets the buyer-visit / inspection Home widgets),
       // even though only an admin can change any of them (Settings page is admin-only).
       state.tasks = r[0]; state.allDoers = r[1] || []; state.doers = state.allDoers.filter(function (d) { return !d.is_deleted; }); state.faqs = r[2]; state.tickets = r[3]; state.buyerVisits = r[4]; state.notices = r[5]; state.holidays = r[6]; state.settings = r[7]; state.buyerVisitAlertStaff = r[8]; state.inspections = r[9]; state.inspectionAlertStaff = r[10]; state.birthdays = r[11];
+      startSessionPing();
       state.teams = r[12] || []; state.leaves = r[13] || []; state.reimbursements = r[14] || []; state.customModules = r[15] || []; state.buyerEmails = r[16] || [];
       applyBrandColorOverride(); // workspace-wide, every viewer — not admin-gated
       applyModuleOverrides(); // renames/re-icons built-in MODULE_DEFS tiles in place, before anything renders them
@@ -8142,6 +8246,31 @@ window.RCBuyerUI = (function () {
     state.staffControlsReturnScrollY = window.scrollY || document.documentElement.scrollTop || 0;
     goToView("staffControls");
   }
+  function scSecurityWire(d) {
+    var box = document.getElementById("scSessions"), btn = document.getElementById("scLogoutAll");
+    if (!box || !btn) return;
+    function load() {
+      api("sessionsList", { doc_id: d.doc_id }).then(function (rows) {
+        rows = rows || [];
+        box.innerHTML = rows.length ? rows.map(function (r) {
+          return '<div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>' + esc(rcDeviceName(r.user_agent)) + "</b>" +
+            (r.current ? ' <span class="badge">this device</span>' : "") +
+            '<div class="sub">Last active ' + esc(rcWhen(r.last_seen_at)) + " · signed in " + esc(rcWhen(r.created_at)) + (r.ip ? " · IP " + esc(r.ip) : "") + "</div></div>";
+        }).join("") : "Not signed in on any device.";
+      }).catch(function (e) { box.textContent = e.message || "Couldn't load devices."; });
+    }
+    var armed = false;
+    btn.addEventListener("click", function () {
+      if (!armed) { armed = true; btn.textContent = "Tap again to confirm"; setTimeout(function () { armed = false; btn.textContent = "🚪 Log out everywhere"; }, 4000); return; }
+      btn.disabled = true; btn.textContent = "Logging out…";
+      api("sessionsRevoke", { doc_id: d.doc_id }).then(function (r) {
+        toast("Logged out of " + (r.revoked || 0) + " device(s).");
+        if (r.self) { rcSessionEnded("You logged yourself out everywhere."); return; }
+        btn.disabled = false; armed = false; btn.textContent = "🚪 Log out everywhere"; load();
+      }).catch(function (e) { toast(e.message || "Couldn't log out.", true); btn.disabled = false; armed = false; btn.textContent = "🚪 Log out everywhere"; });
+    });
+    load();
+  }
   function renderStaffControls() {
     var wrap = document.getElementById("scBody");
     if (!wrap || !state.doer || !state.doer.is_admin) return;
@@ -8156,7 +8285,14 @@ window.RCBuyerUI = (function () {
     var roles = d.module_roles || {};
     var isSelf = d.doc_id === state.doer.doc_id;
 
+    setTimeout(function () { scSecurityWire(d); }, 0);
     wrap.innerHTML =
+      '<div class="card" style="padding:18px;margin-bottom:16px;border:1px solid rgba(180,35,24,.25)">' +
+        '<div class="page-head" style="margin:0 0 4px"><h2 style="font-size:15px">🔒 Sign-in security</h2></div>' +
+        '<div class="page-sub" style="margin:0 0 10px">Devices where this person is signed in. “Log out everywhere” ends all of them within a minute (they must sign in again with password + security code).</div>' +
+        '<div id="scSessions" class="sub">Loading…</div>' +
+        '<button class="btn" id="scLogoutAll" type="button" style="margin-top:10px;background:#b42318;border-color:#b42318">🚪 Log out everywhere</button>' +
+      "</div>" +
       '<div class="card" style="padding:18px;margin-bottom:16px">' +
         '<div class="page-head" style="margin:0 0 12px"><h2 style="font-size:15px">Profile</h2></div>' +
         '<div class="field"><label>Full name</label><input id="scFullName" value="' + esc(d.name || "") + '" /></div>' +
@@ -11067,7 +11203,7 @@ window.RCBuyerUI = (function () {
     openModal("<h3>Add a post</h3>" +
       '<div class="sub" style="margin:-4px 0 10px">Paste the link of a LinkedIn / Instagram post, a news article or a blog.</div>' +
       '<div class="field"><label>Platform</label><select id="prPlatform">' + PRESS_PLATFORMS.map(function (o) { return "<option>" + o + "</option>"; }).join("") + "</select></div>" +
-      '<div class="field"><label>Link to the post</label><input id="prUrl" placeholder="https://www.linkedin.com/posts/…" /></div>' +
+      '<div class="field"><label>Link to the post</label><div style="display:flex;gap:8px"><input id="prUrl" placeholder="https://www.instagram.com/p/… or https://www.linkedin.com/posts/…" style="flex:1;min-width:0" /><button type="button" class="btn secondary" id="prFetch" style="white-space:nowrap">✨ Fetch details</button></div><div class="sub" id="prFetchMsg" style="margin-top:4px"></div></div>' +
       '<div class="field"><label>Title</label><input id="prTitle" placeholder="e.g. Rugs Creation at Domotex 2026" /></div>' +
       '<div class="field"><label>Short summary (optional)</label><textarea id="prSummary" rows="3"></textarea></div>' +
       '<div class="field"><label>Picture (optional)</label><input id="prImageFile" type="file" accept="image/*" /><div class="sub" style="margin:6px 0">…or paste an image link:</div><input id="prImage" placeholder="https://…jpg" /><img id="prImgPreview" alt="" style="display:none;max-width:100%;max-height:160px;margin-top:8px;border-radius:8px" /></div>' +
@@ -11082,6 +11218,25 @@ window.RCBuyerUI = (function () {
       else if (u.indexOf("youtube.com") !== -1 || u.indexOf("youtu.be") !== -1) sel.value = "YouTube";
     });
     var prPhoto = "";
+    function prFetchDetails(auto) {
+      var url = document.getElementById("prUrl").value.trim(), msg = document.getElementById("prFetchMsg"), fb = document.getElementById("prFetch");
+      if (!url) { if (!auto) msg.textContent = "Paste the post link first."; return; }
+      if (!safeHttpUrl(url)) { msg.textContent = "The link should start with https://"; return; }
+      fb.disabled = true; fb.innerHTML = '<span class="spinner"></span>Fetching…'; msg.textContent = "";
+      api("pressFetchMeta", { url: url }).then(function (m) {
+        var sel = document.getElementById("prPlatform");
+        if (m.platform && PRESS_PLATFORMS.indexOf(m.platform) !== -1) sel.value = m.platform;
+        var t = document.getElementById("prTitle"), su = document.getElementById("prSummary"), im = document.getElementById("prImage"), dt = document.getElementById("prDate");
+        if (m.title && (!auto || !t.value.trim())) t.value = m.title;
+        if (m.summary && (!auto || !su.value.trim())) su.value = m.summary;
+        if (m.image_url && !prPhoto) { im.value = m.image_url; var pv = document.getElementById("prImgPreview"); pv.src = m.image_url; pv.style.display = "block"; }
+        if (m.published_on && (!auto || !dt.value)) dt.value = m.published_on;
+        msg.textContent = "✓ Details filled in — check them, then Add Post." + (m.image_note ? " " + m.image_note : "");
+      }).catch(function (e) { msg.textContent = e.message || "Couldn't read that link — please fill in by hand."; })
+        .then(function () { fb.disabled = false; fb.textContent = "✨ Fetch details"; });
+    }
+    document.getElementById("prFetch").addEventListener("click", function () { prFetchDetails(false); });
+    document.getElementById("prUrl").addEventListener("change", function () { if (!document.getElementById("prTitle").value.trim()) prFetchDetails(true); });
     document.getElementById("prImageFile").addEventListener("change", function () {
       var f = this.files && this.files[0]; if (!f) return;
       pressShrinkImage(f).then(function (d) {
@@ -14698,9 +14853,19 @@ window.RCBuyerUI = (function () {
   // ---------- Boot: restore session ----------
   (function boot() {
     try {
+      var reason = "";
+      try { reason = sessionStorage.getItem("rc_logout_reason") || ""; sessionStorage.removeItem("rc_logout_reason"); } catch (e) {}
       var saved = localStorage.getItem("deleg_doer");
-      if (saved) { state.doer = JSON.parse(saved); state.demo = false; enterApp({ intro: false }); }
-    } catch (e) {}
+      if (saved) {
+        var sd = JSON.parse(saved);
+        // Sign-ins from before secure sessions have no token — everyone signs in once more.
+        if (!sd || !sd.session_token) { state.doer = sd; state.demo = false; performLogout("For security, please sign in again (one time)."); return; }
+        state.doer = sd; state.demo = false; enterApp({ intro: false });
+        return;
+      }
+      if (reason) { var le = document.getElementById("loginError"); if (le) le.textContent = reason; }
+      loadLoginCaptcha();
+    } catch (e) { loadLoginCaptcha(); }
   })();
 })();
 </script>
