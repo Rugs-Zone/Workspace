@@ -180,6 +180,39 @@
   #bdOrderWrap:fullscreen{height:100vh!important;border-radius:0!important}
   /* ---- Buyer Sampling Dashboard (public ?sampling= link) ---- */
   #buyerSamplingScreen{display:none}
+
+  /* ---- Order sheet (Buyer Portal orders + Buyer Admin): same grouped table as the emailed order link ---- */
+  .rc-sheet{--sh-card:var(--card,#fff);--sh-ink:var(--ink,#1C1B19);--sh-sub:var(--sub,#5B5E66);--sh-line:var(--line,#E7E2D9);--sh-bg:var(--bg,#FAF8F5);--sh-brand:var(--brand,#ff5a0a);}
+  #buyerSamplingScreen .rc-sheet{--sh-card:#fff;--sh-ink:#1C1B19;--sh-sub:#5B5E66;--sh-line:#E7E2D9;--sh-bg:#FAF8F5;--sh-brand:#ff5a0a;}
+  .rc-sheet .shf{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+  .rc-sheet .shf div{display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px}
+  .rc-sheet .shf label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--sh-sub)}
+  .rc-sheet .shf input,.rc-sheet .shf select{font:inherit;font-size:13.5px;padding:9px 11px;border:1px solid var(--sh-line);border-radius:8px;background:var(--sh-card);color:var(--sh-ink);width:100%}
+  .rc-sheet .shf button{flex:none;font:700 13px/1 inherit;padding:10px 14px;border-radius:8px;border:1px solid var(--sh-line);background:var(--sh-card);color:var(--sh-ink);cursor:pointer;white-space:nowrap}
+  .rc-sheet .shf button.pri{background:var(--sh-brand);border-color:var(--sh-brand);color:#fff}
+  .rc-sheet .shw{overflow:auto;max-height:70vh;background:var(--sh-card);border:1px solid var(--sh-line);border-radius:14px}
+  .rc-sheet table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+  .rc-sheet thead th{position:sticky;background:var(--sh-card);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:9px 11px;white-space:nowrap;text-align:left;z-index:2;color:var(--sh-sub)}
+  .rc-sheet thead tr.g th{top:0;height:30px;font-size:10px;letter-spacing:.1em;color:var(--sh-brand);border-bottom:1px solid var(--sh-line)}
+  .rc-sheet thead tr.c th{top:30px;border-bottom:2px solid var(--sh-brand)}
+  .rc-sheet .gs{border-left:1px solid var(--sh-line)}
+  .rc-sheet td{padding:10px 11px;border-bottom:1px solid var(--sh-line);white-space:nowrap;color:var(--sh-ink);background:var(--sh-card)}
+  .rc-sheet tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--sh-bg) 60%,var(--sh-card))}
+  .rc-sheet tbody tr:hover td{background:color-mix(in srgb,var(--sh-brand) 9%,var(--sh-card))}
+  .rc-sheet .stk{position:sticky;left:0;z-index:1;box-shadow:1px 0 0 var(--sh-line)}
+  .rc-sheet thead th.stk{z-index:3}
+  .rc-sheet .po{font-weight:800}
+  .rc-sheet .na{color:var(--sh-sub);font-style:italic;font-size:12px}
+  .rc-sheet .num{font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;text-align:right}
+  .rc-sheet .pb{background:color-mix(in srgb,var(--sh-sub) 22%,transparent);border-radius:6px;width:66px;height:8px;display:inline-block;vertical-align:middle;margin-right:6px;overflow:hidden}
+  .rc-sheet .pb i{display:block;height:8px;border-radius:6px}
+  .rc-sheet .st{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700}
+  .rc-sheet .st.c{background:rgba(31,157,85,.15);color:#178a49}
+  .rc-sheet .st.r{background:rgba(217,119,6,.16);color:#b45f06}
+  .rc-sheet .st.n{background:color-mix(in srgb,var(--sh-sub) 16%,transparent);color:var(--sh-sub)}
+  .rc-sheet .she{padding:40px 16px;text-align:center;color:var(--sh-sub)}
+  .rc-sheet.full{position:fixed;inset:0;z-index:3000;background:var(--sh-bg);padding:12px;overflow:auto}
+  .rc-sheet.full .shw{max-height:calc(100vh - 90px)}
   #boLinkScreen{display:none}
   html.buyer-orders body > *:not(#boLinkScreen){display:none!important}
   html.buyer-orders #boLinkScreen{display:block}
@@ -1745,7 +1778,72 @@ window.RCBuyerUI = (function () {
     rows.sort(function (a, b) { return String(a.ship_date_iso || "9999").localeCompare(String(b.ship_date_iso || "9999")); });
     return { rows: rows, asOf: asOf, live: live, multi: codes.length > 1 };
   }
-  return { esc: esc, fd: fd, ioDone: ioDone, sampleCard: sampleCard, orderCard: orderCard, flattenOrders: flattenOrders };
+
+  // Order sheet — the same grouped table as the emailed order link (?orders=), with filters + full page view.
+  // mount(el, rows, {multi, showIo}) renders into el and wires its own filters.
+  function sheetBadge(s) {
+    var cls = /^(Completed|Requested|In-House|Ready)$/.test(s) ? "c" : (/^(Running|Pending|Ordered)$/.test(s) ? "r" : "n");
+    return '<span class="st ' + cls + '">' + esc(s) + "</span>";
+  }
+  function sheetTable(list, o) {
+    if (!list.length) return '<div class="she">No orders match.</div>';
+    var io = !!o.showIo, mb = !!o.multi;
+    var orderCols = 3 + (io ? 2 : 0) + (mb ? 1 : 0);
+    return "<table><thead>" +
+      '<tr class="g"><th class="stk">Order</th><th colspan="' + (orderCols - 1) + '"></th><th class="gs" colspan="3">Quantity</th><th class="gs" colspan="7">Production</th><th class="gs" colspan="3">Dispatch</th><th class="gs" colspan="2">Progress</th></tr>' +
+      '<tr class="c"><th class="stk">PO No.</th>' + (mb ? "<th>Buyer</th>" : "") + (io ? "<th>Order No.</th><th>Our Article</th>" : "") + '<th>Buyer Article</th><th>Item</th><th class="gs">Qty</th><th>Shipped</th><th>Balance</th><th class="gs">Yarn</th><th>Dyeing</th><th>Weaving</th><th>Produced</th><th>Latex</th><th>Stitching</th><th>Packing</th><th class="gs">Packaging</th><th>Container</th><th>Ship Date</th><th class="gs">Progress</th><th>Status</th></tr></thead><tbody>' +
+      list.map(function (s) {
+        var pc = s.progress_pct >= 80 ? "#1f9d55" : (s.progress_pct >= 40 ? "#d97706" : "#94a3b8");
+        var latex = !s.latex_applies ? '<span class="na">N/A</span>' : (s.latex_qty >= 1 ? '<span class="num">' + esc(s.latex_qty) + "</span>" : sheetBadge(s.latexing_status));
+        var pack = s.packing_qty >= 1 ? '<span class="num">' + esc(s.packing_qty) + "</span>" : sheetBadge(s.packing_status);
+        return '<tr><td class="stk po">' + esc(s.buyer_po || "—") + "</td>" + (mb ? "<td>" + esc(s._buyer || "") + "</td>" : "") +
+          (io ? '<td style="font-weight:700">' + esc(s.io || "") + '</td><td class="num" style="text-align:left">' + esc(s.sku || "") + "</td>" : "") +
+          "<td>" + esc(s.buyer_article_no || "—") + "</td><td>" + esc(s.category || "—") + "</td>" +
+          '<td class="num gs">' + esc(s.qty) + '</td><td class="num" style="color:' + (s.shipped_qty > 0 ? "#1f9d55" : "var(--sh-sub)") + ';font-weight:700">' + esc(s.shipped_qty) + "</td>" +
+          '<td class="num" style="color:' + (s.balance_qty > 0 ? "#dc2626" : "#1f9d55") + ';font-weight:700">' + esc(s.balance_qty) + "</td>" +
+          '<td class="gs">' + sheetBadge(s.purchase_yarn) + "</td><td>" + sheetBadge(s.dyeing_status) + "</td><td>" + sheetBadge(s.weaving_status) + "</td>" +
+          '<td class="num">' + esc(s.produced_qty) + "</td><td>" + latex + "</td><td>" + (s.stitch_applies ? sheetBadge(s.stitching_status) : '<span class="na">N/A</span>') + "</td>" +
+          "<td>" + pack + '</td><td class="gs">' + sheetBadge(s.packaging_status) + "</td><td>" + sheetBadge(s.container_booking_status) + "</td>" +
+          '<td class="num" style="text-align:left">' + esc(s.ship_date || "TBC") + '</td><td class="gs"><span class="pb"><i style="width:' + s.progress_pct + "%;background:" + pc + '"></i></span>' + s.progress_pct + "%</td>" +
+          "<td>" + sheetBadge(s.order_status === "Completed" ? "Ready" : "Pending") + "</td></tr>";
+      }).join("") + "</tbody></table>";
+  }
+  function mountOrderSheet(el, rows, o) {
+    o = o || {};
+    if (!rows.length) { el.innerHTML = '<div class="rc-sheet"><div class="she">No open orders right now — everything has shipped.</div></div>'; return; }
+    el.innerHTML = '<div class="rc-sheet"><div class="shf">' +
+      '<div><label>Search</label><input type="search" data-k="q" placeholder="PO, article or item…" /></div>' +
+      '<div><label>Status</label><select data-k="st"><option value="">All</option><option value="Pending">In production</option><option value="Completed">Ready to ship</option></select></div>' +
+      '<div><label>Ship date</label><input type="date" data-k="d" /></div>' +
+      '<div><label>Ship month</label><input type="month" data-k="m" /></div>' +
+      '<button type="button" data-k="clr">Clear</button><button type="button" class="pri" data-k="full">⛶ Full page view</button></div><div class="shw"></div></div>';
+    var box = el.querySelector(".rc-sheet"), wrap = el.querySelector(".shw");
+    function v(k) { return box.querySelector('[data-k="' + k + '"]'); }
+    function draw() {
+      var q = v("q").value.trim().toUpperCase(), st = v("st").value, d = v("d").value, m = v("m").value;
+      wrap.innerHTML = sheetTable(rows.filter(function (s) {
+        if (q && [s.buyer_po, s.buyer_article_no, s.category, s.io, s.sku].join(" ").toUpperCase().indexOf(q) === -1) return false;
+        if (st && s.order_status !== st) return false;
+        if (d) return s.ship_date_iso === d;
+        if (m) return (s.ship_date_iso || "").slice(0, 7) === m;
+        return true;
+      }), o);
+      if (o.onFilter) o.onFilter(q);
+    }
+    v("q").addEventListener("input", draw);
+    v("st").addEventListener("change", draw);
+    v("d").addEventListener("change", function () { if (this.value) v("m").value = ""; draw(); });
+    v("m").addEventListener("change", function () { if (this.value) v("d").value = ""; draw(); });
+    v("clr").addEventListener("click", function () { v("q").value = ""; v("st").value = ""; v("d").value = ""; v("m").value = ""; draw(); });
+    v("full").addEventListener("click", function () {
+      var on = !box.classList.contains("full");
+      box.classList.toggle("full", on);
+      this.textContent = on ? "✕ Exit full page" : "⛶ Full page view";
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && box.classList.contains("full")) v("full").click(); });
+    draw();
+  }
+  return { esc: esc, fd: fd, ioDone: ioDone, sampleCard: sampleCard, orderCard: orderCard, flattenOrders: flattenOrders, mountOrderSheet: mountOrderSheet };
 })();
 </script>
 <script>
@@ -1979,18 +2077,12 @@ window.RCBuyerUI = (function () {
   }
   function drawOrders(first) {
     var O = S.orders, rows = O.rows;
-    if (first) {
-      var ready = rows.filter(function (o) { return o.order_status === "Completed"; }).length, pos = {};
-      rows.forEach(function (o) { if (o.buyer_po) pos[o.buyer_po] = 1; });
-      main(head("📦 Orders", (O.live ? "Live from our production system." : (O.asOf ? "As of " + fd(O.asOf) + "." : "")) + " Shipped orders drop off this list.") +
-        '<div class="bs-stats"><div class="bs-stat"><span>Open POs</span><b>' + Object.keys(pos).length + '</b></div><div class="bs-stat"><span>Items in production</span><b>' + (rows.length - ready) + '</b></div><div class="bs-stat ok"><span>Ready to ship</span><b>' + ready + "</b></div></div>" +
-        '<div class="bs-tools"><input id="bpOSearch" type="search" placeholder="Search PO, article or category…" /><div class="bs-chips" id="bpOChips"><button class="bs-chip active" data-f="all">All</button><button class="bs-chip" data-f="Pending">In production</button><button class="bs-chip" data-f="Completed">Ready to ship</button></div></div><div id="bpOList"></div>');
-      $("bpOSearch").oninput = function () { drawOrders(false); clearTimeout(searchTimer); var v = this.value; searchTimer = setTimeout(function () { if (v.trim()) track("search", { section: "orders", q: v.trim().slice(0, 60) }); }, 1500); };
-      $("bpOChips").querySelectorAll(".bs-chip").forEach(function (b) { b.onclick = function () { S.ofilter = b.dataset.f; $("bpOChips").querySelectorAll(".bs-chip").forEach(function (x) { x.classList.toggle("active", x === b); }); drawOrders(false); }; });
-    }
-    var q = ($("bpOSearch").value || "").toLowerCase();
-    var list = rows.filter(function (o) { if (S.ofilter !== "all" && o.order_status !== S.ofilter) return false; return !q || [o.buyer_po, o.buyer_article_no, o.category].join(" ").toLowerCase().indexOf(q) !== -1; });
-    $("bpOList").innerHTML = !rows.length ? '<div class="bs-empty">No open orders right now.</div>' : list.length ? list.map(function (o) { return UI.orderCard(o, O.multi); }).join("") : '<div class="bs-empty">No orders match.</div>';
+    var ready = rows.filter(function (o) { return o.order_status === "Completed"; }).length, pos = {};
+    rows.forEach(function (o) { if (o.buyer_po) pos[o.buyer_po] = 1; });
+    main(head("📦 Orders", (O.live ? "Live from our production system." : (O.asOf ? "As of " + fd(O.asOf) + "." : "")) + " Shipped orders drop off this list.") +
+      '<div class="bs-stats"><div class="bs-stat"><span>Open POs</span><b>' + Object.keys(pos).length + '</b></div><div class="bs-stat"><span>Items in production</span><b>' + (rows.length - ready) + '</b></div><div class="bs-stat ok"><span>Ready to ship</span><b>' + ready + "</b></div></div>" +
+      '<div id="bpOList"></div>');
+    UI.mountOrderSheet($("bpOList"), rows, { multi: O.multi, onFilter: function (q) { clearTimeout(searchTimer); searchTimer = setTimeout(function () { if (q) track("search", { section: "orders", q: q.slice(0, 60) }); }, 1500); } });
   }
 
   // Approvals
@@ -11701,12 +11793,13 @@ window.RCBuyerUI = (function () {
         '<div class="ba-pane" data-p="act">' + baFeed(d.activity) + "</div>" +
         '<div class="ba-pane hidden" data-p="logins">' + (d.accounts.length ? '<table class="ba-tbl"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Registered</th><th>Last sign-in</th></tr></thead><tbody>' + d.accounts.map(function (a) { return "<tr><td>" + esc(a.name || "—") + "</td><td>" + esc(a.email) + "</td><td>" + esc(a.phone || "—") + '</td><td><span class="ba-status ' + esc(a.status) + '">' + esc(a.status) + "</span></td><td>" + fmtDate(a.created_at) + "</td><td>" + (a.last_login_at ? baWhen(a.last_login_at) : "—") + "</td></tr>"; }).join("") + "</tbody></table>" : '<div class="empty">Nobody from this buyer has registered yet.</div>') + "</div>" +
         '<div class="ba-pane hidden" data-p="samples">' + (d.ios.length ? d.ios.map(function (io) { return RCBuyerUI.sampleCard(io, false); }).join("") : '<div class="empty">No samples.</div>') + "</div>" +
-        '<div class="ba-pane hidden" data-p="orders"><div class="sub" style="margin-bottom:8px">' + (ord.live ? "Live from the production sheet." : (ord.asOf ? "From the last snapshot (" + RCBuyerUI.fd(ord.asOf) + ") — becomes live once the Apps Script update is deployed." : "No order data yet.")) + "</div>" + (ord.rows.length ? ord.rows.map(function (o) { return RCBuyerUI.orderCard(o, false); }).join("") : '<div class="empty">No open orders.</div>') + "</div>" +
+        '<div class="ba-pane hidden" data-p="orders"><div class="sub" style="margin-bottom:8px">' + (ord.live ? "Live from the production sheet." : (ord.asOf ? "From the last snapshot (" + RCBuyerUI.fd(ord.asOf) + ") — becomes live once the Apps Script update is deployed." : "No order data yet.")) + "</div>" + '<div id="baOrdSheet"></div></div>' +
         '<div class="ba-pane hidden" data-p="appr">' + (d.approvals.length ? '<table class="ba-tbl"><tbody>' + d.approvals.map(function (a) { return "<tr><td><b>" + esc(a.title) + '</b><div class="sub">' + esc(a.kind) + (a.io ? " · IO " + esc(a.io) : "") + "</div></td><td><span class=\"ba-status " + esc(a.status.replace(/ /g, "-")) + '">' + esc(a.status) + "</span></td><td>" + esc(a.buyer_comment || "") + "</td><td>" + fmtDate(a.created_at) + "</td></tr>"; }).join("") + "</tbody></table>" : '<div class="empty">No approvals shared yet.</div>') + "</div>" +
         '<div class="ba-pane hidden" data-p="msg">' + (d.threads.length ? '<table class="ba-tbl"><tbody>' + d.threads.map(function (t) { return "<tr><td><b>" + esc(t.subject) + '</b><div class="sub">' + esc(t.ref || "") + "</div></td><td>" + esc(t.created_by || "") + '</td><td><span class="ba-status ' + esc(t.status) + '">' + esc(t.status) + "</span></td><td>" + baWhen(t.last_message_at) + "</td></tr>"; }).join("") + "</tbody></table>" : '<div class="empty">No conversations.</div>') + "</div>" +
         '<div class="ba-pane hidden" data-p="req">' + (d.requests.length ? '<table class="ba-tbl"><tbody>' + d.requests.map(function (r) { return "<tr><td><b>" + esc(r.title) + '</b><div class="sub">' + esc(r.account_name || "") + "</div></td><td><span class=\"ba-status " + esc(r.status.replace(/ /g, "-")) + '">' + esc(r.status) + "</span></td><td>" + fmtDate(r.created_at) + "</td></tr>"; }).join("") + "</tbody></table>" : '<div class="empty">No sample requests.</div>') + "</div>" +
         "</div>");
       document.getElementById("baBack").onclick = function () { baGo("buyers"); };
+      if (document.getElementById("baOrdSheet")) RCBuyerUI.mountOrderSheet(document.getElementById("baOrdSheet"), ord.rows, { showIo: ord.rows.some(function (r) { return r.io; }) });
       document.querySelectorAll("#baDTabs .tab").forEach(function (t) {
         t.onclick = function () {
           document.querySelectorAll("#baDTabs .tab").forEach(function (x) { x.classList.toggle("active", x === t); });
