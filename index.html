@@ -183,7 +183,7 @@
   #boLinkScreen{display:none}
   html.buyer-orders body > *:not(#boLinkScreen){display:none!important}
   html.buyer-orders #boLinkScreen{display:block}
-  html.buyer-orders body{background:#FAF8F5}
+  html.buyer-orders body{background:var(--bg)}
   html.buyer-sampling body > *:not(#buyerSamplingScreen){display:none!important}
   html.buyer-sampling #buyerSamplingScreen{display:block;min-height:100vh;background:#FAF8F5;color:#1C1B19;font-family:'Plus Jakarta Sans',Arial,sans-serif}
   html.buyer-sampling body{background:#FAF8F5}
@@ -1439,65 +1439,91 @@
      ?orders=<token> — the private link emailed from the Buyer Order Dashboard.
      Shows the copy of that buyer's orders saved when the email was sent
      (no login, no IO / article numbers). html.buyer-orders hides the staff app.
+     Uses the same Workspace theme tokens (day colour + light/dark) as the app.
      Backend: "buyer-orders-api" → boSnapshot. -->
 <div id="boLinkScreen">
   <style>
-    #boLinkScreen{--ink:#1C1D21;--sub:#5B5E66;--mut:#8A8F98;--bd:#E7E2D9;--bg:#FAF8F5;--or:#FF5000;--ord:#D23D00;--gr:#2F9E44;font-family:'Plus Jakarta Sans',Inter,Arial,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;}
-    #boLinkScreen header{position:relative;overflow:hidden;background:linear-gradient(135deg,#0B0B0B,#1C1B19);color:#fff;padding:30px clamp(18px,5vw,56px);border-bottom:4px solid var(--or);}
-    #boLinkScreen header::before{content:"";position:absolute;top:-40%;right:-8%;width:480px;height:220%;background:radial-gradient(circle,rgba(255,80,0,.35),transparent 62%);pointer-events:none;}
-    #boLinkScreen .hd{position:relative;z-index:1;max-width:1250px;margin:0 auto;}
-    #boLinkScreen .logo{height:34px;display:block;margin-bottom:14px;}
-    #boLinkScreen .eb{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#FF9257;font-weight:700;margin:0 0 8px;}
-    #boLinkScreen h1{margin:0;font-size:clamp(26px,4vw,34px);font-weight:800;letter-spacing:-.02em;}
+    #boLinkScreen{font-family:'Plus Jakarta Sans',Inter,Arial,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;}
+    #boLinkScreen .blh{position:relative;overflow:hidden;background:linear-gradient(135deg,#0b0b0c,#1c1b19);color:#fff;padding:26px clamp(16px,3vw,40px);border-bottom:4px solid var(--brand);}
+    #boLinkScreen .blh::before{content:"";position:absolute;top:-60%;right:-6%;width:520px;height:240%;background:radial-gradient(circle,rgba(var(--vibe-brand-rgb,255,80,1),.45),transparent 62%);pointer-events:none;}
+    #boLinkScreen .blh-in{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+    #boLinkScreen .eb{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--brand) 55%,#fff);font-weight:800;margin:0 0 8px;}
+    #boLinkScreen h1{margin:0;font-family:var(--font-heading);font-size:clamp(26px,4vw,36px);font-weight:800;letter-spacing:-.02em;color:#fff;}
     #boLinkScreen .sub{opacity:.85;font-size:14px;margin-top:6px;}
-    #boLinkScreen main{max-width:1250px;margin:0 auto;padding:24px clamp(14px,4vw,56px) 50px;}
-    #boLinkScreen .ctl{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px;}
-    #boLinkScreen .ctl div{display:flex;flex-direction:column;gap:5px;}
-    #boLinkScreen .ctl label{font-size:10.5px;text-transform:uppercase;color:var(--sub);letter-spacing:.06em;font-weight:700;}
-    #boLinkScreen .ctl input,#boLinkScreen .ctl select{font:inherit;font-size:14px;padding:9px 13px;border:1.5px solid var(--bd);border-radius:8px;background:#fff;color:var(--ink);}
-    #boLinkScreen .ctl input:focus,#boLinkScreen .ctl select:focus{outline:none;border-color:var(--or);box-shadow:0 0 0 3px #FFF0E6;}
-    #boLinkScreen .ctl button{font:600 14px/1 inherit;padding:11px 16px;border-radius:8px;border:0;background:#EEEFF1;color:var(--sub);cursor:pointer;}
-    #boLinkScreen .sg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;}
-    @media (max-width:700px){#boLinkScreen .sg{grid-template-columns:1fr;}}
-    #boLinkScreen .sb{position:relative;background:#fff;border:1.5px solid var(--bd);border-radius:10px;padding:18px;text-align:center;overflow:hidden;}
-    #boLinkScreen .sb::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--a,var(--or));}
-    #boLinkScreen .sb small{display:block;font-size:11.5px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
-    #boLinkScreen .sb b{font-size:26px;font-weight:800;color:var(--ord);}
-    #boLinkScreen .tw{overflow-x:auto;background:#fff;border:1px solid var(--bd);border-radius:10px;}
-    #boLinkScreen table{width:100%;border-collapse:collapse;font-size:13px;}
-    #boLinkScreen th{text-align:left;font-size:10.5px;text-transform:uppercase;color:var(--sub);background:#FAF7F2;padding:11px 12px;border-bottom:2px solid var(--or);white-space:nowrap;}
-    #boLinkScreen td{padding:10px 12px;border-bottom:1px solid var(--bd);white-space:nowrap;}
-    #boLinkScreen tbody tr:hover{background:#FFF0E6;}
-    #boLinkScreen .na{color:var(--mut);font-style:italic;font-size:12px;}
-    #boLinkScreen .mono{font-family:ui-monospace,Menlo,monospace;}
-    #boLinkScreen .pb{background:#EEEFF1;border-radius:6px;width:70px;height:8px;display:inline-block;vertical-align:middle;margin-right:6px;overflow:hidden;}
+    #boLinkScreen .hbtns{display:flex;gap:8px;}
+    #boLinkScreen .hb{appearance:none;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;border-radius:var(--radius-btn,10px);padding:9px 14px;font:700 13px/1 inherit;cursor:pointer;white-space:nowrap;}
+    #boLinkScreen .hb:hover{background:var(--brand);border-color:var(--brand);color:var(--brand-ink,#fff);}
+    #boLinkScreen main{padding:18px clamp(12px,2.4vw,32px) 30px;}
+    #boLinkScreen .top{display:grid;grid-template-columns:repeat(3,minmax(160px,1fr)) 2fr;gap:12px;margin-bottom:14px;align-items:stretch;}
+    @media (max-width:1000px){#boLinkScreen .top{grid-template-columns:1fr 1fr 1fr;}#boLinkScreen .ctl{grid-column:1/-1;}}
+    @media (max-width:640px){#boLinkScreen .top{grid-template-columns:1fr;}}
+    #boLinkScreen .sb{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card,16px);padding:14px 16px;overflow:hidden;}
+    #boLinkScreen .sb::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--a,var(--brand));}
+    #boLinkScreen .sb small{display:block;font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;}
+    #boLinkScreen .sb b{display:block;font-family:var(--font-heading);font-size:28px;font-weight:800;color:var(--ink);margin-top:4px;font-variant-numeric:tabular-nums;}
+    #boLinkScreen .ctl{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card,16px);padding:12px 14px;}
+    #boLinkScreen .ctl div{display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px;}
+    #boLinkScreen .ctl label{font-size:10.5px;text-transform:uppercase;color:var(--sub);letter-spacing:.06em;font-weight:800;}
+    #boLinkScreen .ctl input,#boLinkScreen .ctl select{font:inherit;font-size:13.5px;padding:8px 11px;border:1px solid var(--line);border-radius:var(--radius-btn,8px);background:var(--bg);color:var(--ink);width:100%;}
+    #boLinkScreen .ctl button{flex:none;font:700 13px/1 inherit;padding:10px 14px;border-radius:var(--radius-btn,8px);border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;}
+    #boLinkScreen .tw{overflow:auto;max-height:calc(100vh - 150px);background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card,16px);}
+    #boLinkScreen table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;}
+    #boLinkScreen thead th{position:sticky;background:var(--card);color:var(--ink);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:9px 12px;white-space:nowrap;text-align:left;z-index:2;}
+    #boLinkScreen thead tr.g th{top:0;height:30px;font-size:10px;letter-spacing:.1em;color:var(--brand);border-bottom:1px solid var(--line);}
+    #boLinkScreen thead tr.c th{top:30px;border-bottom:2px solid var(--brand);color:var(--sub);}
+    #boLinkScreen thead th.gs,#boLinkScreen td.gs{border-left:1px solid var(--line);}
+    #boLinkScreen td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;color:var(--ink);background:var(--card);}
+    #boLinkScreen tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--bg) 55%,var(--card));}
+    #boLinkScreen tbody tr:hover td{background:color-mix(in srgb,var(--brand) 9%,var(--card));}
+    #boLinkScreen .stk{position:sticky;left:0;z-index:1;box-shadow:1px 0 0 var(--line);}
+    #boLinkScreen thead th.stk{z-index:3;}
+    #boLinkScreen .po{font-weight:800;}
+    #boLinkScreen .na{color:var(--sub);font-style:italic;font-size:12px;}
+    #boLinkScreen .num{font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;text-align:right;}
+    #boLinkScreen .pb{background:color-mix(in srgb,var(--sub) 22%,transparent);border-radius:6px;width:70px;height:8px;display:inline-block;vertical-align:middle;margin-right:6px;overflow:hidden;}
     #boLinkScreen .pb i{display:block;height:8px;border-radius:6px;}
-    #boLinkScreen .st{padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;}
+    #boLinkScreen .st{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;}
+    #boLinkScreen .st.c{background:rgba(31,157,85,.15);color:#178a49;}
+    #boLinkScreen .st.r{background:rgba(217,119,6,.16);color:#b45f06;}
+    #boLinkScreen .st.n{background:color-mix(in srgb,var(--sub) 16%,transparent);color:var(--sub);}
     #boLinkScreen .empty{padding:60px 20px;text-align:center;color:var(--sub);}
-    #boLinkScreen footer{max-width:1250px;margin:0 auto;padding:24px 20px 40px;text-align:center;color:var(--sub);font-size:13px;line-height:1.6;border-top:1px solid var(--bd);}
+    #boLinkScreen footer{padding:20px;text-align:center;color:var(--sub);font-size:13px;line-height:1.6;border-top:1px solid var(--line);}
+    /* Full page view: only the sheet, edge to edge */
+    #boLinkScreen.full .blh,#boLinkScreen.full .top,#boLinkScreen.full footer{display:none;}
+    #boLinkScreen.full main{padding:8px;}
+    #boLinkScreen.full .tw{max-height:calc(100vh - 16px);}
+    #boLinkScreen .fx{display:none;position:fixed;right:14px;bottom:14px;z-index:5;}
+    #boLinkScreen.full .fx{display:inline-flex;}
+    #boLinkScreen .fx{appearance:none;border:0;background:var(--brand);color:var(--brand-ink,#fff);border-radius:999px;padding:11px 16px;font:800 13px/1 inherit;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.25);}
   </style>
-  <header><div class="hd">
-    <img class="logo" id="boLinkLogo" alt="Rugs Creation" />
-    <p class="eb">Rugs Creation · Your Orders</p>
-    <h1 id="boLinkHello">Loading your orders…</h1>
-    <p class="sub" id="boLinkSub">A complete view of every current order with us.</p>
-  </div></header>
-  <main>
-    <div class="ctl" id="boLinkCtl" style="display:none">
-      <div><label for="blQ">Search</label><input id="blQ" type="search" placeholder="Search by PO or article…" /></div>
-      <div><label for="blS">Status</label><select id="blS"><option value="">All</option><option value="Pending">Pending</option><option value="Completed">Completed</option></select></div>
-      <div><label for="blD">Ship date</label><input id="blD" type="date" /></div>
-      <div><label for="blM">Ship month</label><input id="blM" type="month" /></div>
-      <div><label>&nbsp;</label><button type="button" id="blC">Clear filters</button></div>
+  <div class="blh"><div class="blh-in">
+    <div>
+      <p class="eb">Rugs Creation · Your Orders</p>
+      <h1 id="boLinkHello">Loading your orders…</h1>
+      <p class="sub" id="boLinkSub">A complete view of every current order with us.</p>
     </div>
-    <div class="sg" id="boLinkSum" style="display:none">
+    <div class="hbtns">
+      <button type="button" class="hb" id="blTheme" title="Light / dark">🌗 Theme</button>
+      <button type="button" class="hb" id="blFull">⛶ Full page view</button>
+    </div>
+  </div></div>
+  <main>
+    <div class="top" id="boLinkTop" style="display:none">
       <div class="sb"><small>📦 Active orders</small><b id="blO">—</b></div>
-      <div class="sb" style="--a:#0B0B0B"><small>🧵 Total items</small><b id="blI">—</b></div>
-      <div class="sb" style="--a:#2F9E44"><small>💰 In-hand value</small><b id="blV">—</b></div>
+      <div class="sb" style="--a:#334155"><small>🧵 Total items</small><b id="blI">—</b></div>
+      <div class="sb" style="--a:#1f9d55"><small>💰 In-hand value</small><b id="blV">—</b></div>
+      <div class="ctl">
+        <div><label for="blQ">Search</label><input id="blQ" type="search" placeholder="PO or article…" /></div>
+        <div><label for="blS">Status</label><select id="blS"><option value="">All</option><option value="Pending">Pending</option><option value="Completed">Completed</option></select></div>
+        <div><label for="blD">Ship date</label><input id="blD" type="date" /></div>
+        <div><label for="blM">Ship month</label><input id="blM" type="month" /></div>
+        <button type="button" id="blC">Clear</button>
+      </div>
     </div>
     <div class="tw"><div class="empty" id="boLinkBody">Loading…</div></div>
   </main>
-  <footer>Thank you for your continued partnership. Please reach out to your account manager with any questions.<br><br>— The Rugs Creation Team</footer>
+  <footer>Thank you for your continued partnership. Please reach out to your account manager with any questions.<br>— The Rugs Creation Team</footer>
+  <button type="button" class="fx" id="blExit">✕ Exit full page</button>
 </div>
 <script>
 (function () {
@@ -1508,11 +1534,28 @@
   var ALL = [];
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
-  try { var lg = document.querySelector("img.landing-logo, #bpLogoLand"); if (lg && lg.src) $("boLinkLogo").src = lg.src; else $("boLinkLogo").style.display = "none"; } catch (e) {}
   function badge(s) {
-    var c = { "Completed": ["#2F9E44", "#E8F6EA"], "Running": ["#B8790A", "#FBF0DA"], "Pending": ["#B8790A", "#FBF0DA"], "Requested": ["#2F9E44", "#E8F6EA"] }[s] || ["#8A8F98", "#EEEFF1"];
-    return '<span class="st" style="background:' + c[1] + ";color:" + c[0] + '">' + esc(s) + "</span>";
+    var cls = /^(Completed|Requested|In-House)$/.test(s) ? "c" : (/^(Running|Pending|Ordered)$/.test(s) ? "r" : "n");
+    return '<span class="st ' + cls + '">' + esc(s) + "</span>";
   }
+  // Theme: same "deleg_theme" setting + tokens as Workspace (system → light → dark)
+  function curTheme() { try { return localStorage.getItem("deleg_theme") || "system"; } catch (e) { return "system"; } }
+  function setTheme(t) {
+    try { localStorage.setItem("deleg_theme", t); } catch (e) {}
+    if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme");
+    $("blTheme").textContent = t === "dark" ? "🌙 Dark" : t === "light" ? "☀️ Light" : "🌗 Auto";
+  }
+  setTheme(curTheme());
+  $("blTheme").addEventListener("click", function () { var c = curTheme(); setTheme(c === "system" ? "light" : c === "light" ? "dark" : "system"); });
+  function full(on) {
+    $("boLinkScreen").classList.toggle("full", on);
+    $("blFull").textContent = on ? "✕ Exit full page" : "⛶ Full page view";
+    if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {});
+    if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+  }
+  $("blFull").addEventListener("click", function () { full(!$("boLinkScreen").classList.contains("full")); });
+  $("blExit").addEventListener("click", function () { full(false); });
+  document.addEventListener("fullscreenchange", function () { if (!document.fullscreenElement && $("boLinkScreen").classList.contains("full")) full(false); });
   function render() {
     var q = $("blQ").value.trim().toUpperCase(), st = $("blS").value, d = $("blD").value, m = $("blM").value;
     var list = ALL.filter(function (o) {
@@ -1529,22 +1572,24 @@
     var box = $("boLinkBody");
     if (!list.length) { box.className = "empty"; box.innerHTML = "No orders found."; return; }
     box.className = "";
-    box.innerHTML = "<table><thead><tr><th>Your PO No.</th><th>Buyer Article No.</th><th>Item</th><th>Qty</th><th>Shipped</th><th>Balance</th><th>Yarn</th><th>Dyeing</th><th>Weaving</th><th>Produced</th><th>Latex</th><th>Stitching</th><th>Packing</th><th>Packaging Accessories</th><th>Container Booking</th><th>Ship Date</th><th>Progress</th><th>Status</th></tr></thead><tbody>" +
+    box.innerHTML = "<table><thead>" +
+      '<tr class="g"><th class="stk" colspan="1">Order</th><th colspan="2"></th><th class="gs" colspan="3">Quantity</th><th class="gs" colspan="7">Production</th><th class="gs" colspan="3">Dispatch</th><th class="gs" colspan="2">Progress</th></tr>' +
+      '<tr class="c"><th class="stk">Your PO No.</th><th>Buyer Article No.</th><th>Item</th><th class="gs">Qty</th><th>Shipped</th><th>Balance</th><th class="gs">Yarn</th><th>Dyeing</th><th>Weaving</th><th>Produced</th><th>Latex</th><th>Stitching</th><th>Packing</th><th class="gs">Packaging Acc.</th><th>Container</th><th>Ship Date</th><th class="gs">Progress</th><th>Status</th></tr></thead><tbody>' +
       list.map(function (s) {
-        var pc = s.progress_pct >= 80 ? "#2F9E44" : (s.progress_pct >= 40 ? "#B8790A" : "#8A8F98");
-        var latex = !s.latex_applies ? '<span class="na">N/A</span>' : (s.latex_qty >= 1 ? '<span class="mono">' + esc(s.latex_qty) + "</span>" : badge(s.latexing_status));
-        var pack = s.packing_qty >= 1 ? '<span class="mono">' + esc(s.packing_qty) + "</span>" : badge(s.packing_status);
-        return "<tr><td class=\"na\">" + esc(s.buyer_po || "—") + "</td><td class=\"na\">" + esc(s.buyer_article_no || "—") + "</td><td>" + esc(s.category || "—") + "</td>" +
-          '<td class="mono">' + s.qty + '</td><td class="mono" style="color:' + (s.shipped_qty > 0 ? "#2F9E44" : "#8A8F98") + ';font-weight:600">' + s.shipped_qty + "</td>" +
-          '<td class="mono" style="color:' + (s.balance_qty > 0 ? "#C6373B" : "#2F9E44") + ';font-weight:600">' + s.balance_qty + "</td>" +
-          "<td>" + badge(s.purchase_yarn) + "</td><td>" + badge(s.dyeing_status) + "</td><td>" + badge(s.weaving_status) + "</td>" +
-          '<td class="mono">' + esc(s.produced_qty) + "</td><td>" + latex + "</td><td>" + (s.stitch_applies ? badge(s.stitching_status) : '<span class="na">N/A</span>') + "</td>" +
-          "<td>" + pack + "</td><td>" + esc(s.packaging_status) + "</td><td>" + badge(s.container_booking_status) + "</td>" +
-          '<td class="mono">' + esc(s.ship_date || "TBC") + '</td><td><span class="pb"><i style="width:' + s.progress_pct + "%;background:" + pc + '"></i></span>' + s.progress_pct + "%</td>" +
+        var pc = s.progress_pct >= 80 ? "#1f9d55" : (s.progress_pct >= 40 ? "#d97706" : "#94a3b8");
+        var latex = !s.latex_applies ? '<span class="na">N/A</span>' : (s.latex_qty >= 1 ? '<span class="num">' + esc(s.latex_qty) + "</span>" : badge(s.latexing_status));
+        var pack = s.packing_qty >= 1 ? '<span class="num">' + esc(s.packing_qty) + "</span>" : badge(s.packing_status);
+        return '<tr><td class="stk po">' + esc(s.buyer_po || "—") + "</td><td>" + esc(s.buyer_article_no || "—") + "</td><td>" + esc(s.category || "—") + "</td>" +
+          '<td class="num gs">' + s.qty + '</td><td class="num" style="color:' + (s.shipped_qty > 0 ? "#1f9d55" : "var(--sub)") + ';font-weight:700">' + s.shipped_qty + "</td>" +
+          '<td class="num" style="color:' + (s.balance_qty > 0 ? "#dc2626" : "#1f9d55") + ';font-weight:700">' + s.balance_qty + "</td>" +
+          '<td class="gs">' + badge(s.purchase_yarn) + "</td><td>" + badge(s.dyeing_status) + "</td><td>" + badge(s.weaving_status) + "</td>" +
+          '<td class="num">' + esc(s.produced_qty) + "</td><td>" + latex + "</td><td>" + (s.stitch_applies ? badge(s.stitching_status) : '<span class="na">N/A</span>') + "</td>" +
+          "<td>" + pack + '</td><td class="gs">' + badge(s.packaging_status) + "</td><td>" + badge(s.container_booking_status) + "</td>" +
+          '<td class="num" style="text-align:left">' + esc(s.ship_date || "TBC") + '</td><td class="gs"><span class="pb"><i style="width:' + s.progress_pct + "%;background:" + pc + '"></i></span>' + s.progress_pct + "%</td>" +
           "<td>" + badge(s.order_status) + "</td></tr>";
       }).join("") + "</tbody></table>";
   }
-  ["blQ"].forEach(function (id) { $(id).addEventListener("input", render); });
+  $("blQ").addEventListener("input", render);
   $("blS").addEventListener("change", render);
   $("blD").addEventListener("change", function () { if (this.value) $("blM").value = ""; render(); });
   $("blM").addEventListener("change", function () { if (this.value) $("blD").value = ""; render(); });
@@ -1558,7 +1603,7 @@
       $("boLinkHello").textContent = "Hello " + (d.buyer || "") + ",";
       document.title = "Your Orders — Rugs Creation";
       if (d.created_at) $("boLinkSub").textContent = "Your order status as of " + new Date(d.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) + ".";
-      $("boLinkCtl").style.display = ""; $("boLinkSum").style.display = "";
+      $("boLinkTop").style.display = "";
       render();
     })
     .catch(function (e) {
@@ -2985,14 +3030,22 @@ window.RCBuyerUI = (function () {
         .bo-card small{display:block;font-size:11.5px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;}
         .bo-card b{display:block;font-family:var(--font-heading);font-size:26px;font-weight:800;color:var(--ink);margin-top:4px;font-variant-numeric:tabular-nums;}
         .bo-card span{font-size:12px;color:var(--sub);}
-        .bo-wrap{overflow:auto;max-height:calc(100vh - 330px);min-height:240px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card,16px);}
+        .bo-wrap{overflow:auto;max-height:calc(100vh - 300px);min-height:260px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-card,16px);}
         .bo-t{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;}
-        .bo-t th{position:sticky;top:0;z-index:1;background:var(--card);text-align:left;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);padding:10px;border-bottom:2px solid var(--brand);white-space:nowrap;}
-        .bo-t td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--ink);white-space:nowrap;}
-        .bo-t tbody tr:hover td{background:color-mix(in srgb,var(--brand) 7%,transparent);}
+        .bo-t th{position:sticky;z-index:2;background:var(--card);text-align:left;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);padding:9px 10px;white-space:nowrap;}
+        .bo-t tr.g th{top:0;height:30px;font-size:10px;letter-spacing:.1em;color:var(--brand);border-bottom:1px solid var(--line);}
+        .bo-t tr.c th{top:30px;border-bottom:2px solid var(--brand);}
+        .bo-t .gs{border-left:1px solid var(--line);}
+        .bo-t td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--ink);white-space:nowrap;background:var(--card);}
+        .bo-t tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--bg) 55%,var(--card));}
+        .bo-t tbody tr:hover td{background:color-mix(in srgb,var(--brand) 9%,var(--card));}
+        .bo-t .stk{position:sticky;left:0;z-index:1;box-shadow:1px 0 0 var(--line);}
+        .bo-t th.stk{z-index:3;}
+        .bo-t .num{text-align:right;}
         .bo-t .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums;}
         .bo-t .io{font-weight:800;color:var(--brand);}
-        .bo-t .muted{color:var(--sub);}
+        .bo-t .muted{color:var(--ink);}
+        .bo-t .po{font-weight:800;color:var(--ink);}
         .bo-pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;}
         .bo-pill.c{background:rgba(31,157,85,.15);color:#1f9d55;}
         .bo-pill.r{background:rgba(217,119,6,.16);color:#c26a04;}
@@ -3003,6 +3056,15 @@ window.RCBuyerUI = (function () {
         .bo-prog i b{display:block;height:100%;border-radius:9px;}
         .bo-empty{padding:48px 16px;text-align:center;color:var(--sub);}
         .bo-empty .big{font-size:40px;display:block;margin-bottom:6px;}
+        /* Full page view: just the filters + the sheet, edge to edge */
+        #view-buyerorder.bo-full{position:fixed;inset:0;z-index:1500;background:var(--bg);padding:12px;overflow:auto;}
+        #view-buyerorder.bo-full .bo-hero{display:none;}
+        #view-buyerorder.bo-full .bo-sum{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:8px;}
+        #view-buyerorder.bo-full .bo-card{padding:8px 12px;}
+        #view-buyerorder.bo-full .bo-card b{font-size:20px;}
+        #view-buyerorder.bo-full .bo-card span{display:none;}
+        #view-buyerorder.bo-full .bo-bar{padding:10px;margin-bottom:8px;}
+        #view-buyerorder.bo-full .bo-wrap{max-height:calc(100vh - 205px);}
         .bo-modal{position:fixed;inset:0;z-index:2000;background:rgba(10,10,20,.55);display:flex;align-items:center;justify-content:center;padding:16px;}
         .bo-modal .box{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;max-width:460px;width:100%;padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.35);border-top:4px solid var(--brand);}
         .bo-modal h3{margin:0 0 6px;font-family:var(--font-heading);font-size:19px;}
@@ -3025,6 +3087,7 @@ window.RCBuyerUI = (function () {
         <div class="bo-f"><label for="boDate">Ship date</label><input id="boDate" type="date" /></div>
         <div class="bo-f"><label for="boMonth">Ship month</label><input id="boMonth" type="month" /></div>
         <button type="button" class="bo-btn" id="boClear">Clear</button>
+        <button type="button" class="bo-btn" id="boFull">⛶ Full page view</button>
         <div class="bo-acts">
           <button type="button" class="bo-btn pri" id="boEmailBtn" disabled>✉ Email to buyer</button>
           <button type="button" class="bo-btn ok" id="boAllBtn">📨 Send to all buyers</button>
@@ -6090,27 +6153,30 @@ window.RCBuyerUI = (function () {
       '<div class="bo-card" style="--acc:#0ea5e9"><small>Ready to ship</small><b>' + ready + "</b><span>all stages done</span></div>";
     if (!bo.orders.length) { wrap.innerHTML = '<div class="bo-empty"><span class="big">✅</span>No open orders for ' + esc(bo.buyer) + " — everything has shipped.</div>"; return; }
     if (!list.length) { wrap.innerHTML = '<div class="bo-empty">No orders match these filters.</div>'; return; }
+    var GS = { 5: 1, 8: 1, 15: 1, 18: 1 };
     var head = ["Buyer PO", "Order No.", "Our Article", "Buyer Article", "Item", "Qty", "Shipped", "Balance", "Yarn", "Dyeing", "Weaving", "Produced", "Latex", "Stitching", "Packing", "Packaging Acc.", "Container", "Ship Date", "Progress", "Status"];
-    wrap.innerHTML = '<table class="bo-t"><thead><tr>' + head.map(function (h) { return "<th>" + h + "</th>"; }).join("") + "</tr></thead><tbody>" +
+    wrap.innerHTML = '<table class="bo-t"><thead>' +
+      '<tr class="g"><th class="stk">Order</th><th colspan="4"></th><th class="gs" colspan="3">Quantity</th><th class="gs" colspan="7">Production</th><th class="gs" colspan="3">Dispatch</th><th class="gs" colspan="2">Progress</th></tr>' +
+      '<tr class="c">' + head.map(function (h, i) { return '<th class="' + (i === 0 ? "stk" : "") + (GS[i] ? " gs" : "") + '">' + h + "</th>"; }).join("") + "</tr></thead><tbody>" +
       list.map(function (o) {
         var pc = o.progress_pct >= 80 ? "#1f9d55" : (o.progress_pct >= 40 ? "#d97706" : "#94a3b8");
         return "<tr>" +
-          '<td class="muted">' + esc(o.buyer_po || "—") + "</td>" +
+          '<td class="stk po">' + esc(o.buyer_po || "—") + "</td>" +
           '<td class="io">' + esc(o.io) + "</td>" +
           '<td class="mono">' + esc(o.sku) + "</td>" +
           '<td class="muted">' + esc(o.buyer_article_no || "—") + "</td>" +
           "<td>" + esc(o.category || "—") + "</td>" +
-          '<td class="mono">' + o.qty + "</td>" +
-          '<td class="mono" style="color:' + (o.shipped_qty > 0 ? "#1f9d55" : "var(--sub)") + ';font-weight:700">' + o.shipped_qty + "</td>" +
-          '<td class="mono" style="color:' + (o.balance_qty > 0 ? "#dc2626" : "#1f9d55") + ';font-weight:700">' + o.balance_qty + "</td>" +
-          "<td>" + boPill(o.purchase_yarn) + "</td><td>" + boPill(o.dyeing_status) + "</td><td>" + boPill(o.weaving_status) + "</td>" +
+          '<td class="mono num gs">' + o.qty + "</td>" +
+          '<td class="mono num" style="color:' + (o.shipped_qty > 0 ? "#1f9d55" : "var(--sub)") + ';font-weight:700">' + o.shipped_qty + "</td>" +
+          '<td class="mono num" style="color:' + (o.balance_qty > 0 ? "#dc2626" : "#1f9d55") + ';font-weight:700">' + o.balance_qty + "</td>" +
+          '<td class="gs">' + boPill(o.purchase_yarn) + "</td><td>" + boPill(o.dyeing_status) + "</td><td>" + boPill(o.weaving_status) + "</td>" +
           '<td class="mono">' + esc(o.produced_qty) + "</td>" +
           "<td>" + (o.latex_applies ? boQty(o.latex_qty, o.latexing_status) : '<span class="bo-na">N/A</span>') + "</td>" +
           "<td>" + (o.stitch_applies ? boPill(o.stitching_status) : '<span class="bo-na">N/A</span>') + "</td>" +
           "<td>" + boQty(o.packing_qty, o.packing_status) + "</td>" +
-          "<td>" + boPill(o.packaging_status) + "</td><td>" + boPill(o.container_booking_status) + "</td>" +
+          '<td class="gs">' + boPill(o.packaging_status) + "</td><td>" + boPill(o.container_booking_status) + "</td>" +
           '<td class="mono">' + esc(o.ship_date || "TBC") + "</td>" +
-          '<td><span class="bo-prog"><i><b style="width:' + o.progress_pct + "%;background:" + pc + '"></b></i>' + o.progress_pct + "%</span></td>" +
+          '<td class="gs"><span class="bo-prog"><i><b style="width:' + o.progress_pct + "%;background:" + pc + '"></b></i>' + o.progress_pct + "%</span></td>" +
           "<td>" + boPill(o.order_status === "Completed" ? "Ready" : "Pending").replace("bo-pill n", "bo-pill c") + "</td></tr>";
       }).join("") + "</tbody></table>";
   }
@@ -6193,6 +6259,16 @@ window.RCBuyerUI = (function () {
       boEl("boStatus").value = ""; boRender();
     });
     boEl("boEmailBtn").addEventListener("click", boEmailOne);
+    function boFull(on) {
+      var v = boEl("view-buyerorder");
+      v.classList.toggle("bo-full", on);
+      boEl("boFull").textContent = on ? "✕ Exit full page" : "⛶ Full page view";
+      if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {});
+      if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+    }
+    boEl("boFull").addEventListener("click", function () { boFull(!boEl("view-buyerorder").classList.contains("bo-full")); });
+    document.addEventListener("fullscreenchange", function () { if (!document.fullscreenElement && boEl("view-buyerorder").classList.contains("bo-full")) boFull(false); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && boEl("view-buyerorder").classList.contains("bo-full")) boFull(false); });
     boEl("boAllBtn").addEventListener("click", boEmailAll);
   })();
 
