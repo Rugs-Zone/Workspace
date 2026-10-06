@@ -3220,6 +3220,7 @@ window.RCBuyerUI = (function () {
 
     <div id="view-merchant" class="hidden" style="height:calc(100vh - var(--topbar-offset));display:flex;flex-direction:column">
       <button class="embed-back-btn" data-goto="modules">← Back to Workspace</button>
+      <button class="embed-back-btn hidden" id="mdAccessBtn" type="button" title="Who sees which merchandiser dashboard">👥 Who sees what</button>
       <button class="embed-back-btn hidden" id="mdBridgeBtn" type="button" title="Connect the Order Editor to the Google Sheets">⚙ Connect editor</button>
       <div class="card embed-frame-wrap" style="padding:0;border-radius:0;border-width:0">
         <div class="embed-loading-overlay" id="merchantLoading"><span class="spinner"></span><span>Loading Merchant Dashboard…</span></div>
@@ -5327,6 +5328,7 @@ window.RCBuyerUI = (function () {
       applyBrandColorOverride(); // workspace-wide, every viewer — not admin-gated
       applyModuleOverrides(); // renames/re-icons built-in MODULE_DEFS tiles in place, before anything renders them
       if (typeof ppcMaybePreload === "function") ppcMaybePreload();
+      if (typeof merchantAccessCheck === "function") merchantAccessCheck();
       if (typeof engageAfterLoad === "function") engageAfterLoad();
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
       renderTasks(); renderFaqs(); renderAudits(); renderAdmin(); renderHome(); renderTickets(); renderHelpSlips(); renderBuyerVisits(); renderInspections(); renderNoticeBoard(); renderSettingsCard(); renderModuleCoversCard(); renderModuleOpenModesCard(); renderDeveloperPane(); updateDevTabVisibility(); renderQuickLinksCard(); renderNotifTypesCard(); renderTeamsCard(); renderLeavePage(); renderReimbursementPage(); renderHomeExtras();
@@ -5357,6 +5359,7 @@ window.RCBuyerUI = (function () {
       applyBrandColorOverride(); // workspace-wide, every viewer — not admin-gated
       applyModuleOverrides(); // renames/re-icons built-in MODULE_DEFS tiles in place, before anything renders them
       if (typeof ppcMaybePreload === "function") ppcMaybePreload();
+      if (typeof merchantAccessCheck === "function") merchantAccessCheck();
       if (typeof engageAfterLoad === "function") engageAfterLoad();
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
       applyDeskVisibility(); // EA desk bar needs the staff list to find the director
@@ -6007,6 +6010,7 @@ window.RCBuyerUI = (function () {
     { key: "cbm", icon: "📦", name: "CBM / Storage Planner", status: "live", goto: "cbm", category: "production" },
     { key: "buyerorder", icon: "🧾", name: "Buyer Order Dashboard", status: "live", goto: "buyerorder", category: "production" },
     { key: "scoring", icon: "🏅", name: "RC Scoring Dashboard", status: "live", goto: "scoring", category: "work" },
+    { key: "merchant", icon: "🧑‍💼", name: "Merchant Dashboard", status: "live", goto: "merchant", category: "production" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit", category: "production" },
     { key: "fairvisit", icon: "🎪", name: "Fair Visit", status: "live", goto: "fairvisit", category: "production" },
     { key: "drive", icon: "🗄️", name: "My Drive", status: "live", goto: "drive", category: "work" },
@@ -6655,65 +6659,80 @@ window.RCBuyerUI = (function () {
     frame.srcdoc = rcEmbedHtml(SCORING_HTML_B64, { doc_id: state.doer.doc_id, fnUrl: SCORING_FN_URL, anonKey: ANON_KEY, tokens: rcEmbedTokens() });
     scoringFrameLoaded = true;
   }
-  // 👥 Doer names: one person written two ways (e.g. "JAGJEET SINGH - Sr. Merchant" and "Jagjit")
-  // is merged into one name for scoring. Was the Doer_Aliases tab; now saved in Workspace.
+  // 👥 Doer names: every name used in the scores (task assignees, sampling handlers, PMS doers) is
+  // matched automatically to that person's name in Rugs-Zone. Here an admin checks the matches,
+  // picks the right person where it couldn't decide, and can override any match.
   function openScoringAliases() {
-    openModal('<h3>👥 Doer names</h3><div id="scAlBody"><div class="sub">Loading…</div></div>');
+    openModal('<h3>👥 Doer names → Rugs-Zone names</h3><div id="scAlBody"><div class="sub">Matching names with Rugs-Zone… (takes a few seconds)</div></div>');
     rcFnCall(SCORING_FN_URL, "scAliasesGet").then(function (d) {
-      var list = Object.keys(d.aliases || {}).sort(function (a, b) { return a.localeCompare(b); }).map(function (k) { return { a: k, c: d.aliases[k] }; });
-      renderScoringAliases(list);
+      var rows = (d.rows || []).map(function (r) { return { raw: r.raw, auto: r.auto, cands: r.candidates || [], chosen: r.chosen || "" }; });
+      var have = {}; rows.forEach(function (r) { have[r.raw.toLowerCase()] = 1; });
+      Object.keys(d.aliases || {}).forEach(function (a) { if (!have[a.toLowerCase()]) rows.push({ raw: a, auto: "", cands: [], chosen: d.aliases[a] }); });
+      renderScoringAliases({ rows: rows, people: d.people || [], filter: rows.some(function (r) { return !r.auto && !r.chosen; }) ? "need" : "all", q: "" });
     }).catch(function (e) { var b = document.getElementById("scAlBody"); if (b) b.innerHTML = '<div class="sub" style="color:var(--danger-ink)">' + esc(e.message) + "</div>"; });
   }
-  function renderScoringAliases(list) {
+  function renderScoringAliases(st) {
     var body = document.getElementById("scAlBody");
     if (!body) return;
+    var need = st.rows.filter(function (r) { return !r.auto && !r.chosen; }).length;
+    var mine = st.rows.filter(function (r) { return r.chosen; }).length;
+    var q = st.q.toLowerCase();
+    var shown = st.rows.map(function (r, i) { return { r: r, i: i }; }).filter(function (x) {
+      if (st.filter === "need" && (x.r.auto || x.r.chosen)) return false;
+      if (st.filter === "mine" && !x.r.chosen) return false;
+      return !q || (x.r.raw + " " + x.r.auto + " " + x.r.chosen).toLowerCase().indexOf(q) !== -1;
+    });
+    var chip = function (k, label) { return '<button type="button" class="btn ' + (st.filter === k ? "" : "secondary") + ' sc-al-f" data-f="' + k + '" style="padding:6px 12px;font-size:12px">' + label + "</button>"; };
+    var people = st.people;
     body.innerHTML =
-      '<div class="sub" style="margin-bottom:10px">Left: the name as it appears in a task or sheet. Right: the one name it should count as. Example: <b>JAGJEET SINGH - Sr. Merchant</b> → <b>Jagjit</b>.</div>' +
-      '<div style="max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:10px">' +
-      (list.length ? list.map(function (r, i) {
-        return '<div class="notify-row" style="gap:8px;align-items:center;padding:6px 10px">' +
-          '<input class="sc-al-a" data-i="' + i + '" value="' + esc(r.a) + '" placeholder="Name as written" style="flex:1;min-width:120px" />' +
+      '<div class="sub" style="margin-bottom:10px">Each name used in the scores is matched to the person\'s <b>name in Rugs-Zone</b>, so one person shows once. ' +
+      'Check the list, and where it says <b>Pick a person</b>, choose the right one. Names nobody matches (e.g. a department like "Zipper") can stay as they are.</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">' +
+      chip("need", "⚠ Needs a choice (" + need + ")") + chip("all", "All names (" + st.rows.length + ")") + chip("mine", "Set by you (" + mine + ")") +
+      '<input id="scAlQ" placeholder="Search a name…" value="' + esc(st.q) + '" style="flex:1;min-width:150px;padding:7px 10px" /></div>' +
+      '<div style="max-height:48vh;overflow:auto;border:1px solid var(--line);border-radius:10px">' +
+      (shown.length ? shown.map(function (x) {
+        var r = x.r, val = r.chosen || "";
+        var badge = r.chosen ? '<span style="font-size:10.5px;font-weight:800;color:var(--brand)">SET BY YOU</span>'
+          : r.auto ? '<span style="font-size:10.5px;font-weight:800;color:#178a49">AUTO ✓</span>'
+          : '<span style="font-size:10.5px;font-weight:800;color:#b45f06">PICK A PERSON' + (r.cands.length ? " · maybe " + esc(r.cands.slice(0, 3).join(" / ")) : "") + "</span>";
+        var opts = '<option value="">' + (r.auto ? "Auto: " + esc(r.auto) : "— leave as it is —") + "</option>" +
+          (r.cands.length ? '<optgroup label="Best guesses">' + r.cands.map(function (c) { return '<option value="' + esc(c) + '"' + (c === val ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") + "</optgroup>" : "") +
+          '<optgroup label="Everyone in Rugs-Zone">' + people.map(function (p) { return '<option value="' + esc(p) + '"' + (p === val && r.cands.indexOf(p) === -1 ? " selected" : "") + ">" + esc(p) + "</option>"; }).join("") + "</optgroup>";
+        return '<div class="notify-row" style="gap:10px;align-items:center;padding:8px 10px;flex-wrap:wrap">' +
+          '<div style="flex:1;min-width:170px"><b style="font-size:13px">' + esc(r.raw) + "</b><br>" + badge + "</div>" +
           '<span style="color:var(--sub)">→</span>' +
-          '<input class="sc-al-c" data-i="' + i + '" value="' + esc(r.c) + '" placeholder="Counts as" style="flex:1;min-width:120px" />' +
-          '<button class="btn secondary sc-al-del" data-i="' + i + '" type="button" style="padding:6px 10px;font-size:12px">Remove</button></div>';
-      }).join("") : '<div class="empty" style="padding:16px">No names merged yet.</div>') + "</div>" +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn secondary" id="scAlAdd" type="button">+ Add a name</button>' +
-      '<button class="btn secondary" id="scAlPasteBtn" type="button">📋 Paste from Google Sheet</button></div>' +
-      '<div id="scAlPasteWrap" class="hidden" style="margin-top:10px"><div class="sub">Copy the two columns (Alias, Canonical Name) from the old Doer_Aliases tab and paste them here:</div>' +
-      '<textarea id="scAlPaste" rows="6" style="width:100%;margin-top:6px" placeholder="JAGJEET SINGH - Sr. Merchant&#9;Jagjit"></textarea>' +
-      '<button class="btn" id="scAlPasteGo" type="button" style="margin-top:6px">Add these</button></div>' +
+          '<select class="sc-al-sel" data-i="' + x.i + '" style="flex:1;min-width:180px">' + opts + "</select></div>";
+      }).join("") : '<div class="empty" style="padding:16px">' + (st.filter === "need" ? "🎉 Every name is matched." : "No names here.") + "</div>") + "</div>" +
+      '<details style="margin-top:10px"><summary style="cursor:pointer;font-size:13px;font-weight:700">📋 Paste names from the old Doer_Aliases sheet (optional)</summary>' +
+      '<div class="sub" style="margin-top:6px">Copy the two columns (Alias, Canonical Name) and paste here. Anything you choose above still wins.</div>' +
+      '<textarea id="scAlPaste" rows="5" style="width:100%;margin-top:6px"></textarea><button class="btn secondary" id="scAlPasteGo" type="button" style="margin-top:6px">Add these</button></details>' +
       '<div class="modal-err" id="scAlErr"></div>' +
       '<div class="modal-actions"><button class="btn secondary" id="scAlClose" type="button">Close</button><button class="btn" id="scAlSave" type="button">Save</button></div>';
-    function collect() {
-      body.querySelectorAll(".sc-al-a").forEach(function (x) { list[+x.dataset.i].a = x.value.trim(); });
-      body.querySelectorAll(".sc-al-c").forEach(function (x) { list[+x.dataset.i].c = x.value.trim(); });
-    }
-    body.querySelectorAll(".sc-al-del").forEach(function (b) { b.onclick = function () { collect(); list.splice(+b.dataset.i, 1); renderScoringAliases(list); }; });
-    document.getElementById("scAlAdd").onclick = function () { collect(); list.push({ a: "", c: "" }); renderScoringAliases(list); };
-    document.getElementById("scAlPasteBtn").onclick = function () { document.getElementById("scAlPasteWrap").classList.toggle("hidden"); };
+    body.querySelectorAll(".sc-al-sel").forEach(function (sel) { sel.onchange = function () { st.rows[+sel.dataset.i].chosen = sel.value; }; });
+    body.querySelectorAll(".sc-al-f").forEach(function (b) { b.onclick = function () { st.filter = b.dataset.f; renderScoringAliases(st); }; });
+    var qi = document.getElementById("scAlQ"), qt = null;
+    qi.oninput = function () { clearTimeout(qt); qt = setTimeout(function () { st.q = qi.value; renderScoringAliases(st); var n = document.getElementById("scAlQ"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 250); };
     document.getElementById("scAlPasteGo").onclick = function () {
-      collect();
       var added = 0;
       document.getElementById("scAlPaste").value.split(/\r?\n/).forEach(function (line) {
-        var p = line.split("\t");
-        if (p.length < 2) p = line.split(",");
+        var p = line.split("\t"); if (p.length < 2) p = line.split(",");
         var a = (p[0] || "").trim(), c = (p[1] || "").trim();
         if (!a || !c || /^alias/i.test(a)) return;
-        var ex = list.find(function (r) { return r.a.toLowerCase() === a.toLowerCase(); });
-        if (ex) ex.c = c; else list.push({ a: a, c: c });
+        var ex = st.rows.find(function (r) { return r.raw.toLowerCase() === a.toLowerCase(); });
+        if (ex) { if (!ex.chosen) ex.chosen = c; } else st.rows.push({ raw: a, auto: "", cands: [], chosen: c });
         added++;
       });
-      renderScoringAliases(list);
+      st.filter = "mine"; renderScoringAliases(st);
       toast(added + " name" + (added === 1 ? "" : "s") + " added — press Save.");
     };
     document.getElementById("scAlClose").onclick = closeModal;
     document.getElementById("scAlSave").onclick = function () {
-      collect();
       var map = {};
-      list.forEach(function (r) { if (r.a && r.c) map[r.a] = r.c; });
+      st.rows.forEach(function (r) { if (r.raw && r.chosen) map[r.raw] = r.chosen; });
       var btn = document.getElementById("scAlSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
-      rcFnCall(SCORING_FN_URL, "scAliasesSave", { aliases: map }).then(function (res) {
-        closeModal(); toast("Saved " + res.count + " name" + (res.count === 1 ? "" : "s") + ". Refreshing the scores…");
+      rcFnCall(SCORING_FN_URL, "scAliasesSave", { aliases: map }).then(function () {
+        closeModal(); toast("Saved. Refreshing the scores with Rugs-Zone names…");
         loadScoringFrame(true);
       }).catch(function (e) { btn.disabled = false; btn.textContent = "Save"; document.getElementById("scAlErr").textContent = e.message; });
     };
@@ -6721,6 +6740,7 @@ window.RCBuyerUI = (function () {
   document.addEventListener("click", function (e) {
     if (e.target.closest && e.target.closest("#scAliasBtn")) { e.preventDefault(); openScoringAliases(); }
     if (e.target.closest && e.target.closest("#mdBridgeBtn")) { e.preventDefault(); openMerchantBridge(); }
+    if (e.target.closest && e.target.closest("#mdAccessBtn")) { e.preventDefault(); openMerchantAccess(); }
   });
 
   // ---------- 🔗 Merchant Dashboard + Order Editor — built in (was an Apps Script web app) ----------
@@ -6729,7 +6749,19 @@ window.RCBuyerUI = (function () {
   // Dashboard numbers come from the sheet copies in Supabase ("merchant-api"); the Order Editor
   // and Recovery tool still save into each merchandiser's Google Sheet through the
   // "Workspace Sheet Bridge" Apps Script (⚙ Connect editor, admins only).
-  var MERCHANT_MODULE_KEY = "cm_merchant-dashboard_4dtmo";
+  var MERCHANT_MODULE_KEY = "cm_merchant-dashboard_4dtmo";   // old custom-module tile, now hidden (built-in tile below)
+  // No links: right after sign-in we quietly ask merchant-api who this person is. Their Rugs-Zone
+  // name decides the dashboard (Jagjeet Singh → Jagjit (Team), Arun → Arun); admins see everyone.
+  // Only people with a dashboard get the 🧑‍💼 Merchant Dashboard tile.
+  function merchantAccessCheck() {
+    if (state.demo || !state.doer) return;
+    rcFnCall(MERCHANT_FN_URL, "mdWhoAmI").then(function (w) {
+      merchantWho = w;
+      var had = !!state.merchantAccess;
+      state.merchantAccess = !!(w && w.labels && w.labels.length);
+      if (had !== state.merchantAccess && typeof renderHome === "function") renderHome();
+    }).catch(function () {});
+  }
   var merchantFrameLoaded = false, merchantWho = null;
   function loadMerchantFrame(page, label) {
     if (merchantFrameLoaded && !page) return;
@@ -6738,6 +6770,8 @@ window.RCBuyerUI = (function () {
     if (state.demo || !state.doer) { frame.srcdoc = '<div style="font-family:sans-serif;padding:40px">Not available in demo mode.</div>'; return; }
     var bb = rcMoveToToolbar("view-merchant", "mdBridgeBtn");
     if (bb) bb.classList.toggle("hidden", !state.doer.is_admin);
+    var wb = rcMoveToToolbar("view-merchant", "mdAccessBtn");
+    if (wb) wb.classList.toggle("hidden", !state.doer.is_admin);
     merchantFrameLoaded = true;
     wireEmbedFrameLoading("merchantFrame", "merchantLoading", page === "editor" ? "Order Editor" : "Merchant Dashboard");
     var who = merchantWho ? Promise.resolve(merchantWho) : rcFnCall(MERCHANT_FN_URL, "mdWhoAmI").then(function (w) { merchantWho = w; return w; });
@@ -6767,7 +6801,7 @@ window.RCBuyerUI = (function () {
       : /^ok/.test(d.test || "") ? '<span style="color:#178a49;font-weight:700">✅ Connected — the Google Sheets answered.</span>'
       : '<span style="color:var(--danger-ink);font-weight:700">⚠ ' + esc(d.test || "No answer") + "</span>";
     body.innerHTML =
-      '<div class="sub" style="margin-bottom:10px">The Order Editor and Recovery tool save into each merchandiser\'s Google Sheet through the <b>Workspace Sheet Bridge</b> Apps Script. Paste its web app link (ends with <code>/exec</code>) below.</div>' +
+      '<div class="sub" style="margin-bottom:10px">The Order Editor and Recovery tool save into each merchandiser\'s Google Sheet through <b>WorkspaceBridge.gs</b> inside your <b>SupabaseSync</b> Apps Script. Paste its web app link (ends with <code>/exec</code>) below. Nobody opens this link — it is only used when someone presses Save.</div>' +
       '<div class="field"><label>Bridge link</label><input id="mdBrUrl" value="' + esc(d.url || "") + '" placeholder="https://script.google.com/macros/s/…/exec" /></div>' +
       '<div style="margin:8px 0">' + st + "</div>" +
       '<div class="modal-err" id="mdBrErr"></div>' +
@@ -6782,6 +6816,55 @@ window.RCBuyerUI = (function () {
     };
   }
 
+
+  // 👥 Who sees what (admins): everyone is matched by their Rugs-Zone name automatically;
+  // here an admin can check it, and give / change / remove anyone's dashboard.
+  function openMerchantAccess() {
+    openModal('<h3>👥 Merchant Dashboard — who sees what</h3><div id="mdAcBody"><div class="sub">Matching Rugs-Zone names…</div></div>');
+    rcFnCall(MERCHANT_FN_URL, "mdAccessGet").then(function (d) { renderMerchantAccess({ rows: d.rows || [], labels: d.labels || [], q: "", only: true }); })
+      .catch(function (e) { var b = document.getElementById("mdAcBody"); if (b) b.innerHTML = '<div class="sub" style="color:var(--danger-ink)">' + esc(e.message) + "</div>"; });
+  }
+  function renderMerchantAccess(st) {
+    var body = document.getElementById("mdAcBody");
+    if (!body) return;
+    var q = st.q.toLowerCase();
+    var shown = st.rows.map(function (r, i) { return { r: r, i: i }; }).filter(function (x) {
+      if (st.only && !(x.r.auto.length || x.r.set || x.r.is_admin)) return false;
+      return !q || x.r.name.toLowerCase().indexOf(q) !== -1;
+    });
+    body.innerHTML =
+      '<div class="sub" style="margin-bottom:10px">Each person sees the dashboard that matches <b>their name in Rugs-Zone</b> — no links needed. Team Leaders get their team view. Admins always see everyone. Change anyone here if needed.</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">' +
+      '<label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="mdAcOnly" style="width:auto"' + (st.only ? " checked" : "") + '> Only people with a dashboard</label>' +
+      '<input id="mdAcQ" placeholder="Search a person…" value="' + esc(st.q) + '" style="flex:1;min-width:160px;padding:7px 10px" /></div>' +
+      '<div style="max-height:50vh;overflow:auto;border:1px solid var(--line);border-radius:10px">' +
+      (shown.length ? shown.map(function (x) {
+        var r = x.r;
+        var autoTxt = r.is_admin ? "Admin — sees everyone" : (r.auto.length ? "By name: " + r.auto.join(" + ") : "No match by name");
+        var opts = '<option value="">' + esc(r.is_admin ? "Admin (everyone)" : (r.auto.length ? "Auto: " + r.auto.join(" + ") : "— no dashboard —")) + "</option>" +
+          '<option value="*"' + (r.set === "*" ? " selected" : "") + ">Everyone (all merchandisers)</option>" +
+          '<option value="-"' + (r.set === "-" ? " selected" : "") + ">No access</option>" +
+          st.labels.map(function (l) { return '<option value="' + esc(l) + '"' + (r.set === l ? " selected" : "") + ">" + esc(l) + "</option>"; }).join("");
+        return '<div class="notify-row" style="gap:10px;align-items:center;padding:8px 10px;flex-wrap:wrap">' +
+          '<div style="flex:1;min-width:180px"><b style="font-size:13px">' + esc(r.name) + '</b><br><span style="font-size:11px;color:var(--sub)">' + esc(autoTxt) +
+          (r.set ? ' · <b style="color:var(--brand)">set by admin</b>' : "") + "</span></div>" +
+          '<select class="md-ac-sel" data-i="' + x.i + '" style="flex:1;min-width:190px"' + (r.is_admin ? " disabled" : "") + ">" + opts + "</select></div>";
+      }).join("") : '<div class="empty" style="padding:16px">Nobody here.</div>') + "</div>" +
+      '<div class="modal-err" id="mdAcErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="mdAcClose" type="button">Close</button><button class="btn" id="mdAcSave" type="button">Save</button></div>';
+    body.querySelectorAll(".md-ac-sel").forEach(function (sel) { sel.onchange = function () { st.rows[+sel.dataset.i].set = sel.value; }; });
+    document.getElementById("mdAcOnly").onchange = function (e) { st.only = e.target.checked; renderMerchantAccess(st); };
+    var qi = document.getElementById("mdAcQ"), qt = null;
+    qi.oninput = function () { clearTimeout(qt); qt = setTimeout(function () { st.q = qi.value; renderMerchantAccess(st); var n = document.getElementById("mdAcQ"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 250); };
+    document.getElementById("mdAcClose").onclick = closeModal;
+    document.getElementById("mdAcSave").onclick = function () {
+      var map = {};
+      st.rows.forEach(function (r) { if (r.set) map[r.doc_id] = r.set; });
+      var btn = document.getElementById("mdAcSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      rcFnCall(MERCHANT_FN_URL, "mdAccessSave", { map: map }).then(function () { closeModal(); toast("Saved — changes apply next time each person opens the dashboard."); })
+        .catch(function (e) { btn.disabled = false; btn.textContent = "Save"; document.getElementById("mdAcErr").textContent = e.message; });
+    };
+  }
   // ---------- Centralised Passing Department — built in ----------
   // Receiving → Passing (Passed/Rejected/Reworking) → Issue → Job cards floor to floor.
   // The module's page ships inside PASSING_HTML_B64. Orders come from the Production
@@ -7766,6 +7849,7 @@ window.RCBuyerUI = (function () {
     if (view === "customModule" && PPC_BUILTIN_ENABLED && state.activeCustomModuleKey === PPC_MODULE_KEY) view = "ppc";
     if (view === "customModule" && state.activeCustomModuleKey === PASSING_MODULE_KEY) view = "passing";
     if (view === "customModule" && state.activeCustomModuleKey === MERCHANT_MODULE_KEY) view = "merchant";
+    if (view === "merchant" && !(state.doer && (state.doer.is_admin || state.merchantAccess))) { toast("You don't have a Merchant Dashboard. Ask your admin."); return; }
     if (view === "scoring" && !canManageModule("scoring")) { toast("You don't have access to the RC Scoring Dashboard. Ask your admin."); return; }
     if (view === "customModule") {
       var cmForLink = (state.customModules || []).find(function (x) { return x.module_key === state.activeCustomModuleKey; });
@@ -8223,6 +8307,9 @@ window.RCBuyerUI = (function () {
       // RC Scoring Dashboard: admins + people given it in Module access only.
       modules = modules.filter(function (m) { return m.key !== "scoring"; });
       if (canManageModule("scoring")) { var scDef = allModuleDefs.find(function (m) { return m.key === "scoring"; }); if (scDef) modules.push(scDef); }
+      // Merchant Dashboard: admins + everyone whose Rugs-Zone name matches a merchandiser (checked after sign-in).
+      modules = modules.filter(function (m) { return m.key !== "merchant" && m.customModuleKey !== "cm_merchant-dashboard_4dtmo"; });
+      if (state.doer && (state.doer.is_admin || state.merchantAccess)) { var mdDef = allModuleDefs.find(function (m) { return m.key === "merchant"; }); if (mdDef) modules.push(mdDef); }
       // Quality Portal is role-gated: shown only to people given a Quality
       // role in Staff Controls, whatever their visible_modules list says.
       modules = modules.filter(function (m) { return m.key !== "quality"; });
