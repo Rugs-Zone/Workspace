@@ -3114,7 +3114,7 @@ window.RCBuyerUI = (function () {
 
     <div id="view-fairvisit" class="hidden">
       <div class="page-head"><h2>Fair Visit</h2></div>
-      <div class="page-sub" style="margin-top:-14px">Know a buyer of yours is coming to the fair? Log it here so the team is ready at the stand. Only Merchants, Vinay and Gaurav can see this page.</div>
+      <div class="page-sub" style="margin-top:-14px">Know a buyer of yours is coming to the fair? Log it here so the team is ready at the stand.</div>
       <div class="card" style="padding:18px;margin-bottom:18px">
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <div class="field" style="flex:1.4;min-width:220px"><label>Fair</label><select id="fvFair"></select></div>
@@ -8752,10 +8752,7 @@ window.RCBuyerUI = (function () {
       // Modules grid, since it isn't really a workspace module.
       var allModuleDefs = MODULE_DEFS.concat(customModuleDefs());
       var modules = Array.isArray(visibleKeys) ? allModuleDefs.filter(function (m) { return visibleKeys.indexOf(m.key) !== -1; }) : allModuleDefs.slice();
-      // Fair Visit is role-gated (Merchants + Vinay + Gaurav) instead of
-      // visible_modules-gated: almost everyone has a saved visible_modules
-      // list from before this module existed, so it would never appear for
-      // them. Show it to exactly the eligible people, hide it from everyone else.
+      // Fair Visit: shown by canSeeFairVisits() (Module access list + directors/EAs/admins).
       modules = modules.filter(function (m) { return m.key !== "fairvisit"; });
       // RC Scoring Dashboard: admins + people given it in Module access only.
       modules = modules.filter(function (m) { return m.key !== "scoring"; });
@@ -12035,7 +12032,7 @@ window.RCBuyerUI = (function () {
     });
   }
 
-  // ---------- Fair Visit (Merchants + Vinay + Gaurav only) ----------
+  // ---------- Fair Visit (who sees it: Settings -> Modules -> Fair Visit -> Manage) ----------
   // Same idea as Buyer Visit, but for buyers coming to a trade fair rather
   // than to the office. Visibility is enforced by deleg-api
   // (fairVisitAccess()); FAIR_VISIT_DIRECTOR_DOC_IDS / the Merchant
@@ -12050,10 +12047,15 @@ window.RCBuyerUI = (function () {
     return f ? f.name : (key || "—");
   }
   function isFairVisitDirector(d) { d = d || state.doer; return !!d && FAIR_VISIT_DIRECTOR_DOC_IDS.indexOf(d.doc_id) > -1; }
+  // Who sees Fair Visit is set in Settings -> Modules -> Fair Visit -> Manage
+  // (visible_modules), like every other module. Vinay, Gaurav, their EAs and
+  // Workspace admins always have it. deleg-api fairVisitAccess() uses the same rule.
   function canSeeFairVisits() {
     var d = state.doer;
     if (!d) return false;
-    return isFairVisitDirector(d) || /merch/i.test(String(d.department || "")) || !!EA_DIRECTORS[d.doc_id];
+    if (isFairVisitDirector(d) || !!EA_DIRECTORS[d.doc_id] || d.is_admin) return true;
+    var vis = Array.isArray(d.visible_modules) ? d.visible_modules : null;
+    return vis === null || vis.indexOf("fairvisit") !== -1;
   }
   function canEditFairVisit(v) {
     return !!v && (isFairVisitDirector() || v.created_by_doc_id === state.doer.doc_id);
@@ -12061,7 +12063,7 @@ window.RCBuyerUI = (function () {
   function loadFairVisits() {
     if (!canSeeFairVisits()) {
       var w = document.getElementById("fvListWrap");
-      if (w) w.innerHTML = '<div class="empty">Fair Visit is only available to Merchants, Vinay and Gaurav.</div>';
+      if (w) w.innerHTML = '<div class="empty">Fair Visit isn\'t turned on for you. Ask an admin (Settings → Modules → Fair Visit → Manage).</div>';
       return;
     }
     renderFairVisits(); // show whatever we already have immediately
