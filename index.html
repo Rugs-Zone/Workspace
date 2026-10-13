@@ -2733,6 +2733,11 @@ window.RCBuyerUI = (function () {
         </div>
         <ul class="mini-list" id="kudosHomeList" style="margin-top:8px"></ul>
       </div>
+      <div class="card hidden" id="reimbHomeWidget" style="padding:18px;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">🧳 Employee Travel / Outstation Expenses</h3><button class="btn secondary" id="reimbHomeOpen" type="button" style="padding:5px 12px;font-size:12px">Open all →</button></div>
+        <div id="reimbHomeStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0"></div>
+        <div id="reimbHomeList" style="overflow-x:auto"></div>
+      </div>
       <div class="card hidden" id="triageHomeWidget" style="padding:18px;margin-bottom:20px;border:1px solid #ffd8b0;background:#fff8f2">
         <h3>⏳ Stuck Tasks (no update in 3+ days)</h3>
         <ul class="mini-list" id="triageHomeList"></ul>
@@ -3173,9 +3178,9 @@ window.RCBuyerUI = (function () {
     <div id="view-reimbursement" class="hidden">
       <div class="page-head">
         <h2>Travel / Outstation Allowance Reimbursement</h2>
-        <button class="btn" id="newReimbBtn">+ New Reimbursement Request</button>
+        <button class="btn" id="newReimbBtn">+ New Request</button>
       </div>
-      <div class="page-sub" style="margin-top:-14px">List your expenses and attach bills (PDF or image) — routes to your TL, then a senior approver, then final sign-off, then Accounts for payment. Fully tracked here at every stage.</div>
+      <div class="page-sub" style="margin-top:-14px"><b>Claim</b>: already spent — list expenses and attach bills. <b>Advance</b>: money before the trip — after the trip you upload the bills, Accounts verifies and settles the difference. Both go TL → senior approver → final sign-off → Accounts pays (cash or online) → you confirm you received it.</div>
       <div class="toolbar">
         <div class="tabs" id="reimbTabs">
           <button class="tab active" data-rtab="mine">My Requests</button>
@@ -8798,7 +8803,7 @@ window.RCBuyerUI = (function () {
           case "helpslip": return openHelpSlipsDept > 0;
           case "attendance": return !(state.attendanceToday && state.attendanceToday.punch_in_at);
           case "leave": return (state.leaves || []).some(function (l) { return l.status === "Pending" && (l.doc_id === d.doc_id || canDecideLeave(l, d)); });
-          case "reimbursement": return (state.reimbursements || []).some(function (r) { return r.status === "Pending" && (r.doc_id === d.doc_id || d.is_admin); });
+          case "reimbursement": return (state.reimbursements || []).some(function (r) { return (r.status === "Pending" && (r.doc_id === d.doc_id || d.is_admin)) || (typeof canActOnReimbRow === "function" && canActOnReimbRow(r, d)); });
           default: return false;
         }
       }
@@ -13356,7 +13361,7 @@ window.RCBuyerUI = (function () {
 
   // ---------- Shared status badge (Leave + Reimbursement) ----------
   function statusBadgeHtml(status) {
-    if (status === "Approved" || status === "Paid") return '<span class="module-badge live">' + esc(status) + "</span>";
+    if (status === "Approved" || status === "Paid" || status === "Settled") return '<span class="module-badge live">' + esc(status) + "</span>";
     if (status === "Rejected") return '<span class="module-badge soon" style="color:var(--danger);border-color:var(--danger)">' + esc(status) + "</span>";
     return '<span class="module-badge soon">' + esc(status) + "</span>";
   }
@@ -13592,28 +13597,85 @@ window.RCBuyerUI = (function () {
   // actually enforces it.
   var REIMB_SECOND_APPROVER_DOC_IDS = ["vinay", "gaurav", "ashish_gulati"];
   var REIMB_FINAL_APPROVER_DOC_IDS = ["vinay", "gaurav"];
+  // Only Accounts (or a Developer) pays; the employee confirms receipt. Mirrors deleg-api isReimbAccounts().
+  function isReimbAccounts(d) { return !!d && ((d.department || "").toUpperCase() === "ACCOUNTS" || d.role === "super_admin"); }
+  var REIMB_ACCOUNTS_STAGES = ["accounts", "settle_verify", "balance_pay", "balance_return"];
+  var REIMB_SELF_STAGES = ["receipt", "settle"];
+  // HR (Raman Tyagi, Narinder) see every employee's travel expenses (read-only): All tab + Home card.
+  var REIMB_VIEWER_DOC_IDS = ["raman_tyagi_hr", "narinder_hr"];
+  function canViewAllReimb(d) { return !!d && (d.is_admin || REIMB_VIEWER_DOC_IDS.indexOf(d.doc_id) !== -1); }
+  function renderReimbHomeWidget() {
+    var w = document.getElementById("reimbHomeWidget");
+    if (!w || !state.doer) return;
+    if (REIMB_VIEWER_DOC_IDS.indexOf(state.doer.doc_id) === -1) { w.classList.add("hidden"); return; }
+    w.classList.remove("hidden");
+    var list = (state.reimbursements || []).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+    var now = new Date(), ym = now.getFullYear() + "-" + ("0" + (now.getMonth() + 1)).slice(-2);
+    var sum = function (arr, f) { return arr.reduce(function (a, r) { return a + (Number(f(r)) || 0); }, 0); };
+    var live = list.filter(function (r) { return r.status !== "Rejected"; });
+    var month = live.filter(function (r) { return String(r.created_at || "").slice(0, 7) === ym; });
+    var waitingApproval = live.filter(function (r) { return ["tl", "second", "final"].indexOf(r.stage) !== -1; });
+    var waitingPay = live.filter(function (r) { return ["accounts", "receipt", "balance_pay"].indexOf(r.stage) !== -1; });
+    var openAdv = live.filter(function (r) { return r.kind === "advance" && r.stage !== "done" && r.accounts_paid_at; });
+    var paid = live.filter(function (r) { return r.stage === "done"; });
+    var tile = function (n, l, sub) { return '<div class="card" style="padding:10px 12px;margin:0"><div style="font-size:20px;font-weight:800">' + n + '</div><div class="sub">' + l + (sub ? " · " + sub : "") + "</div></div>"; };
+    document.getElementById("reimbHomeStats").innerHTML =
+      tile(rbMoney(sum(month, function (r) { return r.total_amount; })), "Asked this month", month.length + " request" + (month.length === 1 ? "" : "s")) +
+      tile(waitingApproval.length, "Awaiting approval", rbMoney(sum(waitingApproval, function (r) { return r.total_amount; }))) +
+      tile(waitingPay.length, "With Accounts / to confirm", rbMoney(sum(waitingPay, function (r) { return r.stage === "balance_pay" ? r.balance : r.total_amount; }))) +
+      tile(openAdv.length, "Advances not settled", rbMoney(sum(openAdv, function (r) { return r.total_amount; }))) +
+      tile(rbMoney(sum(paid, function (r) { return r.kind === "advance" ? (r.settle_total != null ? r.settle_total : r.total_amount) : r.total_amount; })), "Paid / settled", paid.length + " done");
+    var rows = list.slice(0, 8).map(function (r) {
+      return "<tr><td>" + esc(doerName(r.doc_id)) + (r.purpose ? '<div class="sub">' + esc(String(r.purpose).slice(0, 70)) + "</div>" : "") + "</td>" +
+        "<td>" + (r.kind === "advance" ? '<span class="module-badge soon" style="font-size:10px">ADVANCE</span> ' : "") + rbMoney(r.total_amount) + (r.settle_total != null ? '<div class="sub">spent ' + rbMoney(r.settle_total) + "</div>" : "") + "</td>" +
+        "<td>" + statusBadgeHtml(r.status) + '<div class="sub">' + reimbStageLabel(r) + "</div></td>" +
+        '<td class="sub">' + new Date(r.created_at).toLocaleDateString() + "</td></tr>";
+    }).join("");
+    document.getElementById("reimbHomeList").innerHTML = rows ? "<table><thead><tr><th>Employee</th><th>Amount</th><th>Status</th><th>Raised</th></tr></thead><tbody>" + rows + "</tbody></table>" : '<div class="empty">No travel / outstation requests yet.</div>';
+    var openBtn = document.getElementById("reimbHomeOpen");
+    if (openBtn && !openBtn.dataset.wired) {
+      openBtn.dataset.wired = "1";
+      openBtn.addEventListener("click", function () {
+        state.reimbTab = "all";
+        document.querySelectorAll("#reimbTabs .tab").forEach(function (b) { b.classList.toggle("active", b.dataset.rtab === "all"); });
+        goToView("reimbursement");
+      });
+    }
+  }
   function canApproveReimbAnything(d) {
-    return d.is_admin || isTLOfAnyTeam(d.doc_id) || REIMB_SECOND_APPROVER_DOC_IDS.indexOf(d.doc_id) !== -1 || (d.department || "").toUpperCase() === "ACCOUNTS";
+    return d.is_admin || isTLOfAnyTeam(d.doc_id) || REIMB_SECOND_APPROVER_DOC_IDS.indexOf(d.doc_id) !== -1 || isReimbAccounts(d);
   }
   function canActOnReimbRow(r, d) {
+    if (!d || r.status === "Rejected" || r.stage === "done") return false;
+    if (REIMB_SELF_STAGES.indexOf(r.stage) !== -1) return r.doc_id === d.doc_id;
+    if (REIMB_ACCOUNTS_STAGES.indexOf(r.stage) !== -1) return isReimbAccounts(d);
     if (r.status !== "Pending") return false;
     if (d.is_admin) return true;
     if (r.stage === "tl") return r.tl_doc_id === d.doc_id;
     if (r.stage === "second") return REIMB_SECOND_APPROVER_DOC_IDS.indexOf(d.doc_id) !== -1;
     if (r.stage === "final") return REIMB_FINAL_APPROVER_DOC_IDS.indexOf(d.doc_id) !== -1 && !r["final_" + d.doc_id + "_at"];
-    if (r.stage === "accounts") return (d.department || "").toUpperCase() === "ACCOUNTS";
     return false;
   }
   function reimbForTab(tab) {
     var d = state.doer, list = state.reimbursements || [];
     if (tab === "all") return list;
-    if (tab === "approvals") return list.filter(function (r) { return canActOnReimbRow(r, d) || (r.status === "Pending" && d.is_admin); });
+    if (tab === "approvals") return list.filter(function (r) { return (canActOnReimbRow(r, d) && r.doc_id !== d.doc_id) || (r.status === "Pending" && d.is_admin) || (isReimbAccounts(d) && REIMB_ACCOUNTS_STAGES.indexOf(r.stage) !== -1); });
     return list.filter(function (r) { return r.doc_id === d.doc_id; });
   }
+  function rbMoney(n) { return "₹" + Math.abs(Number(n) || 0).toLocaleString("en-IN"); }
+  function rbPayInfo(r) { return r.payment_mode ? esc(r.payment_mode) + (r.payment_ref ? " · " + esc(r.payment_ref) : "") : (r.payment_ref ? esc(r.payment_ref) : ""); }
   function reimbStageLabel(r) {
     if (r.status === "Rejected") return "Rejected at " + esc(r.rejected_stage || "?") + " stage";
-    if (r.status === "Paid") return "Paid" + (r.payment_ref ? " · " + esc(r.payment_ref) : "");
-    var labels = { tl: "Awaiting TL", second: "Awaiting senior approval (Vinay/Gaurav/Ashish Gulati)", final: "Awaiting final sign-off (Vinay + Gaurav)", accounts: "Awaiting payment (Accounts)" };
+    if (r.stage === "done" && r.status === "Paid") return "Received by employee" + (r.received_at ? " on " + new Date(r.received_at).toLocaleDateString() : "") + (rbPayInfo(r) ? " · " + rbPayInfo(r) : "");
+    if (r.stage === "done" && r.status === "Settled") return "Advance settled" + (r.balance ? (r.balance > 0 ? " · balance " + rbMoney(r.balance) + " paid" : " · " + rbMoney(r.balance) + " returned") : "");
+    var balTxt = r.balance ? rbMoney(r.balance) : "";
+    var labels = { tl: "Awaiting TL", second: "Awaiting senior approval (Vinay/Gaurav/Ashish Gulati)", final: "Awaiting final sign-off (Vinay + Gaurav)",
+      accounts: "Approved — Accounts to pay (cash/online)" + (r.received_note ? " · employee said: " + esc(r.received_note) : ""),
+      receipt: "Accounts paid " + (r.settle_verified_at ? "balance " + balTxt : rbMoney(r.total_amount)) + (rbPayInfo(r) ? " (" + rbPayInfo(r) + ")" : "") + " — waiting for employee to confirm receipt",
+      settle: "Advance received — employee to upload bills after the trip" + (r.settle_note ? " · " + esc(r.settle_note) : ""),
+      settle_verify: "Bills submitted (" + rbMoney(r.settle_total) + " spent) — Accounts to verify",
+      balance_pay: "Spent more than advance — Accounts to pay balance " + balTxt + (r.received_note ? " · employee said: " + esc(r.received_note) : ""),
+      balance_return: "Spent less than advance — employee to return " + balTxt + " to Accounts" };
     var lbl = labels[r.stage] || r.stage;
     if (r.stage === "final") {
       var got = [];
@@ -13624,12 +13686,18 @@ window.RCBuyerUI = (function () {
     return lbl;
   }
   function reimbTatHtml(r) {
-    var endIso = r.status === "Paid" ? r.accounts_paid_at : (r.status === "Rejected" ? r.rejected_at : null);
+    var endIso = r.stage === "done" ? (r.balance_done_at || r.received_at || r.accounts_paid_at || r.updated_at) : (r.status === "Rejected" ? r.rejected_at : null);
     var days = workingDaysBetween(r.created_at, endIso);
     return '<span class="sub">' + days + " working day" + (days === 1 ? "" : "s") + (endIso ? " (done)" : " so far") + "</span>";
   }
   function reimbActionButtonsHtml(r) {
-    var approveLabel = r.stage === "accounts" ? "Mark Paid" : "Approve";
+    var b = function (cls, label, extra) { return '<button class="btn ' + (extra || "secondary") + " " + cls + '" data-id="' + esc(r.id) + '" data-stage="' + esc(r.stage) + '" style="padding:5px 10px;font-size:12px">' + label + "</button>"; };
+    if (r.stage === "receipt") return b("reimb-recv-btn", "✓ Money received", "") + " " + b("reimb-notrecv-btn", "Not received");
+    if (r.stage === "settle") return b("reimb-settle-btn", "📎 Upload bills", "");
+    if (r.stage === "settle_verify") return b("reimb-verify-btn", "Verify bills", "");
+    if (r.stage === "balance_pay") return b("reimb-balpay-btn", "Pay balance " + rbMoney(r.balance), "");
+    if (r.stage === "balance_return") return b("reimb-balret-btn", "Return received " + rbMoney(r.balance), "");
+    var approveLabel = r.stage === "accounts" ? "Pay (Accounts)" : "Approve";
     var approveCls = r.stage === "accounts" ? "reimb-pay-btn" : "reimb-approve-btn";
     return '<button class="btn secondary ' + approveCls + '" data-id="' + esc(r.id) + '" data-stage="' + esc(r.stage) + '" style="padding:5px 10px;font-size:12px">' + approveLabel + '</button> <button class="btn secondary reimb-reject-btn" data-id="' + esc(r.id) + '" data-stage="' + esc(r.stage) + '" style="padding:5px 10px;font-size:12px">Reject</button>';
   }
@@ -13640,8 +13708,8 @@ window.RCBuyerUI = (function () {
     var approvalsTabEl = document.getElementById("reimbTabApprovals");
     if (approvalsTabEl) approvalsTabEl.classList.toggle("hidden", !canApprove);
     var allTabEl = document.getElementById("reimbTabAll");
-    if (allTabEl) allTabEl.classList.toggle("hidden", !state.doer.is_admin);
-    if ((state.reimbTab === "approvals" && !canApprove) || (state.reimbTab === "all" && !state.doer.is_admin)) {
+    if (allTabEl) allTabEl.classList.toggle("hidden", !canViewAllReimb(state.doer));
+    if ((state.reimbTab === "approvals" && !canApprove) || (state.reimbTab === "all" && !canViewAllReimb(state.doer))) {
       state.reimbTab = "mine";
       document.querySelectorAll("#reimbTabs .tab").forEach(function (b) { b.classList.toggle("active", b.dataset.rtab === "mine"); });
     }
@@ -13650,9 +13718,9 @@ window.RCBuyerUI = (function () {
     var showRequester = state.reimbTab !== "mine";
     var rows = list.map(function (r) {
       var canAct = canActOnReimbRow(r, state.doer);
-      var billsHtml = (r.bill_urls || []).map(function (u, i) { return '<a href="' + esc(u) + '" target="_blank" rel="noopener">Bill ' + (i + 1) + "</a>"; }).join(" · ");
+      var billsHtml = (r.bill_urls || []).concat(r.settle_bill_urls || []).map(function (u, i) { return '<a href="' + esc(u) + '" target="_blank" rel="noopener">Bill ' + (i + 1) + "</a>"; }).join(" · ");
       return "<tr><td>" + (showRequester ? esc(doerName(r.doc_id)) : esc(r.id)) + (r.purpose ? '<div class="sub">' + esc(r.purpose) + "</div>" : "") + "</td>" +
-        "<td>₹" + Number(r.total_amount).toLocaleString("en-IN") + '<div class="sub">' + (r.expenses || []).length + " expense" + ((r.expenses || []).length === 1 ? "" : "s") + "</div></td>" +
+        "<td>" + (r.kind === "advance" ? '<span class="module-badge soon" style="font-size:10px">ADVANCE</span> ' : "") + "₹" + Number(r.total_amount).toLocaleString("en-IN") + '<div class="sub">' + (r.kind === "advance" && r.settle_total != null ? "Actual spent " + rbMoney(r.settle_total) : (r.expenses || []).length + " expense" + ((r.expenses || []).length === 1 ? "" : "s")) + "</div></td>" +
         "<td>" + statusBadgeHtml(r.status) + '<div class="sub" style="margin-top:2px">' + reimbStageLabel(r) + "</div></td>" +
         "<td>" + reimbTatHtml(r) + "</td>" +
         "<td>" + (billsHtml || "—") + "</td>" +
@@ -13663,6 +13731,108 @@ window.RCBuyerUI = (function () {
     wrap.querySelectorAll(".reimb-reject-btn").forEach(function (b) { b.addEventListener("click", function () { promptRejectReimb(b.dataset.id, b.dataset.stage); }); });
     wrap.querySelectorAll(".reimb-pay-btn").forEach(function (b) { b.addEventListener("click", function () { promptPayReimb(b.dataset.id); }); });
     wrap.querySelectorAll(".reimb-view-btn").forEach(function (b) { b.addEventListener("click", function () { openReimbDetailModal(b.dataset.id); }); });
+    wrap.querySelectorAll(".reimb-recv-btn").forEach(function (b) { b.addEventListener("click", function () { promptReimbReceipt(b.dataset.id, true); }); });
+    wrap.querySelectorAll(".reimb-notrecv-btn").forEach(function (b) { b.addEventListener("click", function () { promptReimbReceipt(b.dataset.id, false); }); });
+    wrap.querySelectorAll(".reimb-settle-btn").forEach(function (b) { b.addEventListener("click", function () { openReimbSettleModal(b.dataset.id); }); });
+    wrap.querySelectorAll(".reimb-verify-btn").forEach(function (b) { b.addEventListener("click", function () { openReimbVerifyModal(b.dataset.id); }); });
+    wrap.querySelectorAll(".reimb-balpay-btn").forEach(function (b) { b.addEventListener("click", function () { promptPayReimb(b.dataset.id, "pay_balance"); }); });
+    wrap.querySelectorAll(".reimb-balret-btn").forEach(function (b) { b.addEventListener("click", function () { promptPayReimb(b.dataset.id, "return_received"); }); });
+  }
+  function reloadReimb(msg) {
+    return api("reimbursementList").then(function (v) { state.reimbursements = v; closeModal(); renderReimbursementPage(); if (typeof renderHome === "function") renderHome(); renderReimbHomeWidget(); if (msg) toast(msg); });
+  }
+  function promptReimbReceipt(id, received) {
+    var r = (state.reimbursements || []).find(function (x) { return x.id === id; }) || {};
+    var amt = r.settle_verified_at ? r.balance : r.total_amount;
+    openModal(
+      "<h3>" + (received ? "Confirm you received the money" : "Money not received") + "</h3>" +
+      '<div class="sub" style="margin-bottom:8px">Accounts paid ' + rbMoney(amt) + (rbPayInfo(r) ? " (" + rbPayInfo(r) + ")" : "") + (r.accounts_note ? " · " + esc(r.accounts_note) : "") + "</div>" +
+      '<div class="field"><label>' + (received ? "Note (optional)" : "What happened? (required)") + '</label><textarea id="rbRecvNote" rows="2" placeholder="' + (received ? "e.g. received in cash from Rajesh" : "e.g. not received yet / received less") + '"></textarea></div>' +
+      '<div class="modal-err" id="rbRecvErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="rbRecvCancel">Cancel</button><button class="btn" id="rbRecvOk">' + (received ? "Yes, I received it" : "Send back to Accounts") + "</button></div>"
+    );
+    document.getElementById("rbRecvCancel").addEventListener("click", closeModal);
+    document.getElementById("rbRecvOk").addEventListener("click", function () {
+      var note = document.getElementById("rbRecvNote").value.trim();
+      if (!received && !note) { document.getElementById("rbRecvErr").textContent = "Please write what happened."; return; }
+      var btn = document.getElementById("rbRecvOk"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+      api("reimbursementReceipt", { id: id, requester_doc_id: state.doer.doc_id, received: received, note: note }).then(function () {
+        return reloadReimb(received ? (r.kind === "advance" && !r.settle_verified_at ? "Advance received — upload the bills after your trip." : "Thanks — marked as received.") : "Sent back to Accounts.");
+      }).catch(function (e) { document.getElementById("rbRecvErr").textContent = e.message; btn.disabled = false; btn.textContent = "Try again"; });
+    });
+  }
+  function openReimbSettleModal(id) {
+    var r = (state.reimbursements || []).find(function (x) { return x.id === id; });
+    if (!r) return;
+    state.reimbExpenseRows = (r.settle_expenses && r.settle_expenses.length ? r.settle_expenses : r.expenses || []).map(function (e) { return { date: e.date || "", category: e.category || "Travel", description: e.description || "", amount: e.amount != null ? String(e.amount) : "" }; });
+    if (!state.reimbExpenseRows.length) state.reimbExpenseRows = [{ date: "", category: "Travel", description: "", amount: "" }];
+    state.reimbBillFiles = [];
+    openModal(
+      "<h3>Upload bills for your advance</h3>" +
+      '<div class="sub" style="margin-bottom:8px">Advance taken: <b>' + rbMoney(r.total_amount) + "</b> · " + esc(r.purpose || r.id) + ". Enter what you actually spent and attach every bill / slip. If you spent more, Accounts pays you the balance; if less, you return the rest.</div>" +
+      (r.settle_note ? '<div class="sub" style="color:var(--danger);margin-bottom:6px">' + esc(r.settle_note) + "</div>" : "") +
+      '<div id="rbExpenseRows"></div>' +
+      '<button class="btn secondary" id="rbAddExpenseBtn" style="margin:6px 0" type="button">+ Add expense</button>' +
+      '<div style="text-align:right;font-weight:700" id="rbTotalLine"></div>' +
+      '<div style="text-align:right" class="sub" id="rbBalanceLine"></div>' +
+      '<div class="field"><label>Attach bills / slips (PDF or image, multiple allowed)</label><input id="rbBillsInput" type="file" accept="image/*,application/pdf" multiple /><div class="sub" id="rbBillsList" style="margin-top:6px">' + ((r.settle_bill_urls || []).length ? (r.settle_bill_urls || []).length + " bill(s) already uploaded" : "") + "</div></div>" +
+      '<div class="field"><label>Note (optional)</label><input id="rbSettleNote" /></div>' +
+      '<div class="modal-err" id="rbErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="rbCancel">Cancel</button><button class="btn" id="rbSubmit">Submit bills</button></div>'
+    );
+    var showBal = function () {
+      var t = state.reimbExpenseRows.reduce(function (a, x) { return a + (parseFloat(x.amount) || 0); }, 0), bal = t - Number(r.total_amount || 0);
+      var el = document.getElementById("rbBalanceLine");
+      if (el) el.textContent = bal > 0 ? "Accounts will pay you " + rbMoney(bal) : bal < 0 ? "You will return " + rbMoney(bal) + " to Accounts" : "Exactly the advance — nothing to settle";
+    };
+    renderReimbExpenseRows(); showBal();
+    document.getElementById("rbExpenseRows").addEventListener("input", showBal);
+    document.getElementById("rbAddExpenseBtn").addEventListener("click", function () { state.reimbExpenseRows.push({ date: "", category: "Travel", description: "", amount: "" }); renderReimbExpenseRows(); showBal(); });
+    document.getElementById("rbBillsInput").addEventListener("change", function (e) {
+      Promise.all(Array.prototype.slice.call(e.target.files || []).map(function (f) {
+        return new Promise(function (resolve) { var rd = new FileReader(); rd.onload = function () { resolve({ name: f.name, dataUrl: rd.result }); }; rd.readAsDataURL(f); });
+      })).then(function (res) { state.reimbBillFiles = state.reimbBillFiles.concat(res); renderReimbBillsList(); });
+    });
+    document.getElementById("rbCancel").addEventListener("click", closeModal);
+    document.getElementById("rbSubmit").addEventListener("click", function () {
+      syncReimbExpenseRows();
+      var errEl = document.getElementById("rbErr");
+      var expenses = state.reimbExpenseRows.map(function (x) { return { date: x.date, category: x.category, description: x.description, amount: parseFloat(x.amount) || 0 }; });
+      for (var i = 0; i < expenses.length; i++) if (!expenses[i].date || !expenses[i].category) { errEl.textContent = "Every line needs a date and category."; return; }
+      if (!state.reimbBillFiles.length && !(r.settle_bill_urls || []).length) { errEl.textContent = "Attach the bills / slips."; return; }
+      var btn = document.getElementById("rbSubmit"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Uploading…';
+      api("reimbursementSettle", { id: id, requester_doc_id: state.doer.doc_id, expenses: expenses, bills: state.reimbBillFiles.map(function (f) { return f.dataUrl; }), note: document.getElementById("rbSettleNote").value.trim() }).then(function () {
+        return reloadReimb("Bills submitted — Accounts will verify them.");
+      }).catch(function (e) { errEl.textContent = e.message; btn.disabled = false; btn.textContent = "Submit bills"; });
+    });
+  }
+  function openReimbVerifyModal(id) {
+    var r = (state.reimbursements || []).find(function (x) { return x.id === id; });
+    if (!r) return;
+    var bal = Number(r.settle_total || 0) - Number(r.total_amount || 0);
+    var rows = (r.settle_expenses || []).map(function (e) { return "<tr><td>" + esc(e.date || "") + "</td><td>" + esc(e.category || "") + "</td><td>" + esc(e.description || "") + '</td><td style="text-align:right">' + rbMoney(e.amount) + "</td></tr>"; }).join("");
+    var bills = (r.settle_bill_urls || []).map(function (u, i) { return '<a href="' + esc(u) + '" target="_blank" rel="noopener">Bill ' + (i + 1) + "</a>"; }).join(" · ");
+    openModal(
+      "<h3>Verify advance bills — " + esc(doerName(r.doc_id)) + "</h3>" +
+      '<div class="sub" style="margin-bottom:8px">' + esc(r.purpose || r.id) + "</div>" +
+      "<table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>" + rows + "</tbody></table>" +
+      '<div style="margin-top:8px">Advance given <b>' + rbMoney(r.total_amount) + "</b> · Actual spent <b>" + rbMoney(r.settle_total) + "</b> · " +
+        (bal > 0 ? '<b style="color:var(--brand)">Pay employee ' + rbMoney(bal) + "</b>" : bal < 0 ? '<b style="color:var(--danger)">Employee returns ' + rbMoney(bal) + "</b>" : "<b>No balance</b>") + "</div>" +
+      (bills ? '<div style="margin-top:8px">' + bills + "</div>" : "") + (r.settle_note ? '<div class="sub" style="margin-top:6px">Note: ' + esc(r.settle_note) + "</div>" : "") +
+      '<div class="field" style="margin-top:10px"><label>Note (required if sending back)</label><textarea id="rbVerNote" rows="2"></textarea></div>' +
+      '<div class="modal-err" id="rbVerErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="rbVerCancel">Cancel</button><button class="btn secondary" id="rbVerBack">Send back</button><button class="btn" id="rbVerOk">Bills OK — verify</button></div>'
+    );
+    document.getElementById("rbVerCancel").addEventListener("click", closeModal);
+    var go = function (step) {
+      var note = document.getElementById("rbVerNote").value.trim();
+      if (step === "send_back" && !note) { document.getElementById("rbVerErr").textContent = "Write what needs correcting."; return; }
+      api("reimbursementAccounts", { id: id, decider_doc_id: state.doer.doc_id, step: step, note: note }).then(function () {
+        return reloadReimb(step === "verify" ? "Bills verified." : "Sent back to the employee.");
+      }).catch(function (e) { document.getElementById("rbVerErr").textContent = e.message; });
+    };
+    document.getElementById("rbVerOk").addEventListener("click", function () { go("verify"); });
+    document.getElementById("rbVerBack").addEventListener("click", function () { go("send_back"); });
   }
   function decideReimb(id, stage, decision) {
     api("reimbursementDecide", { id: id, decider_doc_id: state.doer.doc_id, stage: stage, decision: decision }).then(function () {
@@ -13686,20 +13856,30 @@ window.RCBuyerUI = (function () {
       }).catch(function (e) { document.getElementById("rbRejectErr").textContent = e.message; btn.disabled = false; btn.textContent = "Reject"; });
     });
   }
-  function promptPayReimb(id) {
+  function promptPayReimb(id, step) {
+    var r = (state.reimbursements || []).find(function (x) { return x.id === id; }) || {};
+    var isRet = step === "return_received";
+    var amt = step ? r.balance : r.total_amount;
     openModal(
-      "<h3>Mark as paid</h3>" +
-      '<div class="field"><label>Payment reference (optional)</label><input id="rbPayRef" placeholder="UTR / cheque no." /></div>' +
+      "<h3>" + (isRet ? "Unused advance returned to Accounts" : (step ? "Pay balance to " : "Pay ") + esc(doerName(r.doc_id))) + " — " + rbMoney(amt) + "</h3>" +
+      '<div class="sub" style="margin-bottom:8px">' + (isRet ? "Confirm you received the money back from the employee." : "Hand over the money first. The employee then confirms they received it — only then it shows as Paid.") + "</div>" +
+      '<div class="field"><label>Paid by</label><select id="rbPayMode"><option value="">Choose…</option><option>Cash</option><option>Online</option></select></div>' +
+      '<div class="field"><label>UTR / transaction reference (needed for Online)</label><input id="rbPayRef" placeholder="UTR / UPI ref / cheque no." /></div>' +
       '<div class="field"><label>Note (optional)</label><textarea id="rbPayNote" rows="2"></textarea></div>' +
       '<div class="modal-err" id="rbPayErr"></div>' +
-      '<div class="modal-actions"><button class="btn secondary" id="rbPayCancel">Cancel</button><button class="btn" id="rbPayConfirm">Mark Paid</button></div>'
+      '<div class="modal-actions"><button class="btn secondary" id="rbPayCancel">Cancel</button><button class="btn" id="rbPayConfirm">' + (isRet ? "Money received back" : "Money handed over") + "</button></div>"
     );
     document.getElementById("rbPayCancel").addEventListener("click", closeModal);
     document.getElementById("rbPayConfirm").addEventListener("click", function () {
+      var mode = document.getElementById("rbPayMode").value, ref = document.getElementById("rbPayRef").value.trim(), note = document.getElementById("rbPayNote").value.trim();
+      if (!mode) { document.getElementById("rbPayErr").textContent = "Choose Cash or Online."; return; }
+      if (mode === "Online" && !ref) { document.getElementById("rbPayErr").textContent = "Enter the UTR / transaction reference."; return; }
       var btn = document.getElementById("rbPayConfirm"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
-      api("reimbursementDecide", { id: id, decider_doc_id: state.doer.doc_id, stage: "accounts", decision: "Approved", payment_ref: document.getElementById("rbPayRef").value.trim(), note: document.getElementById("rbPayNote").value.trim() }).then(function () {
-        return api("reimbursementList").then(function (v) { state.reimbursements = v; closeModal(); renderReimbursementPage(); toast("Marked as paid."); });
-      }).catch(function (e) { document.getElementById("rbPayErr").textContent = e.message; btn.disabled = false; btn.textContent = "Mark Paid"; });
+      var call = step ? api("reimbursementAccounts", { id: id, decider_doc_id: state.doer.doc_id, step: step, payment_mode: mode, payment_ref: ref, note: note })
+        : api("reimbursementDecide", { id: id, decider_doc_id: state.doer.doc_id, stage: "accounts", decision: "Approved", payment_mode: mode, payment_ref: ref, note: note });
+      call.then(function () {
+        return reloadReimb(isRet ? "Advance settled." : "Saved — waiting for the employee to confirm receipt.");
+      }).catch(function (e) { document.getElementById("rbPayErr").textContent = e.message; btn.disabled = false; btn.textContent = "Try again"; });
     });
   }
   function openReimbDetailModal(id) {
@@ -13711,8 +13891,12 @@ window.RCBuyerUI = (function () {
       "<h3>" + esc(r.id) + " — " + esc(doerName(r.doc_id)) + "</h3>" +
       (r.purpose ? '<div class="sub" style="margin-bottom:8px">' + esc(r.purpose) + "</div>" : "") +
       "<table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>" + rows + "</tbody></table>" +
-      '<div style="margin-top:10px"><b>Total: ₹' + Number(r.total_amount).toLocaleString("en-IN") + "</b></div>" +
+      '<div style="margin-top:10px"><b>' + (r.kind === "advance" ? "Advance asked" : "Total") + ': ₹' + Number(r.total_amount).toLocaleString("en-IN") + "</b></div>" +
       (bills ? '<div style="margin-top:8px">' + bills + "</div>" : "") +
+      (r.kind === "advance" && r.settle_total != null ? '<div style="margin-top:10px"><b>Actual spent: ' + rbMoney(r.settle_total) + "</b>" + (r.settle_verified_at ? " · verified" : "") +
+        ((r.settle_bill_urls || []).length ? '<div style="margin-top:4px">' + (r.settle_bill_urls || []).map(function (u, i) { return '<a href="' + esc(u) + '" target="_blank" rel="noopener">Slip ' + (i + 1) + "</a>"; }).join(" · ") + "</div>" : "") + "</div>" : "") +
+      (r.accounts_paid_at ? '<div class="sub" style="margin-top:8px">Accounts paid on ' + new Date(r.accounts_paid_at).toLocaleString() + " by " + esc(doerName(r.accounts_paid_by)) + (rbPayInfo(r) ? " · " + rbPayInfo(r) : "") + (r.accounts_note ? " · " + esc(r.accounts_note) : "") + "</div>" : "") +
+      (r.received_at ? '<div class="sub">Employee confirmed receipt on ' + new Date(r.received_at).toLocaleString() + (r.received_note ? " · " + esc(r.received_note) : "") + "</div>" : "") +
       '<div class="sub" style="margin-top:10px">' + reimbStageLabel(r) + "</div>" +
       '<div class="modal-actions"><button class="btn secondary" id="rbDetailClose">Close</button></div>'
     );
@@ -13722,7 +13906,9 @@ window.RCBuyerUI = (function () {
     state.reimbExpenseRows = [{ date: "", category: "Travel", description: "", amount: "" }];
     state.reimbBillFiles = [];
     openModal(
-      "<h3>New Reimbursement Request</h3>" +
+      "<h3>New Travel / Outstation Request</h3>" +
+      '<div class="field"><label>Type</label><select id="rbKind"><option value="claim">Claim — I already spent, bills attached</option><option value="advance">Advance — I need money before the trip</option></select>' +
+      '<div class="sub" id="rbKindHint" style="margin-top:4px">List what you spent and attach the bills.</div></div>' +
       '<div class="field"><label>Purpose / trip</label><input id="rbPurpose" placeholder="e.g. Delhi buyer visit, 10–12 Sep" /></div>' +
       '<div id="rbExpenseRows"></div>' +
       '<button class="btn secondary" id="rbAddExpenseBtn" style="margin:6px 0" type="button">+ Add expense</button>' +
@@ -13732,6 +13918,11 @@ window.RCBuyerUI = (function () {
       '<div class="modal-actions"><button class="btn secondary" id="rbCancel">Cancel</button><button class="btn" id="rbSubmit">Submit Request</button></div>'
     );
     renderReimbExpenseRows();
+    document.getElementById("rbKind").addEventListener("change", function (e) {
+      document.getElementById("rbKindHint").textContent = e.target.value === "advance"
+        ? "List the expected expenses (dates can be in the future). Bills are not needed now — after the trip you upload them, and Accounts settles the difference."
+        : "List what you spent and attach the bills.";
+    });
     document.getElementById("rbAddExpenseBtn").addEventListener("click", function () {
       state.reimbExpenseRows.push({ date: "", category: "Travel", description: "", amount: "" });
       renderReimbExpenseRows();
@@ -13801,13 +13992,15 @@ window.RCBuyerUI = (function () {
       if (!expenses[i].date || !expenses[i].category || !(expenses[i].amount > 0)) { errEl.textContent = "Every expense needs a date, category and a positive amount."; return; }
     }
     var btn = document.getElementById("rbSubmit"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Submitting…';
+    var kindEl = document.getElementById("rbKind");
     api("reimbursementCreate", {
+      kind: kindEl ? kindEl.value : "claim",
       doc_id: state.doer.doc_id,
       purpose: document.getElementById("rbPurpose").value.trim(),
       expenses: expenses,
       bills: state.reimbBillFiles.map(function (f) { return f.dataUrl; })
     }).then(function () {
-      return api("reimbursementList").then(function (v) { state.reimbursements = v; closeModal(); renderReimbursementPage(); toast("Reimbursement request submitted — your TL has been emailed."); });
+      return api("reimbursementList").then(function (v) { state.reimbursements = v; closeModal(); renderReimbursementPage(); toast((kindEl && kindEl.value === "advance" ? "Advance" : "Reimbursement") + " request submitted — your TL has been emailed."); });
     }).catch(function (e) { errEl.textContent = e.message; btn.disabled = false; btn.textContent = "Submit Request"; });
   }
 
@@ -16251,6 +16444,7 @@ window.RCBuyerUI = (function () {
     renderAnniversaryHomeWidget();
     renderQuickLinksHomeWidget();
     if (typeof renderPollHomeWidget === "function") renderPollHomeWidget();
+    if (typeof renderReimbHomeWidget === "function") renderReimbHomeWidget();
   }
 
   // ---------- Polls ----------
