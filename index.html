@@ -10562,7 +10562,7 @@ window.RCBuyerUI = (function () {
   var SETTINGS_TOGGLES = [
     { key: "notifications_enabled", id: "notifEnabledToggle", label: "Email notifications", sub: "Turn off to pause all outbound task/visit emails workspace-wide (in-app data is unaffected)." },
     { key: "ticker_show_notices", id: "tickerNoticesToggle", label: "Show Notices in the bulletin ticker", sub: "The scrolling bar at the top of every page. Turning this off only hides notices from that bar — the full Notice Board page is unaffected." },
-    { key: "ticker_show_holidays", id: "tickerHolidaysToggle", label: "Show Holidays in the bulletin ticker", sub: "Same bar, for upcoming holidays. The Holidays list itself still shows everything." }
+    { key: "ticker_show_holidays", id: "tickerHolidaysToggle", label: "Show Holidays in the bulletin ticker", sub: "Same bar, for upcoming holidays. The Holidays list on the Notice Board shows only upcoming holidays too." }
   ];
   // "Version 2" module customization — cover art for module tiles. Real
   // photo upload would need a new storage/upload backend action; a curated
@@ -14096,9 +14096,13 @@ window.RCBuyerUI = (function () {
     }
     var hWrap = document.getElementById("holidayListWrap");
     if (hWrap) {
-      var holidays = (state.holidays || []).slice().sort(function (a, b) { return new Date(a.holiday_date) - new Date(b.holiday_date); });
+      // Only today's and upcoming holidays are listed; past ones drop off automatically
+      // (they stay in the database, so working-day / TAT counts still skip them).
+      var nowD = new Date(), todayKey = nowD.getFullYear() + "-" + ("0" + (nowD.getMonth() + 1)).slice(-2) + "-" + ("0" + nowD.getDate()).slice(-2);
+      var holidays = (state.holidays || []).filter(function (h) { return String(h.holiday_date || "").slice(0, 10) >= todayKey; })
+        .sort(function (a, b) { return new Date(a.holiday_date) - new Date(b.holiday_date); });
       if (!holidays.length) {
-        hWrap.innerHTML = '<div class="empty">No holidays added yet.</div>';
+        hWrap.innerHTML = '<div class="empty">No upcoming holidays.</div>';
       } else {
         hWrap.innerHTML = holidays.map(function (h) {
           return '<div class="holiday-row"><div class="holiday-date">' + fmtHolidayDate(h.holiday_date) + '</div>' +
