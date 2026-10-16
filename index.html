@@ -3291,13 +3291,6 @@ window.RCBuyerUI = (function () {
       </div>
     </div>
 
-    <div id="view-ojdemo" class="hidden" style="height:calc(100vh - var(--topbar-offset));display:flex;flex-direction:column">
-      <button class="embed-back-btn" data-goto="modules">← Back to Workspace</button>
-      <div class="card embed-frame-wrap" style="padding:0;border-radius:0;border-width:0">
-        <div class="embed-loading-overlay" id="ojdemoLoading"><span class="spinner"></span><span>Loading Oberoi Jewels…</span></div>
-        <iframe id="ojdemoFrame" title="Oberoi Jewels — Diwali 2026" style="background:#0b0a08" allow="fullscreen; clipboard-write" allowfullscreen></iframe>
-      </div>
-    </div>
     <div id="view-scoring" class="hidden" style="height:calc(100vh - var(--topbar-offset));display:flex;flex-direction:column">
       <button class="embed-back-btn" data-goto="modules">← Back to Workspace</button>
       <button class="embed-back-btn hidden" id="scAliasBtn" type="button" title="Merge two spellings of the same person">👥 Doer names</button>
@@ -6773,34 +6766,6 @@ window.RCBuyerUI = (function () {
     if (bar && b && b.parentNode !== bar) bar.appendChild(b);
     return b;
   }
-  // Oberoi Jewels demo: a static page kept next to index.html in the repo (oberoi-jewels-demo.html),
-  // loaded only when Vinay opens the tile, so it doesn't add 2.5 MB to everyone's Workspace load.
-  // Vinay only. Not in MODULE_DEFS on purpose, so it never appears in Visibility / Module access lists.
-  var OJDEMO_DOC_IDS = ["vinay"];
-  var OJDEMO_DEF = { key: "ojdemo", icon: "💎", name: "Oberoi Jewels (Diwali 2026)", status: "live", goto: "ojdemo", category: "work" };
-  function canSeeOjDemo() { return !!(state.doer && !state.demo && OJDEMO_DOC_IDS.indexOf(state.doer.doc_id) !== -1); }
-  var ojdemoFrameLoaded = false;
-  function loadOjDemoFrame() {
-    if (ojdemoFrameLoaded) return;
-    var frame = document.getElementById("ojdemoFrame");
-    if (!frame || !canSeeOjDemo()) return;
-    // Absolute link, so it also works when index.html is opened from a computer (file://) for testing.
-    var base = "https://rugs-zone.github.io/Workspace/";
-    var names = ["oberoi-jewels-demo.html", "oberoijewelsdemo.html"];   // either file name in the repo works
-    wireEmbedFrameLoading("ojdemoFrame", "ojdemoLoading", "Oberoi Jewels");
-    (function tryName(i) {
-      if (i >= names.length) return Promise.reject(new Error("missing"));
-      var url = base + names[i] + "?v=1";
-      return fetch(url, { method: "HEAD", cache: "no-store" }).then(function (r) {
-        if (!r.ok) return tryName(i + 1);
-        frame.src = url;
-        ojdemoFrameLoaded = true;
-      }, function () { return tryName(i + 1); });
-    })(0).catch(function () {
-      frame.srcdoc = '<div style="font-family:sans-serif;padding:40px;color:#333"><h2>Oberoi Jewels page not found</h2>' +
-        '<p>Upload <b>oberoi-jewels-demo.html</b> to the GitHub repo <b>Rugs-Zone/Workspace</b> (same folder as index.html), commit, wait a minute and open this again.</p></div>';
-    });
-  }
   var scoringFrameLoaded = false;
   function loadScoringFrame(force) {
     if (scoringFrameLoaded && !force) return;
@@ -8323,7 +8288,7 @@ window.RCBuyerUI = (function () {
     }
   });
 
-  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup", "ojdemo"];
+  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup"];
   // Per-module choice of whether an external-URL-backed module opens in a
   // real new browser tab ("redirect") or is framed inside Workspace
   // ("embed") — Settings → Modules → Module Open Behavior for the 3
@@ -8359,7 +8324,6 @@ window.RCBuyerUI = (function () {
     if (view === "merchant" && !(state.doer && (state.doer.is_admin || state.merchantAccess))) { toast("You don't have a Merchant Dashboard. Ask your admin."); return; }
     if (view === "fairleads" && !canSeeFairLeads()) { toast("Fair Leads isn't turned on for you. Ask your admin."); return; }
     if (view === "followup" && !canManageModule("followup")) { toast("You don't have access to the Follow-up report. Ask your admin."); return; }
-    if (view === "ojdemo" && !canSeeOjDemo()) { toast("This module isn't available for you."); return; }
     if (view === "scoring" && !canManageModule("scoring")) { toast("You don't have access to the RC Scoring Dashboard. Ask your admin."); return; }
     if (view === "customModule") {
       var cmForLink = (state.customModules || []).find(function (x) { return x.module_key === state.activeCustomModuleKey; });
@@ -8395,7 +8359,6 @@ window.RCBuyerUI = (function () {
     if (view === "cbm") loadCbmFrame();
     if (view === "passing") loadPassingFrame();
     if (view === "scoring") loadScoringFrame();
-    if (view === "ojdemo") loadOjDemoFrame();
     if (view === "merchant") loadMerchantFrame();
     if (view === "followup") loadFollowup();
     if (view === "samplingfms" || view === "ppc") fuToggleButtons();
@@ -8424,7 +8387,7 @@ window.RCBuyerUI = (function () {
     // when set to "embed" mode; otherwise they're intercepted and sent
     // straight to a new browser tab instead. Counter Room, like
     // Checklist/CBM/Sampling FMS, is always embedded in place below.
-    document.body.classList.toggle("embed-focus", view === "checklist" || view === "cbm" || view === "samplingfms" || view === "counterroom" || view === "quality" || view === "ppc" || view === "passing" || view === "scoring" || view === "merchant" || view === "ojdemo");
+    document.body.classList.toggle("embed-focus", view === "checklist" || view === "cbm" || view === "samplingfms" || view === "counterroom" || view === "quality" || view === "ppc" || view === "passing" || view === "scoring" || view === "merchant");
     applySidebarState();
     ALL_VIEWS.forEach(function (v) {
       var el = document.getElementById("view-" + v);
@@ -8483,7 +8446,7 @@ window.RCBuyerUI = (function () {
     b.addEventListener("click", function () { toggleFullscreen(getTarget()); });
     afterEl.insertAdjacentElement("afterend", b);
   }
-  ["checklist", "costing", "cbm", "passing", "counterroom", "quality", "buyerorder", "samplingfms", "rugsconnect", "scoring", "merchant", "ojdemo"].forEach(function (v) {
+  ["checklist", "costing", "cbm", "passing", "counterroom", "quality", "buyerorder", "samplingfms", "rugsconnect", "scoring", "merchant"].forEach(function (v) {
     var view = document.getElementById("view-" + v);
     if (!view) return;
     var back = view.querySelector(".embed-back-btn");
@@ -8836,7 +8799,6 @@ window.RCBuyerUI = (function () {
       // Fair Leads: Module access list + directors/EAs/admins (canSeeFairLeads, same rule as fair-leads-api).
       modules = modules.filter(function (m) { return m.key !== "fairleads"; });
       if (canSeeFairLeads()) { var flDef = allModuleDefs.find(function (m) { return m.key === "fairleads"; }); if (flDef) modules.push(flDef); }
-      if (canSeeOjDemo()) modules.push(OJDEMO_DEF);
       var hiddenModules = (state.doer.dashboard_prefs && state.doer.dashboard_prefs.hidden_module_tiles) || [];
       modules = modules.filter(function (m) { return hiddenModules.indexOf(m.key) === -1; });
       // "Inactive apps decluttering": Coming Soon tiles move out of the main
