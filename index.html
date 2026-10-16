@@ -7918,15 +7918,13 @@ window.RCBuyerUI = (function () {
     var all = MODULE_DEFS.concat(customModuleDefs());
     var vis = deskVisibleModules();
     var keys = (Array.isArray(vis) ? all.filter(function (m) { return vis.indexOf(m.key) !== -1; }) : all).map(function (m) { return m.key; });
-    if (keys.indexOf("directory") === -1) keys.push("directory");
-    if (keys.indexOf("drive") === -1) keys.push("drive");
     if (typeof canSeeFairVisits === "function" && canSeeFairVisits() && keys.indexOf("fairvisit") === -1) keys.push("fairvisit");
     if (typeof canSeeFairLeads === "function" && canSeeFairLeads() && keys.indexOf("fairleads") === -1) keys.push("fairleads");
     return keys;
   }
   function canOpenItem(it) {
     if (it.key === "_alerts") return "Notification" in window && Notification.permission !== "granted";
-    if (it.key === "polls" || it.key === "directory") return true;
+    if (it.key === "polls") return true;
     if (it.open && it.open.custom) {
       var m = (state.customModules || []).find(function (x) { return x.module_key === it.open.custom; });
       return !!(m && (m.my_link || state.doer.is_admin));
@@ -8793,10 +8791,7 @@ window.RCBuyerUI = (function () {
       // role in Staff Controls, whatever their visible_modules list says.
       modules = modules.filter(function (m) { return m.key !== "quality"; });
       if (hasQualityAccess()) { var qDef = allModuleDefs.find(function (m) { return m.key === "quality"; }); if (qDef) modules.push(qDef); }
-      // Directory is for everyone, whatever their saved visible_modules list says.
-      if (!modules.some(function (m) { return m.key === "directory"; })) { var dirDef = allModuleDefs.find(function (m) { return m.key === "directory"; }); if (dirDef) modules.push(dirDef); }
-      // My Drive is for everyone too.
-      if (!modules.some(function (m) { return m.key === "drive"; })) { var drvDef = allModuleDefs.find(function (m) { return m.key === "drive"; }); if (drvDef) modules.push(drvDef); }
+      // Directory and My Drive follow the visibility list like every other tile (untick = hidden).
       if (canSeeFairVisits()) {
         var fvDef = allModuleDefs.find(function (m) { return m.key === "fairvisit"; });
         if (fvDef) modules.push(fvDef);
@@ -10080,6 +10075,7 @@ window.RCBuyerUI = (function () {
       // grid and per-employee Visibility modal already use — so a module
       // only needs to be added once, ever, in one place.
       function visibleCountFor(key) {
+        if (key === "scoring" || key === "followup") return state.doers.filter(function (d) { return d.is_admin || ((d.managed_modules || []).indexOf(key) !== -1); }).length;
         return state.doers.filter(function (d) {
           return !Array.isArray(d.visible_modules) || d.visible_modules.indexOf(key) !== -1;
         }).length;
@@ -10091,11 +10087,13 @@ window.RCBuyerUI = (function () {
       // nothing to manage on a module that isn't live yet.
       modWrap.innerHTML = MODULE_DEFS.concat(customModuleDefs()).map(function (m) {
         var visCount = m.status === "live" ? visibleCountFor(m.key) : 0;
-        var clickable = m.status === "live";
+        var gated = VIS_ROLE_GATED[m.key];
+        var clickable = m.status === "live" && !gated;
         return '<div class="module-card tilt"' + (clickable ? ' data-vis-key="' + esc(m.key) + '" style="cursor:pointer"' : ' style="cursor:default"') + '>' +
           '<div class="top"><div class="icon lavender" style="margin-bottom:0">' + m.icon + '</div><span class="module-badge ' + (m.status === "live" ? "live" : "soon") + '">' + (m.status === "live" ? "Live" : "Coming Soon") + '</span></div>' +
           '<div class="mt">' + esc(m.name) + '</div>' +
-          '<div class="mv">Visible to <b style="color:var(--ink)">' + visCount + '</b> / ' + total + ' staff' + (clickable ? ' · <span style="color:var(--brand);font-weight:700">Manage →</span>' : '') + '</div>' +
+          (gated ? '<div class="mv">' + ((m.key === "scoring" || m.key === "followup") ? "Visible to <b style=\"color:var(--ink)\">" + visCount + "</b> / " + total + " · " : "") + esc(gated) + '</div>'
+            : '<div class="mv">Visible to <b style="color:var(--ink)">' + visCount + '</b> / ' + total + ' staff' + (clickable ? ' · <span style="color:var(--brand);font-weight:700">Manage →</span>' : '') + '</div>') +
           '</div>';
       }).join("");
       modWrap.querySelectorAll("[data-vis-key]").forEach(function (card) {
@@ -10429,7 +10427,7 @@ window.RCBuyerUI = (function () {
         '<div class="page-head" style="margin:0 0 4px"><h2 style="font-size:15px">Visibility</h2></div>' +
         '<div class="page-sub" style="margin:0 0 10px">Untick anything this person shouldn\'t see. Workspace Admin above isn\'t affected by this.</div>' +
         '<div class="field"><label>Sidebar sections</label>' + visChecklist(SECTION_DEFS, curSections, "sc-section") + "</div>" +
-        '<div class="field"><label>Module tiles</label>' + visChecklist(MODULE_DEFS.filter(function (m) { return m.key !== "quality"; }).concat(customModuleDefs()), curModules, "sc-module") + "</div>" +
+        '<div class="field"><label>Module tiles</label>' + visChecklist(MODULE_DEFS.filter(function (m) { return m.key !== "quality"; }).concat(customModuleDefs()), curModules, "sc-module", d) + "</div>" +
       "</div>" +
       '<div class="card" style="padding:18px;margin-bottom:16px">' +
         '<div class="page-head" style="margin:0 0 4px"><h2 style="font-size:15px">Quality Portal access</h2></div>' +
@@ -11728,9 +11726,24 @@ window.RCBuyerUI = (function () {
   }
 
   // ---------- Per-staff visibility (sidebar sections + module tiles) ----------
-  function visChecklist(defs, current, groupClass) {
+  // Tiles whose visibility is NOT the tick list: decided by another right, so a tick here would do nothing.
+  var VIS_ROLE_GATED = {
+    scoring: "Set by “Delegated module access → RC Scoring Dashboard” (or Admin)",
+    followup: "Set by “Delegated module access → Follow-up report” (or Admin)",
+    merchant: "Automatic: merchandisers (name match) and Admins",
+    "cm_cm_merchant-dashboard_4dtmo": "Automatic: merchandisers (name match) and Admins",
+    quality: "Set by the Quality Portal role"
+  };
+  function visChecklist(defs, current, groupClass, who) {
     var isDefault = current === null;
     return defs.map(function (m) {
+      if (VIS_ROLE_GATED[m.key]) {
+        var on = null;
+        if (who && (m.key === "scoring" || m.key === "followup")) on = !!who.is_admin || ((who.managed_modules || []).indexOf(m.key) !== -1);
+        return '<label style="display:flex;align-items:center;gap:8px;padding:6px 0;opacity:.75" title="' + esc(VIS_ROLE_GATED[m.key]) + '">' +
+          '<input type="checkbox" disabled' + (on ? " checked" : "") + ' style="width:auto" /> ' + esc(m.name) +
+          ' <span class="sub" style="font-size:11px">— ' + esc(VIS_ROLE_GATED[m.key]) + (on === null ? "" : (on ? " · has access" : " · no access")) + "</span></label>";
+      }
       var checked = isDefault ? true : current.indexOf(m.key) !== -1;
       return '<label style="display:flex;align-items:center;gap:8px;padding:6px 0">' +
         '<input type="checkbox" class="' + groupClass + '" data-key="' + m.key + '" style="width:auto" ' + (checked ? "checked" : "") + ' /> ' +
@@ -11745,7 +11758,7 @@ window.RCBuyerUI = (function () {
       "<h3>Visibility for " + esc(d.delegation_name || d.name) + "</h3>" +
       '<div class="sub">Untick anything this person shouldn\'t see. Admin Control isn\'t affected here — that\'s controlled by the Admin toggle.</div>' +
       '<div class="field"><label>Sidebar sections</label>' + visChecklist(SECTION_DEFS, curSections, "mm-section") + "</div>" +
-      '<div class="field"><label>Module tiles</label>' + visChecklist(MODULE_DEFS, curModules, "mm-module") + "</div>" +
+      '<div class="field"><label>Module tiles</label>' + visChecklist(MODULE_DEFS, curModules, "mm-module", d) + "</div>" +
       '<div class="modal-err" id="mmErr"></div>' +
       '<div class="modal-actions"><button class="btn secondary" id="mmReset">Show All (Default)</button><button class="btn secondary" id="mmCancel">Cancel</button><button class="btn" id="mmSave">Save</button></div>'
     );
