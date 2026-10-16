@@ -3117,6 +3117,23 @@ window.RCBuyerUI = (function () {
       <div id="dvBody"><div class="empty">Loading…</div></div>
     </div>
 
+    <div id="view-fairleads" class="hidden">
+      <div class="page-head"><h2>Fair Leads</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn secondary" id="flCsvBtn" type="button">⬇ CSV</button><button class="btn" id="flNewBtn" type="button">+ Log stand lead</button></div></div>
+      <div class="page-sub" style="margin-top:-14px">Buyers who walked into our stand — card photo, catalogue, interest and follow-up in one place. (Fair Visit is for buyers you <i>expect</i>.)</div>
+      <div class="stat-grid" id="flStats"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:18px">
+        <div class="card" style="padding:14px 16px;margin:0"><h3 style="margin:0 0 8px;font-size:15px">Leads per day</h3><div id="flPerDay"></div></div>
+        <div class="card" style="padding:14px 16px;margin:0"><h3 style="margin:0 0 8px;font-size:15px">Top countries</h3><div id="flCountries"></div></div>
+        <div class="card" style="padding:14px 16px;margin:0"><h3 style="margin:0 0 8px;font-size:15px">Logged by</h3><div id="flLoggers"></div></div>
+      </div>
+      <div class="toolbar" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <select id="flFilterFair" style="max-width:260px"></select>
+        <select id="flFilterType" style="max-width:160px"><option value="">New + existing</option><option value="new">New buyers</option><option value="existing">Existing buyers</option></select>
+        <select id="flFilterStatus" style="max-width:160px"><option value="">Any follow-up</option><option value="open">Open</option><option value="in_progress">In progress</option><option value="done">Done</option></select>
+        <input id="flSearch" placeholder="Search buyer, company, country, interest…" style="flex:1;min-width:200px" />
+      </div>
+      <div class="card"><div id="flListWrap"></div></div>
+    </div>
     <div id="view-fairvisit" class="hidden">
       <div class="page-head"><h2>Fair Visit</h2></div>
       <div class="page-sub" style="margin-top:-14px">Know a buyer of yours is coming to the fair? Log it here so the team is ready at the stand.</div>
@@ -6113,6 +6130,7 @@ window.RCBuyerUI = (function () {
     { key: "followup", icon: "📋", name: "Follow-up report", status: "live", goto: "followup", category: "work" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit", category: "production" },
     { key: "fairvisit", icon: "🎪", name: "Fair Visit", status: "live", goto: "fairvisit", category: "production" },
+    { key: "fairleads", icon: "🤝", name: "Fair Leads", status: "live", goto: "fairleads", category: "production" },
     { key: "drive", icon: "🗄️", name: "My Drive", status: "live", goto: "drive", category: "work" },
     { key: "inspection", icon: "🔍", name: "Inspection", status: "live", goto: "inspection", category: "production" },
     { key: "ordertracking", icon: "🚚", name: "Order Tracking", status: "live", goto: "ordertracking", category: "production" },
@@ -7903,6 +7921,7 @@ window.RCBuyerUI = (function () {
     if (keys.indexOf("directory") === -1) keys.push("directory");
     if (keys.indexOf("drive") === -1) keys.push("drive");
     if (typeof canSeeFairVisits === "function" && canSeeFairVisits() && keys.indexOf("fairvisit") === -1) keys.push("fairvisit");
+    if (typeof canSeeFairLeads === "function" && canSeeFairLeads() && keys.indexOf("fairleads") === -1) keys.push("fairleads");
     return keys;
   }
   function canOpenItem(it) {
@@ -8271,7 +8290,7 @@ window.RCBuyerUI = (function () {
     }
   });
 
-  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup"];
+  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup"];
   // Per-module choice of whether an external-URL-backed module opens in a
   // real new browser tab ("redirect") or is framed inside Workspace
   // ("embed") — Settings → Modules → Module Open Behavior for the 3
@@ -8305,6 +8324,7 @@ window.RCBuyerUI = (function () {
     if (view === "customModule" && state.activeCustomModuleKey === PASSING_MODULE_KEY) view = "passing";
     if (view === "customModule" && state.activeCustomModuleKey === MERCHANT_MODULE_KEY) view = "merchant";
     if (view === "merchant" && !(state.doer && (state.doer.is_admin || state.merchantAccess))) { toast("You don't have a Merchant Dashboard. Ask your admin."); return; }
+    if (view === "fairleads" && !canSeeFairLeads()) { toast("Fair Leads isn't turned on for you. Ask your admin."); return; }
     if (view === "followup" && !canManageModule("followup")) { toast("You don't have access to the Follow-up report. Ask your admin."); return; }
     if (view === "scoring" && !canManageModule("scoring")) { toast("You don't have access to the RC Scoring Dashboard. Ask your admin."); return; }
     if (view === "customModule") {
@@ -8329,6 +8349,7 @@ window.RCBuyerUI = (function () {
     } catch (e) {}
     if (view === "buyervisit") renderBuyerVisits();
     if (view === "fairvisit") loadFairVisits();
+    if (view === "fairleads") flLoad();
     if (view === "drive") loadDrive();
     if (view === "directory") loadDirectory(false);
     if (view === "inspection") renderInspections();
@@ -8780,6 +8801,9 @@ window.RCBuyerUI = (function () {
         var fvDef = allModuleDefs.find(function (m) { return m.key === "fairvisit"; });
         if (fvDef) modules.push(fvDef);
       }
+      // Fair Leads: Module access list + directors/EAs/admins (canSeeFairLeads, same rule as fair-leads-api).
+      modules = modules.filter(function (m) { return m.key !== "fairleads"; });
+      if (canSeeFairLeads()) { var flDef = allModuleDefs.find(function (m) { return m.key === "fairleads"; }); if (flDef) modules.push(flDef); }
       var hiddenModules = (state.doer.dashboard_prefs && state.doer.dashboard_prefs.hidden_module_tiles) || [];
       modules = modules.filter(function (m) { return hiddenModules.indexOf(m.key) === -1; });
       // "Inactive apps decluttering": Coming Soon tiles move out of the main
@@ -13450,7 +13474,7 @@ window.RCBuyerUI = (function () {
         admBtns("leave", l);
       return "<tr><td>" + (showRequester ? esc(doerName(l.doc_id)) + '<div class="sub">' + esc(l.leave_type) + (l.is_short_leave ? " · Short" : "") + "</div>" : esc(l.leave_type) + (l.is_short_leave ? '<div class="sub">Short leave</div>' : "")) + "</td>" +
         "<td>" + esc(leaveRange(l)) + "</td>" +
-        "<td>" + esc((l.reason || "").slice(0, 80)) + "</td>" +
+        '<td style="white-space:pre-wrap;word-break:break-word;min-width:220px;max-width:420px">' + esc(l.reason || "") + "</td>" +
         "<td>" + statusBadgeHtml(l.status) + (l.decision_note ? '<div class="sub" style="margin-top:2px">' + esc(l.decision_note) + "</div>" : "") +
           (l.status === "Pending" && !canDecide && eaDirLv && l.tl_doc_id === eaDirLv.doc_id ? '<div class="sub" style="margin-top:2px">⏳ Waiting for ' + esc(String(eaDirLv.name || eaDirLv.delegation_name).split(" - ")[0]) + "</div>" : "") + "</td>" +
         "<td>NA</td>" +
@@ -14003,6 +14027,223 @@ window.RCBuyerUI = (function () {
       return api("reimbursementList").then(function (v) { state.reimbursements = v; closeModal(); renderReimbursementPage(); toast((kindEl && kindEl.value === "advance" ? "Advance" : "Reimbursement") + " request submitted — your TL has been emailed."); });
     }).catch(function (e) { errEl.textContent = e.message; btn.disabled = false; btn.textContent = "Submit Request"; });
   }
+
+  // ---------- Fair Leads (buyers who walked into our stand) ----------
+  // Backend: edge function fair-leads-api (table deleg_fair_leads, private bucket "fair-leads").
+  // Access: directors, their EAs, admins, or "fairleads" in Settings -> Modules (or no module restriction).
+  var FL_FN_URL = SUPABASE_URL + "/functions/v1/fair-leads-api";
+  var FL_STATUS = { open: "Open", in_progress: "In progress", done: "Done" };
+  var FL_MAX_FILES = 10, FL_MAX_BYTES = 45 * 1024 * 1024;
+  var fl = { rows: [], buyers: null, filters: { fair: "", type: "", status: "", q: "" } };
+  function canSeeFairLeads() {
+    var d = state.doer;
+    if (!d) return false;
+    if (d.is_admin || isFairVisitDirector(d) || !!EA_DIRECTORS[d.doc_id]) return true;
+    var vis = Array.isArray(d.visible_modules) ? d.visible_modules : null;
+    return vis === null || vis.indexOf("fairleads") !== -1;
+  }
+  function flCanEdit(r) { return !!r && (state.doer.is_admin || isFairVisitDirector() || r.created_by_doc_id === state.doer.doc_id); }
+  function flApi(action, payload) {
+    if (state.demo) return Promise.reject(new Error("Not available in demo mode."));
+    return fetch(FL_FN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
+      body: JSON.stringify(Object.assign({ action: action, requester_doc_id: (state.doer || {}).doc_id }, payload || {}))
+    }).then(function (r) { return r.json().catch(function () { throw new Error("Server error (" + r.status + ")"); }).then(function (j) { if (!r.ok || !j.ok) throw new Error(j.error || ("HTTP " + r.status)); return j.data; }); });
+  }
+  function flFairOptions(sel, withAll) {
+    return (withAll ? '<option value="">All fairs</option>' : "") + FAIR_VISIT_FAIRS.map(function (f) { return '<option value="' + esc(f.key) + '"' + (f.key === sel ? " selected" : "") + ">" + esc(f.name) + "</option>"; }).join("");
+  }
+  function flLoad() {
+    var w = document.getElementById("flListWrap");
+    if (!canSeeFairLeads()) { if (w) w.innerHTML = '<div class="empty">Fair Leads isn\'t turned on for you. Ask an admin (Settings → Modules → Fair Leads → Manage).</div>'; return; }
+    var fs = document.getElementById("flFilterFair");
+    if (fs && !fs.options.length) fs.innerHTML = flFairOptions("", true);
+    flRender();
+    flApi("flList").then(function (rows) { fl.rows = rows || []; flRender(); })
+      .catch(function (e) { if (w) w.innerHTML = '<div class="empty">Couldn\'t load leads: ' + esc(e.message) + "</div>"; });
+  }
+  function flFiltered() {
+    var f = fl.filters, q = f.q.trim().toLowerCase();
+    return fl.rows.filter(function (r) {
+      if (f.fair && r.fair !== f.fair) return false;
+      if (f.type && r.buyer_type !== f.type) return false;
+      if (f.status && (r.followup_status || "open") !== f.status) return false;
+      if (q && [r.buyer_name, r.company, r.country, r.email, r.phone, r.existing_buyer, r.interest, r.concern, r.notes, r.met_by, r.created_by].join(" ").toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+  }
+  function flBars(pairs, max) {
+    if (!pairs.length) return '<div class="sub">—</div>';
+    var top = Math.max.apply(null, pairs.map(function (p) { return p[1]; })) || 1;
+    return pairs.slice(0, max || 8).map(function (p) {
+      return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="flex:0 0 42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(p[0]) + '">' + esc(p[0]) + '</span>' +
+        '<span style="flex:1;height:8px;background:var(--line);border-radius:4px;overflow:hidden"><span style="display:block;height:100%;width:' + Math.round(100 * p[1] / top) + '%;background:var(--brand)"></span></span><b style="min-width:24px;text-align:right">' + p[1] + "</b></div>";
+    }).join("");
+  }
+  function flCount(rows, keyFn) {
+    var m = {};
+    rows.forEach(function (r) { var k = keyFn(r); if (k) m[k] = (m[k] || 0) + 1; });
+    return Object.keys(m).map(function (k) { return [k, m[k]]; });
+  }
+  function flRender() {
+    var w = document.getElementById("flListWrap");
+    if (!w) return;
+    var rows = flFiltered();
+    var pending = rows.filter(function (r) { return (r.followup_status || "open") !== "done"; }).length;
+    renderStatGrid("flStats", [
+      { n: rows.length, l: "Total leads" },
+      { n: rows.filter(function (r) { return r.buyer_type !== "existing"; }).length, l: "New buyers" },
+      { n: rows.filter(function (r) { return r.buyer_type === "existing"; }).length, l: "Existing buyers" },
+      { n: pending, l: "Pending follow-ups" },
+      { n: rows.filter(function (r) { return r.card_path; }).length, l: "Cards captured" }
+    ]);
+    var perDay = flCount(rows, function (r) { return String(r.created_at || "").slice(0, 10); }).sort(function (a, b) { return a[0] < b[0] ? -1 : 1; })
+      .map(function (p) { return [new Date(p[0] + "T00:00:00").toLocaleDateString(undefined, { day: "2-digit", month: "short" }), p[1]]; });
+    document.getElementById("flPerDay").innerHTML = flBars(perDay, 14);
+    document.getElementById("flCountries").innerHTML = flBars(flCount(rows, function (r) { return (r.country || "").trim(); }).sort(function (a, b) { return b[1] - a[1]; }));
+    document.getElementById("flLoggers").innerHTML = flBars(flCount(rows, function (r) { return r.created_by || ""; }).sort(function (a, b) { return b[1] - a[1]; }));
+    if (!fl.rows.length) { w.innerHTML = '<div class="empty">No stand leads yet — tap “+ Log stand lead”.</div>'; return; }
+    if (!rows.length) { w.innerHTML = '<div class="empty">No leads match these filters.</div>'; return; }
+    w.innerHTML = '<div style="overflow-x:auto"><table><thead><tr><th>When</th><th>Buyer</th><th>Interest / concern</th><th>Met by</th><th>Card &amp; files</th><th>Follow-up</th><th></th></tr></thead><tbody>' + rows.map(function (r) {
+      var files = (r.files || []).map(function (f, i) { return f.url ? '<a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(f.name || ("File " + (i + 1))) + "</a>" : esc(f.name || ""); }).join("<br>");
+      return "<tr>" +
+        '<td class="sub" style="white-space:nowrap">' + new Date(r.created_at).toLocaleDateString(undefined, { day: "2-digit", month: "short" }) + "<br>" + new Date(r.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + '<div style="font-size:11px">' + esc(fairName(r.fair)) + "</div></td>" +
+        "<td><b>" + esc(r.buyer_name) + "</b>" + (r.buyer_type === "existing" ? ' <span class="module-badge live" style="font-size:10px">EXISTING' + (r.existing_buyer ? " · " + esc(r.existing_buyer) : "") + "</span>" : ' <span class="module-badge soon" style="font-size:10px">NEW</span>') +
+          '<div class="sub">' + esc([r.company, r.country].filter(Boolean).join(" · ")) + "</div>" +
+          '<div class="sub">' + [r.phone ? '<a href="tel:' + esc(r.phone) + '">' + esc(r.phone) + "</a>" : "", r.email ? '<a href="mailto:' + esc(r.email) + '">' + esc(r.email) + "</a>" : ""].filter(Boolean).join(" · ") + "</div></td>" +
+        '<td style="max-width:300px;white-space:pre-wrap;word-break:break-word">' + esc(r.interest || "") + (r.concern ? '<div class="sub" style="color:var(--danger)">Concern: ' + esc(r.concern) + "</div>" : "") + (r.notes ? '<div class="sub">' + esc(r.notes) + "</div>" : "") + "</td>" +
+        "<td>" + esc(r.met_by || "—") + '<div class="sub">logged by ' + esc(r.created_by || "") + "</div></td>" +
+        "<td>" + (r.card_url ? '<a href="' + esc(r.card_url) + '" target="_blank" rel="noopener"><img src="' + esc(r.card_url) + '" alt="card" style="width:72px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--line)"></a><br>' : "") + '<span style="font-size:12px">' + files + "</span></td>" +
+        '<td><select class="fl-status" data-id="' + esc(r.id) + '" style="min-width:110px">' + Object.keys(FL_STATUS).map(function (k) { return '<option value="' + k + '"' + ((r.followup_status || "open") === k ? " selected" : "") + ">" + FL_STATUS[k] + "</option>"; }).join("") + "</select></td>" +
+        '<td style="white-space:nowrap">' + (flCanEdit(r) ? '<button class="btn secondary fl-edit" data-id="' + esc(r.id) + '" style="padding:4px 10px;font-size:12px">✎ Edit</button> <button class="btn secondary fl-del" data-id="' + esc(r.id) + '" style="padding:4px 10px;font-size:12px">Delete</button>' : "") + "</td></tr>";
+    }).join("") + "</tbody></table></div>";
+    w.querySelectorAll(".fl-status").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        flApi("flStatus", { id: sel.dataset.id, followup_status: sel.value }).then(function () {
+          var r = fl.rows.find(function (x) { return x.id === sel.dataset.id; }); if (r) r.followup_status = sel.value; flRender(); toast("Follow-up updated.");
+        }).catch(function (e) { toast(e.message, true); flRender(); });
+      });
+    });
+    w.querySelectorAll(".fl-edit").forEach(function (b) { b.addEventListener("click", function () { flOpenModal(fl.rows.find(function (x) { return x.id === b.dataset.id; })); }); });
+    w.querySelectorAll(".fl-del").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var r = fl.rows.find(function (x) { return x.id === b.dataset.id; });
+        openModal("<h3>Delete this lead?</h3><div class=\"sub\">" + esc(r ? r.buyer_name : "") + " — the card photo and files are deleted too.</div><div class=\"modal-err\" id=\"flDelErr\"></div><div class=\"modal-actions\"><button class=\"btn secondary\" id=\"flDelNo\">Cancel</button><button class=\"btn\" id=\"flDelYes\" style=\"background:var(--danger);color:#fff\">Delete</button></div>");
+        document.getElementById("flDelNo").addEventListener("click", closeModal);
+        document.getElementById("flDelYes").addEventListener("click", function () {
+          flApi("flDelete", { id: b.dataset.id }).then(function () { closeModal(); fl.rows = fl.rows.filter(function (x) { return x.id !== b.dataset.id; }); flRender(); toast("Lead deleted."); })
+            .catch(function (e) { document.getElementById("flDelErr").textContent = e.message; });
+        });
+      });
+    });
+  }
+  // Visiting-card photo: shrink to ~1600px (JPEG) before upload so phones on fair Wi-Fi stay fast.
+  function flShrinkImage(file) {
+    return new Promise(function (resolve) {
+      if (!/^image\//.test(file.type) || /gif|svg/.test(file.type)) return resolve(file);
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function () {
+        var scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+        var c = document.createElement("canvas"); c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (blob) { resolve(blob ? new File([blob], (file.name || "card").replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }) : file); }, "image/jpeg", 0.85);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+  function flUpload(files) {
+    if (!files.length) return Promise.resolve([]);
+    return flApi("flUploadUrl", { names: files.map(function (f) { return f.name; }) }).then(function (slots) {
+      return Promise.all(files.map(function (f, i) {
+        var s = slots[i];
+        return fetch(s.signedUrl, { method: "PUT", headers: { "Content-Type": f.type || "application/octet-stream", "x-upsert": "false", "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY }, body: f })
+          .then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error("Upload failed for " + f.name + " (" + r.status + ") " + t.slice(0, 120)); }); return { path: s.path, name: f.name, size: f.size }; });
+      }));
+    });
+  }
+  function flOpenModal(r) {
+    var isEdit = !!r; r = r || {};
+    var keepFiles = (r.files || []).slice();
+    var fairSel = r.fair || (fl.filters.fair || FAIR_VISIT_FAIRS[0].key);
+    var meName = state.doer.delegation_name || state.doer.name || state.doer.doc_id;
+    var inp = function (id, label, val, ph, type) { return '<div class="field" style="flex:1;min-width:180px"><label>' + label + '</label><input id="' + id + '" type="' + (type || "text") + '" value="' + esc(val || "") + '" placeholder="' + esc(ph || "") + '" /></div>'; };
+    openModal(
+      "<h3>" + (isEdit ? "Edit stand lead" : "Log a stand lead") + "</h3>" +
+      '<div style="display:flex;gap:12px;flex-wrap:wrap"><div class="field" style="flex:1.4;min-width:200px"><label>Fair</label><select id="flfFair">' + flFairOptions(fairSel) + "</select></div>" +
+        '<div class="field" style="flex:1;min-width:160px"><label>Buyer</label><select id="flfType"><option value="new"' + (r.buyer_type !== "existing" ? " selected" : "") + '>New buyer</option><option value="existing"' + (r.buyer_type === "existing" ? " selected" : "") + ">Existing buyer</option></select></div></div>" +
+      '<div class="field" id="flfExistingWrap"' + (r.buyer_type === "existing" ? "" : ' style="display:none"') + '><label>Which existing buyer</label><input id="flfExisting" list="flfBuyerList" value="' + esc(r.existing_buyer || "") + '" placeholder="Start typing — buyers from the portal, Sampling FMS and Fair Visit" /><datalist id="flfBuyerList"></datalist></div>' +
+      '<div style="display:flex;gap:12px;flex-wrap:wrap">' + inp("flfName", "Contact person", r.buyer_name, "e.g. John Smith") + inp("flfCompany", "Company", r.company, "e.g. Kohinoor Textiles") + inp("flfCountry", "Country", r.country, "e.g. UK") + "</div>" +
+      '<div style="display:flex;gap:12px;flex-wrap:wrap">' + inp("flfPhone", "Phone", r.phone, "+44 …", "tel") + inp("flfEmail", "Email", r.email, "name@company.com", "email") + inp("flfMetBy", "Met by", isEdit ? r.met_by : meName, "") + "</div>" +
+      '<div class="field"><label>Interest (what they liked / asked for)</label><textarea id="flfInterest" rows="2">' + esc(r.interest || "") + "</textarea></div>" +
+      '<div class="field"><label>Concern <span class="sub">(optional)</span></label><textarea id="flfConcern" rows="2">' + esc(r.concern || "") + "</textarea></div>" +
+      '<div class="field"><label>Notes <span class="sub">(optional)</span></label><textarea id="flfNotes" rows="2">' + esc(r.notes || "") + "</textarea></div>" +
+      '<div class="field"><label>Follow-up status</label><select id="flfStatus">' + Object.keys(FL_STATUS).map(function (k) { return '<option value="' + k + '"' + ((r.followup_status || "open") === k ? " selected" : "") + ">" + FL_STATUS[k] + "</option>"; }).join("") + "</select></div>" +
+      '<div class="field"><label>Visiting card photo</label><input id="flfCard" type="file" accept="image/*" capture="environment" />' + (r.card_url ? '<div class="sub" style="margin-top:4px">Current: <a href="' + esc(r.card_url) + '" target="_blank" rel="noopener">view card</a> — choose a new photo to replace it</div>' : "") + "</div>" +
+      '<div class="field"><label>Buyer\'s PPT / PDF / catalogue <span class="sub">(up to 10 files, 45 MB each)</span></label><input id="flfFiles" type="file" multiple accept=".ppt,.pptx,.pdf,.doc,.docx,.xls,.xlsx,.zip,image/*" /><div id="flfKeep" class="sub" style="margin-top:6px"></div></div>' +
+      '<div class="modal-err" id="flfErr"></div>' +
+      '<div class="modal-actions"><button class="btn secondary" id="flfCancel">Cancel</button><button class="btn" id="flfSave">' + (isEdit ? "Save changes" : "Save lead") + "</button></div>"
+    );
+    var renderKeep = function () {
+      var el = document.getElementById("flfKeep");
+      if (el) el.innerHTML = keepFiles.map(function (f, i) { return '<span style="display:inline-block;margin:2px 8px 2px 0">📎 ' + esc(f.name) + ' <a href="#" data-fl-rm="' + i + '">remove</a></span>'; }).join("");
+      if (el) el.querySelectorAll("[data-fl-rm]").forEach(function (a) { a.addEventListener("click", function (e) { e.preventDefault(); keepFiles.splice(Number(a.dataset.flRm), 1); renderKeep(); }); });
+    };
+    renderKeep();
+    document.getElementById("flfType").addEventListener("change", function (e) { document.getElementById("flfExistingWrap").style.display = e.target.value === "existing" ? "" : "none"; });
+    var fillBuyers = function (list) { var dl = document.getElementById("flfBuyerList"); if (dl) dl.innerHTML = (list || []).map(function (n) { return '<option value="' + esc(n) + '">'; }).join(""); };
+    if (fl.buyers) fillBuyers(fl.buyers); else flApi("flBuyers").then(function (b) { fl.buyers = b || []; fillBuyers(fl.buyers); }).catch(function () {});
+    document.getElementById("flfCancel").addEventListener("click", closeModal);
+    document.getElementById("flfSave").addEventListener("click", function () {
+      var err = document.getElementById("flfErr"), v = function (id) { return document.getElementById(id).value.trim(); };
+      var type = v("flfType");
+      var name = v("flfName") || (type === "existing" ? v("flfExisting") : "");
+      if (!name) { err.textContent = "Enter the contact person's name."; return; }
+      var cardFile = (document.getElementById("flfCard").files || [])[0] || null;
+      var newFiles = Array.prototype.slice.call(document.getElementById("flfFiles").files || []);
+      if (keepFiles.length + newFiles.length > FL_MAX_FILES) { err.textContent = "Up to " + FL_MAX_FILES + " files per lead."; return; }
+      var big = newFiles.concat(cardFile ? [cardFile] : []).filter(function (f) { return f.size > FL_MAX_BYTES; })[0];
+      if (big) { err.textContent = big.name + " is larger than 45 MB."; return; }
+      var btn = document.getElementById("flfSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>' + (cardFile || newFiles.length ? "Uploading…" : "Saving…");
+      (cardFile ? flShrinkImage(cardFile) : Promise.resolve(null)).then(function (card) {
+        return flUpload((card ? [card] : []).concat(newFiles)).then(function (up) {
+          var cardPath = card ? up[0].path : (r.card_path || null);
+          var uploadedFiles = card ? up.slice(1) : up;
+          return flApi(isEdit ? "flUpdate" : "flCreate", {
+            id: r.id, fair: v("flfFair"), buyer_type: type, buyer_name: name, existing_buyer: type === "existing" ? v("flfExisting") : "",
+            company: v("flfCompany"), country: v("flfCountry"), phone: v("flfPhone"), email: v("flfEmail"), met_by: v("flfMetBy"),
+            interest: v("flfInterest"), concern: v("flfConcern"), notes: v("flfNotes"), followup_status: v("flfStatus"),
+            card_path: cardPath, files: keepFiles.map(function (f) { return { path: f.path, name: f.name, size: f.size }; }).concat(uploadedFiles)
+          });
+        });
+      }).then(function () {
+        closeModal(); toast(isEdit ? "Lead updated." : "Lead saved."); fl.buyers = null; flLoad();
+      }).catch(function (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = isEdit ? "Save changes" : "Save lead"; });
+    });
+  }
+  function flCsv() {
+    var rows = flFiltered();
+    var cols = [["Date", function (r) { return new Date(r.created_at).toLocaleString(); }], ["Fair", function (r) { return fairName(r.fair); }], ["Type", function (r) { return r.buyer_type; }],
+      ["Existing buyer", "existing_buyer"], ["Contact person", "buyer_name"], ["Company", "company"], ["Country", "country"], ["Phone", "phone"], ["Email", "email"],
+      ["Interest", "interest"], ["Concern", "concern"], ["Notes", "notes"], ["Met by", "met_by"], ["Logged by", "created_by"],
+      ["Follow-up", function (r) { return FL_STATUS[r.followup_status || "open"]; }], ["Card", function (r) { return r.card_path ? "yes" : ""; }], ["Files", function (r) { return (r.files || []).map(function (f) { return f.name; }).join("; "); }]];
+    var q = function (x) { x = x == null ? "" : String(x); return /[",\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; };
+    var csv = [cols.map(function (c) { return c[0]; }).join(",")].concat(rows.map(function (r) { return cols.map(function (c) { return q(typeof c[1] === "function" ? c[1](r) : r[c[1]]); }).join(","); })).join("\n");
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+    a.download = "fair-leads-" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  (function wireFairLeads() {
+    var b = document.getElementById("flNewBtn"); if (b) b.addEventListener("click", function () { flOpenModal(null); });
+    var c = document.getElementById("flCsvBtn"); if (c) c.addEventListener("click", flCsv);
+    [["flFilterFair", "fair"], ["flFilterType", "type"], ["flFilterStatus", "status"], ["flSearch", "q"]].forEach(function (p) {
+      var el = document.getElementById(p[0]);
+      if (el) el.addEventListener(p[1] === "q" ? "input" : "change", function () { fl.filters[p[1]] = el.value; flRender(); });
+    });
+  })();
 
   // ---------- Notice Board (admin posts, everyone views) ----------
   function fmtHolidayDate(iso) {
@@ -16902,11 +17143,34 @@ window.RCBuyerUI = (function () {
           '<input type="checkbox" data-todo-toggle="' + t.id + '"' + (t.done ? " checked" : "") + ' style="width:auto" />' +
           '<span style="flex:1;' + (t.done ? "text-decoration:line-through" : "") + '">' + esc(t.text) + '</span>' +
           (t.due_date ? '<span class="sub" style="' + (overdue ? "color:#dc2626;font-weight:700" : "") + '">' + esc(t.due_date) + '</span>' : "") +
-          '<button type="button" data-todo-del="' + t.id + '" class="btn secondary" style="padding:2px 8px;font-size:11px">✕</button></li>';
+          '<button type="button" data-todo-edit="' + t.id + '" class="btn secondary" title="Edit" style="padding:2px 8px;font-size:11px">✎ Edit</button>' +
+          '<button type="button" data-todo-del="' + t.id + '" class="btn secondary" title="Delete" style="padding:2px 8px;font-size:11px">✕</button></li>';
       }).join("") + '</ul>';
       wrap.querySelectorAll("[data-todo-toggle]").forEach(function (cb) {
         cb.addEventListener("change", function () {
           api("todoToggle", { doc_id: state.doer.doc_id, id: cb.dataset.todoToggle, done: cb.checked }).then(function () { renderTodoList(); }).catch(function (e) { toast(e.message, true); });
+        });
+      });
+      wrap.querySelectorAll("[data-todo-edit]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var t = (state.todos || []).find(function (x) { return String(x.id) === b.dataset.todoEdit; });
+          if (!t) return;
+          openModal(
+            '<h3>Edit Task</h3>' +
+            '<div class="field"><label>Task</label><textarea id="etText" rows="3">' + esc(t.text) + '</textarea></div>' +
+            '<div class="field"><label>Due date (optional)</label><input id="etDue" type="date" value="' + esc(t.due_date || "") + '" /></div>' +
+            '<div class="modal-err" id="etErr"></div>' +
+            '<div class="modal-actions"><button class="btn secondary" id="etCancel">Cancel</button><button class="btn" id="etSave">Save</button></div>'
+          );
+          document.getElementById("etCancel").addEventListener("click", closeModal);
+          document.getElementById("etSave").addEventListener("click", function () {
+            var text = document.getElementById("etText").value.trim();
+            if (!text) { document.getElementById("etErr").textContent = "Write the task."; return; }
+            var btn = document.getElementById("etSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+            api("todoUpdate", { doc_id: state.doer.doc_id, id: t.id, text: text, due_date: document.getElementById("etDue").value || null }).then(function () {
+              closeModal(); renderTodoList(); toast("Task updated.");
+            }).catch(function (e) { document.getElementById("etErr").textContent = e.message; btn.disabled = false; btn.textContent = "Save"; });
+          });
         });
       });
       wrap.querySelectorAll("[data-todo-del]").forEach(function (b) {
