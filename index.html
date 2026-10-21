@@ -2686,6 +2686,186 @@ window.RCBuyerUI = (function () {
   <button class="login-sound-btn" id="loomSoundBtn" type="button" aria-pressed="false">Sound off</button>
 </div>
 
+<!-- ===================== FESTIVE THEME: DIWALI 2026 =====================
+     Decoration only: marigold toran, diya row, rangoli, golden embers and
+     small fireworks on the landing + login screens, and a Diwali greeting on
+     the welcome screen. It never touches doLogin() or the loom animation.
+     Turns itself on 21 Oct – 12 Nov 2026 (IST). Anyone can switch it off
+     with the "Festive lights" button; ?festive=off / ?festive=on also work.
+     To reuse for another festival, change FEST below. -->
+<style>
+  html.rc-fest #loginScreen .login-card{border-top:3px solid #ffb627;box-shadow:0 0 0 1px rgba(255,182,39,.18),0 20px 60px rgba(255,120,20,.22)}
+  /* Diwali: the 3D loom is hidden and the sign-in card sits in the middle of a full-page festive scene */
+  html.rc-fest #loginScreen #webgl-canvas{display:none}
+  html.rc-fest #loginScreen{grid-template-columns:1fr;background:radial-gradient(60% 50% at 50% 55%,#3a1700 0%,#1a0800 45%,#070200 100%)}
+  html.rc-fest #loginScreen .login-panel{grid-column:1;padding:96px 16px 40px}
+  html.rc-fest #loginScreen .login-shell{max-width:440px}
+  html.rc-fest #loginScreen .login-card{transform:none!important}
+  html.rc-fest #loginScreen::after{content:"";position:fixed;left:50%;top:58%;width:900px;height:900px;max-width:140vw;max-height:140vw;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(255,170,40,.18),rgba(255,120,20,.06) 40%,transparent 65%);pointer-events:none;z-index:0}
+  .rc-fest-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+  .rc-toran{position:fixed;left:0;right:0;top:0;height:74px;z-index:4;pointer-events:none;display:none}
+  html.rc-fest .rc-toran.on{display:block}
+  .rc-toran svg{width:100%;height:100%;display:block}
+  .rc-rangoli{position:fixed;width:420px;height:420px;left:-120px;bottom:-120px;z-index:1;pointer-events:none;opacity:.55;animation:rcSpin 90s linear infinite}
+  .rc-rangoli.r2{left:auto;right:-120px;bottom:auto;top:auto;bottom:-120px;width:420px;height:420px;opacity:.5;animation-direction:reverse}
+  @keyframes rcSpin{to{transform:rotate(360deg)}}
+  .rc-greet{display:flex;flex-direction:column;align-items:center;gap:4px;margin:-6px 0 18px}
+  .rc-greet .hi{font:600 1.05rem 'Rubik',sans-serif;color:#ffcc66;letter-spacing:.01em}
+  .rc-greet .hi span{color:#fff}
+  .rc-greet .cd{font:500 .78rem 'Rubik',sans-serif;color:#d6a35c;background:rgba(255,182,39,.1);border:1px solid rgba(255,182,39,.28);border-radius:999px;padding:3px 12px}
+  .rc-diyas{display:flex;justify-content:center;gap:18px;margin-top:14px}
+  .rc-diya{width:34px;height:30px;position:relative}
+  .rc-diya svg{width:100%;height:100%;overflow:visible}
+  .rc-diya .flame{transform-origin:17px 13px;animation:rcFlick 1.3s ease-in-out infinite alternate}
+  .rc-diya:nth-child(2) .flame{animation-delay:-.4s}.rc-diya:nth-child(3) .flame{animation-delay:-.9s}.rc-diya:nth-child(4) .flame{animation-delay:-.2s}.rc-diya:nth-child(5) .flame{animation-delay:-.7s}
+  @keyframes rcFlick{0%{transform:scale(1,1) rotate(-3deg)}50%{transform:scale(.9,1.12) rotate(2deg)}100%{transform:scale(1.05,.94) rotate(-1deg)}}
+  .rc-fest-btn{position:fixed;right:16px;bottom:14px;z-index:5;background:rgba(0,0,0,.6);color:#ffcc66;border:1px solid #6b4a12;border-radius:20px;padding:7px 14px;font:500 .8rem 'Rubik',sans-serif;cursor:pointer}
+  .rc-fest-btn[aria-pressed="false"]{color:#a3a3a3;border-color:#2a2a2a}
+  .rc-fest-btn:focus-visible{outline:2px solid #ffb627;outline-offset:2px}
+  html.rc-fest #landingScreen .landing-eyebrow.rc-fest-eye{color:#ffb627}
+  html.rc-fest #landingScreen .landing-nav{margin-top:62px}
+  @media (max-width:820px){html.rc-fest #loginScreen{align-items:center}html.rc-fest #loginScreen .login-panel{padding:70px 12px 24px}.rc-fest-btn{bottom:auto;top:58px;right:12px}html.rc-fest #loginScreen .login-sound-btn{top:58px}.rc-rangoli{width:200px;height:200px;left:-70px;bottom:-70px}.rc-rangoli.r2{width:200px;height:200px;right:-70px;bottom:-70px}.rc-toran{height:56px}}
+  @media (prefers-reduced-motion:reduce){.rc-rangoli,.rc-diya .flame{animation:none}}
+</style>
+<div class="rc-toran" id="rcToran" aria-hidden="true"></div>
+<button type="button" class="rc-fest-btn" id="rcFestBtn" aria-pressed="true" hidden>✨ Festive lights on</button>
+<script>
+function rcFestStart() {
+  var FEST = { key: "diwali2026", from: "2026-10-21", to: "2026-11-12", day: "2026-11-08",
+    hi: "शुभ दीपावली", en: "Happy Diwali", intro: "Happy Diwali from Rugs Creation" };
+  function istDay(off) { return new Date(Date.now() + 330 * 60000 + (off || 0)).toISOString().slice(0, 10); }
+  var today = istDay(), q = (location.search.match(/[?&]festive=(on|off)/) || [])[1];
+  var pref = null; try { pref = localStorage.getItem("rc_festive_" + FEST.key); } catch (e) {}
+  if (q) { pref = q; try { localStorage.setItem("rc_festive_" + FEST.key, q); } catch (e) {} }
+  var inWindow = today >= FEST.from && today <= FEST.to;
+  if (!inWindow && q !== "on") return;
+  var on = pref !== "off";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var html = document.documentElement, login = document.getElementById("loginScreen"), landing = document.getElementById("landingScreen");
+  if (!login) return;
+
+  /* ---------- countdown text ---------- */
+  function daysTo(d) { return Math.round((Date.parse(d + "T00:00:00Z") - Date.parse(today + "T00:00:00Z")) / 86400000); }
+  var n = daysTo(FEST.day), cd;
+  if (n > 1) cd = "Diwali on Sunday, 8 November · " + n + " days to go";
+  else if (n === 1) cd = "Diwali is tomorrow";
+  else if (n === 0) cd = "Today is Diwali — wishing you light and prosperity";
+  else if (today <= "2026-11-10") cd = "Happy Govardhan Puja";
+  else if (today === "2026-11-11") cd = "Happy Bhai Dooj";
+  else cd = "Hope you had a bright Diwali";
+
+  /* ---------- pieces ---------- */
+  function diyaSvg() {
+    return '<svg viewBox="0 0 34 30" aria-hidden="true"><defs><radialGradient id="rcGl" cx="50%" cy="40%" r="50%"><stop offset="0" stop-color="#ffd76a" stop-opacity=".9"/><stop offset="1" stop-color="#ff7a00" stop-opacity="0"/></radialGradient></defs>' +
+      '<circle cx="17" cy="9" r="11" fill="url(#rcGl)"/>' +
+      '<path class="flame" d="M17 2 C20 7 21 10 17 14 C13 10 14 7 17 2Z" fill="#ffcf40"/><path class="flame" d="M17 6 C18.5 9 18.6 11 17 13 C15.4 11 15.6 9 17 6Z" fill="#fff4c2"/>' +
+      '<path d="M3 16 Q17 32 31 16 Q24 20 17 20 Q10 20 3 16Z" fill="#c2410c"/><path d="M3 16 Q17 21 31 16" stroke="#fdba74" stroke-width="1.2" fill="none"/>' +
+      '<circle cx="11" cy="22" r="1.1" fill="#fde68a"/><circle cx="17" cy="23.5" r="1.1" fill="#fde68a"/><circle cx="23" cy="22" r="1.1" fill="#fde68a"/></svg>';
+  }
+  function toranSvg(w) {
+    var s = '<svg viewBox="0 0 ' + w + ' 74" preserveAspectRatio="none"><path d="M0 6 Q' + w / 2 + ' 30 ' + w + ' 6" stroke="#7c4a12" stroke-width="2" fill="none"/>';
+    var count = Math.max(10, Math.round(w / 46));
+    for (var i = 0; i <= count; i++) {
+      var x = i / count * w, t = i / count, y = 6 + 24 * 4 * t * (1 - t) * 0.5 * 2;
+      var len = 3 + (i % 3 === 1 ? 2 : i % 2), cols = ["#f59e0b", "#ea580c", "#facc15"];
+      for (var k = 0; k < len; k++) s += '<circle cx="' + x.toFixed(1) + '" cy="' + (y + 7 + k * 9).toFixed(1) + '" r="5" fill="' + cols[(i + k) % 3] + '"/><circle cx="' + x.toFixed(1) + '" cy="' + (y + 7 + k * 9).toFixed(1) + '" r="1.6" fill="#7c2d12" opacity=".55"/>';
+      if (i % 2 === 0) s += '<path d="M' + (x + 23) + ' ' + (y + 6) + ' q6 10 0 20 q-6 -10 0 -20Z" fill="#15803d"/>';
+    }
+    return s + '</svg>';
+  }
+  function rangoliSvg() {
+    var s = '<svg viewBox="-100 -100 200 200" aria-hidden="true">', cols = ["#ea580c", "#f59e0b", "#db2777", "#7c3aed", "#0ea5e9", "#16a34a"];
+    [[88, 16, 0], [70, 12, 1], [52, 10, 2], [36, 8, 3], [22, 8, 4]].forEach(function (ring) {
+      for (var i = 0; i < ring[1]; i++) {
+        var a = i / ring[1] * 360;
+        s += '<ellipse cx="0" cy="' + (-ring[0] + 12) + '" rx="' + (ring[0] / 7 + 2) + '" ry="13" transform="rotate(' + a + ')" fill="' + cols[(ring[2] + i % 2) % cols.length] + '" opacity=".85"/>';
+      }
+    });
+    return s + '<circle r="10" fill="#facc15"/><circle r="4" fill="#ea580c"/></svg>';
+  }
+
+  /* ---------- build ---------- */
+  var toran = document.getElementById("rcToran"), btn = document.getElementById("rcFestBtn");
+  var card = document.getElementById("mainCard"), brand = card && card.querySelector(".login-brand"), form = document.getElementById("loginForm");
+  var greet = document.createElement("div"); greet.className = "rc-greet";
+  greet.innerHTML = '<div class="hi">' + FEST.hi + ' · <span>' + FEST.en + '</span></div><div class="cd">' + cd + '</div>';
+  var diyas = document.createElement("div"); diyas.className = "rc-diyas"; diyas.setAttribute("aria-hidden", "true");
+  diyas.innerHTML = new Array(6).join('<span class="rc-diya">' + diyaSvg() + '</span>');
+  var r1 = document.createElement("div"); r1.className = "rc-rangoli"; r1.innerHTML = rangoliSvg();
+  var r2 = document.createElement("div"); r2.className = "rc-rangoli r2"; r2.innerHTML = rangoliSvg();
+  var cv = document.createElement("canvas"); cv.className = "rc-fest-canvas"; cv.setAttribute("aria-hidden", "true");
+  var panel = login.querySelector(".login-panel");
+  var eye = landing && landing.querySelector(".landing-eyebrow"), eyeOld = eye ? eye.textContent : "";
+  var introEye = document.querySelector("#introScreen .intro-greet .eyebrow"), introOld = introEye ? introEye.textContent : "";
+  var subP = login.querySelector(".login-brand-text p"), subOld = subP ? subP.textContent : "";
+
+  function apply() {
+    html.classList.toggle("rc-fest", on);
+    btn.hidden = false; btn.setAttribute("aria-pressed", on); btn.textContent = on ? "✨ Festive lights on" : "Festive lights off";
+    if (on) {
+      if (brand && !greet.parentNode) brand.parentNode.insertBefore(greet, brand.nextSibling);
+      if (form && !diyas.parentNode) form.parentNode.insertBefore(diyas, form.nextSibling);
+      if (!r1.parentNode) { login.insertBefore(r1, panel); login.insertBefore(r2, panel); login.insertBefore(cv, panel); }
+      if (!toran.innerHTML) toran.innerHTML = toranSvg(Math.max(800, window.innerWidth));
+      if (eye) { eye.textContent = "Diwali 2026 · People & Operations"; eye.classList.add("rc-fest-eye"); }
+      if (introEye) introEye.textContent = FEST.intro;
+      if (subP) subP.textContent = "Enter your punch number and password.";
+    } else {
+      [greet, diyas, r1, r2, cv].forEach(function (el) { if (el.parentNode) el.parentNode.removeChild(el); });
+      if (eye) { eye.textContent = eyeOld; eye.classList.remove("rc-fest-eye"); }
+      if (introEye) introEye.textContent = introOld;
+      if (subP) subP.textContent = subOld;
+    }
+  }
+  btn.addEventListener("click", function () {
+    on = !on; try { localStorage.setItem("rc_festive_" + FEST.key, on ? "on" : "off"); } catch (e) {}
+    apply(); if (on) loop();
+  });
+
+  /* toran + button only while the landing or login screen is showing */
+  function vis(el) { return el && !el.classList.contains("hidden") && el.style.display !== "none" && el.offsetParent !== null; }
+  function screens() {
+    var show = vis(login) || vis(landing);
+    toran.classList.toggle("on", show && on); btn.hidden = !show;
+    return vis(login);
+  }
+
+  /* ---------- embers + small fireworks (login screen only) ---------- */
+  var ctx = cv.getContext && cv.getContext("2d"), P = [], W = 0, H = 0, last = 0, nextBurst = 0, running = false;
+  function size() { var d = Math.min(window.devicePixelRatio || 1, 2); W = cv.width = innerWidth * d; H = cv.height = innerHeight * d; }
+  window.addEventListener("resize", function () { size(); toran.innerHTML = on ? toranSvg(Math.max(800, window.innerWidth)) : ""; });
+  function ember() { P.push({ x: Math.random() * W, y: H + 10, vx: (Math.random() - .5) * .3, vy: -(.4 + Math.random() * .9), r: 1 + Math.random() * 2.2, life: 1, d: .0015 + Math.random() * .002, c: "255,190,80" }); }
+  function burst() {
+    var cx = W * (.15 + Math.random() * .7), cy = H * (.12 + Math.random() * .3), cols = ["255,200,80", "255,120,40", "255,80,140", "160,120,255", "120,220,255"], c = cols[(Math.random() * cols.length) | 0], k = 46;
+    for (var i = 0; i < k; i++) { var a = i / k * Math.PI * 2, sp = 1.6 + Math.random() * 2.2; P.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 1.6, life: 1, d: .012 + Math.random() * .008, c: c, g: .025 }); }
+  }
+  function frame(t) {
+    var showLogin = screens();
+    if (!on || !ctx) { running = false; return; }
+    if (!showLogin || document.hidden) { setTimeout(function () { requestAnimationFrame(frame); }, 600); return; }
+    if (!W) size();
+    ctx.clearRect(0, 0, W, H);
+    if (reduce) { running = false; return; }
+    if (P.length < 140 && Math.random() < .35) ember();
+    if (t > nextBurst) { burst(); nextBurst = t + 2200 + Math.random() * 2600; }
+    ctx.globalCompositeOperation = "lighter";
+    for (var i = P.length - 1; i >= 0; i--) {
+      var p = P[i]; p.x += p.vx; p.y += p.vy; if (p.g) { p.vy += p.g; p.vx *= .985; p.vy *= .985; } p.life -= p.d;
+      if (p.life <= 0 || p.y < -20) { P.splice(i, 1); continue; }
+      ctx.beginPath(); ctx.fillStyle = "rgba(" + p.c + "," + (p.life * .85).toFixed(3) + ")"; ctx.arc(p.x, p.y, p.r * (window.devicePixelRatio > 1 ? 1.6 : 1), 0, 6.283); ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over";
+    requestAnimationFrame(frame);
+  }
+  function loop() { if (running) return; running = true; size(); requestAnimationFrame(frame); }
+
+  apply(); screens(); if (on) loop();
+  setInterval(function () { screens(); if (on && !running) loop(); }, 1500);
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", rcFestStart); else rcFestStart();
+</script>
+<!-- =================== END FESTIVE THEME =================== -->
+
 <div id="introScreen">
   <div class="intro-center">
     <div class="intro-greet">
@@ -2710,6 +2890,142 @@ window.RCBuyerUI = (function () {
   </div>
 </div>
 
+<style id="rcLogoutFix">
+  /* Log out: a clear, labelled red button on every screen size.
+     Desktop/tablet: full-width at the bottom of the sidebar.
+     Collapsed sidebar: red icon button. Phone (<=820px): the account bar
+     (name, theme, punch in/out, Log out) sits at the very top of the page. */
+  .logout-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:38px;padding:8px 12px;border-radius:9px;border:1px solid rgba(248,113,113,.5);background:rgba(220,38,38,.14);color:#fecaca;font:700 13px/1 inherit;font-family:inherit;cursor:pointer;flex-shrink:0}
+  .logout-btn:hover,.logout-btn:focus-visible{background:#dc2626;border-color:#dc2626;color:#fff}
+  .logout-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  .logout-btn .lo-ic{font-size:15px;line-height:1}
+  .attend-widget .attend-status{min-width:0;white-space:normal;overflow-wrap:anywhere}
+  .attend-widget #attendActionBtn{position:static}
+  .sidebar.collapsed .logout-btn{width:40px;height:40px;min-height:40px;padding:0;align-self:center}
+  .sidebar.collapsed .logout-btn .lo-tx{display:none}
+  @media (max-width:820px){
+    .sidebar .sidebar-footer{display:flex!important;order:-1;width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 8px;padding:2px 2px 10px;border-top:0;border-bottom:1px solid var(--sidebar-line)}
+    .sidebar .sidebar-footer .footer-utility-row{display:none}
+    .sidebar .sidebar-footer .account-row{flex:1 1 auto;min-width:0;gap:6px}
+    .sidebar .sidebar-footer .account-row .who-text{display:block!important;font-size:14px}
+    .sidebar .sidebar-footer .footer-icon-btn{width:38px;height:38px;font-size:16px}
+    .sidebar .sidebar-footer .logout-btn{width:auto;padding:8px 16px;font-size:14px}
+    .sidebar .sidebar-footer .logout-btn .lo-tx{display:inline!important}
+    .sidebar .sidebar-footer .attend-widget{order:3;flex:1 1 100%;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .sidebar .sidebar-footer .attend-widget{flex-wrap:wrap}
+    .sidebar .sidebar-footer .attend-widget .attend-status{flex:1 1 160px;min-width:0;white-space:normal}
+    .sidebar .sidebar-footer .attend-widget #attendActionBtn{width:auto!important;margin-top:0!important;flex:0 0 auto;position:static}
+  }
+  /* Status colours: Completed = green, Pending = amber, Overdue = red (Delegation, Workspace tasks, Buyer Visits, Inspections) */
+  .badge{border:1px solid transparent}
+  .badge.Pending{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+  .badge.Completed{background:#dcfce7;color:#166534;border-color:#86efac}
+  .badge.Overdue,tr .badge.Overdue{background:#dc2626!important;color:#fff!important;border-color:#dc2626!important}
+  .badge.Today{background:#ff5001;color:#fff;border-color:#ff5001}
+  .badge.Upcoming{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+  tr.st-done td{background:rgba(22,163,74,.07)} tr.st-done td:first-child{box-shadow:inset 4px 0 0 #16a34a}
+  tr.st-pend td{background:rgba(245,158,11,.08)} tr.st-pend td:first-child{box-shadow:inset 4px 0 0 #f59e0b}
+  tr.st-late td{background:rgba(220,38,38,.09)} tr.st-late td:first-child{box-shadow:inset 4px 0 0 #dc2626}
+  tr.st-today td{background:rgba(255,80,1,.10)} tr.st-today td:first-child{box-shadow:inset 4px 0 0 #ff5001}
+  tr.st-next td:first-child{box-shadow:inset 4px 0 0 #3b82f6}
+  tr.st-late td.overdue{color:#dc2626}
+  :root[data-theme="dark"] .badge.Pending{background:#3a2a06;color:#fcd34d;border-color:#78510c}
+  :root[data-theme="dark"] .badge.Completed{background:#0f2e1a;color:#86efac;border-color:#166534}
+  :root[data-theme="dark"] .badge.Upcoming{background:#14223b;color:#93c5fd;border-color:#1e40af}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .badge.Pending{background:#3a2a06;color:#fcd34d;border-color:#78510c}:root:not([data-theme="light"]) .badge.Completed{background:#0f2e1a;color:#86efac;border-color:#166534}:root:not([data-theme="light"]) .badge.Upcoming{background:#14223b;color:#93c5fd;border-color:#1e40af}}
+  /* ---------- 📦 Order Master ---------- */
+  #view-ordermaster{padding-bottom:40px}
+  .om-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .om-sub{color:var(--sub);font-size:13px;margin-top:2px}
+  .om-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:10px}
+  .om-tabs button{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;cursor:pointer}
+  .om-tabs button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+  .om-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+  .om-kpi{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer;text-align:left;color:var(--ink)}
+  .om-kpi b{font-size:22px;font-variant-numeric:tabular-nums}
+  .om-kpi span{font-size:12px;color:var(--sub);font-weight:600}
+  .om-kpi.on{outline:2px solid var(--brand)}
+  .om-kpi.bad b{color:#dc2626} .om-kpi.pu b{color:#7c3aed} .om-kpi.warn b{color:#d97706} .om-kpi.ok b{color:#16a34a}
+  .om-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .om-bar select,.om-bar input{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);min-width:0}
+  .om-bar input{flex:1;min-width:200px}
+  .om-count{color:var(--sub);font-size:12.5px;font-weight:600}
+  .om-table{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+  .om-table table{width:100%;border-collapse:collapse;font-size:13px;display:table}
+  .om-table th{background:var(--bg);color:var(--sub);font-size:11px;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:8px 10px;white-space:nowrap;position:sticky;top:0}
+  .om-table td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
+  .om-table .num{text-align:right;font-variant-numeric:tabular-nums}
+  .om-row{cursor:pointer} .om-row:hover td{background:color-mix(in srgb,var(--brand) 7%,transparent)}
+  .om-row:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+  .om-io{display:block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--sub)}
+  .om-small{font-size:11.5px;color:var(--sub)}
+  .om-red{color:#dc2626!important;font-weight:700} .om-amber{color:#d97706!important;font-weight:700}
+  .om-issue{max-width:240px}
+  .om-tag{font-size:10px;font-weight:800;background:#dcfce7;color:#166534;border-radius:5px;padding:1px 6px;vertical-align:1px}
+  .om-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:700;white-space:nowrap;background:var(--card)}
+  .om-pill i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .om-pill.om-mute{color:var(--sub)}
+  .om-note{background:color-mix(in srgb,var(--brand) 8%,var(--card));border:1px solid color-mix(in srgb,var(--brand) 25%,var(--line));border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .om-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+  .om-card-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;background:none;border:0;color:var(--ink);padding:0;text-align:left;font:inherit}
+  .om-toggle{cursor:pointer}
+  .om-card .om-table{margin-top:10px}
+  .om-late-io{display:grid;grid-template-columns:150px 120px 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--bg);border:1px solid var(--line);border-left:4px solid #dc2626;border-radius:9px;padding:8px 10px;margin-top:8px;color:var(--ink);cursor:pointer;font:inherit;font-size:13px}
+  .om-late-io:hover{border-color:var(--brand)}
+  .om-late-io .om-issue-line{grid-column:1/-1}
+  @media (max-width:700px){.om-late-io{grid-template-columns:1fr 1fr}}
+  .om-weeks{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+  .om-week{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+  .om-week.late{border-color:#fca5a5;background:color-mix(in srgb,#dc2626 6%,var(--bg))}
+  .om-week.warn{border-color:#fcd34d}
+  .om-week-h{font-weight:800;font-size:13px;display:flex;justify-content:space-between}
+  .om-ship{display:flex;flex-direction:column;gap:3px;text-align:left;background:var(--card);border:1px solid var(--line);border-left:4px solid #3b82f6;border-radius:9px;padding:8px 10px;color:var(--ink);cursor:pointer;font:inherit;font-size:13px}
+  .om-ship.late{border-left-color:#dc2626} .om-ship.warn{border-left-color:#f59e0b}
+  .om-ship-l{display:flex;flex-direction:column;gap:1px;font-size:12px;color:var(--sub)}
+  .om-cap td.om-cell{text-align:center;min-width:76px}
+  .om-cap td.om-cell b{display:block;font-size:13px}
+  .om-cap td.om-cell span{font-size:10.5px;color:var(--sub)}
+  .om-cap td.over{background:rgba(220,38,38,.14)} .om-cap td.over b{color:#dc2626}
+  .om-cap td.near{background:rgba(245,158,11,.14)} .om-cap td.near b{color:#b45309}
+  .om-cap td.spare{background:rgba(22,163,74,.08)} .om-cap td.spare b{color:#15803d}
+  .om-cap th.om-now{color:var(--brand)}
+  .om-alert-row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:13px;flex-wrap:wrap}
+  .modal.om-modal{max-width:880px;width:calc(100vw - 24px);max-height:92vh;overflow:auto}
+  .om-drawer h3{margin:2px 0 2px;font-size:18px}
+  .om-drawer h4{margin:18px 0 8px;font-size:14px}
+  .om-dh{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .om-chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+  .om-stages input[type=date]{padding:5px 6px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);min-height:32px}
+  .om-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:560px){.om-grid2{grid-template-columns:1fr}}
+  .om-drawer label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--sub)}
+  .om-drawer label.om-l{margin-top:10px}
+  .om-drawer label.om-check{flex-direction:row;align-items:center;gap:8px;margin-top:10px;color:var(--ink);font-weight:600}
+  .om-drawer select,.om-drawer textarea,.om-drawer label input:not([type=checkbox]){background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);font:inherit;font-size:13.5px;font-weight:400}
+  .om-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+  .om-hist{display:flex;flex-direction:column;gap:0;font-size:12.5px}
+  .om-hrow{display:grid;grid-template-columns:110px 1fr auto;gap:10px;padding:6px 0;border-top:1px solid var(--line);align-items:center}
+  @media (max-width:560px){.om-hrow{grid-template-columns:1fr}}
+  .om-st{font-size:11px;font-weight:800;border-radius:6px;padding:2px 7px;white-space:nowrap}
+  .om-st.ok{background:#dcfce7;color:#166534} .om-st.warn{background:#fef3c7;color:#92400e} .om-st.bad{background:#fee2e2;color:#991b1b} .om-st.mute{background:var(--bg);color:var(--sub)}
+  /* ---------- 📱 Tablet requests ---------- */
+  #view-devices{padding-bottom:40px}
+  .tblt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+  .tblt-card{background:var(--card);border:1px solid var(--line);border-left:5px solid #16a34a;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:5px;min-width:0}
+  .tblt-card.busy{border-left-color:#3b82f6} .tblt-card.late{border-left-color:#dc2626;background:color-mix(in srgb,#dc2626 5%,var(--card))} .tblt-card.off{border-left-color:var(--line);opacity:.75}
+  .tblt-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .tblt-top b{font-size:15px}
+  .tblt-line{font-size:13.5px}
+  .tblt-small{font-size:12px;color:var(--sub)}
+  .tblt-last{border-top:1px dashed var(--line);padding-top:6px;margin-top:2px}
+  .tblt-red{color:#dc2626;font-weight:700}
+  .tblt-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+  .tblt-hist summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--sub)}
+  .tblt-add{align-items:center;justify-content:center;border-style:dashed;border-left-width:1px;color:var(--sub);font-weight:700;cursor:pointer;min-height:120px;font-size:14px}
+  /* Buyer Visit: people who always attend */
+  .bv-chip.bv-must{cursor:default;opacity:1}
+  .bv-chip.bv-must .bv-lock{margin-left:4px;font-size:11px}
+</style>
 <div id="app">
 <button id="tsFab" class="ts-fab" type="button" title="Report a technical problem">🛠️<span class="ts-fab-t"> Report a problem</span><span id="tsFabBadge" class="ts-fab-badge hidden"></span></button>
   <div class="sidebar">
@@ -2740,8 +3056,8 @@ window.RCBuyerUI = (function () {
       <div class="account-row">
         <div class="who who-text" id="whoName" title="My Profile">—</div>
         <button class="footer-icon-btn" id="themeToggleBtn" title="Switch theme (system / light / dark)">🖥️</button>
-        <button class="footer-icon-btn" id="logoutBtn" title="Log out">🚪</button>
-      </div>
+        </div>
+      <button type="button" class="logout-btn" id="logoutBtn" title="Log out" aria-label="Log out"><span class="lo-ic" aria-hidden="true">⏻</span><span class="lo-tx">Log out</span></button>
     </div>
   </div>
   <main>
@@ -3124,8 +3440,8 @@ window.RCBuyerUI = (function () {
           <div class="field" style="flex:1;min-width:120px"><label>Number of persons</label><input id="bvPersons" type="number" min="1" step="1" value="1" /></div>
         </div>
         <div class="field">
-          <label>Also attending (optional)</label>
-          <div class="sub" style="margin:-2px 0 6px">Anyone else covering this buyer with you — they'll see it too.</div>
+          <label>Who is attending</label>
+          <div class="sub" style="margin:-2px 0 6px">Neha, Jai Mala, Anamika, Rajesh (showroom) and Preeti are added to every visit. Tick anyone else covering this buyer with you.</div>
           <div id="bvAttendeePicker" class="bv-picker"></div>
         </div>
         <div class="modal-err" id="bvErr"></div>
@@ -3418,6 +3734,44 @@ window.RCBuyerUI = (function () {
         <div class="embed-loading-overlay" id="merchantLoading"><span class="spinner"></span><span>Loading Merchant Dashboard…</span></div>
         <iframe id="merchantFrame" title="Merchant Dashboard" style="background:var(--bg)" allow="fullscreen; clipboard-write" allowfullscreen></iframe>
       </div>
+    </div>
+
+    <div id="view-ordermaster" class="hidden">
+      <div class="om-head">
+        <button class="embed-back-btn" data-goto="modules" style="margin:0">← Back to Workspace</button>
+        <div style="flex:1;min-width:200px">
+          <h2 style="margin:0">📦 Order Master</h2>
+          <div class="om-sub" id="omAsOf">Every open SKU. Update stages, issues and ship dates here — every dashboard and the merchant's sheet follow.</div>
+        </div>
+        <button class="btn secondary" type="button" id="omCsvBtn" title="Download this list as Excel / CSV">⬇ Download</button>
+        <button class="btn" type="button" id="omRefreshBtn">↻ Refresh</button>
+      </div>
+      <div class="om-tabs" role="tablist" id="omTabs">
+        <button type="button" role="tab" data-omtab="orders" class="on">📋 Orders</button>
+        <button type="button" role="tab" data-omtab="late">⏰ Late list</button>
+        <button type="button" role="tab" data-omtab="ship">🚢 Shipments</button>
+        <button type="button" role="tab" data-omtab="cap">🏭 Capacity</button>
+        <button type="button" role="tab" data-omtab="mat">🧶 Pending material</button>
+      </div>
+      <div id="omBody"><div class="empty">Loading…</div></div>
+    </div>
+
+    <div id="view-devices" class="hidden">
+      <div class="om-head">
+        <button class="embed-back-btn" data-goto="modules" style="margin:0">← Back to Workspace</button>
+        <div style="flex:1;min-width:200px">
+          <h2 style="margin:0">📱 Tablet requests</h2>
+          <div class="om-sub" id="tbltItTeam">Ask for a tablet, see who has each one, and give it back.</div>
+        </div>
+        <button class="btn secondary" type="button" id="tbltRefreshBtn">↻ Refresh</button>
+        <button class="btn" type="button" id="tbltRequestBtn">+ Ask for a tablet</button>
+      </div>
+      <div class="om-tabs" id="tbltTabs">
+        <button type="button" data-tblttab="board" class="on">📱 Tablets</button>
+        <button type="button" data-tblttab="mine">🙋 My requests</button>
+        <button type="button" data-tblttab="requests" class="hidden">📥 All requests (IT)</button>
+      </div>
+      <div id="tbltBody"><div class="empty">Loading…</div></div>
     </div>
 
     <div id="view-followup" class="hidden">
@@ -5554,6 +5908,7 @@ window.RCBuyerUI = (function () {
       applyModuleOverrides(); // renames/re-icons built-in MODULE_DEFS tiles in place, before anything renders them
       if (typeof ppcMaybePreload === "function") ppcMaybePreload();
       if (typeof merchantAccessCheck === "function") merchantAccessCheck();
+      if (typeof omAccessCheck === "function") omAccessCheck();
       if (typeof fuToggleButtons === "function") fuToggleButtons();
       if (typeof engageAfterLoad === "function") engageAfterLoad();
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
@@ -5586,6 +5941,7 @@ window.RCBuyerUI = (function () {
       applyModuleOverrides(); // renames/re-icons built-in MODULE_DEFS tiles in place, before anything renders them
       if (typeof ppcMaybePreload === "function") ppcMaybePreload();
       if (typeof merchantAccessCheck === "function") merchantAccessCheck();
+      if (typeof omAccessCheck === "function") omAccessCheck();
       if (typeof fuToggleButtons === "function") fuToggleButtons();
       if (typeof engageAfterLoad === "function") engageAfterLoad();
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
@@ -5937,7 +6293,7 @@ window.RCBuyerUI = (function () {
           if (n._eaCopy) eaMarkSeen(id);
           else api("markNotificationSeen", { ids: [id] }).catch(function () {});
         }
-        var goNotif = n && { complaint: "complaints", idea: "ideabox" }[String(n.type || "").split("_")[0]];
+        var goNotif = n && { complaint: "complaints", idea: "ideabox", om: "ordermaster", device: "devices" }[String(n.type || "").split("_")[0]];
         if (goNotif) goToView(goNotif);
       });
     });
@@ -6364,6 +6720,8 @@ window.RCBuyerUI = (function () {
     { key: "scoring", icon: "🏅", name: "RC Scoring Dashboard", status: "live", goto: "scoring", category: "work" },
     { key: "merchant", icon: "🧑‍💼", name: "Merchant Dashboard", status: "live", goto: "merchant", category: "production" },
     { key: "followup", icon: "📋", name: "Follow-up report", status: "live", goto: "followup", category: "work" },
+    { key: "ordermaster", icon: "📦", name: "Order Master", status: "live", goto: "ordermaster", category: "production" },
+    { key: "devices", icon: "📱", name: "Tablet requests", status: "live", goto: "devices", category: "work" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit", category: "production" },
     { key: "fairvisit", icon: "🎪", name: "Fair Visit", status: "live", goto: "fairvisit", category: "production" },
     { key: "fairleads", icon: "🤝", name: "Fair Leads", status: "live", goto: "fairleads", category: "production" },
@@ -7242,6 +7600,410 @@ window.RCBuyerUI = (function () {
   }
   // ---------- Follow-up report (Sampling FMS + PPC pending items, grouped by person) ----------
   // Data: followup-api (Supabase). Access: admins + people given "followup" in Module access.
+
+  // ---------- 📦 Order Master — built in ----------
+  // Orders come from the Google Sheet copy (MasterData_Live). Updates made here are saved in
+  // Supabase (om_updates / om_current), shown at once in every dashboard (om_overlay trigger on
+  // the sheet copy) and written into the merchant's own Google Sheet through the Sheet Bridge.
+  // Server: "planning-api" (Workspace session). Merchants see their SKUs, team leaders their team,
+  // admins everything — same rules as the Merchant Dashboard.
+  var PLANNING_FN_URL = SUPABASE_URL + "/functions/v1/planning-api";
+  var om = { tab: "orders", boot: null, orders: null, ship: null, cap: null, mat: null, f: { mer: "", st: "", q: "", io: "" }, open: {}, loading: false };
+  function omApi(action, payload) {
+    if (state.demo) return Promise.reject(new Error("Order Master is not available in demo mode."));
+    return fetch(PLANNING_FN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
+      body: JSON.stringify(Object.assign({ action: action, session_token: (state.doer || {}).session_token || "" }, payload || {}))
+    }).then(function (r) {
+      return r.json().then(function (j) { if (!r.ok || !j.ok) throw new Error(j.error || ("HTTP " + r.status)); return j.data; });
+    });
+  }
+  // Quietly after sign-in: does this person get the 📦 Order Master tile?
+  function omAccessCheck() {
+    if (state.demo || !state.doer) return;
+    omApi("plBoot").then(function (b) {
+      om.boot = b;
+      var had = !!state.omAccess;
+      state.omAccess = !!(b && b.access);
+      if (had !== state.omAccess && typeof renderHome === "function") renderHome();
+    }).catch(function () {});
+  }
+  function omD(iso) {
+    if (!iso) return "–";
+    var p = String(iso).split("-");
+    if (p.length !== 3) return esc(iso);
+    return p[2] + " " + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][+p[1] - 1] + (p[0] !== String(new Date().getFullYear()) ? " " + p[0].slice(2) : "");
+  }
+  var OM_AUTO = { "GREEN": "#16a34a", "YELLOW": "#eab308", "PURPLE": "#7c3aed", "LIGHT BLUE": "#7dd3fc", "MEDIUM BLUE": "#3b82f6", "DARK BLUE": "#1e3a8a", "ORANGE": "#f97316" };
+  function omAutoPill(a) {
+    var c = OM_AUTO[String(a || "").toUpperCase()];
+    return a ? '<span class="om-pill"><i style="background:' + (c || "#a1a1aa") + '"></i>' + esc(a) + "</span>" : '<span class="om-pill om-mute">no status</span>';
+  }
+  function omStatusOf(r) { return r.od ? "late" : String(r.auto).toUpperCase() === "PURPLE" ? "purple" : "ok"; }
+
+  function omLoad(force) {
+    var body = document.getElementById("omBody");
+    if (!body) return;
+    if (!om.boot) { body.innerHTML = '<div class="empty">Loading…</div>'; omApi("plBoot").then(function (b) { om.boot = b; state.omAccess = !!b.access; omLoad(force); }).catch(function (e) { body.innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; }); return; }
+    if (!om.boot.access) { body.innerHTML = '<div class="empty">Order Master is for merchants, team leaders and admins. Ask your admin.</div>'; return; }
+    var need = { orders: "plOrders", late: "plOrders", ship: "plShip", cap: "plCapacity", mat: "plMaterial" }[om.tab];
+    var slot = { plOrders: "orders", plShip: "ship", plCapacity: "cap", plMaterial: "mat" }[need];
+    if (om[slot] && !force) { omRender(); return; }
+    if (om.loading) return;
+    om.loading = true;
+    body.innerHTML = '<div class="empty"><span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:var(--brand)"></span> Loading…</div>';
+    omApi(need).then(function (d) { om[slot] = d; om.loading = false; omRender(); })
+      .catch(function (e) { om.loading = false; body.innerHTML = '<div class="empty">Could not load: ' + esc(e.message) + ' <button class="btn secondary" type="button" id="omRetry">Try again</button></div>'; var b = document.getElementById("omRetry"); if (b) b.onclick = function () { omLoad(true); }; });
+  }
+  function omRender() {
+    document.querySelectorAll("#omTabs button").forEach(function (b) { b.classList.toggle("on", b.dataset.omtab === om.tab); });
+    var asOf = document.getElementById("omAsOf");
+    if (asOf && om.orders && om.orders.asOf) asOf.textContent = "Orders from the sheet, updated " + new Date(om.orders.asOf).toLocaleString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) + " · your changes show at once";
+    var body = document.getElementById("omBody");
+    if (om.tab === "orders") body.innerHTML = omOrdersHtml();
+    else if (om.tab === "late") body.innerHTML = omLateHtml();
+    else if (om.tab === "ship") body.innerHTML = omShipHtml();
+    else if (om.tab === "cap") body.innerHTML = omCapHtml();
+    else body.innerHTML = omMatHtml();
+    omWire();
+  }
+
+  // ---- Orders
+  function omFiltered() {
+    var f = om.f, q = f.q.trim().toLowerCase(), ed = (om.orders && om.orders.edited) || {};
+    return (om.orders ? om.orders.rows : []).filter(function (r) {
+      if (f.mer && r.mer !== f.mer) return false;
+      if (f.io && r.io !== f.io) return false;
+      if (f.st === "late" && !r.od) return false;
+      if (f.st === "purple" && String(r.auto).toUpperCase() !== "PURPLE") return false;
+      if (f.st === "issue" && !r.issue) return false;
+      if (f.st === "edited" && !ed[r.k]) return false;
+      if (f.st === "nostage" && r.stage) return false;
+      if (q && (r.io + " " + r.sku + " " + r.buyer + " " + r.po + " " + r.cat + " " + r.color).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    }).sort(function (a, b) { return (a.eff || "9999").localeCompare(b.eff || "9999") || a.io.localeCompare(b.io); });
+  }
+  function omOrdersHtml() {
+    var rows = om.orders ? om.orders.rows : [], ed = (om.orders && om.orders.edited) || {};
+    var mers = {}; rows.forEach(function (r) { if (r.mer) mers[r.mer] = 1; });
+    var list = omFiltered();
+    var late = rows.filter(function (r) { return r.od; }).length, pu = rows.filter(function (r) { return String(r.auto).toUpperCase() === "PURPLE"; }).length;
+    var ios = {}; rows.forEach(function (r) { ios[r.io] = 1; });
+    var kp = function (n, l, cls, st) { return '<button type="button" class="om-kpi ' + cls + (om.f.st === st ? " on" : "") + '" data-omst="' + st + '"><b>' + n + "</b><span>" + l + "</span></button>"; };
+    var h = '<div class="om-kpis">' + kp(rows.length, "Open SKUs · " + Object.keys(ios).length + " IOs", "", "") + kp(late, "Overdue", "bad", "late") + kp(pu, "Purple", "pu", "purple") +
+      kp(rows.filter(function (r) { return r.issue; }).length, "With an issue", "warn", "issue") + kp(rows.filter(function (r) { return !r.stage; }).length, "No stage yet", "", "nostage") + kp(Object.keys(ed).filter(function (k) { return rows.some(function (r) { return r.k === k; }); }).length, "Updated here", "ok", "edited") + "</div>";
+    h += '<div class="om-bar"><select id="omFMer" aria-label="Merchant"><option value="">All merchants</option>' + Object.keys(mers).sort().map(function (m) { return "<option" + (m === om.f.mer ? " selected" : "") + ">" + esc(m) + "</option>"; }).join("") + "</select>" +
+      '<input id="omFQ" type="search" placeholder="Search IO, SKU, buyer, PO, colour" value="' + esc(om.f.q) + '">' +
+      (om.f.io ? '<button type="button" class="btn secondary" id="omClearIo">IO ' + esc(om.f.io) + " ✕</button>" : "") +
+      '<span class="om-count">' + list.length + " of " + rows.length + "</span></div>";
+    if (!list.length) return h + '<div class="empty">No SKUs match these filters.</div>';
+    var show = list.slice(0, 400);
+    h += '<div class="om-table"><table><thead><tr><th>IO / SKU</th><th>Buyer</th><th>Merchant</th><th class="num">Qty</th><th>Ship date</th><th>Status</th><th>Now at</th><th>Next</th><th>Issue / plan</th></tr></thead><tbody>' +
+      show.map(function (r) {
+        var st = omStatusOf(r);
+        return '<tr class="om-row st-' + (st === "late" ? "late" : st === "purple" ? "pend" : "") + '" tabindex="0" data-omkey="' + esc(r.k) + '">' +
+          '<td><span class="om-io">' + esc(r.io) + "</span><b>" + esc(r.sku) + "</b>" + (ed[r.k] ? ' <span class="om-tag">updated</span>' : "") + '<div class="om-small">' + esc(r.cat) + (r.color ? " · " + esc(r.color) : "") + (r.size ? " · " + esc(r.size) : "") + "</div></td>" +
+          "<td>" + esc(r.buyer) + "</td><td>" + esc(r.mer) + '<div class="om-small">TL ' + esc(r.tl || "–") + "</div></td>" +
+          '<td class="num">' + Number(r.qty || 0).toLocaleString("en-IN") + "</td>" +
+          "<td>" + omD(r.eff) + (r.rev ? ' <span class="om-small">(revised)</span>' : "") + (r.days !== null && r.days !== undefined ? '<div class="om-small ' + (r.days < 0 ? "om-red" : r.days <= 15 ? "om-amber" : "") + '">' + (r.days < 0 ? Math.abs(r.days) + " days late" : r.days + " days left") + "</div>" : "") + "</td>" +
+          "<td>" + omAutoPill(r.auto) + (r.od ? ' <span class="badge Overdue">Overdue</span>' : "") + "</td>" +
+          "<td>" + (r.stage ? esc(r.stage) + '<div class="om-small">' + omD(r.stageAt) + "</div>" : '<span class="om-small">not started</span>') + "</td>" +
+          "<td>" + (r.next ? esc(r.next) + '<div class="om-small">' + omD(r.nextAt) + "</div>" : "–") + "</td>" +
+          '<td class="om-issue">' + (r.issue ? esc(r.issue) : "–") + (r.plan ? '<div class="om-small">Plan: ' + esc(r.plan) + (r.recAt ? " · by " + omD(r.recAt) : "") + "</div>" : "") + "</td></tr>";
+      }).join("") + "</tbody></table></div>" + (list.length > 400 ? '<div class="om-small" style="margin-top:8px">Showing the first 400 — use the filters or search to narrow down.</div>' : "");
+    return h;
+  }
+
+  // ---- Late list (same list the morning alert sends)
+  function omLateHtml() {
+    var rows = (om.orders ? om.orders.rows : []).filter(function (r) { return r.od || String(r.auto).toUpperCase() === "PURPLE"; });
+    if (!rows.length) return '<div class="empty">Nothing overdue or purple in your orders. 🎉</div>';
+    var by = {};
+    rows.forEach(function (r) {
+      var m = by[r.mer || "No merchant"] || (by[r.mer || "No merchant"] = { mer: r.mer || "No merchant", tl: r.tl, ios: {}, od: 0, pu: 0 });
+      var g = m.ios[r.io] || (m.ios[r.io] = { io: r.io, buyer: r.buyer, n: 0, od: 0, pu: 0, eff: r.eff, issue: "" });
+      g.n++; if (r.od) { g.od++; m.od++; } if (String(r.auto).toUpperCase() === "PURPLE") { g.pu++; m.pu++; }
+      if (r.eff && (!g.eff || r.eff < g.eff)) g.eff = r.eff; if (!g.issue && r.issue) g.issue = r.issue;
+    });
+    var h = '<div class="om-note">This is the list each merchant and team leader gets as a notification every morning at 9:45.' + (om.boot && om.boot.isAdmin ? ' <button type="button" class="btn secondary" id="omAlertPreview">👀 Who gets what tomorrow</button>' : "") + "</div><div id=\"omAlertBox\"></div>";
+    h += Object.keys(by).sort(function (a, b) { return (by[b].od + by[b].pu) - (by[a].od + by[a].pu); }).map(function (k) {
+      var m = by[k], ios = Object.keys(m.ios).map(function (x) { return m.ios[x]; }).sort(function (a, b) { return (a.eff || "9").localeCompare(b.eff || "9"); });
+      return '<div class="om-card"><div class="om-card-h"><b>' + esc(m.mer) + '</b><span class="om-small">TL ' + esc(m.tl || "–") + '</span><span style="margin-left:auto" class="badge Overdue">' + m.od + ' overdue</span><span class="om-pill"><i style="background:#7c3aed"></i>' + m.pu + " purple</span></div>" +
+        ios.map(function (g) {
+          return '<button type="button" class="om-late-io" data-omio="' + esc(g.io) + '"><span class="om-io">' + esc(g.io) + "</span><b>" + esc(g.buyer) + "</b><span>" + g.n + " SKU" + (g.n > 1 ? "s" : "") + (g.od ? " · " + g.od + " overdue" : "") + (g.pu ? " · " + g.pu + " purple" : "") + "</span><span class=\"om-small\">ship " + omD(g.eff) + "</span>" + (g.issue ? '<span class="om-small om-issue-line">' + esc(g.issue) + "</span>" : "") + "</button>";
+        }).join("") + "</div>";
+    }).join("");
+    return h;
+  }
+
+  // ---- Shipments: by week of the effective ship date
+  function omWeekStart(iso) { var d = new Date(iso + "T00:00:00Z"); var k = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - k); return d.toISOString().slice(0, 10); }
+  function omShipHtml() {
+    var d = om.ship; if (!d) return "";
+    var today = d.today, wk0 = omWeekStart(today);
+    var groups = { late: [], none: [] }, weeks = [];
+    for (var i = 0; i < 10; i++) { var w = new Date(wk0 + "T00:00:00Z"); w.setUTCDate(w.getUTCDate() + i * 7); weeks.push(w.toISOString().slice(0, 10)); groups[weeks[i]] = []; }
+    var later = [];
+    d.ios.forEach(function (g) {
+      if (!g.eff) groups.none.push(g);
+      else if (g.eff < today) groups.late.push(g);
+      else { var ws = omWeekStart(g.eff); if (groups[ws]) groups[ws].push(g); else later.push(g); }
+    });
+    var card = function (g) {
+      var bookLate = g.bookDue && g.bookDue < today && !/yes|sent|done/i.test(g.booked + " " + g.bookStatus);
+      return '<button type="button" class="om-ship ' + (g.eff && g.eff < today ? "late" : bookLate ? "warn" : "") + '" data-omio="' + esc(g.io) + '"><span class="om-io">' + esc(g.io) + "</span><b>" + esc(g.buyer) + '</b><span class="om-small">' + esc(g.mer) + " · " + g.skus + " SKU" + (g.skus > 1 ? "s" : "") + " · " + Number(g.qty).toLocaleString("en-IN") + " pcs</span>" +
+        '<span class="om-ship-l"><span>🚢 ' + omD(g.eff) + "</span>" + (g.bookDue ? '<span class="' + (bookLate ? "om-red" : "") + '">📦 Book by ' + omD(g.bookDue) + (g.booked ? " · " + esc(g.booked) : "") + "</span>" : "") + (g.insp ? "<span>🔍 Inspection " + omD(g.insp) + "</span>" : "") + "</span>" +
+        (g.od ? '<span class="badge Overdue">' + g.od + " overdue SKUs</span>" : "") + "</button>";
+    };
+    var col = function (title, list, cls) { return '<div class="om-week ' + (cls || "") + '"><div class="om-week-h">' + title + ' <span class="om-small">' + list.length + "</span></div>" + (list.length ? list.sort(function (a, b) { return (a.eff || "").localeCompare(b.eff || ""); }).map(card).join("") : '<div class="om-small">—</div>') + "</div>"; };
+    var h = '<div class="om-note">Every open order by its ship date. Container booking is due 15 days before shipping; red = past the date and not booked.</div><div class="om-weeks">';
+    if (groups.late.length) h += col("Past ship date", groups.late, "late");
+    weeks.forEach(function (w, i) { var e = new Date(w + "T00:00:00Z"); e.setUTCDate(e.getUTCDate() + 6); h += col((i === 0 ? "This week · " : i === 1 ? "Next week · " : "") + omD(w) + " – " + omD(e.toISOString().slice(0, 10)), groups[w]); });
+    if (later.length) h += col("Later", later);
+    if (groups.none.length) h += col("No ship date", groups.none, "warn");
+    return h + "</div>";
+  }
+
+  // ---- Capacity: load vs capacity per department per week
+  function omCapHtml() {
+    var d = om.cap; if (!d || !d.rows.length) return '<div class="empty">No capacity data in the sheet yet.</div>';
+    var depts = {}, weeks = {};
+    d.rows.forEach(function (r) { (depts[r.dept] = depts[r.dept] || {})[r.week] = r; weeks[r.week] = 1; });
+    var wl = Object.keys(weeks).sort(), today = d.today;
+    var h = '<div class="om-note">Planned load against each department\'s weekly capacity (from the Capacity Alerts tab). Red = overloaded, green = spare.</div>' +
+      '<div class="om-table om-cap"><table><thead><tr><th>Department</th>' + wl.map(function (w) { return '<th class="' + (w <= today && today < new Date(Date.parse(w) + 7 * 864e5).toISOString().slice(0, 10) ? "om-now" : "") + '">' + omD(w) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+      Object.keys(depts).sort().map(function (dp) {
+        var set = d.settings.find(function (s) { return s.dept.toUpperCase() === dp.toUpperCase(); });
+        return "<tr><td><b>" + esc(dp) + "</b>" + (set ? '<div class="om-small">' + esc(set.head || "") + (set.week ? " · " + Number(set.week).toLocaleString("en-IN") + "/week" : "") + "</div>" : "") + "</td>" + wl.map(function (w) {
+          var r = depts[dp][w]; if (!r) return '<td class="om-cell">–</td>';
+          var pct = r.cap ? Math.round(r.load / r.cap * 100) : 0, over = r.gap > 0 || /OVER/i.test(r.status);
+          return '<td class="om-cell ' + (over ? "over" : pct >= 85 ? "near" : "spare") + '" title="Load ' + r.load + " / capacity " + r.cap + '"><b>' + pct + '%</b><span>' + Number(r.load).toLocaleString("en-IN") + "</span></td>";
+        }).join("") + "</tr>";
+      }).join("") + "</tbody></table></div>";
+    return h;
+  }
+
+  // ---- Pending material by order
+  function omMatHtml() {
+    var d = om.mat; if (!d) return "";
+    if (!d.items.length) return '<div class="empty">No pending raw material or job work for your open orders. 🎉</div>';
+    var by = {};
+    d.items.forEach(function (it) { (by[it.io] = by[it.io] || []).push(it); });
+    var info = {}; (d.ios || []).forEach(function (g) { info[g.io] = g; });
+    var keys = Object.keys(by).sort(function (a, b) { return ((info[a] || {}).eff || "9").localeCompare((info[b] || {}).eff || "9"); });
+    var h = '<div class="om-note">Yarn / fabric purchase POs and job work still not received, per order. Red = past its delivery date. Click an order to see the lines.</div>';
+    h += keys.map(function (io) {
+      var list = by[io], g = info[io] || {}, late = list.filter(function (x) { return x.late; }).length, open = !!om.open[io];
+      return '<div class="om-card"><button type="button" class="om-card-h om-toggle" data-omopen="' + esc(io) + '"><span class="om-io">' + esc(io) + "</span><b>" + esc(g.buyer || "") + '</b><span class="om-small">' + esc(g.mer || "") + " · ship " + omD(g.eff) + '</span><span style="margin-left:auto">' + list.length + " pending</span>" + (late ? '<span class="badge Overdue">' + late + " late</span>" : '<span class="badge Pending">on time</span>') + "<span>" + (open ? "▾" : "▸") + "</span></button>" +
+        (open ? '<div class="om-table"><table><thead><tr><th>Type</th><th>PO</th><th>Vendor</th><th>Item</th><th class="num">Ordered</th><th class="num">Received</th><th class="num">Balance</th><th>Due</th><th>Note</th></tr></thead><tbody>' +
+          list.sort(function (a, b) { return (a.del || "9").localeCompare(b.del || "9"); }).map(function (x) {
+            return '<tr class="' + (x.late ? "st-late" : "st-pend") + '"><td>' + esc(x.src) + (x.stage ? '<div class="om-small">' + esc(x.stage) + "</div>" : "") + '</td><td class="om-small">' + esc(x.po) + "</td><td>" + esc(x.vendor) + "</td><td>" + esc(x.item) + '</td><td class="num">' + x.qty + '</td><td class="num">' + x.rcvd + '</td><td class="num"><b>' + Math.round(x.bal * 100) / 100 + "</b></td><td>" + omD(x.del) + '</td><td class="om-small">' + esc(x.upd || "") + "</td></tr>";
+          }).join("") + "</tbody></table></div>" : "") + "</div>";
+    }).join("");
+    return h;
+  }
+
+  function omWire() {
+    var body = document.getElementById("omBody");
+    body.querySelectorAll("[data-omst]").forEach(function (b) { b.onclick = function () { om.f.st = om.f.st === b.dataset.omst ? "" : b.dataset.omst; omRender(); }; });
+    var fm = document.getElementById("omFMer"); if (fm) fm.onchange = function () { om.f.mer = fm.value; omRender(); };
+    var fq = document.getElementById("omFQ");
+    if (fq) fq.oninput = function () { om.f.q = fq.value; clearTimeout(om._t); om._t = setTimeout(function () { var p = fq.selectionStart; omRender(); var n = document.getElementById("omFQ"); if (n) { n.focus(); try { n.setSelectionRange(p, p); } catch (e) {} } }, 250); };
+    var ci = document.getElementById("omClearIo"); if (ci) ci.onclick = function () { om.f.io = ""; omRender(); };
+    body.querySelectorAll("tr[data-omkey]").forEach(function (tr) {
+      tr.onclick = function () { omOpen(tr.dataset.omkey); };
+      tr.onkeydown = function (e) { if (e.key === "Enter") omOpen(tr.dataset.omkey); };
+    });
+    body.querySelectorAll("[data-omio]").forEach(function (b) { b.onclick = function () { om.f = { mer: "", st: "", q: "", io: b.dataset.omio }; om.tab = "orders"; omLoad(); }; });
+    body.querySelectorAll("[data-omopen]").forEach(function (b) { b.onclick = function () { om.open[b.dataset.omopen] = !om.open[b.dataset.omopen]; omRender(); }; });
+    var ap = document.getElementById("omAlertPreview");
+    if (ap) ap.onclick = function () {
+      var box = document.getElementById("omAlertBox"); box.innerHTML = '<div class="om-note">Working it out…</div>';
+      omApi("plLatePreview").then(function (r) {
+        box.innerHTML = '<div class="om-card"><div class="om-card-h"><b>Tomorrow 9:45 · ' + r.people + ' people get the alert</b></div>' + (r.sent || []).map(function (p) { return '<div class="om-alert-row"><b>' + esc(p.name) + "</b><span>" + p.od + " overdue · " + p.pu + " purple · " + p.orders + " orders</span></div>"; }).join("") + "</div>";
+      }).catch(function (e) { box.innerHTML = '<div class="om-note">' + esc(e.message) + "</div>"; });
+    };
+  }
+
+  // ---- Update drawer (one SKU)
+  function omOpen(key) {
+    openModal('<div class="om-drawer"><div class="empty">Loading…</div></div>', "om-modal");
+    omApi("omRow", { key: key }).then(function (d) { omDrawer(d); }).catch(function (e) { var m = document.querySelector(".om-drawer"); if (m) m.innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; });
+  }
+  function omDrawer(d) {
+    var r = d.row, today = new Date().toISOString().slice(0, 10);
+    var risk = (om.boot && om.boot.riskOwners) || [];
+    if (r.risk && risk.indexOf(r.risk) === -1) risk = [r.risk].concat(risk);
+    var stages = d.stages.filter(function (s) { return s.applies; });
+    var h = '<div class="om-drawer"><div class="om-dh"><div><span class="om-io">' + esc(r.io) + "</span><h3>" + esc(r.sku) + '</h3><div class="om-small">' + esc(r.buyer) + " · " + esc(r.cat) + " · " + Number(r.qty).toLocaleString("en-IN") + " pcs" + (r.color ? " · " + esc(r.color) : "") + (r.size ? " · " + esc(r.size) : "") + " · " + esc(r.mer) + '</div></div><button type="button" class="btn secondary" id="omClose">Close</button></div>' +
+      '<div class="om-chips">' + omAutoPill(r.auto) + (r.od ? '<span class="badge Overdue">Overdue</span>' : "") + '<span class="om-pill">🚢 ' + omD(r.eff) + (r.rev ? " (revised)" : "") + '</span><span class="om-pill">Now: ' + esc(r.stage || "not started") + "</span></div>" +
+      (d.sheetLinked ? "" : '<div class="om-note">' + esc(r.mer || "This merchant") + " has no order sheet linked, so changes are saved in Workspace only.</div>") +
+      '<h4>1 · Stage dates (actual)</h4><div class="om-small" style="margin:-4px 0 8px">Fill the date a stage really started or finished. Planned dates are shown for comparison.</div>' +
+      '<div class="om-table om-stages"><table><thead><tr><th>Stage</th><th>Start plan</th><th>Started on</th><th>Finish plan</th><th>Finished on</th></tr></thead><tbody>' +
+      stages.map(function (s) {
+        var lateF = s.fp && !s.fa && s.fp < today, lateS = s.sp && !s.sa && s.sp < today;
+        return "<tr><td><b>" + esc(s.label) + "</b></td><td class=\"om-small " + (lateS ? "om-red" : "") + '">' + omD(s.sp) + "</td><td>" + (s.saF ? '<input type="date" max="' + today + '" data-omf="' + esc(s.saF) + '" data-old="' + esc(s.sa) + '" value="' + esc(s.sa) + '">' : "–") + '</td><td class="om-small ' + (lateF ? "om-red" : "") + '">' + omD(s.fp) + '</td><td><input type="date" max="' + today + '" data-omf="' + esc(s.faF) + '" data-old="' + esc(s.fa) + '" value="' + esc(s.fa) + '"></td></tr>';
+      }).join("") + "</tbody></table></div>" +
+      '<h4>2 · Issue &amp; recovery</h4><div class="om-grid2">' +
+      '<label>Risk owner<select id="omRisk"><option value=""></option>' + risk.map(function (x) { return "<option" + (x === r.risk ? " selected" : "") + ">" + esc(x) + "</option>"; }).join("") + "</select></label>" +
+      '<label>Recovery date<input type="date" id="omRecAt" value="' + esc(r.recAt) + '"></label></div>' +
+      '<label class="om-l">Issue<textarea id="omIssue" rows="2" placeholder="What is stopping this SKU">' + esc(r.issue) + "</textarea></label>" +
+      '<label class="om-l">Recovery plan<textarea id="omPlan" rows="2" placeholder="What will be done, by whom">' + esc(r.plan) + "</textarea></label>" +
+      '<label class="om-l">Remarks<input id="omRem" value="' + esc(r.rem) + '"></label>' +
+      '<label class="om-check"><input type="checkbox" id="omAllSkus"> Same issue for every open SKU of ' + esc(r.io) + "</label>" +
+      '<h4>3 · Revised ship date <span class="om-small">(whole IO ' + esc(r.io) + ")</span></h4><div class=\"om-grid2\">" +
+      '<label>New ship date<input type="date" id="omShip" min="' + today + '" value=""></label><label>Why<input id="omShipWhy" placeholder="e.g. buyer approval late"></label></div>' +
+      '<div class="modal-err" id="omErr"></div><div class="om-actions"><button type="button" class="btn secondary" id="omCancel">Cancel</button><button type="button" class="btn" id="omSave">Save changes</button></div>' +
+      '<h4>History</h4><div class="om-hist">' + (d.history.length ? d.history.map(function (x) {
+        var st = { written: ["✓ in sheet", "ok"], pending: ["waiting", "warn"], failed: ["not in sheet yet", "bad"], skipped: ["Workspace only", "mute"] }[x.sheet_status] || [x.sheet_status, "mute"];
+        return '<div class="om-hrow"><span class="om-small">' + new Date(x.created_at).toLocaleString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) + "</span><span><b>" + esc(x.field) + "</b>: " + esc(x.old_value || "–") + " → <b>" + esc(x.value || "(cleared)") + "</b> · " + esc(x.by_name || "") + '</span><span class="om-st ' + st[1] + '" title="' + esc(x.sheet_note || "") + '">' + st[0] + "</span></div>";
+      }).join("") : '<div class="om-small">No changes made in Workspace yet.</div>') + "</div></div>";
+    var m = document.querySelector(".om-drawer"); if (!m) return;
+    m.outerHTML = h;
+    document.getElementById("omClose").onclick = closeModal;
+    document.getElementById("omCancel").onclick = closeModal;
+    document.getElementById("omSave").onclick = function () { omSaveDrawer(d); };
+  }
+  function omSaveDrawer(d) {
+    var r = d.row, err = document.getElementById("omErr"), btn = document.getElementById("omSave");
+    var dates = {}, nDates = 0;
+    document.querySelectorAll(".om-drawer input[data-omf]").forEach(function (i) { if ((i.value || "") !== (i.dataset.old || "")) { dates[i.dataset.omf] = i.value || ""; nDates++; } });
+    var v = function (id) { var e = document.getElementById(id); return e ? e.value.trim() : ""; };
+    var rec = { riskOwner: v("omRisk"), issue: v("omIssue"), recoveryPlan: v("omPlan"), recoveryDate: v("omRecAt"), remarks: v("omRem"), allSkus: document.getElementById("omAllSkus").checked };
+    var recChanged = rec.allSkus || rec.riskOwner !== (r.risk || "") || rec.issue !== (r.issue || "") || rec.recoveryPlan !== (r.plan || "") || rec.recoveryDate !== (r.recAt || "") || rec.remarks !== (r.rem || "");
+    var ship = v("omShip") ? { revisedDate: v("omShip"), remark: v("omShipWhy") } : null;
+    if (ship && !ship.remark) { err.textContent = "Write why the ship date is changing."; return; }
+    if (!nDates && !recChanged && !ship) { err.textContent = "Nothing changed yet."; return; }
+    err.textContent = ""; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+    omApi("omSave", { key: r.k, dates: nDates ? dates : undefined, recovery: recChanged ? rec : undefined, ship: ship || undefined }).then(function (res) {
+      closeModal();
+      toast("Saved ✓ " + (res.sheet || []).join(" "));
+      om.orders = null; om.ship = null; om.mat = null; omLoad(true);
+    }).catch(function (e) { btn.disabled = false; btn.textContent = "Save changes"; err.textContent = e.message; });
+  }
+  function omCsv() {
+    var list = om.tab === "orders" || om.tab === "late" ? omFiltered() : [];
+    if (!list.length) { toast("Open the Orders tab to download the list."); return; }
+    var cols = [["IO", "io"], ["SKU", "sku"], ["Buyer", "buyer"], ["Buyer PO", "po"], ["Merchant", "mer"], ["Team leader", "tl"], ["Category", "cat"], ["Colour", "color"], ["Size", "size"], ["Qty", "qty"], ["Ship date", "eff"], ["Days left", "days"], ["Auto status", "auto"], ["Overdue", "od"], ["Current stage", "stage"], ["Next stage", "next"], ["Next stage date", "nextAt"], ["Risk owner", "risk"], ["Issue", "issue"], ["Recovery plan", "plan"], ["Recovery date", "recAt"]];
+    var q = function (x) { x = x === null || x === undefined ? "" : String(x === true ? "Yes" : x === false ? "" : x); return /[",\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; };
+    var csv = "﻿" + cols.map(function (c) { return c[0]; }).join(",") + "\n" + list.map(function (r) { return cols.map(function (c) { return q(r[c[1]]); }).join(","); }).join("\n");
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = "order-master-" + new Date().toLocaleDateString("en-CA") + ".csv"; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  (function () {
+    var tabs = document.getElementById("omTabs");
+    if (tabs) tabs.addEventListener("click", function (e) { var b = e.target.closest("button[data-omtab]"); if (!b) return; om.tab = b.dataset.omtab; omLoad(); });
+    var rb = document.getElementById("omRefreshBtn"); if (rb) rb.onclick = function () { om.orders = om.ship = om.cap = om.mat = null; omLoad(true); };
+    var cb = document.getElementById("omCsvBtn"); if (cb) cb.onclick = omCsv;
+  })();
+
+
+
+
+  // ---------- 📱 Tablet requests — built in ----------
+  // Ask for a tablet → IT (Priyanshu, Anand, Ritesh, IT dept, admins) hands one over → give it
+  // back → IT marks it received. The board shows who has each tablet now and who had it last.
+  // Server: "device-api" (Workspace session).
+  var DEVICE_FN_URL = SUPABASE_URL + "/functions/v1/device-api";
+  var tblt = { data: null, tab: "board", loading: false };
+  function tbltApi(action, payload) {
+    if (state.demo) return Promise.reject(new Error("Tablet requests are not available in demo mode."));
+    return fetch(DEVICE_FN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
+      body: JSON.stringify(Object.assign({ action: action, session_token: (state.doer || {}).session_token || "" }, payload || {}))
+    }).then(function (r) { return r.json().then(function (j) { if (!r.ok || !j.ok) throw new Error(j.error || ("HTTP " + r.status)); return j.data; }); });
+  }
+  var TBLT_ST = { requested: ["Waiting for IT", "Pending"], issued: ["With them", "Upcoming"], returning: ["Given back · IT to confirm", "Pending"], returned: ["Returned", "Completed"], rejected: ["Not approved", "Overdue"], cancelled: ["Cancelled", ""] };
+  function tbltD(iso) { if (!iso) return "–"; var d = new Date(String(iso).length === 10 ? iso + "T00:00:00" : iso); return isNaN(d) ? esc(iso) : d.toLocaleDateString(undefined, { day: "2-digit", month: "short" }) + (String(iso).length > 10 ? " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : ""); }
+  function tbltLoad(force) {
+    var body = document.getElementById("tbltBody"); if (!body) return;
+    if (tblt.data && !force) return tbltRender();
+    if (tblt.loading) return; tblt.loading = true;
+    body.innerHTML = '<div class="empty">Loading…</div>';
+    tbltApi("dvBoot").then(function (d) { tblt.data = d; tblt.loading = false; tbltRender(); })
+      .catch(function (e) { tblt.loading = false; body.innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; });
+  }
+  function tbltDevName(id) { var d = (tblt.data.devices || []).find(function (x) { return x.id === id; }); return d ? d.name : "Any tablet"; }
+  function tbltRender() {
+    var d = tblt.data, me = d.me, body = document.getElementById("tbltBody"), today = d.today;
+    document.querySelectorAll("#tbltTabs button").forEach(function (b) { b.classList.toggle("on", b.dataset.tblttab === tblt.tab); b.classList.toggle("hidden", b.dataset.tblttab === "requests" && !me.isIT); });
+    var who = document.getElementById("tbltItTeam"); if (who) who.textContent = "Requests go to: " + (d.itTeam || []).join(", ");
+    var live = function (l) { return l.status === "issued" || l.status === "returning"; };
+    var h = "";
+    if (tblt.tab === "board") {
+      if (!d.devices.length) h = '<div class="empty">No tablets added yet.' + (me.isIT ? ' <button class="btn" type="button" data-tbltact="adddev">+ Add a tablet</button>' : " The IT team will add them.") + "</div>";
+      else h = '<div class="tblt-grid">' + d.devices.map(function (dev) {
+        var cur = d.loans.find(function (l) { return l.device_id === dev.id && live(l); });
+        var last = d.loans.filter(function (l) { return l.device_id === dev.id && l.status === "returned"; }).sort(function (a, b) { return String(b.returned_at).localeCompare(String(a.returned_at)); })[0];
+        var late = cur && cur.need_till && cur.need_till < today;
+        return '<div class="tblt-card ' + (!dev.active ? "off" : cur ? (late ? "late" : "busy") : "free") + '"><div class="tblt-top"><b>📱 ' + esc(dev.name) + "</b>" +
+          '<span class="badge ' + (!dev.active ? "" : cur ? (late ? "Overdue" : "Upcoming") : "Completed") + '">' + (!dev.active ? "Not in use" : cur ? (late ? "Overdue" : "With " + esc(cur.requested_name.split(" - ")[0])) : "Available") + "</span></div>" +
+          (dev.serial ? '<div class="tblt-small">' + esc(dev.serial) + "</div>" : "") +
+          (cur ? '<div class="tblt-line">👤 <b>' + esc(cur.requested_name) + '</b></div><div class="tblt-small">Since ' + tbltD(cur.issued_at) + " · give back by " + tbltD(cur.need_till) + (cur.status === "returning" ? " · <b>given back, IT to confirm</b>" : "") + "</div>" : "") +
+          (last ? '<div class="tblt-small tblt-last">Last with: <b>' + esc(last.requested_name) + "</b> · returned " + tbltD(last.returned_at) + (last.condition && last.condition !== "Good" ? ' · <span class="tblt-red">' + esc(last.condition) + "</span>" : "") + "</div>" : (cur ? "" : '<div class="tblt-small tblt-last">Never handed out yet.</div>')) +
+          (me.isIT ? '<div class="tblt-acts">' + (cur ? '<button class="btn secondary" type="button" data-tbltact="receive" data-id="' + cur.id + '">✓ Received back</button>' : (dev.active ? '<button class="btn secondary" type="button" data-tbltact="give" data-dev="' + esc(dev.id) + '">Give to someone</button>' : "")) + '<button class="btn ghost" type="button" data-tbltact="editdev" data-dev="' + esc(dev.id) + '">Edit</button></div>' : "") +
+          '<details class="tblt-hist"><summary>History</summary>' + (d.loans.filter(function (l) { return l.device_id === dev.id && l.status !== "requested"; }).map(function (l) { return '<div class="tblt-small">' + tbltD(l.issued_at || l.created_at) + " → " + (l.returned_at ? tbltD(l.returned_at) : "now") + " · " + esc(l.requested_name) + (l.condition ? " · " + esc(l.condition) : "") + "</div>"; }).join("") || '<div class="tblt-small">No history yet.</div>') + "</details></div>";
+      }).join("") + (me.isIT ? '<button type="button" class="tblt-card tblt-add" data-tbltact="adddev">+ Add a tablet</button>' : "") + "</div>";
+    } else {
+      var list = tblt.tab === "mine" ? d.loans.filter(function (l) { return l.requested_by === me.doc_id; }) : d.loans;
+      if (tblt.tab === "requests") list = list.slice().sort(function (a, b) { var o = { requested: 0, returning: 1, issued: 2 }; return ((o[a.status] ?? 9) - (o[b.status] ?? 9)) || String(b.created_at).localeCompare(String(a.created_at)); });
+      h = list.length ? '<div class="om-table"><table><thead><tr><th>Who</th><th>Why</th><th>Needed</th><th>Tablet</th><th>Status</th><th></th></tr></thead><tbody>' + list.map(function (l) {
+        var st = TBLT_ST[l.status] || [l.status, ""], late = live(l) && l.need_till && l.need_till < today;
+        var acts = "";
+        if (l.status === "requested" && me.isIT) acts += '<button class="btn" type="button" data-tbltact="issue" data-id="' + l.id + '">Hand over</button><button class="btn secondary" type="button" data-tbltact="reject" data-id="' + l.id + '">Decline</button>';
+        if (l.status === "requested" && l.requested_by === me.doc_id) acts += '<button class="btn secondary" type="button" data-tbltact="cancel" data-id="' + l.id + '">Cancel</button>';
+        if (l.status === "issued" && l.requested_by === me.doc_id) acts += '<button class="btn" type="button" data-tbltact="giveback" data-id="' + l.id + '">I gave it back</button>';
+        if (live(l) && me.isIT) acts += '<button class="btn secondary" type="button" data-tbltact="receive" data-id="' + l.id + '">✓ Received back</button>';
+        return '<tr class="' + (late || l.status === "rejected" ? "st-late" : l.status === "returned" ? "st-done" : l.status === "cancelled" ? "" : "st-pend") + '"><td><b>' + esc(l.requested_name) + '</b><div class="tblt-small">asked ' + tbltD(l.created_at) + "</div></td><td>" + esc(l.purpose) + (l.note ? '<div class="tblt-small">' + esc(l.note) + "</div>" : "") + "</td><td>" + tbltD(l.need_from) + " – " + tbltD(l.need_till) + "</td><td>" + esc(l.device_id ? tbltDevName(l.device_id) : "Any") + (l.issued_by && l.status !== "rejected" ? '<div class="tblt-small">by ' + esc(l.issued_by) + "</div>" : "") + "</td>" +
+          '<td><span class="badge ' + (late ? "Overdue" : st[1]) + '">' + (late ? "Overdue" : st[0]) + "</span>" + (l.received_by ? '<div class="tblt-small">received by ' + esc(l.received_by) + " " + tbltD(l.returned_at) + "</div>" : "") + '</td><td class="row-actions">' + acts + "</td></tr>";
+      }).join("") + "</tbody></table></div>" : '<div class="empty">' + (tblt.tab === "mine" ? "You haven't asked for a tablet yet." : "No requests yet.") + "</div>";
+    }
+    body.innerHTML = h;
+    body.querySelectorAll("[data-tbltact]").forEach(function (b) { b.onclick = function () { tbltAction(b.dataset.tbltact, b.dataset.id, b.dataset.dev); }; });
+  }
+  function tbltDone(p, msg) {
+    return p.then(function (r) { closeModal(); toast((r && r.message) || msg || "Saved."); tblt.data = null; tbltLoad(true); })
+      .catch(function (e) { var er = document.getElementById("tbltErr"); if (er) er.textContent = e.message; else toast(e.message, true); var b = document.getElementById("tbltOk"); if (b) { b.disabled = false; b.textContent = "Save"; } });
+  }
+  function tbltModal(title, fields, onOk, okLabel) {
+    openModal("<h3>" + title + "</h3>" + fields + '<div class="modal-err" id="tbltErr"></div><div class="modal-actions"><button class="btn secondary" type="button" id="tbltCancelBtn">Cancel</button><button class="btn" type="button" id="tbltOk">' + (okLabel || "Save") + "</button></div>");
+    document.getElementById("tbltCancelBtn").onclick = closeModal;
+    document.getElementById("tbltOk").onclick = function () { var b = document.getElementById("tbltOk"); b.disabled = true; b.innerHTML = '<span class="spinner"></span>Saving…'; onOk(); };
+  }
+  function tbltVal(id) { var e = document.getElementById(id); return e ? (e.type === "checkbox" ? e.checked : e.value.trim()) : ""; }
+  function tbltDeviceOptions(sel) { return tblt.data.devices.filter(function (x) { return x.active; }).map(function (x) { var busy = tblt.data.loans.some(function (l) { return l.device_id === x.id && (l.status === "issued" || l.status === "returning"); }); return '<option value="' + esc(x.id) + '"' + (x.id === sel ? " selected" : "") + (busy ? " disabled" : "") + ">" + esc(x.name) + (busy ? " (with someone)" : "") + "</option>"; }).join(""); }
+  function tbltAction(act, id, devId) {
+    var today = tblt.data.today, l = tblt.data.loans.find(function (x) { return String(x.id) === String(id); });
+    if (act === "request") return tbltModal("📱 Ask for a tablet", '<div class="field"><label>Why do you need it?</label><textarea id="tbltPurpose" rows="2" placeholder="e.g. buyer visit presentation, fair, photoshoot"></textarea></div><div class="two"><div class="field"><label>From</label><input type="date" id="tbltFrom" value="' + today + '" min="' + today + '"></div><div class="field"><label>Give back by</label><input type="date" id="tbltTill" value="' + today + '" min="' + today + '"></div></div>' +
+      (tblt.data.devices.length ? '<div class="field"><label>Which tablet (optional)</label><select id="tbltDev"><option value="">Any free tablet</option>' + tbltDeviceOptions("") + "</select></div>" : ""),
+      function () { tbltDone(tbltApi("dvRequest", { purpose: tbltVal("tbltPurpose"), need_from: tbltVal("tbltFrom"), need_till: tbltVal("tbltTill"), device_id: tbltVal("tbltDev") })); }, "Send request");
+    if (act === "issue") return tbltModal("Hand over a tablet to " + esc(l.requested_name), '<div class="sub" style="margin:-4px 0 10px">' + esc(l.purpose) + "</div>" + '<div class="field"><label>Tablet</label><select id="tbltDev">' + tbltDeviceOptions(l.device_id) + '</select></div><div class="field"><label>Give back by</label><input type="date" id="tbltTill" value="' + esc(l.need_till || today) + '"></div><div class="field"><label>Note (optional)</label><input id="tbltNote" placeholder="e.g. with charger and cover"></div>',
+      function () { tbltDone(tbltApi("dvIssue", { id: id, device_id: tbltVal("tbltDev"), need_till: tbltVal("tbltTill"), note: tbltVal("tbltNote") })); }, "Hand over");
+    if (act === "reject") return tbltModal("Decline this request", '<div class="field"><label>Why</label><input id="tbltNote" placeholder="e.g. all tablets are out till Friday"></div>', function () { tbltDone(tbltApi("dvReject", { id: id, note: tbltVal("tbltNote") })); }, "Decline");
+    if (act === "cancel") return tbltModal("Cancel your request?", "", function () { tbltDone(tbltApi("dvCancel", { id: id })); }, "Yes, cancel");
+    if (act === "giveback") return tbltModal("Did you give the tablet back to IT?", '<div class="sub">The IT team will check it and confirm.</div>', function () { tbltDone(tbltApi("dvReturnAsk", { id: id })); }, "Yes, I gave it back");
+    if (act === "receive") return tbltModal("Tablet received back", '<div class="field"><label>Condition</label><select id="tbltCond"><option>Good</option><option>Damaged</option><option>Charger missing</option><option>Not working</option></select></div><div class="field"><label>Note (optional)</label><input id="tbltNote"></div>',
+      function () { tbltDone(tbltApi("dvReceive", { id: id, condition: tbltVal("tbltCond"), note: tbltVal("tbltNote") })); }, "Mark received");
+    if (act === "give") {
+      var people = (state.doers || []).slice().sort(function (a, b) { return (a.delegation_name || a.name || "").localeCompare(b.delegation_name || b.name || ""); });
+      return tbltModal("Give " + esc(tbltDevName(devId)) + " to someone", '<div class="field"><label>Person</label><select id="tbltWho"><option value=""></option>' + people.map(function (p) { return '<option value="' + esc(p.doc_id) + '">' + esc(p.delegation_name || p.name) + "</option>"; }).join("") + '</select></div><div class="field"><label>Why</label><input id="tbltPurpose" placeholder="e.g. buyer visit"></div><div class="field"><label>Give back by</label><input type="date" id="tbltTill" value="' + today + '"></div>',
+        function () { tbltDone(tbltApi("dvGiveDirect", { device_id: devId, doc_id: tbltVal("tbltWho"), purpose: tbltVal("tbltPurpose"), need_till: tbltVal("tbltTill") })); }, "Hand over");
+    }
+    if (act === "adddev" || act === "editdev") {
+      var dev = tblt.data.devices.find(function (x) { return x.id === devId; }) || { id: "", name: "", serial: "", notes: "", active: true };
+      return tbltModal(dev.id ? "Edit " + esc(dev.name) : "Add a tablet", '<div class="field"><label>Name</label><input id="tbltName" value="' + esc(dev.name) + '" placeholder="e.g. Tablet 1 (Samsung)"></div><div class="field"><label>Serial / IMEI (optional)</label><input id="tbltSerial" value="' + esc(dev.serial) + '"></div><div class="field"><label>Notes</label><input id="tbltNotes" value="' + esc(dev.notes) + '" placeholder="e.g. comes with cover + charger"></div><label class="om-check" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="tbltActive"' + (dev.active ? " checked" : "") + "> In use (can be handed out)</label>",
+        function () { tbltDone(tbltApi("dvDeviceSave", { id: dev.id, name: tbltVal("tbltName"), serial: tbltVal("tbltSerial"), notes: tbltVal("tbltNotes"), active: tbltVal("tbltActive") })); });
+    }
+  }
+  (function () {
+    var tabs = document.getElementById("tbltTabs");
+    if (tabs) tabs.addEventListener("click", function (e) { var b = e.target.closest("button[data-tblttab]"); if (!b || !tblt.data) return; tblt.tab = b.dataset.tblttab; tbltRender(); });
+    var rq = document.getElementById("tbltRequestBtn"); if (rq) rq.onclick = function () { if (!tblt.data) return; tbltAction("request"); };
+    var rf = document.getElementById("tbltRefreshBtn"); if (rf) rf.onclick = function () { tblt.data = null; tbltLoad(true); };
+  })();
+
   var FOLLOWUP_FN_URL = SUPABASE_URL + "/functions/v1/followup-api";
   var FU_KIND = {
     s_ack:      ["Not acknowledged", "red"],
@@ -8556,7 +9318,7 @@ window.RCBuyerUI = (function () {
     }
   });
 
-  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "complaints", "spareparts", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup", "mktportal"];
+  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "complaints", "spareparts", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup", "mktportal", "ordermaster", "devices"];
   // Per-module choice of whether an external-URL-backed module opens in a
   // real new browser tab ("redirect") or is framed inside Workspace
   // ("embed") — Settings → Modules → Module Open Behavior for the 3
@@ -8591,6 +9353,7 @@ window.RCBuyerUI = (function () {
     if (view === "customModule" && state.activeCustomModuleKey === MERCHANT_MODULE_KEY) view = "merchant";
     if (view === "merchant" && !(state.doer && (state.doer.is_admin || state.merchantAccess))) { toast("You don't have a Merchant Dashboard. Ask your admin."); return; }
     if (view === "fairleads" && !canSeeFairLeads()) { toast("Fair Leads isn't turned on for you. Ask your admin."); return; }
+    if (view === "ordermaster" && !state.omAccess) { toast("Order Master is for merchants, team leaders and admins. Ask your admin."); return; }
     if (view === "followup" && !canManageModule("followup")) { toast("You don't have access to the Follow-up report. Ask your admin."); return; }
     if (view === "mktportal" && !canSeeMktPortal()) { toast("This module isn't available for you."); return; }
     if (view === "spareparts" && !canManageModule("spareparts")) { toast("You don't have access to Spare Parts. Ask your admin (Module access)."); return; }
@@ -8632,6 +9395,8 @@ window.RCBuyerUI = (function () {
     if (view === "mktportal") loadMktPortalFrame();
     if (view === "merchant") loadMerchantFrame();
     if (view === "followup") loadFollowup();
+    if (view === "ordermaster") omLoad();
+    if (view === "devices") tbltLoad();
     if (view === "samplingfms" || view === "ppc") fuToggleButtons();
     if (view === "samplingfms") loadSamplingFmsFrame();
     if (view === "ppc") loadPpcFrame();
@@ -9117,6 +9882,10 @@ window.RCBuyerUI = (function () {
       modules = modules.filter(function (m) { return m.key !== "merchant" && m.customModuleKey !== "cm_merchant-dashboard_4dtmo"; });
       if (state.doer && (state.doer.is_admin || state.merchantAccess)) { var mdDef = allModuleDefs.find(function (m) { return m.key === "merchant"; }); if (mdDef) modules.push(mdDef); }
       // Follow-up report: admins + people given it in Module access (Ruchika).
+      // Order Master: merchants, team leaders and admins (decided by planning-api).
+      modules = modules.filter(function (m) { return m.key !== "ordermaster" && m.key !== "devices"; });
+      if (state.doer && !state.demo) { var tbltDef = allModuleDefs.find(function (m) { return m.key === "devices"; }); if (tbltDef) modules.push(tbltDef); }
+      if (state.omAccess) { var omDef = allModuleDefs.find(function (m) { return m.key === "ordermaster"; }); if (omDef) modules.push(omDef); }
       modules = modules.filter(function (m) { return m.key !== "followup"; });
       if (canManageModule("followup")) { var fuDef = allModuleDefs.find(function (m) { return m.key === "followup"; }); if (fuDef) modules.push(fuDef); }
       // Spare Parts: admins + people given it in Module access.
@@ -9606,12 +10375,13 @@ window.RCBuyerUI = (function () {
         var rShort = remarkSrc.length > 160 ? remarkSrc.slice(0, 160) + "…" : remarkSrc;
         remarkPreview = '<div class="task-remark-preview">💬 ' + esc(rShort) + "</div>";
       }
-      return "<tr>" +
+      var stCls = t.status === "Completed" ? "st-done" : overdue ? "st-late" : t.status === "Pending" ? "st-pend" : "";
+      return '<tr class="' + stCls + '">' +
         '<td class="task-text"><b>' + esc(t.task) + '</b>' + taskAttachmentsHtml(t) + '<div style="color:var(--sub);font-size:11px;margin-top:3px">' + esc(t.id) + "</div>" + remarkPreview + "</td>" +
         "<td>" + esc(t.assignee) + "</td>" +
         "<td>" + esc(t.delegated_by) + "</td>" +
         '<td class="' + (overdue ? "overdue" : "") + '">' + fmtDate(t.deadline) + (overdue ? " ⚠" : "") + "</td>" +
-        '<td><span class="badge ' + esc(t.status) + '">' + esc(t.status) + "</span></td>" +
+        '<td><span class="badge ' + (overdue ? "Overdue" : esc(t.status)) + '">' + (overdue ? "Overdue" : esc(t.status)) + "</span></td>" +
         // Completion time wasn't visible anywhere except the "View Proof" modal —
         // shown right in the row now so it doesn't take an extra click to see
         // when a task actually got finished, and whether that was late.
@@ -9797,9 +10567,10 @@ window.RCBuyerUI = (function () {
       var actions = "";
       if (t.status === "Pending" && isMine) actions += '<button class="btn" data-act="complete" data-id="' + esc(t.id) + '">Complete</button>';
       if (t.status === "Pending" && !isMine && canManage) actions += '<button class="btn secondary" data-act="admincomplete" data-id="' + esc(t.id) + '">Mark Done</button>';
-      return "<tr><td class=\"task-text\"><b>" + esc(t.task) + "</b></td><td>" + esc(t.assignee) + "</td><td>" + esc(t.delegated_by) + "</td>" +
+      var stCls = t.status === "Completed" ? "st-done" : overdue ? "st-late" : t.status === "Pending" ? "st-pend" : "";
+      return '<tr class="' + stCls + '"><td class="task-text"><b>' + esc(t.task) + "</b></td><td>" + esc(t.assignee) + "</td><td>" + esc(t.delegated_by) + "</td>" +
         '<td class="' + (overdue ? "overdue" : "") + '">' + fmtDate(t.deadline) + (overdue ? " ⚠" : "") + "</td>" +
-        '<td><span class="badge ' + esc(t.status) + '">' + esc(t.status) + "</span></td>" +
+        '<td><span class="badge ' + (overdue ? "Overdue" : esc(t.status)) + '">' + (overdue ? "Overdue" : esc(t.status)) + "</span></td>" +
         '<td class="row-actions">' + actions + "</td></tr>";
     }).join("");
     wrap.innerHTML = "<table><thead><tr><th>Task</th><th>Assignee</th><th>Assigned By</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead><tbody>" + rows + "</tbody></table>";
@@ -12299,10 +13070,26 @@ window.RCBuyerUI = (function () {
   }
 
   // ---------- Buyer Visit Intimation ----------
+  // Every buyer visit: these people always attend and are always told (EA Neha, designers Jai Mala
+  // and Anamika, Rajesh in the showroom, Preeti at reception). Change the list here.
+  var BV_MUST_ATTEND = [
+    { doc_id: "neha_chaudhary_ea", name: "NEHA CHAUDHARY - EA" },
+    { doc_id: "jai_mala_sr_designer", name: "JAI MALA - Sr. Designer" },
+    { doc_id: "anamika_kumari_designer", name: "ANAMIKA KUMARI - Designer" },
+    { doc_id: "rajesh_kumar_showroom", name: "RAJESH KUMAR - Showroom" },
+    { doc_id: "EMP158FXY", name: "Preeti - Reception" }
+  ];
+  function bvMustIds() { return BV_MUST_ATTEND.map(function (m) { return m.doc_id; }); }
   function renderBvAttendeePicker() {
     var wrap = document.getElementById("bvAttendeePicker");
     if (!wrap) return;
-    var others = (state.doers || []).filter(function (d) { return d.doc_id !== state.doer.doc_id; })
+    var must = BV_MUST_ATTEND.filter(function (m) { return !state.doer || m.doc_id !== state.doer.doc_id; }).map(function (m) {
+      var d = (state.doers || []).find(function (x) { return x.doc_id === m.doc_id; });
+      return { doc_id: m.doc_id, name: d ? (d.delegation_name || d.name) : m.name };
+    });
+    var mustHtml = must.length ? '<div class="bv-picker-group"><div class="bv-picker-group-label">Always attending (added to every visit)</div><div class="bv-picker-chips">' +
+      must.map(function (m) { return '<label class="bv-chip checked bv-must" title="Always attends buyer visits"><input type="checkbox" class="bv-attendee-cb" data-doc-id="' + esc(m.doc_id) + '" data-name="' + esc(m.name) + '" checked disabled /><span class="bv-chip-dot">✓</span>' + esc(m.name) + '<span class="bv-lock">🔒</span></label>'; }).join("") + "</div></div>" : "";
+    var others = (state.doers || []).filter(function (d) { return d.doc_id !== state.doer.doc_id && bvMustIds().indexOf(d.doc_id) === -1; })
       .sort(function (a, b) { return (a.delegation_name || a.name || "").localeCompare(b.delegation_name || b.name || ""); });
     if (!others.length) {
       wrap.innerHTML = '<div class="bv-picker-empty">No other staff to add.</div>';
@@ -12331,13 +13118,13 @@ window.RCBuyerUI = (function () {
     wrap.innerHTML =
       '<div class="bv-picker-search"><input type="text" id="bvAttendeeSearch" placeholder="Search staff…" /></div>' +
       '<div class="bv-picker-count" id="bvAttendeeCount"></div>' +
-      '<div class="bv-picker-list" id="bvAttendeePickerList">' + groupsHtml +
+      '<div class="bv-picker-list" id="bvAttendeePickerList">' + mustHtml + groupsHtml +
       '<div class="bv-picker-noresults hidden">No staff match your search.</div></div>';
 
     function updateCount() {
-      var n = wrap.querySelectorAll(".bv-attendee-cb:checked").length;
+      var n = wrap.querySelectorAll(".bv-attendee-cb:checked:not(:disabled)").length;
       var countEl = document.getElementById("bvAttendeeCount");
-      if (countEl) countEl.textContent = n ? n + " selected" : "";
+      if (countEl) countEl.textContent = (n ? n + " more selected · " : "") + wrap.querySelectorAll(".bv-must").length + " always attending";
     }
     wrap.addEventListener("change", function (e) {
       if (!e.target.classList || !e.target.classList.contains("bv-attendee-cb")) return;
@@ -12376,12 +13163,15 @@ window.RCBuyerUI = (function () {
     var rows = list.map(function (v) {
       var d = new Date(v.visit_at);
       var upcoming = d.getTime() >= now;
+      var isToday = d.toDateString() === new Date(now).toDateString();
+      var soon = upcoming && d.getTime() - now < 2 * 86400000;
+      var bvSt = isToday ? ["st-today", "Today", "Today"] : !upcoming ? ["st-done", "Completed", "Completed"] : soon ? ["st-pend", "Pending", "Upcoming"] : ["st-next", "Upcoming", "Upcoming"];
       var attendeeNames = (v.attendees || []).map(function (a) { return esc(a.name); }).join(", ");
-      return "<tr><td>" + esc(v.buyer_name || "—") + "</td>" +
+      return '<tr class="' + bvSt[0] + '"><td>' + esc(v.buyer_name || "—") + "</td>" +
         "<td>" + d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + "</td>" +
         '<td style="text-align:center">' + esc(v.num_persons) + "</td>" +
         "<td>" + esc(v.created_by || "—") + (attendeeNames ? ' <span class="sub">+ ' + attendeeNames + "</span>" : "") + "</td>" +
-        '<td><span class="module-badge ' + (upcoming ? "live" : "soon") + '">' + (upcoming ? "Upcoming" : "Past") + "</span></td>" +
+        '<td><span class="badge ' + bvSt[1] + '">' + bvSt[2] + "</span></td>" +
         '<td><button class="btn secondary bv-add-attendee-btn" data-id="' + esc(v.id) + '" style="padding:5px 10px;font-size:12px">+ Add</button>' + admBtns("buyervisit", v) + '</td></tr>';
     }).join("");
     wrap.innerHTML = "<table><thead><tr><th>Buyer</th><th>When</th><th>Persons</th><th>Attending</th><th>Status</th><th></th></tr></thead><tbody>" + rows + "</tbody></table>";
@@ -12438,6 +13228,10 @@ window.RCBuyerUI = (function () {
       var visitAt = new Date(date + "T" + time).toISOString();
       var attendees = Array.from(document.querySelectorAll(".bv-attendee-cb")).filter(function (cb) { return cb.checked; })
         .map(function (cb) { return { doc_id: cb.dataset.docId, name: cb.dataset.name }; });
+      BV_MUST_ATTEND.forEach(function (m) {
+        if (state.doer && m.doc_id === state.doer.doc_id) return;
+        if (!attendees.some(function (a) { return a.doc_id === m.doc_id; })) attendees.push({ doc_id: m.doc_id, name: m.name });
+      });
       bvSaveBtn.disabled = true; bvSaveBtn.innerHTML = '<span class="spinner"></span>Logging…';
       api("createBuyerVisit", { visit_at: visitAt, num_persons: persons, created_by: myKey(), buyer_name: buyerName, attendees: attendees }).then(function (res) {
         notifyBuyerVisitAttendees(res && res.id, buyerName, visitAt, attendees);
@@ -12714,12 +13508,15 @@ window.RCBuyerUI = (function () {
     var rows = list.map(function (v) {
       var d = new Date(v.visit_at);
       var upcoming = d.getTime() >= now;
-      return "<tr><td>" + esc(v.visitor_name || "—") + "</td>" +
+      var isToday = d.toDateString() === new Date(now).toDateString();
+      var soon = upcoming && d.getTime() - now < 2 * 86400000;
+      var bvSt = isToday ? ["st-today", "Today", "Today"] : !upcoming ? ["st-done", "Completed", "Completed"] : soon ? ["st-pend", "Pending", "Upcoming"] : ["st-next", "Upcoming", "Upcoming"];
+      return '<tr class="' + bvSt[0] + '"><td>' + esc(v.visitor_name || "—") + "</td>" +
         "<td>" + esc(v.buyer_name || "—") + "</td>" +
         "<td>" + d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + "</td>" +
         "<td>" + esc(v.reason || "—") + "</td>" +
         "<td>" + esc(v.created_by || "—") + "</td>" +
-        '<td><span class="module-badge ' + (upcoming ? "live" : "soon") + '">' + (upcoming ? "Upcoming" : "Past") + "</span></td>" + (state.doer.is_admin ? "<td>" + admBtns("inspection", v) + "</td>" : "") + "</tr>";
+        '<td><span class="badge ' + bvSt[1] + '">' + bvSt[2] + "</span></td>" + (state.doer.is_admin ? "<td>" + admBtns("inspection", v) + "</td>" : "") + "</tr>";
     }).join("");
     wrap.innerHTML = "<table><thead><tr><th>Person</th><th>Buyer</th><th>When</th><th>Reason</th><th>Logged by</th><th>Status</th>" + (state.doer.is_admin ? "<th></th>" : "") + "</tr></thead><tbody>" + rows + "</tbody></table>";
   }
