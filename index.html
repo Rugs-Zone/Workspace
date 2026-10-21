@@ -3902,12 +3902,13 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
         <button class="embed-back-btn" data-goto="modules" style="margin:0">← Back to Workspace</button>
         <div style="flex:1;min-width:200px">
           <h2 style="margin:0">🛠️ Developer</h2>
-          <div class="om-sub" id="dhSub">CEO agent + 6 helper agents, and publishing the Workspace to GitHub.</div>
+          <div class="om-sub" id="dhSub">CEO agent, 6 helper agents and the Follow-up agent — plus publishing the Workspace to GitHub.</div>
         </div>
         <button class="btn secondary" type="button" id="dhRefreshBtn">↻ Refresh</button>
       </div>
       <div class="om-tabs" id="dhTabs">
         <button type="button" data-dhtab="inbox" class="on">👔 CEO inbox</button>
+        <button type="button" data-dhtab="followups">🤝 Follow-ups</button>
         <button type="button" data-dhtab="agents">🤖 Agents</button>
         <button type="button" data-dhtab="publish" class="hidden dh-devonly">🚀 Publish</button>
         <button type="button" data-dhtab="edit" class="hidden dh-devonly">✏️ Quick edit</button>
@@ -8657,6 +8658,12 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   function dhLoad(force) {
     var body = document.getElementById("dhBody"); if (!body) return;
     document.querySelectorAll("#dhTabs .dh-devonly").forEach(function (b) { b.classList.toggle("hidden", !dhIsDev()); });
+    if (dh.tab === "followups" && (force || !dh.fu)) {
+      if (dh.loading) return; dh.loading = true;
+      body.innerHTML = '<div class="empty"><span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:var(--brand)"></span> Loading…</div>';
+      ahApi("ahFollowups").then(function (d) { dh.loading = false; dh.fu = d; dhRender(); }).catch(function (e) { dh.loading = false; body.innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; });
+      return;
+    }
     var needAgents = (dh.tab === "inbox" || dh.tab === "agents") && (force || !dh.boot);
     var needGh = ["publish", "edit", "history", "github"].indexOf(dh.tab) >= 0 && (force || !dh.gh);
     if (!needAgents && !needGh) { dhRender(); return; }
@@ -8675,6 +8682,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     var h = "";
     if (dh.tab === "inbox") h = dhInbox();
     else if (dh.tab === "agents") h = dhAgents();
+    else if (dh.tab === "followups") h = dhFollowTab();
     else if (dh.tab === "publish") h = dhPublishTab();
     else if (dh.tab === "edit") h = dhEditTab();
     else if (dh.tab === "history") h = '<div id="dhHist"><div class="empty">Loading history…</div></div>';
@@ -8748,6 +8756,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     var open = b.findings.filter(function (f) { return f.status === "open"; });
     var JOB = { orders: "Overdue SKUs per merchant, Order Master changes that did not reach the sheets, dispatch pace vs the +5% target.", sampling: "Client complaints past due, sampling costing / shade-card steps stuck over 3 days, fair leads not followed up.", quality: "Lots past the time limit (gate 2 h, DQA 2 h, 4-point 48 h), lots without a lot number.", purchase: "Purchase lines past delivery date by vendor, late job-work / RM, spare parts below minimum.", people: "Overdue delegation tasks, leave and reimbursements waiting, tablets not returned.", it: "Sheet sync stopped, failed scheduled jobs / server calls, Sheet Bridge offline, open tech issues, stuck emails." };
     var h = '<div class="dh-agents"><div class="dh-agent ceo"><h4>👔 CEO agent</h4><div class="om-small">Collects every finding, sends urgent alerts and a 10 am daily brief to the approvers, and sends nothing to staff until an approver says yes.</div><span class="om-small">Open issues: <b>' + open.length + "</b> · last brief " + esc(b.brief ? dhAgo(b.brief.made_at) : "–") + "</span></div>" +
+      '<div class="dh-agent ceo"><h4>🤝 Follow-up agent</h4><div class="om-small">Works for the merchants: every day at 10 am it chases the production person for each late PPC / Order Master stage, and tells the merchant what was chased. Closes by itself when the actual date is filled.</div><button class="btn secondary" type="button" data-dhgo="followups" style="margin-top:8px;padding:5px 10px;font-size:12px">Open dashboard</button></div>' +
       b.agents.map(function (a) {
         var n = open.filter(function (f) { return f.agent === a.id; }), hi = n.filter(function (f) { return f.severity === "high"; }).length, l = a.last;
         return '<div class="dh-agent"><h4>' + a.icon + " " + esc(a.name) + '</h4><div class="om-small">' + esc(JOB[a.id] || "") + '</div><span class="om-small">Open: <b>' + n.length + "</b>" + (hi ? ' · <b style="color:#dc2626">' + hi + " urgent</b>" : "") + " · last run " + esc(l ? dhAgo(l.started_at) : "never") + (l && l.error ? ' · <b style="color:#dc2626">error: ' + esc(l.error) + "</b>" : "") + '</span><button class="btn secondary" type="button" data-dhrun="' + a.id + '" style="margin-top:8px;padding:5px 10px;font-size:12px">▶ Run now</button></div>';
@@ -8894,7 +8903,73 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       '<li>If GitHub says the organisation must approve it, the rugs-zone owner approves it under Organisation → Settings → Personal access tokens.</li></ol></div></div>';
   }
 
+
+  // ---- 🤝 Follow-up agent dashboard (admins see what the agent chased for the merchants)
+  function dhFollowTab() {
+    var d = dh.fu; if (!d) return '<div class="empty">Loading…</div>';
+    var f = dh.fuf || (dh.fuf = { mer: "", pp: "", q: "" });
+    var open = d.open, closed = d.closed;
+    var linked = open.filter(function (x) { return x.prod_doc; }), notLinked = open.filter(function (x) { return !x.prod_doc; });
+    var mers = {}, pps = {};
+    open.forEach(function (x) {
+      var m = mers[x.merchant || "–"] || (mers[x.merchant || "–"] = { n: 0, linked: 0, max: 0, done: 0 }); m.n++; if (x.prod_doc) m.linked++; m.max = Math.max(m.max, x.days_late || 0);
+      var k = x.prod_person || "(blank)", p = pps[k] || (pps[k] = { n: 0, max: 0, doc: x.prod_doc, done: 0 }); p.n++; p.max = Math.max(p.max, x.days_late || 0);
+    });
+    closed.forEach(function (x) { if (mers[x.merchant || "–"]) mers[x.merchant || "–"].done++; else mers[x.merchant || "–"] = { n: 0, linked: 0, max: 0, done: 1 }; var k = x.prod_person || "(blank)"; if (pps[k]) pps[k].done++; else pps[k] = { n: 0, max: 0, doc: null, done: 1 }; });
+    var pname = function (id) { var p = (d.people || []).find(function (x) { return x.doc_id === id; }); return p ? p.name : id; };
+    var avg = open.length ? Math.round(open.reduce(function (s, x) { return s + (x.days_late || 0); }, 0) / open.length) : 0;
+    var h = '<div class="dh-brief"><div class="om-dh"><div><h3>🤝 Follow-up agent</h3><div class="om-small">Every working day at 10 am it reads PPC / Order Master stage dates and chases the production person for each late stage — <b>so the merchants don\'t have to</b>. When the actual date is filled, the follow-up closes by itself.</div></div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><label class="om-small" style="display:flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" id="dhFuAuto"' + (d.auto ? " checked" : "") + '> Send automatically every day</label><button class="btn" type="button" id="dhFuSend">📨 Send today\'s follow-ups now</button></div></div>' +
+      '<p class="om-small" style="margin:6px 0 0">' + (d.auto ? "Automatic send: every working day at about 10 am" + (d.lastDay ? " · last daily run <b>" + esc(d.lastDay) + "</b>" : "") : "<b>Automatic send is paused</b> — use the button to send") + "</p></div>";
+    h += '<div class="dh-kpis">' +
+      '<div class="dh-kpi"><span>Pending stage updates</span><b>' + open.length + "</b></div>" +
+      '<div class="dh-kpi"><span>Chased by the agent</span><b style="color:#16a34a">' + linked.length + "</b></div>" +
+      '<div class="dh-kpi bad"><span>Name not linked</span><b>' + notLinked.length + "</b></div>" +
+      '<div class="dh-kpi"><span>Answered (last 7 days)</span><b style="color:#16a34a">' + closed.length + "</b></div>" +
+      '<div class="dh-kpi"><span>Average days late</span><b>' + avg + "</b></div>" +
+      '<div class="dh-kpi"><span>Merchants helped</span><b>' + Object.keys(mers).filter(function (k) { return mers[k].linked; }).length + "</b></div></div>";
+    var un = Object.keys(pps).filter(function (k) { return !pps[k].doc && pps[k].n; });
+    if (un.length) h += '<div class="dsp-card"><h3 style="margin:0 0 4px;font-size:15px">🔗 Link production names to people</h3><div class="om-sub">The sheet column "Concern Production Merchant" has these names. Pick who should get their follow-ups (once). Until then the merchant is told to check them.</div>' +
+      un.map(function (k) {
+        return '<div class="om-alert-row" style="align-items:center"><span><b>' + esc(k) + '</b> <span class="om-small">· ' + pps[k].n + " pending · up to " + pps[k].max + ' days late</span></span><span style="display:flex;gap:6px;align-items:center"><select data-fumapname="' + esc(k) + '" style="max-width:260px"><option value="">— pick a person —</option>' +
+          (d.people || []).map(function (p) { return '<option value="' + esc(p.doc_id) + '">' + esc(p.name) + (p.dept ? " · " + esc(p.dept) : "") + "</option>"; }).join("") + '<option value="-">Nobody (keep with merchant)</option></select></span></div>';
+      }).join("") + "</div>";
+    var merRows = Object.keys(mers).sort(function (a, b) { return mers[b].n - mers[a].n; }).map(function (k) { var m = mers[k]; return '<tr class="om-row" data-fumer="' + esc(k) + '"><td>' + esc(k) + '</td><td class="num"><b>' + m.n + '</b></td><td class="num" style="color:#16a34a">' + m.linked + '</td><td class="num">' + (m.n - m.linked) + '</td><td class="num">' + m.max + 'd</td><td class="num" style="color:#16a34a">' + m.done + "</td></tr>"; }).join("");
+    var ppRows = Object.keys(pps).sort(function (a, b) { return pps[b].n - pps[a].n; }).map(function (k) { var p = pps[k]; return '<tr class="om-row" data-fupp="' + esc(k) + '"><td>' + esc(k) + "</td><td>" + (p.doc ? '<span class="om-st ok">' + esc(pname(p.doc)) + "</span>" : '<span class="om-st bad">not linked</span>') + '</td><td class="num"><b>' + p.n + '</b></td><td class="num">' + p.max + 'd</td><td class="num" style="color:#16a34a">' + p.done + "</td></tr>"; }).join("");
+    h += '<div class="dsp-grid2"><div class="dsp-card"><h3 style="margin:0 0 6px;font-size:15px">🧑‍💼 By merchant (work taken off them)</h3><div class="om-table"><table><thead><tr><th>Merchant</th><th class="num">Pending</th><th class="num">Agent chases</th><th class="num">Merchant checks</th><th class="num">Oldest</th><th class="num">Answered 7d</th></tr></thead><tbody>' + (merRows || '<tr><td colspan="6" class="om-small">Nothing pending</td></tr>') + "</tbody></table></div></div>" +
+      '<div class="dsp-card"><h3 style="margin:0 0 6px;font-size:15px">🏭 By production person</h3><div class="om-table"><table><thead><tr><th>Name in sheet</th><th>Goes to</th><th class="num">Pending</th><th class="num">Oldest</th><th class="num">Answered 7d</th></tr></thead><tbody>' + (ppRows || '<tr><td colspan="5" class="om-small">Nothing pending</td></tr>') + "</tbody></table></div></div></div>";
+    var q = f.q.trim().toUpperCase();
+    var list = open.filter(function (x) { return (!f.mer || x.merchant === f.mer) && (!f.pp || (x.prod_person || "(blank)") === f.pp) && (!q || (x.io + " " + x.sku + " " + x.buyer + " " + x.stage).toUpperCase().indexOf(q) >= 0); }).sort(function (a, b) { return (b.days_late || 0) - (a.days_late || 0); });
+    h += '<div class="dsp-card"><div class="om-bar" style="margin:0 0 8px"><b style="font-size:15px">📋 Pending stage updates</b>' + (f.mer ? '<span class="dh-chip">Merchant: ' + esc(f.mer) + ' <button type="button" data-fuclr="mer">✕</button></span>' : "") + (f.pp ? '<span class="dh-chip">Production: ' + esc(f.pp) + ' <button type="button" data-fuclr="pp">✕</button></span>' : "") +
+      '<input type="search" id="dhFuQ" placeholder="Search IO, SKU, buyer, stage…" value="' + esc(f.q) + '" style="flex:1;min-width:180px"></div>' +
+      '<div class="om-table"><table><thead><tr><th>IO / SKU</th><th>Buyer</th><th>Merchant</th><th>Stage</th><th>Planned</th><th class="num">Late</th><th>Ship</th><th>Chased</th></tr></thead><tbody>' +
+      (list.slice(0, 300).map(function (x) { return "<tr" + ((x.days_late || 0) > 7 ? ' class="st-late"' : "") + "><td>" + esc(x.sku) + '<span class="om-io">' + esc(x.io) + "</span></td><td>" + esc(x.buyer) + "</td><td>" + esc(x.merchant) + "</td><td>" + esc(x.stage) + ' <span class="om-small">' + esc(x.kind) + "</span></td><td>" + esc(x.planned ? omD(x.planned) : "–") + '</td><td class="num"><b>' + (x.days_late || 0) + "d</b></td><td>" + esc(x.ship ? omD(x.ship) : "–") + "</td><td>" + (x.prod_doc ? '<span class="om-st ok">' + esc(x.prod_person) + (x.sent_count ? " · " + x.sent_count + "×" : " · not yet") + "</span>" : '<span class="om-st warn">merchant</span>') + "</td></tr>"; }).join("") || '<tr><td colspan="8" class="om-small">Nothing here 🎉</td></tr>') +
+      "</tbody></table></div>" + (list.length > 300 ? '<p class="om-small">Showing 300 of ' + list.length + "</p>" : "") + "</div>";
+    return h;
+  }
+  function dhWireFollow(root) {
+    var d = dh.fu; if (!d) return;
+    var el;
+    if ((el = document.getElementById("dhFuAuto"))) el.onchange = function () { var on = this.checked; ahApi("ahFollowupAuto", { on: on }).then(function () { d.auto = on; toast(on ? "Follow-ups will go out every day at 10 am" : "Automatic follow-ups paused"); }).catch(function (e) { toast(e.message, true); }); };
+    if ((el = document.getElementById("dhFuSend"))) el.onclick = function () {
+      var b = this; if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Tap again — sends to production people + merchants"; return; }
+      b.disabled = true; b.textContent = "Sending…";
+      ahApi("ahFollowupRun").then(function (r) { toast("Sent to " + r.people + " production people and " + r.merchants + " merchants"); dh.fu = null; dhLoad(true); }).catch(function (e) { b.disabled = false; b.textContent = "📨 Send today's follow-ups now"; toast(e.message, true); });
+    };
+    root.querySelectorAll("[data-fumapname]").forEach(function (sel) {
+      sel.onchange = function () {
+        if (!sel.value) return; sel.disabled = true;
+        ahApi("ahFollowupMap", { name: sel.dataset.fumapname, doc_id: sel.value }).then(function (r) { dh.fu = r; toast("Linked"); dhRender(); }).catch(function (e) { sel.disabled = false; toast(e.message, true); });
+      };
+    });
+    root.querySelectorAll("[data-fumer]").forEach(function (x) { x.onclick = function () { dh.fuf.mer = x.dataset.fumer; dhRender(); }; });
+    root.querySelectorAll("[data-fupp]").forEach(function (x) { x.onclick = function () { dh.fuf.pp = x.dataset.fupp; dhRender(); }; });
+    root.querySelectorAll("[data-fuclr]").forEach(function (x) { x.onclick = function () { dh.fuf[x.dataset.fuclr] = ""; dhRender(); }; });
+    if ((el = document.getElementById("dhFuQ"))) el.oninput = function () { var v = this.value; clearTimeout(dh.fqt); dh.fqt = setTimeout(function () { dh.fuf.q = v; dhRender(); var i = document.getElementById("dhFuQ"); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } }, 300); };
+  }
+
   function dhWire(root) {
+    if (dh.tab === "followups") dhWireFollow(root);
     root.querySelectorAll("[data-dhgo]").forEach(function (x) { x.onclick = function () { dh.tab = x.dataset.dhgo; dhLoad(); }; });
     root.querySelectorAll("[data-dhf]").forEach(function (x) { x.onclick = function () { dh.f = { agent: x.dataset.dhf, sev: "" }; dhRender(); }; });
     root.querySelectorAll("[data-dhsev]").forEach(function (x) { x.onclick = function () { dh.f = { agent: "", sev: x.dataset.dhsev }; dhRender(); }; });
@@ -9009,7 +9084,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       var tabs = document.getElementById("dhTabs"); if (!tabs || tabs.dataset.wired) return;
       tabs.dataset.wired = "1";
       tabs.addEventListener("click", function (e) { var b = e.target.closest("button[data-dhtab]"); if (!b) return; dh.tab = b.dataset.dhtab; dhLoad(); });
-      document.getElementById("dhRefreshBtn").addEventListener("click", function () { if (["inbox", "agents"].indexOf(dh.tab) >= 0) dh.boot = null; else dh.gh = null; dhLoad(true); });
+      document.getElementById("dhRefreshBtn").addEventListener("click", function () { if (dh.tab === "followups") dh.fu = null; else if (["inbox", "agents"].indexOf(dh.tab) >= 0) dh.boot = null; else dh.gh = null; dhLoad(true); });
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire); else wire();
   })();
