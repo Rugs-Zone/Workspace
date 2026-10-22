@@ -3130,6 +3130,56 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   .dh-fix summary{cursor:pointer;font-weight:700;color:#15803d}
   .dh-fix ol{margin:6px 0 2px;padding-left:20px} .dh-fix li{margin:2px 0}
   button.dh-kpi small{display:block;margin-top:2px}
+  /* ---------- 🧑‍🔧 My Helper ---------- */
+  #view-helper{padding-bottom:40px}
+  .hp-hero{background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 16%,var(--card)),var(--card));border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .hp-hero h3{margin:0;font-size:17px}
+  .hp-hero .om-sub{margin:2px 0 0}
+  .hp-count{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .hp-count span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700}
+  .hp-count .hi{color:#dc2626;border-color:#fca5a5}
+  .hp-sec{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);margin:16px 2px 8px}
+  .hp-item{background:var(--card);border:1px solid var(--line);border-left:5px solid #f59e0b;border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+  .hp-item.high{border-left-color:#dc2626} .hp-item.low{border-left-color:#3b82f6}
+  .hp-item .hp-ic{font-size:22px;line-height:1;flex:0 0 auto;margin-top:2px}
+  .hp-item .hp-main{flex:1 1 260px;min-width:0}
+  .hp-item b{display:block;font-size:14.5px}
+  .hp-item .hp-note{font-size:12px;color:var(--sub);margin-top:2px}
+  .hp-item pre{white-space:pre-wrap;font:inherit;font-size:12.5px;margin:6px 0 0;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 9px;max-height:150px;overflow:auto}
+  .hp-item details{margin-top:6px;font-size:12.5px} .hp-item summary{cursor:pointer;font-weight:700;color:#15803d}
+  .hp-item ol{margin:4px 0 0;padding-left:20px}
+  .hp-go{flex:0 0 auto;align-self:center;font-size:14px!important;padding:10px 16px!important}
+  @media (max-width:560px){.hp-go{width:100%}}
+  .hp-done{text-align:center;padding:36px 12px;font-size:15px}
+  .hp-done b{display:block;font-size:40px;margin-bottom:8px}
+  /* ---------- 🗓️ Dispatch planner ---------- */
+  .pl-how summary{cursor:pointer;font-size:13.5px}
+  .pl-rules{font-size:13px;line-height:1.55;margin:8px 0;padding-left:20px}
+  .pl-weeks{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:12px}
+  @media (max-width:1100px){.pl-weeks{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  @media (max-width:560px){.pl-weeks{grid-template-columns:1fr 1fr}}
+  .pl-wk{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer;color:var(--ink);font:inherit;min-width:0}
+  .pl-wk span{display:block;font-weight:800;font-size:13px}
+  .pl-wk b{display:block;font-size:19px;margin:3px 0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .pl-wk small{display:block;font-size:11.5px;color:var(--sub)}
+  .pl-wk .pl-tags{color:#b45309;font-weight:700;margin-top:3px}
+  .pl-wk.on{outline:2px solid var(--brand);background:color-mix(in srgb,var(--brand) 8%,var(--card))}
+  .pl-wk.none b{color:#dc2626}
+  .pl-grid td.cur{background:color-mix(in srgb,var(--brand) 7%,transparent)}
+  .pl-cell{background:none;border:0;padding:0;color:var(--ink);cursor:pointer;text-align:right;font:inherit}
+  .pl-cell b{display:block;font-variant-numeric:tabular-nums} .pl-cell small{display:block;font-size:11px;color:var(--sub)}
+  .pl-total td{border-top:2px solid var(--line)}
+  .pl-list tr.pl-io td{background:var(--bg);border-top:2px solid var(--line)}
+  .pl-list tr.pl-behind td{background:color-mix(in srgb,#f59e0b 7%,transparent)}
+  .pl-list td{vertical-align:top}
+  .pl-why{font-size:12.5px;min-width:220px}
+  .pl-flag{display:inline-block;background:#fef3c7;color:#92400e;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:800;white-space:nowrap}
+  .pl-shift{display:block;margin-top:3px;background:#ede9fe;color:#5b21b6;border-radius:8px;padding:2px 8px;font-size:11.5px;font-weight:700}
+  .pl-st{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .pl-st.ok{background:#dcfce7;color:#166534} .pl-st.run{background:#dbeafe;color:#1e40af} .pl-st.plan{background:var(--bg);color:var(--sub);border:1px solid var(--line)}
+  .pl-bar{position:sticky;bottom:10px;z-index:30;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--card);border:2px solid var(--brand);border-radius:14px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+  .pl-bar select,.pl-bar input{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px;color:var(--ink);font:inherit;font-size:13px}
+  .pl-bar input{flex:1;min-width:180px}
 </style>
 <style id="rcMobileNav">
   /* ---------- Phone / tablet: menu goes into a ☰ drawer, compact top bar ---------- */
@@ -3178,6 +3228,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     <div class="sidebar-nav">
       <button class="nav-item active" data-view="home" title="Home"><span class="nav-icon">🏠</span><span class="nav-label">Home</span><span class="soon-badge hidden" id="navHomeBadge" style="background:var(--brand);color:#fff"></span></button>
       <button class="nav-item" id="navModules" data-view="modules" title="Modules"><span class="nav-icon">🧩</span><span class="nav-label">Modules</span></button>
+      <button class="nav-item" id="navHelper" data-view="helper" title="My Helper"><span class="nav-icon">🧑‍🔧</span><span class="nav-label">My Helper</span><span class="soon-badge hidden" id="navHelperBadge" style="background:#dc2626;color:#fff"></span></button>
       <button class="nav-item hidden" id="navScore" data-view="score" title="Score Report"><span class="nav-icon">📊</span><span class="nav-label">Score Report</span></button>
       <button class="nav-item hidden" id="navAudit" data-view="audit" title="Audit &amp; Renewal"><span class="nav-icon">📜</span><span class="nav-label">Audit &amp; Renewal</span></button>
       <button class="nav-item" id="navChat" data-view="chat" title="Team Chat"><span class="nav-icon">💬</span><span class="nav-label">Team Chat</span></button>
@@ -3934,6 +3985,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       </div>
       <div class="om-tabs" id="dspTabs">
         <button type="button" data-dsptab="company" class="on">🏭 Company</button>
+        <button type="button" data-dsptab="planner">🗓️ Planner</button>
         <button type="button" data-dsptab="merchants">👥 Merchants</button>
         <button type="button" data-dsptab="reviews">📝 Reviews</button>
         <button type="button" data-dsptab="list">📋 Dispatched SKUs</button>
@@ -3954,6 +4006,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
         <button type="button" data-dhtab="dash" class="on">📊 Dashboard</button>
         <button type="button" data-dhtab="inbox">👔 CEO inbox</button>
         <button type="button" data-dhtab="followups">🤝 Follow-ups</button>
+        <button type="button" data-dhtab="autotasks">📋 Auto-tasks</button>
         <button type="button" data-dhtab="agents">🤖 Agents</button>
         <button type="button" data-dhtab="publish" class="hidden dh-devonly">🚀 Publish</button>
         <button type="button" data-dhtab="edit" class="hidden dh-devonly">✏️ Quick edit</button>
@@ -3962,6 +4015,18 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       </div>
       <div id="dhBody"><div class="empty">Loading…</div></div>
     </div>
+    <div id="view-helper" class="hidden">
+      <div class="om-head">
+        <button class="embed-back-btn" data-goto="modules" style="margin:0">← Back</button>
+        <div style="flex:1;min-width:200px">
+          <h2 style="margin:0">🧑‍🔧 My Helper</h2>
+          <div class="om-sub" id="hpSub">Everything waiting for you today — tap Go fix to jump straight to the page.</div>
+        </div>
+        <button class="btn secondary" type="button" id="hpRefreshBtn">↻ Check again</button>
+      </div>
+      <div id="hpBody"><div class="empty">Loading…</div></div>
+    </div>
+
 
 
 
@@ -6102,6 +6167,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       if (typeof omAccessCheck === "function") omAccessCheck();
       if (typeof dspAccessCheck === "function") dspAccessCheck();
       if (typeof dhAccessCheck === "function") dhAccessCheck();
+      if (typeof hpAccessCheck === "function") hpAccessCheck();
       if (typeof fuToggleButtons === "function") fuToggleButtons();
       if (typeof engageAfterLoad === "function") engageAfterLoad();
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
@@ -6137,6 +6203,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       if (typeof omAccessCheck === "function") omAccessCheck();
       if (typeof dspAccessCheck === "function") dspAccessCheck();
       if (typeof dhAccessCheck === "function") dhAccessCheck();
+      if (typeof hpAccessCheck === "function") hpAccessCheck();
       if (typeof fuToggleButtons === "function") fuToggleButtons();
       if (typeof engageAfterLoad === "function") engageAfterLoad();
       document.getElementById("tabTeam").classList.toggle("hidden", !isTLOfAnyTeam(state.doer.doc_id));
@@ -6488,7 +6555,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
           if (n._eaCopy) eaMarkSeen(id);
           else api("markNotificationSeen", { ids: [id] }).catch(function () {});
         }
-        var goNotif = n && { complaint: "complaints", idea: "ideabox", om: "ordermaster", device: "devices", checklist: "checklist", disp: "dispatch", agent: "devhub" }[String(n.type || "").split("_")[0]];
+        var goNotif = n && (/^agent_(brief|urgent)$/.test(String(n.type || "")) ? "devhub" : { complaint: "complaints", idea: "ideabox", om: "ordermaster", device: "devices", checklist: "checklist", disp: "dispatch", agent: "helper" }[String(n.type || "").split("_")[0]]);
         if (goNotif) goToView(goNotif);
       });
     });
@@ -6919,6 +6986,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     { key: "devices", icon: "📱", name: "Tablet requests", status: "live", goto: "devices", category: "work" },
     { key: "dispatch", icon: "🚚", name: "Dispatch tracker", status: "live", goto: "dispatch", category: "work" },
     { key: "devhub", icon: "🛠️", name: "Developer", status: "live", goto: "devhub", category: "work" },
+    { key: "helper", icon: "🧑‍🔧", name: "My Helper", status: "live", goto: "helper", category: "work" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit", category: "production" },
     { key: "fairvisit", icon: "🎪", name: "Fair Visit", status: "live", goto: "fairvisit", category: "production" },
     { key: "fairleads", icon: "🤝", name: "Fair Leads", status: "live", goto: "fairleads", category: "production" },
@@ -8357,7 +8425,9 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     document.querySelectorAll("#dspMeasure button").forEach(function (x) { x.classList.toggle("on", x.dataset.dspm === dsp.m); });
     var own = (b.owners || []).map(function (o) { return o.name; }).join(" & ");
     document.getElementById("dspSub").innerHTML = (b.all ? "Owners: <b>" + esc(own || "–") + "</b> · " : "Your dispatch · ") + "Target: <b>+" + esc(String(dspPctT())) + "%</b> on last month · " +
-      (b.asOf ? "Sheet copy " + esc(new Date(b.asOf).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })) : "not synced yet");
+      (b.asOf ? "Sheet copy " + esc(new Date(b.asOf).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })) : "not synced yet") +
+      (b.source ? " · Source: <b>" + esc(b.source) + "</b>" + (b.from ? " from " + esc(omD ? omD(b.from) : b.from) : "") : "");
+    if (dsp.tab === "planner") { plLoad(); return; }
     if (!b.synced) { body.innerHTML = dspNotSynced(); return; }
     if (dsp.tab === "company") body.innerHTML = dspSummary(b.R, b.all ? "Company dispatch" : "Your dispatch");
     else if (dsp.tab === "merchants") body.innerHTML = dspMerchants();
@@ -8367,9 +8437,8 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     dspWire(body);
   }
   function dspNotSynced() {
-    return '<div class="dsp-card"><h3>Waiting for the Archive sheet</h3><div class="om-sub">The "Archive Shipment Order Sheet" is not copied into Workspace yet.</div>' +
-      '<p style="font-size:13.5px;margin:6px 0">Admin: in the <b>SupabaseSync</b> Apps Script, add this line inside <code>SOURCES</code>, save, and run <b>refreshAll</b> once:</p>' +
-      '<div class="dsp-pre">[\'1y-nQq4KvLRgxv8ko3I3A_QitanmugPF0bdV2CR9ET3o\', \'DISPATCH\', [[\'Archive\', 0]]],</div>' +
+    return '<div class="dsp-card"><h3>Waiting for the ERP dispatch data</h3><div class="om-sub">The "vPoExport" tab of "jet66erp Data" is not copied into Workspace yet.</div>' +
+      '<p style="font-size:13.5px;margin:6px 0">Admin: in the <b>SupabaseSync</b> Apps Script, find the line with <code>1BQDz7kGRO3ug0bbmOH4PcMmBtc83oHGyaJhB_ZgGzXA</code> and add <code>[\'vPoExport\', 0]</code> to its list of tabs, save, and run <b>refreshAll</b> once.</p>' +
       '<p class="om-small" style="margin-top:8px">After that it updates by itself every 10 minutes.</p></div>';
   }
 
@@ -8658,7 +8727,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       tabs.dataset.wired = "1";
       tabs.addEventListener("click", function (e) { var b = e.target.closest("button[data-dsptab]"); if (!b) return; dsp.tab = b.dataset.dsptab; dspRender(); });
       document.getElementById("dspMeasure").addEventListener("click", function (e) { var b = e.target.closest("button[data-dspm]"); if (!b) return; dsp.m = b.dataset.dspm; dspRender(); });
-      document.getElementById("dspRefreshBtn").addEventListener("click", function () { dspLoad(true); });
+      document.getElementById("dspRefreshBtn").addEventListener("click", function () { if (dsp.tab === "planner") plLoad(true); else dspLoad(true); });
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire); else wire();
   })();
@@ -8703,6 +8772,12 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   function dhLoad(force) {
     var body = document.getElementById("dhBody"); if (!body) return;
     document.querySelectorAll("#dhTabs .dh-devonly").forEach(function (b) { b.classList.toggle("hidden", !dhIsDev()); });
+    if (dh.tab === "autotasks" && (force || !dh.ad)) {
+      if (dh.loading) return; dh.loading = true;
+      body.innerHTML = '<div class="empty"><span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:var(--brand)"></span> Loading…</div>';
+      ahApi("ahDeleg").then(function (d) { dh.loading = false; dh.ad = d; dhRender(); }).catch(function (e) { dh.loading = false; body.innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; });
+      return;
+    }
     if (dh.tab === "followups" && (force || !dh.fu)) {
       if (dh.loading) return; dh.loading = true;
       body.innerHTML = '<div class="empty"><span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:var(--brand)"></span> Loading…</div>';
@@ -8729,6 +8804,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     else if (dh.tab === "inbox") h = dhInbox();
     else if (dh.tab === "agents") h = dhAgents();
     else if (dh.tab === "followups") h = dhFollowTab();
+    else if (dh.tab === "autotasks") h = dhAutoTab();
     else if (dh.tab === "publish") h = dhPublishTab();
     else if (dh.tab === "edit") h = dhEditTab();
     else if (dh.tab === "history") h = '<div id="dhHist"><div class="empty">Loading history…</div></div>';
@@ -8753,12 +8829,13 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     [/^purchase:porm/, ["Open the PO_RM sheet → filter this accountable person, status Pending.", "Chase the vendors / job workers and update the delivery date or received qty.", "Approve & send so the person gets the list."]],
     [/^purchase:spares-low/, ["Open 🔩 Spare Parts → items at or below minimum.", "Raise a purchase order for each, starting with the ones at zero stock."]],
     [/^people:tasks/, ["Open ✅ Delegation → this person's pending tasks.", "Ask them to finish or request a revised date; reassign if they are on leave.", "Approve & send as a reminder."]],
+    [/^people:checklist/, ["Open 📋 Checklist FMS → Report (today / yesterday).", "Check the flagged points by department with the department head; fix the problem or note why it could not be done.", "Talk to the people with many missed checkpoints, or reassign their checkpoints.", "Approve & send to the department heads if needed."]],
     [/^people:leave/, ["Open 🏖️ Leave Request → pending.", "The team leader approves or rejects; if the TL is away, an admin can decide."]],
     [/^people:reimb/, ["Open 🧳 Reimbursement → pending at this stage.", "The approver at that stage approves or rejects with a note."]],
     [/^people:tablet/, ["Ask the person to return the tablet to IT.", "IT presses 'Received' in 📱 Tablet requests."]],
     [/^it:sync-old/, ["These tabs are no longer used (e.g. old Raw Data / by Colour).", "Either remove them from SOURCES in SupabaseSync or press ✖ Not an issue."]],
     [/^it:sync$/, ["Open the SupabaseSync Apps Script → Executions (left menu).", "Read the red error: usually 'Exceeded maximum execution time' or a renamed tab / lost access.", "Fix the tab name or sharing, then run refreshAll once."]],
-    [/^it:dispatch-sync/, ["Open the SupabaseSync Apps Script → find const SOURCES.", "Add: ['1y-nQq4KvLRgxv8ko3I3A_QitanmugPF0bdV2CR9ET3o', 'DISPATCH', [['Archive', 0]]],", "Save → run refreshAll once. The Dispatch tracker fills in."]],
+    [/^it:dispatch-sync/, ["Open the SupabaseSync Apps Script → find const SOURCES.", "Find the line with 1BQDz7kGRO3ug0bbmOH4PcMmBtc83oHGyaJhB_ZgGzXA (jet66erp Data).", "Add ['vPoExport', 0] to its list of tabs (after ['vPoInternal2', 0]).", "Save → run refreshAll once. The Dispatch tracker switches to the ERP data by itself."]],
     [/^it:http/, ["A few server calls failed or timed out — usually a slow Google Apps Script.", "If the count keeps growing every day, tell the developer; otherwise press ✖ Not an issue."]],
     [/^it:cron/, ["A scheduled job failed. Tell the developer with the error text shown above."]],
     [/^it:bridge/, ["Open the WorkspaceBridge Apps Script → Deploy → Manage deployments.", "Check the web app is active and 'Who has access' is Anyone; redeploy if needed."]],
@@ -8793,7 +8870,8 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       '<div class="dh-kpi"><span>🆕 New today</span><b>' + newToday.length + "</b></div>" +
       '<div class="dh-kpi"><span>✅ Solved by itself (24 h)</span><b style="color:#16a34a">' + solved.length + "</b></div>" +
       '<div class="dh-kpi"><span>📨 Sent to staff (24 h)</span><b>' + sent.length + "</b></div>" +
-      '<button type="button" class="dh-kpi" data-dhgo="followups"><span>🤝 Follow-ups pending</span><b>' + b.fu.open + '</b><small class="om-small">' + b.fu.linked + " chased · " + b.fu.closed7 + " answered 7d</small></button></div>";
+      '<button type="button" class="dh-kpi" data-dhgo="followups"><span>🤝 Follow-ups pending</span><b>' + b.fu.open + '</b><small class="om-small">' + b.fu.linked + " chased · " + b.fu.closed7 + " answered 7d</small></button>" +
+      '<button type="button" class="dh-kpi" data-dhgo="autotasks"><span>📋 Auto-tasks</span><b>9 am → 4 pm</b><small class="om-small">delegated from Vinay / Gaurav</small></button></div>';
     // brief
     var br = b.briefs || [];
     var sel = dh.briefIx || 0, cur = br[sel];
@@ -9101,8 +9179,64 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     if ((el = document.getElementById("dhFuQ"))) el.oninput = function () { var v = this.value; clearTimeout(dh.fqt); dh.fqt = setTimeout(function () { dh.fuf.q = v; dhRender(); var i = document.getElementById("dhFuQ"); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } }, 300); };
   }
 
+  // ---- 📋 Auto-tasks: agent issues become delegation tasks every morning (from Vinay / Gaurav, due 4 PM)
+  var DH_AGN = { orders: "📦 Orders & Production", sampling: "🧵 Sampling & Buyers", quality: "🧪 Quality", purchase: "🛒 Purchase & Store", people: "👥 People & HR", it: "🛠️ IT / System health" };
+  var DH_FROM = [["vinay", "Vinay - Director"], ["gaurav", "Gaurav - Director"]];
+  function dhAutoTab() {
+    var d = dh.ad; if (!d) return '<div class="empty">Loading…</div>';
+    var now = Date.now(), rows = d.rows || [];
+    var days = []; rows.forEach(function (r) { if (days.indexOf(r.day) < 0) days.push(r.day); });
+    var day = dh.adDay && days.indexOf(dh.adDay) >= 0 ? dh.adDay : days[0];
+    var cur = rows.filter(function (r) { return r.day === day; });
+    var stOf = function (r) {
+      if (r.status === "Completed") return /fixed/.test(r.closed_how) ? "fixed" : (r.completed_at && new Date(r.completed_at) > new Date(r.deadline) ? "late" : "done");
+      if (r.status === "Pending") return new Date(r.deadline).getTime() < now ? "overdue" : "pending";
+      return "other";
+    };
+    var c = { done: 0, late: 0, fixed: 0, pending: 0, overdue: 0, other: 0 }; cur.forEach(function (r) { c[stOf(r)]++; });
+    var chip = { done: '<span class="om-st ok">✅ Done on time</span>', late: '<span class="om-st warn">✅ Done late</span>', fixed: '<span class="om-st ok">🤖 Fixed — closed by agent</span>', pending: '<span class="om-st mute">⏳ Pending</span>', overdue: '<span class="om-st bad">⏰ Overdue</span>', other: '<span class="om-st mute">–</span>' };
+    var h = '<div class="dh-brief"><div class="om-dh"><div><h3>📋 Auto-tasks</h3><div class="om-small">Every working morning at about <b>9 am</b> each open issue the agents found for a person becomes a <b>delegation task</b> for that person, given from <b>Vinay\'s or Gaurav\'s ID</b>, to be finished by <b>4 pm</b> the same day. The person sees it in ✅ Delegation and in 🧑‍🔧 My Helper (with Go fix). When the agent sees the problem fixed, the task closes by itself. No new task while the old one for the same issue is still pending.</div></div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><label class="om-small" style="display:flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" id="dhAdOn"' + (d.on ? " checked" : "") + '> Make tasks automatically every morning</label><button class="btn" type="button" id="dhAdRun">📋 Make today\'s tasks now</button></div></div>' +
+      '<p class="om-small" style="margin:6px 0 0">' + (d.on ? "Automatic: every working day at about 9 am" + (d.lastDay ? " · last morning run <b>" + esc(d.lastDay) + "</b>" : "") : "<b>Automatic tasks are paused</b> — use the button") + "</p></div>";
+    h += '<div class="dsp-card"><h3 style="margin:0 0 6px;font-size:15px">👔 Who gives the task</h3><div class="om-sub">Pick whose ID each agent\'s tasks come from.</div><div class="dh-agents" style="margin-top:8px">' +
+      Object.keys(DH_AGN).map(function (k) {
+        var v = (d.from || {})[k] || "vinay", opts = DH_FROM.slice(); if (!opts.some(function (o) { return o[0] === v; })) opts.push([v, v]);
+        return '<label class="dh-agent" style="display:block"><b style="font-size:13px">' + esc(DH_AGN[k]) + '</b><select data-adfrom="' + k + '" style="width:100%;margin-top:6px">' + opts.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === v ? " selected" : "") + ">" + esc(o[1]) + "</option>"; }).join("") + "</select></label>";
+      }).join("") + "</div></div>";
+    if (!rows.length) return h + '<div class="dsp-card"><p class="om-small">No auto-tasks yet. The first ones are made tomorrow morning at about 9 am — or press 📋 Make today\'s tasks now.</p></div>';
+    h += '<div class="om-bar" style="margin:4px 0 8px"><b>Day:</b> ' + days.map(function (x) { return '<button type="button" class="dh-chip" data-adday="' + esc(x) + '"' + (x === day ? ' style="outline:2px solid var(--brand)"' : "") + ">" + esc(omD ? omD(x) : x) + "</button>"; }).join(" ") + "</div>";
+    h += '<div class="dh-kpis">' +
+      '<div class="dh-kpi"><span>Tasks made</span><b>' + cur.length + "</b></div>" +
+      '<div class="dh-kpi"><span>✅ Done on time</span><b style="color:#16a34a">' + c.done + "</b></div>" +
+      '<div class="dh-kpi"><span>🤖 Fixed (closed by agent)</span><b style="color:#16a34a">' + c.fixed + "</b></div>" +
+      '<div class="dh-kpi"><span>✅ Done late</span><b>' + c.late + "</b></div>" +
+      '<div class="dh-kpi"><span>⏳ Pending</span><b>' + c.pending + "</b></div>" +
+      '<div class="dh-kpi bad"><span>⏰ Overdue (past 4 pm)</span><b>' + c.overdue + "</b></div></div>";
+    var ord = { overdue: 0, pending: 1, late: 2, done: 3, fixed: 4, other: 5 };
+    cur.sort(function (a, b) { return ord[stOf(a)] - ord[stOf(b)] || a.to.localeCompare(b.to); });
+    h += '<div class="dsp-card"><div class="om-table"><table><thead><tr><th>Person</th><th>Issue</th><th>From</th><th>Due</th><th>Status</th><th>Task</th></tr></thead><tbody>' +
+      cur.map(function (r) { var s = stOf(r); return "<tr" + (s === "overdue" ? ' class="st-late"' : "") + "><td><b>" + esc(r.to) + "</b></td><td>" + esc((DH_AGN[r.agent] || "").split(" ")[0] + " " + r.title) + "</td><td>" + esc(r.from) + "</td><td>" + esc(new Date(r.deadline).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })) + "</td><td>" + chip[s] + '</td><td><code>' + esc(r.task_id) + "</code></td></tr>"; }).join("") +
+      "</tbody></table></div></div>";
+    return h;
+  }
+  function dhWireAuto(root) {
+    var d = dh.ad; if (!d) return;
+    var el;
+    if ((el = document.getElementById("dhAdOn"))) el.onchange = function () { var on = this.checked; ahApi("ahDelegSet", { on: on }).then(function (r) { dh.ad = r; toast(on ? "Tasks will be made every morning at 9 am" : "Automatic tasks paused"); dhRender(); }).catch(function (e) { toast(e.message, true); }); };
+    if ((el = document.getElementById("dhAdRun"))) el.onclick = function () {
+      var b = this; if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Tap again — creates delegation tasks for today"; return; }
+      b.disabled = true; b.textContent = "Making tasks…";
+      ahApi("ahDelegRun").then(function (r) { toast(r.made ? r.made + " tasks made for " + r.people + " people" : "No new tasks — everyone already has theirs"); dh.ad = r.board; dh.adDay = null; dhRender(); }).catch(function (e) { b.disabled = false; b.textContent = "📋 Make today's tasks now"; toast(e.message, true); });
+    };
+    root.querySelectorAll("[data-adfrom]").forEach(function (sel) {
+      sel.onchange = function () { var f = {}; f[sel.dataset.adfrom] = sel.value; sel.disabled = true; ahApi("ahDelegSet", { from: f }).then(function (r) { dh.ad = r; toast("Saved"); dhRender(); }).catch(function (e) { sel.disabled = false; toast(e.message, true); }); };
+    });
+    root.querySelectorAll("[data-adday]").forEach(function (x) { x.onclick = function () { dh.adDay = x.dataset.adday; dhRender(); }; });
+  }
+
   function dhWire(root) {
     if (dh.tab === "followups") dhWireFollow(root);
+    if (dh.tab === "autotasks") dhWireAuto(root);
     root.querySelectorAll("[data-dhgosev]").forEach(function (x) { x.onclick = function () { dh.f = { agent: "", sev: x.dataset.dhgosev }; dh.tab = "inbox"; dhLoad(); }; });
     root.querySelectorAll("[data-dhgoagent]").forEach(function (x) { x.onclick = function () { dh.f = { agent: x.dataset.dhgoagent, sev: "" }; dh.tab = "inbox"; dhLoad(); }; });
     var bs = document.getElementById("dhBriefSel"); if (bs) bs.onchange = function () { dh.briefIx = +this.value; dhRender(); };
@@ -9221,10 +9355,257 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       var tabs = document.getElementById("dhTabs"); if (!tabs || tabs.dataset.wired) return;
       tabs.dataset.wired = "1";
       tabs.addEventListener("click", function (e) { var b = e.target.closest("button[data-dhtab]"); if (!b) return; dh.tab = b.dataset.dhtab; dhLoad(); });
-      document.getElementById("dhRefreshBtn").addEventListener("click", function () { if (dh.tab === "followups") dh.fu = null; else if (["dash", "inbox", "agents"].indexOf(dh.tab) >= 0) dh.boot = null; else dh.gh = null; dhLoad(true); });
+      document.getElementById("dhRefreshBtn").addEventListener("click", function () { if (dh.tab === "followups") dh.fu = null; else if (dh.tab === "autotasks") dh.ad = null; else if (["dash", "inbox", "agents"].indexOf(dh.tab) >= 0) dh.boot = null; else dh.gh = null; dhLoad(true); });
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire); else wire();
   })();
+
+
+  // ---------- 🧑‍🔧 My Helper — a personal agent for every employee ----------
+  // Server: helper-api. Lists what is waiting for the signed-in person (issues the agents found for
+  // them, stage updates being chased, overdue tasks, today's checklist, approvals, tablet to return)
+  // and "Go fix" jumps straight to the page — Order Master even opens the exact IO / SKU.
+  var HELPER_FN_URL = SUPABASE_URL + "/functions/v1/helper-api";
+  var hp = { data: null, loading: false };
+  function hpApi(action, payload) {
+    if (state.demo) return Promise.reject(new Error("My Helper is not available in demo mode."));
+    return fetch(HELPER_FN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
+      body: JSON.stringify(Object.assign({ action: action, session_token: (state.doer || {}).session_token || "" }, payload || {}))
+    }).then(function (r) { return r.json().then(function (j) { if (!r.ok || !j.ok) throw new Error(j.error || ("HTTP " + r.status)); return j.data; }); });
+  }
+  var HP_IC = { agent: "🤖", stage: "🏭", task: "✅", checklist: "📋", approve: "🖊️", tablet: "📱" };
+  function hpLoad(force) {
+    var body = document.getElementById("hpBody"); if (!body) return;
+    if (hp.data && !force) { hpRender(); return; }
+    if (hp.loading) return; hp.loading = true;
+    body.innerHTML = '<div class="empty"><span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:var(--brand)"></span> Your helper is checking your work…</div>';
+    hpApi("hpMine").then(function (d) { hp.loading = false; hp.data = d; hpRender(); hpBadge(); })
+      .catch(function (e) { hp.loading = false; body.innerHTML = '<div class="empty">Could not load: ' + esc(e.message) + "</div>"; });
+  }
+  function hpBadge() {
+    var b = document.getElementById("navHelperBadge"); if (!b || !hp.data) return;
+    var n = hp.data.items.filter(function (x) { return x.sev !== "low"; }).length || hp.data.items.length;
+    b.textContent = n ? String(n) : ""; b.classList.toggle("hidden", !n);
+  }
+  function hpRender() {
+    var d = hp.data, body = document.getElementById("hpBody"); if (!body || !d) return;
+    var hi = d.items.filter(function (x) { return x.sev === "high"; }), mid = d.items.filter(function (x) { return x.sev === "medium"; }), lo = d.items.filter(function (x) { return x.sev === "low"; });
+    var hour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", hour12: false }).format(new Date()));
+    var hello = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+    var h = '<div class="hp-hero"><div><h3>' + esc(hello + ", " + d.name) + ' 👋</h3><div class="om-sub">' + (d.items.length ? "Here is what needs you. Start from the top — tap <b>Go fix</b> and I take you to the right page." : "Nothing is waiting for you right now.") + "</div></div>" +
+      '<div class="hp-count">' + (hi.length ? '<span class="hi">🔴 ' + hi.length + " urgent</span>" : "") + "<span>" + d.items.length + " to do</span>" +
+      (d.unseen ? '<button type="button" class="btn secondary" id="hpClear" style="padding:5px 12px;font-size:12.5px">🔔 Mark ' + d.unseen + " notifications read</button>" : "") + "</div></div>";
+    if (!d.items.length) h += '<div class="hp-done"><b>🎉</b>All clear — nothing pending for you. Great work!</div>';
+    function sec(t, list) { return list.length ? '<div class="hp-sec">' + t + "</div>" + list.map(hpItem).join("") : ""; }
+    h += sec("🔥 Do first", hi) + sec("📌 Today", mid) + sec("🗂 When you can", lo);
+    body.innerHTML = h;
+    body.querySelectorAll("[data-hpgo]").forEach(function (x) { x.onclick = function () { hpGo(d.items[+x.dataset.hpgo]); }; });
+    var c = document.getElementById("hpClear");
+    if (c) c.onclick = function () { c.disabled = true; hpApi("hpClearNotifs").then(function (r) { toast(r.cleared + " notifications marked read"); d.unseen = 0; hpRender(); try { if (typeof loadNotifications === "function") loadNotifications(); } catch (e) {} }).catch(function (e) { c.disabled = false; toast(e.message, true); }); };
+  }
+  function hpItem(x) {
+    var i = hp.data.items.indexOf(x);
+    return '<div class="hp-item ' + x.sev + '"><div class="hp-ic">' + (HP_IC[x.kind] || "📌") + '</div><div class="hp-main"><b>' + esc(x.title) + "</b>" + (x.note ? '<div class="hp-note">' + esc(x.note) + "</div>" : "") +
+      (x.detail ? "<pre>" + esc(x.detail) + "</pre>" : "") +
+      (x.steps && x.steps.length ? "<details><summary>💡 How to do it</summary><ol>" + x.steps.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ol></details>" : "") + "</div>" +
+      (x.go ? '<button class="btn hp-go" type="button" data-hpgo="' + i + '">Go fix →</button>' : "") + "</div>";
+  }
+  function hpGo(x) {
+    if (!x || !x.go) return;
+    var v = x.go.view;
+    if (v === "ordermaster" && !state.omAccess) { toast("Opening Production Planning — fill the stage date there or in your sheet."); goToView("ppc"); return; }
+    if (v === "ordermaster" && typeof om !== "undefined") {
+      om.tab = "orders"; om.f.mer = ""; om.f.q = ""; om.f.st = ""; om.f.io = "";
+      if (x.go.om && x.go.om.st) om.f.st = x.go.om.st;
+      if (x.go.om && x.go.om.io) om.f.io = x.go.om.io;
+      goToView("ordermaster");
+      if (x.go.om && x.go.om.key && typeof omOpen === "function") setTimeout(function () { try { omOpen(x.go.om.key); } catch (e) {} }, 900);
+      return;
+    }
+    goToView(v);
+  }
+  // quietly after sign-in: fill the menu badge
+  function hpAccessCheck() { if (state.demo || !state.doer) return; hpApi("hpMine").then(function (d) { hp.data = d; hpBadge(); }).catch(function () {}); }
+  (function hpInitOnce() {
+    function wire() { var b = document.getElementById("hpRefreshBtn"); if (b && !b.dataset.wired) { b.dataset.wired = "1"; b.addEventListener("click", function () { hpLoad(true); }); } }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire); else wire();
+  })();
+
+  // ---------- 🗓️ Dispatch planner (tab inside 🚚 Dispatch tracker) ----------
+  // Server: "dispatch-plan". Every open SKU of the order master is put into the week it can ship
+  // (packing done → this week; latex / stitching running → next week; else latex / stitching finish
+  // planned or recovery date + packing days; else weaving finish + 7 days). Weeks are Mon–Sun with
+  // ISO week numbers. SKUs / whole IOs can be shifted to another week with a reason (kept, marked ↪).
+  var PLAN_FN_URL = SUPABASE_URL + "/functions/v1/dispatch-plan";
+  var pl = { boot: null, loading: false, wk: "", group: "mer", f: { mer: "", tl: "", buyer: "", q: "", only: "" }, sel: {}, open: {} };
+  function plApi(action, payload) {
+    if (state.demo) return Promise.reject(new Error("The Dispatch planner is not available in demo mode."));
+    return fetch(PLAN_FN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
+      body: JSON.stringify(Object.assign({ action: action, session_token: (state.doer || {}).session_token || "" }, payload || {}))
+    }).then(function (r) { return r.json().then(function (j) { if (!r.ok || !j.ok) throw new Error(j.error || ("HTTP " + r.status)); return j.data; }); });
+  }
+  function plWeekNo(d) { var t = new Date(d + "T00:00:00Z"), day = (t.getUTCDay() + 6) % 7; t.setUTCDate(t.getUTCDate() - day + 3); var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 4)); return 1 + Math.round(((t - y0) / 86400000 - 3 + ((y0.getUTCDay() + 6) % 7)) / 7); }
+  function plIdx(mon) { return Math.round((Date.parse(mon + "T00:00:00Z") - Date.parse(pl.boot.thisWeek + "T00:00:00Z")) / (7 * 86400000)); }
+  function plName(mon) {
+    if (mon === "later") return "Later";
+    if (mon === "none") return "No TNA";
+    var i = plIdx(mon);
+    return i <= 0 ? "This week" : i === 1 ? "Next week" : i === 2 ? "Week after next" : "In " + i + " weeks";
+  }
+  function plRange(mon) { return dspDL(mon) + " – " + dspDL(dspAdd(mon, 6)); }
+  function plBucket(r) {
+    if (!r.week) return "none";
+    var i = plIdx(r.week);
+    return i > 4 ? "later" : r.week;
+  }
+  function plBuckets() {
+    var b = pl.boot, out = [];
+    for (var i = 0; i < 5; i++) out.push(dspAdd(b.thisWeek, i * 7));
+    return out.concat(["later", "none"]);
+  }
+  function plLoad(force) {
+    var body = document.getElementById("dspBody"); if (!body) return;
+    if (pl.boot && !force) { body.innerHTML = plRender(); plWire(body); return; }
+    if (pl.loading) return; pl.loading = true;
+    body.innerHTML = '<div class="empty"><span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:var(--brand)"></span> Making the plan from the order master…</div>';
+    plApi("plBoot").then(function (b) {
+      pl.loading = false; pl.boot = b; if (!pl.wk) pl.wk = b.thisWeek; pl.sel = {};
+      if (dsp.tab === "planner") { body.innerHTML = plRender(); plWire(body); }
+    }).catch(function (e) { pl.loading = false; body.innerHTML = '<div class="empty">Could not make the plan: ' + esc(e.message) + ' <button class="btn secondary" type="button" id="plRetry">Try again</button></div>'; var r = document.getElementById("plRetry"); if (r) r.onclick = function () { plLoad(true); }; });
+  }
+  function plTot(rows) { var v = 0, q = 0, ios = {}, sh = 0, bh = 0; rows.forEach(function (r) { v += r.val; q += r.qty; ios[r.io] = 1; if (r.shift) sh++; if (r.flag) bh++; }); return { val: v, qty: q, skus: rows.length, ios: Object.keys(ios).length, shifted: sh, behind: bh }; }
+  function plFilter(rows) {
+    var f = pl.f, q = f.q.trim().toUpperCase();
+    return rows.filter(function (r) {
+      return (!f.mer || r.mer === f.mer) && (!f.tl || r.tl === f.tl) && (!f.buyer || r.buyer === f.buyer) &&
+        (!f.only || (f.only === "shifted" ? !!r.shift : f.only === "behind" ? !!r.flag : f.only === "late" ? (r.ship && r.week && r.ship < r.week) : true)) &&
+        (!q || (r.io + " " + r.sku + " " + r.buyer + " " + r.cat + " " + r.po + " " + r.art).toUpperCase().indexOf(q) >= 0);
+    });
+  }
+  function plStage(s) {
+    if (!s) return '<span class="om-small">–</span>';
+    var p = s.split("|"); // sp sa fp fa
+    if (p[3]) return '<span class="pl-st ok">✓ ' + esc(dspDL(p[3])) + "</span>";
+    if (p[1]) return '<span class="pl-st run">▶ ' + esc(dspDL(p[1])) + (p[2] ? " → " + esc(dspDL(p[2])) : "") + "</span>";
+    return p[2] ? '<span class="pl-st plan">' + esc(dspDL(p[2])) + "</span>" : '<span class="om-small">no date</span>';
+  }
+  function plRender() {
+    var b = pl.boot, all = b.rows, buckets = plBuckets(), wk = pl.wk;
+    var rows = plFilter(all);
+    var h = '<details class="dsp-card pl-how"><summary><b>🗓️ Dispatch planner</b> — Wk ' + b.weekNo + " is this week · made from the order master TNA (" + (b.asOf ? "updated " + esc(new Date(b.asOf).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })) : "–") + ") · tap to see how</summary>" +
+      '<ol class="pl-rules"><li><b>📦 Packing complete</b> (Packing/Finishing Complete Actual filled) → <b>this week</b>.</li>' +
+      "<li><b>✅ Latex + stitching finished</b> (only the stages marked YES) → <b>this week</b> (packing left).</li>" +
+      "<li><b>🔄 Latex or stitching started, finish actual blank</b> → <b>next week</b> (later if its finish / recovery date is later).</li>" +
+      "<li><b>🗓 Not started</b> → week of the latest <b>latex / stitching finish planned</b> date + " + b.packDays + " days packing. If a <b>recovery date</b> is filled, it counts instead of the planned date.</li>" +
+      "<li><b>🧶 No latex / stitching</b> → Packing completed planned, else <b>weaving / tufting / knitting finish + 7 days</b> (for the weeks after next).</li>" +
+      "<li>A planned date already passed and not done → <b>next week</b>, marked <span class=\"pl-flag\">⚠ behind TNA</span>. No dates at all → <b>No TNA</b> list (merchant must fill the TNA).</li>" +
+      "<li>Shift any SKU or whole IO to another week with a reason — it stays there and shows <span class=\"pl-shift\">↪ from Wk N</span>.</li></ol>" +
+      (b.canManage ? '<label class="om-small" style="display:inline-flex;gap:6px;align-items:center;font-weight:700">Packing days after latex / stitching <input id="plPack" type="number" min="0" max="30" value="' + b.packDays + '" style="width:64px"> <button class="btn secondary" type="button" id="plPackSave" style="padding:4px 10px">Save</button></label>' : "") + "</details>";
+    // week tiles
+    h += '<div class="pl-weeks">' + buckets.map(function (k) {
+      var rs = rows.filter(function (r) { return plBucket(r) === k; }), t = plTot(rs);
+      var sub = k === "later" ? "Wk " + plWeekNo(dspAdd(b.thisWeek, 35)) + " +" : k === "none" ? "fill the TNA" : "Wk " + plWeekNo(k) + " · " + plRange(k);
+      return '<button type="button" class="pl-wk' + (k === wk ? " on" : "") + (k === "none" ? " none" : "") + '" data-plwk="' + k + '"><span>' + esc(plName(k)) + "</span><small>" + esc(sub) + "</small><b>" + esc(dspN(t.val, "val")) + "</b><small>" + t.skus + " SKUs · " + t.ios + " IOs · " + Math.round(t.qty).toLocaleString("en-IN") + " pcs</small>" +
+        (t.shifted || t.behind ? '<small class="pl-tags">' + (t.shifted ? "↪ " + t.shifted + " shifted " : "") + (t.behind ? "⚠ " + t.behind + " behind" : "") + "</small>" : "") + "</button>";
+    }).join("") + "</div>";
+    // by merchant / team leader
+    var by = pl.group === "tl" ? "tl" : "mer", names = {};
+    rows.forEach(function (r) { var n = r[by] || "(blank)"; (names[n] = names[n] || []).push(r); });
+    var ks = Object.keys(names).sort(function (a, c) { return plTot(names[c]).val - plTot(names[a]).val; });
+    h += '<div class="dsp-card"><div class="om-dh" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h3 style="margin:0;flex:1">' + (b.all ? "🏭 Company plan" : "📈 Your plan") + ' by week</h3><div class="dsp-measure"><button type="button" data-plgroup="mer"' + (by === "mer" ? ' class="on"' : "") + '>Merchant</button><button type="button" data-plgroup="tl"' + (by === "tl" ? ' class="on"' : "") + ">Team leader</button></div></div>" +
+      '<div class="om-table" style="margin-top:8px"><table class="pl-grid"><thead><tr><th>' + (by === "tl" ? "Team leader" : "Merchant") + "</th>" + buckets.map(function (k) { return '<th class="num">' + esc(plName(k)) + (k.length === 10 ? "<br><small>Wk " + plWeekNo(k) + "</small>" : "") + "</th>"; }).join("") + '<th class="num">Total</th></tr></thead><tbody>';
+    var cell = function (rs, k, n) { var t = plTot(rs); return '<td class="num' + (k === wk ? " cur" : "") + '">' + (t.skus ? '<button type="button" class="pl-cell" data-plgo="' + k + '"' + (n ? ' data-pln="' + esc(n) + '"' : "") + "><b>" + esc(dspN(t.val, "val")) + "</b><small>" + t.skus + " SKUs</small></button>" : '<span class="om-small">–</span>') + "</td>"; };
+    h += ks.map(function (n) { return "<tr><td><b>" + esc(n) + "</b></td>" + buckets.map(function (k) { return cell(names[n].filter(function (r) { return plBucket(r) === k; }), k, n); }).join("") + '<td class="num"><b>' + esc(dspN(plTot(names[n]).val, "val")) + "</b></td></tr>"; }).join("");
+    h += '<tr class="pl-total"><td><b>' + (b.all ? "Company" : "Total") + "</b></td>" + buckets.map(function (k) { return cell(rows.filter(function (r) { return plBucket(r) === k; }), k, ""); }).join("") + '<td class="num"><b>' + esc(dspN(plTot(rows).val, "val")) + "</b></td></tr></tbody></table></div></div>";
+    // list of the selected week
+    var wr = rows.filter(function (r) { return plBucket(r) === wk; });
+    var t = plTot(wr);
+    var opt = function (arr, cur) { return arr.map(function (x) { return "<option" + (x === cur ? " selected" : "") + ">" + esc(x) + "</option>"; }).join(""); };
+    var uniq = function (k) { var s = {}; all.forEach(function (r) { if (r[k]) s[r[k]] = 1; }); return Object.keys(s).sort(); };
+    h += '<div class="dsp-card"><h3>' + esc(plName(wk)) + (wk.length === 10 ? " · Wk " + plWeekNo(wk) + " · " + esc(plRange(wk)) : "") + "</h3>" +
+      '<div class="om-bar">' + (b.all ? '<select id="plFMer"><option value="">All merchants</option>' + opt(uniq("mer"), pl.f.mer) + '</select><select id="plFTl"><option value="">All team leaders</option>' + opt(uniq("tl"), pl.f.tl) + "</select>" : "") +
+      '<select id="plFBuyer"><option value="">All buyers</option>' + opt(uniq("buyer"), pl.f.buyer) + "</select>" +
+      '<select id="plFOnly"><option value="">All SKUs</option><option value="shifted"' + (pl.f.only === "shifted" ? " selected" : "") + '>↪ Shifted only</option><option value="behind"' + (pl.f.only === "behind" ? " selected" : "") + '>⚠ Behind TNA only</option><option value="late"' + (pl.f.only === "late" ? " selected" : "") + ">🚢 After ship date</option></select>" +
+      '<input id="plFQ" type="search" placeholder="Search IO, SKU, buyer PO, article…" value="' + esc(pl.f.q) + '"><button class="btn secondary" type="button" id="plCsv">⬇ CSV</button></div>' +
+      '<div class="om-count">' + t.skus + " SKUs · " + t.ios + " IOs · " + esc(dspN(t.val, "val")) + " · " + Math.round(t.qty).toLocaleString("en-IN") + " pcs" + (t.shifted ? " · ↪ " + t.shifted + " shifted in" : "") + (t.behind ? " · ⚠ " + t.behind + " behind TNA" : "") + "</div>";
+    var ios = {}, order = [];
+    wr.forEach(function (r) { if (!ios[r.io]) { ios[r.io] = []; order.push(r.io); } ios[r.io].push(r); });
+    order.sort(function (a, c) { var x = ios[a][0].ship || "9", y = ios[c][0].ship || "9"; return x < y ? -1 : x > y ? 1 : 0; });
+    var show = order.slice(0, 150);
+    h += '<div class="om-table pl-list" style="margin-top:8px"><table><thead><tr><th style="width:28px"><input type="checkbox" id="plAll" aria-label="Select all"></th><th>IO / SKU</th><th>Buyer / merchant</th><th>Item</th><th class="num">Qty</th><th class="num">Value</th><th>Ship date</th><th>Stitching</th><th>Latex</th><th>Packing</th><th>Why this week</th></tr></thead><tbody>';
+    h += show.map(function (io) {
+      var rs = ios[io], it = plTot(rs), f = rs[0], allSel = rs.every(function (r) { return pl.sel[r.uk]; });
+      var head = '<tr class="pl-io"><td><input type="checkbox" data-plio="' + esc(io) + '"' + (allSel ? " checked" : "") + ' aria-label="Select IO"></td><td colspan="3"><b>' + esc(io) + "</b> · " + esc(f.buyer) + ' <span class="om-small">· ' + esc(f.mer) + (f.tl ? " · TL " + esc(f.tl) : "") + (f.po ? " · PO " + esc(f.po) : "") + '</span></td><td class="num"><b>' + Math.round(it.qty).toLocaleString("en-IN") + '</b></td><td class="num"><b>' + esc(dspN(it.val, "val")) + "</b></td><td>" + (f.ship ? esc(dspDL(f.ship)) : "–") + '</td><td colspan="4" class="om-small">' + rs.length + " SKU" + (rs.length > 1 ? "s" : "") + (f.prod ? " · production " + esc(f.prod) : "") + "</td></tr>";
+      return head + rs.map(function (r) {
+        var late = r.ship && r.week && r.ship < r.week;
+        return '<tr class="' + (r.flag ? "pl-behind" : "") + '"><td><input type="checkbox" data-pluk="' + esc(r.uk) + '"' + (pl.sel[r.uk] ? " checked" : "") + ' aria-label="Select SKU"></td><td>' + esc(r.sku) + (r.art ? '<span class="om-io">Art ' + esc(r.art) + "</span>" : "") + "</td><td>" + esc(r.buyer) + '<span class="om-io">' + esc(r.mer) + "</span></td><td class=\"om-small\">" + esc([r.cat, r.size, r.color].filter(Boolean).join(" · ")) + '</td><td class="num">' + Math.round(r.qty).toLocaleString("en-IN") + '</td><td class="num">' + esc(dspN(r.val, "val")) + "</td><td>" + (r.ship ? esc(dspDL(r.ship)) : "–") + (late ? ' <span class="pl-flag">🚢 after ship date</span>' : "") + "</td><td>" + plStage(r.st) + "</td><td>" + plStage(r.lx) + "</td><td>" + plStage(r.pk) + '</td><td class="pl-why">' + esc(r.basis) +
+          (r.flag ? ' <span class="pl-flag">⚠ behind TNA</span>' : "") + (r.stage ? '<span class="om-io">Stage: ' + esc(r.stage) + (r.issue ? " · " + esc(r.issue) : "") + "</span>" : "") +
+          (r.shift ? '<span class="pl-shift">↪ ' + (r.shift.from ? "from Wk " + plWeekNo(r.shift.from) + " " : "") + "by " + esc(r.shift.by || "–") + ": " + esc(r.shift.reason || "") + "</span>" : "") + "</td></tr>";
+      }).join("");
+    }).join("") || '<tr><td colspan="11" class="om-small">Nothing planned for this week with these filters.</td></tr>';
+    h += "</tbody></table></div>" + (order.length > show.length ? '<p class="om-small">Showing 150 of ' + order.length + " IOs — use the filters or CSV.</p>" : "") + "</div>";
+    // action bar
+    var selKeys = Object.keys(pl.sel), selRows = all.filter(function (r) { return pl.sel[r.uk]; }), selShifted = selRows.filter(function (r) { return r.shift; }).length;
+    if (selKeys.length) {
+      var weeks = []; for (var i = 0; i < 9; i++) weeks.push(dspAdd(b.thisWeek, i * 7));
+      h += '<div class="pl-bar"><b>' + selKeys.length + " SKU" + (selKeys.length > 1 ? "s" : "") + " selected</b> <span class=\"om-small\">(" + esc(dspN(plTot(selRows).val, "val")) + ")</span>" +
+        '<select id="plTo">' + weeks.map(function (w) { return '<option value="' + w + '"' + (w === dspAdd(wk.length === 10 ? wk : b.thisWeek, 7) ? " selected" : "") + ">" + esc(plName(w)) + " · Wk " + plWeekNo(w) + " (" + esc(plRange(w)) + ")</option>"; }).join("") + "</select>" +
+        '<input id="plReason" type="text" placeholder="Reason (buyer asked, material late, QC…)" maxlength="300">' +
+        '<button class="btn" type="button" id="plShift">↪ Shift</button>' + (selShifted ? '<button class="btn secondary" type="button" id="plUnshift">↩ Back to auto week (' + selShifted + ")</button>" : "") +
+        '<button class="btn secondary" type="button" id="plClear">Clear</button></div>';
+    }
+    return h;
+  }
+  function plCsv() {
+    var b = pl.boot, wk = pl.wk, rows = plFilter(b.rows).filter(function (r) { return plBucket(r) === wk; });
+    var q = function (v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var sp = function (s, i) { return s ? s.split("|")[i] : ""; };
+    var head = ["Plan week", "Week no", "Team", "Team Leader", "Merchant", "Buyer", "Buyer PO", "IO No", "SKU No", "Article", "Category", "Size", "Color", "Open Qty", "Open Value", "Ship date", "Stitching finish planned", "Stitching finish actual", "Latex finish planned", "Latex finish actual", "Packing complete actual", "Recovery date", "Why this week", "Behind TNA", "Shifted from week", "Shift reason", "Shifted by"];
+    var lines = [head.join(",")].concat(rows.map(function (r) { return [r.week, r.week ? plWeekNo(r.week) : "", r.team, r.tl, r.mer, r.buyer, r.po, r.io, r.sku, r.art, r.cat, r.size, r.color, r.qty, r.val, r.ship, sp(r.st, 2), sp(r.st, 3), sp(r.lx, 2), sp(r.lx, 3), sp(r.pk, 3), r.rec, r.basis, r.flag ? "Yes" : "", r.shift && r.shift.from ? r.shift.from : "", r.shift ? r.shift.reason : "", r.shift ? r.shift.by : ""].map(q).join(","); }));
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], { type: "text/csv" }));
+    a.download = "dispatch-plan-" + (wk.length === 10 ? "wk" + plWeekNo(wk) : wk) + ".csv"; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function plRe() { var body = document.getElementById("dspBody"); if (!body) return; var y = window.scrollY; body.innerHTML = plRender(); plWire(body); window.scrollTo(0, y); }
+  function plWire(root) {
+    var el;
+    root.querySelectorAll("[data-plwk]").forEach(function (x) { x.onclick = function () { pl.wk = x.dataset.plwk; pl.sel = {}; plRe(); }; });
+    root.querySelectorAll("[data-plgroup]").forEach(function (x) { x.onclick = function () { pl.group = x.dataset.plgroup; plRe(); }; });
+    root.querySelectorAll("[data-plgo]").forEach(function (x) {
+      x.onclick = function () {
+        pl.wk = x.dataset.plgo; pl.sel = {};
+        if (x.dataset.pln !== undefined) { if (pl.group === "tl") { pl.f.tl = x.dataset.pln === "(blank)" ? "" : x.dataset.pln; pl.f.mer = ""; } else { pl.f.mer = x.dataset.pln === "(blank)" ? "" : x.dataset.pln; pl.f.tl = ""; } }
+        plRe(); var l = document.querySelector(".pl-list"); if (l) l.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+    });
+    [["plFMer", "mer"], ["plFTl", "tl"], ["plFBuyer", "buyer"], ["plFOnly", "only"]].forEach(function (p) { var s = document.getElementById(p[0]); if (s) s.onchange = function () { pl.f[p[1]] = this.value; pl.sel = {}; plRe(); }; });
+    if ((el = document.getElementById("plFQ"))) el.oninput = function () { var v = this.value; clearTimeout(pl.qt); pl.qt = setTimeout(function () { pl.f.q = v; plRe(); var i = document.getElementById("plFQ"); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } }, 300); };
+    if ((el = document.getElementById("plCsv"))) el.onclick = plCsv;
+    root.querySelectorAll("[data-pluk]").forEach(function (x) { x.onchange = function () { if (x.checked) pl.sel[x.dataset.pluk] = 1; else delete pl.sel[x.dataset.pluk]; plRe(); }; });
+    root.querySelectorAll("[data-plio]").forEach(function (x) { x.onchange = function () { var on = x.checked; pl.boot.rows.forEach(function (r) { if (r.io === x.dataset.plio && plBucket(r) === pl.wk) { if (on) pl.sel[r.uk] = 1; else delete pl.sel[r.uk]; } }); plRe(); }; });
+    if ((el = document.getElementById("plAll"))) el.onchange = function () { var on = this.checked; plFilter(pl.boot.rows).forEach(function (r) { if (plBucket(r) === pl.wk) { if (on) pl.sel[r.uk] = 1; else delete pl.sel[r.uk]; } }); plRe(); };
+    if ((el = document.getElementById("plClear"))) el.onclick = function () { pl.sel = {}; plRe(); };
+    if ((el = document.getElementById("plShift"))) el.onclick = function () {
+      var btn = this, to = document.getElementById("plTo").value, reason = document.getElementById("plReason").value.trim();
+      if (!reason) { toast("Write why it is shifted", true); document.getElementById("plReason").focus(); return; }
+      btn.disabled = true;
+      plApi("plShift", { keys: Object.keys(pl.sel), to_week: to, reason: reason }).then(function (r) { toast(r.shifted + " SKUs shifted to Wk " + r.weekNo); pl.sel = {}; plLoad(true); })
+        .catch(function (e) { btn.disabled = false; toast(e.message, true); });
+    };
+    if ((el = document.getElementById("plUnshift"))) el.onclick = function () {
+      var btn = this; btn.disabled = true;
+      plApi("plUnshift", { keys: Object.keys(pl.sel) }).then(function (r) { toast(r.undone + " SKUs back to their automatic week"); pl.sel = {}; plLoad(true); })
+        .catch(function (e) { btn.disabled = false; toast(e.message, true); });
+    };
+    if ((el = document.getElementById("plPackSave"))) el.onclick = function () {
+      var btn = this; btn.disabled = true;
+      plApi("plSettings", { packDays: +document.getElementById("plPack").value }).then(function () { toast("Saved — plan updated"); plLoad(true); }).catch(function (e) { btn.disabled = false; toast(e.message, true); });
+    };
+  }
 
   var FOLLOWUP_FN_URL = SUPABASE_URL + "/functions/v1/followup-api";
   var FU_KIND = {
@@ -10522,7 +10903,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     else if (msg.type === "RC_CFMS_REFRESH") done(clApi("checklistBootstrap", { date: msg.date || undefined }));
   });
 
-  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "complaints", "spareparts", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup", "mktportal", "ordermaster", "devices", "dispatch", "devhub"];
+  var ALL_VIEWS = ["home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "complaints", "spareparts", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup", "mktportal", "ordermaster", "devices", "dispatch", "devhub", "helper"];
   // Per-module choice of whether an external-URL-backed module opens in a
   // real new browser tab ("redirect") or is framed inside Workspace
   // ("embed") — Settings → Modules → Module Open Behavior for the 3
@@ -10605,6 +10986,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     if (view === "devices") tbltLoad();
     if (view === "dispatch") dspLoad();
     if (view === "devhub") dhLoad();
+    if (view === "helper") hpLoad();
     if (view === "samplingfms" || view === "ppc") fuToggleButtons();
     if (view === "samplingfms") loadSamplingFmsFrame();
     if (view === "ppc") loadPpcFrame();
@@ -11226,7 +11608,8 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       if (state.doer && (state.doer.is_admin || state.merchantAccess)) { var mdDef = allModuleDefs.find(function (m) { return m.key === "merchant"; }); if (mdDef) modules.push(mdDef); }
       // Follow-up report: admins + people given it in Module access (Ruchika).
       // Order Master: merchants, team leaders and admins (decided by planning-api).
-      modules = modules.filter(function (m) { return m.key !== "ordermaster" && m.key !== "devices" && m.key !== "dispatch" && m.key !== "devhub"; });
+      modules = modules.filter(function (m) { return m.key !== "ordermaster" && m.key !== "devices" && m.key !== "dispatch" && m.key !== "devhub" && m.key !== "helper"; });
+      if (state.doer && !state.demo) { var hpDef = allModuleDefs.find(function (m) { return m.key === "helper"; }); if (hpDef) modules.push(hpDef); }
       if (state.dhAccess) { var dhDef = allModuleDefs.find(function (m) { return m.key === "devhub"; }); if (dhDef) modules.push(dhDef); }
       if (state.dspAccess) { var dspDef = allModuleDefs.find(function (m) { return m.key === "dispatch"; }); if (dspDef) modules.push(dspDef); }
       if (state.doer && !state.demo) { var tbltDef = allModuleDefs.find(function (m) { return m.key === "devices"; }); if (tbltDef) modules.push(tbltDef); }
