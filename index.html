@@ -3125,8 +3125,52 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   #view-devhub textarea,#view-devhub input[type=text],#view-devhub input[type=password],#view-devhub input[type=search],.dh-modal textarea,.dh-modal input,.dh-modal select{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);font:inherit;font-size:13.5px}
   .modal.dh-modal{max-width:720px;width:calc(100vw - 24px);max-height:92vh;overflow:auto}
   .dh-modal label{display:block;font-size:12px;font-weight:700;color:var(--sub);margin-top:10px}
+  .dh-brief .om-dh{flex-wrap:wrap}
+  .dh-fix{margin-top:8px;background:color-mix(in srgb,#16a34a 7%,var(--card));border:1px solid color-mix(in srgb,#16a34a 30%,var(--line));border-radius:8px;padding:6px 10px;font-size:12.5px}
+  .dh-fix summary{cursor:pointer;font-weight:700;color:#15803d}
+  .dh-fix ol{margin:6px 0 2px;padding-left:20px} .dh-fix li{margin:2px 0}
+  button.dh-kpi small{display:block;margin-top:2px}
+</style>
+<style id="rcMobileNav">
+  /* ---------- Phone / tablet: menu goes into a ☰ drawer, compact top bar ---------- */
+  .rc-mtop,.rc-mback{display:none}
+  @media (max-width:820px){
+    .rc-mtop{display:flex;align-items:center;gap:10px;position:sticky;top:var(--topbar-offset);z-index:60;background:var(--sidebar-bg);color:#fff;padding:8px 12px;min-height:54px;box-shadow:0 4px 14px -8px rgba(0,0,0,.45)}
+    .rc-mtop .rc-mburger{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:10px;width:42px;height:42px;min-height:42px;font-size:20px;display:flex;align-items:center;justify-content:center;padding:0;flex:0 0 auto;cursor:pointer}
+    .rc-mtop img{height:28px;width:auto;flex:0 0 auto}
+    .rc-mtop .rc-mtitle{flex:1;min-width:0;font-weight:800;font-size:15px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .rc-mtop .rc-mtitle small{display:block;font-weight:500;font-size:11px;color:var(--sidebar-sub);overflow:hidden;text-overflow:ellipsis}
+    .rc-mtop .rc-mlogout{background:#7f1d1d;border:1px solid #dc2626;color:#fff;border-radius:10px;height:40px;min-height:40px;padding:0 12px;font-weight:700;font-size:13px;flex:0 0 auto;cursor:pointer;display:flex;align-items:center;gap:6px}
+    /* the sidebar becomes a slide-in drawer (same look as on the computer) */
+    .sidebar,.sidebar.collapsed{position:fixed!important;top:0!important;left:0;bottom:0;z-index:1000;width:min(290px,86vw)!important;height:100%!important;max-height:100vh;flex-direction:column!important;flex-wrap:nowrap!important;overflow-x:hidden!important;overflow-y:auto!important;padding:16px 14px calc(16px + env(safe-area-inset-bottom))!important;transform:translateX(-105%);transition:transform .22s ease;box-shadow:12px 0 40px rgba(0,0,0,.45)}
+    body.rc-nav-open .sidebar{transform:none}
+    .sidebar .brand,.sidebar.collapsed .brand{display:flex!important;justify-content:flex-start;padding:0 8px 14px}
+    .sidebar .brand-text,.sidebar.collapsed .brand-text{display:block!important}
+    .sidebar .sidebar-toggle{display:none!important}
+    .sidebar .sidebar-nav,.sidebar.collapsed .sidebar-nav{display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;flex:1 0 auto!important;width:100%;overflow:visible}
+    .sidebar .nav-item,.sidebar.collapsed .nav-item{justify-content:flex-start!important;padding:12px 12px!important;font-size:15px;min-height:46px}
+    .sidebar .nav-label,.sidebar.collapsed .nav-label{display:inline!important}
+    .sidebar .sidebar-footer,.sidebar.collapsed .sidebar-footer{display:flex!important;order:0!important;flex-direction:column!important;flex-wrap:nowrap!important;align-items:stretch!important;gap:10px;margin:12px 0 0!important;padding:12px 2px 0!important;border-top:1px solid var(--sidebar-line)!important;border-bottom:0!important;width:100%}
+    .sidebar .sidebar-footer .footer-utility-row{display:flex!important;flex-direction:row!important}
+    .sidebar .sidebar-footer .account-row{flex-direction:row!important}
+    .sidebar .sidebar-footer .attend-widget{order:0!important;flex:none!important;display:block}
+    .sidebar .sidebar-footer .attend-widget #attendActionBtn{width:100%!important;margin-top:8px!important}
+    .sidebar .sidebar-footer .logout-btn{width:100%!important}
+    .rc-mback{display:block;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .2s ease}
+    body.rc-nav-open .rc-mback{opacity:1;pointer-events:auto}
+    body.rc-nav-open{overflow:hidden}
+    #app.active{flex-direction:column}
+    main{padding:12px 12px 80px!important}
+    .ticker-bar{margin-bottom:12px}
+  }
+  @media (max-width:420px){ .rc-mtop .rc-mlogout .lo-tx{display:none} .rc-mtop img{display:none} }
+  /* tablets in landscape / small laptops: a bit less padding */
+  @media (min-width:821px) and (max-width:1180px){ main{padding:18px 18px!important} }
 </style>
 <div id="app">
+<div class="rc-mtop" id="rcMTop"><button type="button" class="rc-mburger" id="rcMBurger" aria-label="Open menu" aria-expanded="false">☰</button><img id="rcMLogo" alt="" /><div class="rc-mtitle" id="rcMTitle">Rugs Creation<small id="rcMSub">Workspace</small></div><button type="button" class="rc-mlogout" id="rcMLogout" aria-label="Log out"><span aria-hidden="true">⏻</span><span class="lo-tx">Log out</span></button></div>
+<div class="rc-mback" id="rcMBack"></div>
+
 <button id="tsFab" class="ts-fab" type="button" title="Report a technical problem">🛠️<span class="ts-fab-t"> Report a problem</span><span id="tsFabBadge" class="ts-fab-badge hidden"></span></button>
   <div class="sidebar">
     <button class="sidebar-toggle" id="sidebarToggle" title="Collapse sidebar">⮜</button>
@@ -3907,7 +3951,8 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
         <button class="btn secondary" type="button" id="dhRefreshBtn">↻ Refresh</button>
       </div>
       <div class="om-tabs" id="dhTabs">
-        <button type="button" data-dhtab="inbox" class="on">👔 CEO inbox</button>
+        <button type="button" data-dhtab="dash" class="on">📊 Dashboard</button>
+        <button type="button" data-dhtab="inbox">👔 CEO inbox</button>
         <button type="button" data-dhtab="followups">🤝 Follow-ups</button>
         <button type="button" data-dhtab="agents">🤖 Agents</button>
         <button type="button" data-dhtab="publish" class="hidden dh-devonly">🚀 Publish</button>
@@ -8625,7 +8670,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   // devhub-api (Developer rank only): publish index.html to GitHub, quick edit, history + restore.
   var AGENT_FN_URL = SUPABASE_URL + "/functions/v1/agent-hub";
   var DEVHUB_FN_URL = SUPABASE_URL + "/functions/v1/devhub-api";
-  var dh = { tab: "inbox", boot: null, gh: null, f: { agent: "", sev: "" }, live: null, work: null, edits: [], pick: null, loading: false };
+  var dh = { tab: "dash", boot: null, gh: null, f: { agent: "", sev: "" }, live: null, work: null, edits: [], pick: null, loading: false };
   function dhCall(url, action, payload) {
     if (state.demo) return Promise.reject(new Error("Not available in demo mode."));
     return fetch(url, {
@@ -8664,7 +8709,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       ahApi("ahFollowups").then(function (d) { dh.loading = false; dh.fu = d; dhRender(); }).catch(function (e) { dh.loading = false; body.innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; });
       return;
     }
-    var needAgents = (dh.tab === "inbox" || dh.tab === "agents") && (force || !dh.boot);
+    var needAgents = (dh.tab === "dash" || dh.tab === "inbox" || dh.tab === "agents") && (force || !dh.boot);
     var needGh = ["publish", "edit", "history", "github"].indexOf(dh.tab) >= 0 && (force || !dh.gh);
     if (!needAgents && !needGh) { dhRender(); return; }
     if (dh.loading) return;
@@ -8680,7 +8725,8 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     var body = document.getElementById("dhBody"); if (!body) return;
     document.querySelectorAll("#dhTabs button").forEach(function (b) { b.classList.toggle("on", b.dataset.dhtab === dh.tab); });
     var h = "";
-    if (dh.tab === "inbox") h = dhInbox();
+    if (dh.tab === "dash") h = dhDash();
+    else if (dh.tab === "inbox") h = dhInbox();
     else if (dh.tab === "agents") h = dhAgents();
     else if (dh.tab === "followups") h = dhFollowTab();
     else if (dh.tab === "publish") h = dhPublishTab();
@@ -8690,6 +8736,93 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     body.innerHTML = h;
     dhWire(body);
     if (dh.tab === "history") dhLoadHistory();
+  }
+
+
+  // ---- 💡 How to solve: plain steps for each kind of issue
+  var DH_FIX = [
+    [/^orders:overdue:/, ["Open 📦 Order Master → filter this merchant → tap the ⚠ Overdue tile.", "For each IO fill the Revised ship date and the Recovery plan (Risk owner, issue, plan).", "Press ✅ Approve & send so the merchant gets the list and does it today.", "The issue closes by itself when no SKU of this merchant is overdue."]],
+    [/^orders:writeback/, ["Open 🧑‍💼 Merchant Dashboard → ⚙ Connect editor and check the Sheet Bridge says Connected.", "If it is offline, open the WorkspaceBridge Apps Script → Deploy → Manage deployments → make sure it is active.", "Then open the SKU in 📦 Order Master and save the change again."]],
+    [/^orders:dispatch/, ["Open 🚚 Dispatch tracker → 👥 Merchants and see who is behind pace.", "With Sahil (shipping) and Gulati Ji (production) pick the IOs that can ship this month.", "Approve & send to the dispatch owners with the IO list."]],
+    [/^sampling:complaint/, ["Open 📣 Client Complaints → this complaint.", "Fill the root cause and corrective action, inform the buyer, or move the due date with a reason.", "Approve & send to the owner if nobody is working on it."]],
+    [/^sampling:stuck/, ["Open 🧵 Sampling FMS → this handler's IOs.", "Complete the costing / shade-card step or mark why it is waiting.", "Approve & send so the handler clears them today."]],
+    [/^sampling:leads/, ["Open 🤝 Fair Leads → filter by this person.", "Send the follow-up mail / call and set the follow-up status.", "Approve & send as a reminder."]],
+    [/^quality:sla/, ["Open 🧪 Quality Portal → today's gate / DQA list.", "Pass or reject each lot (gate 2 h, DQA 2 h, 4-point 48 h).", "If these are old ERP gate entries that will never be checked, close them in the Quality Portal so they stop counting.", "Approve & send to Lalit / the DQA person."]],
+    [/^quality:nolot/, ["Open 🧪 Quality Portal → lots without lot number.", "Copy the vendor lot number from the challan into each lot."]],
+    [/^purchase:late-po/, ["Open the Purchase FMS → Pending, sort by delivery date.", "Call the top vendors in the list; write the new promised date in 'Latest update'.", "Approve & send the vendor list to the purchase person."]],
+    [/^purchase:porm/, ["Open the PO_RM sheet → filter this accountable person, status Pending.", "Chase the vendors / job workers and update the delivery date or received qty.", "Approve & send so the person gets the list."]],
+    [/^purchase:spares-low/, ["Open 🔩 Spare Parts → items at or below minimum.", "Raise a purchase order for each, starting with the ones at zero stock."]],
+    [/^people:tasks/, ["Open ✅ Delegation → this person's pending tasks.", "Ask them to finish or request a revised date; reassign if they are on leave.", "Approve & send as a reminder."]],
+    [/^people:leave/, ["Open 🏖️ Leave Request → pending.", "The team leader approves or rejects; if the TL is away, an admin can decide."]],
+    [/^people:reimb/, ["Open 🧳 Reimbursement → pending at this stage.", "The approver at that stage approves or rejects with a note."]],
+    [/^people:tablet/, ["Ask the person to return the tablet to IT.", "IT presses 'Received' in 📱 Tablet requests."]],
+    [/^it:sync-old/, ["These tabs are no longer used (e.g. old Raw Data / by Colour).", "Either remove them from SOURCES in SupabaseSync or press ✖ Not an issue."]],
+    [/^it:sync$/, ["Open the SupabaseSync Apps Script → Executions (left menu).", "Read the red error: usually 'Exceeded maximum execution time' or a renamed tab / lost access.", "Fix the tab name or sharing, then run refreshAll once."]],
+    [/^it:dispatch-sync/, ["Open the SupabaseSync Apps Script → find const SOURCES.", "Add: ['1y-nQq4KvLRgxv8ko3I3A_QitanmugPF0bdV2CR9ET3o', 'DISPATCH', [['Archive', 0]]],", "Save → run refreshAll once. The Dispatch tracker fills in."]],
+    [/^it:http/, ["A few server calls failed or timed out — usually a slow Google Apps Script.", "If the count keeps growing every day, tell the developer; otherwise press ✖ Not an issue."]],
+    [/^it:cron/, ["A scheduled job failed. Tell the developer with the error text shown above."]],
+    [/^it:bridge/, ["Open the WorkspaceBridge Apps Script → Deploy → Manage deployments.", "Check the web app is active and 'Who has access' is Anyone; redeploy if needed."]],
+    [/^it:tech/, ["Open 🛠️ Tech Support → this issue.", "Assign it to IT and reply to the reporter; close it when fixed."]],
+    [/^it:outbox/, ["Emails are not leaving. Check the mail sender / Gmail quota with the developer."]]
+  ];
+  function dhFixSteps(fkey) { for (var i = 0; i < DH_FIX.length; i++) if (DH_FIX[i][0].test(fkey)) return DH_FIX[i][1]; return []; }
+  function dhFixBox(f) {
+    var st = dhFixSteps(f.fkey); if (!st.length) return "";
+    return '<details class="dh-fix"><summary>💡 How to solve</summary><ol>' + st.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>";
+  }
+
+  // ---- 📊 Dashboard: everything the agents report, in one place (no bell notifications)
+  function dhDash() {
+    var b = dh.boot;
+    if (!b || !b.access) return '<div class="empty">The Developer dashboard is for the approvers (directors, Anand, Ritesh, Priyanshu, IT) and the Developer rank.</div>';
+    var now = Date.now(), day = 86400000, today = new Date().toDateString();
+    var open = b.findings.filter(function (f) { return f.status === "open"; });
+    var high = open.filter(function (f) { return f.severity === "high"; });
+    var newToday = open.filter(function (f) { return new Date(f.first_seen).toDateString() === today; });
+    var solved = b.findings.filter(function (f) { return f.status === "resolved" && now - new Date(f.last_seen).getTime() < day; });
+    var sent = b.findings.filter(function (f) { return f.status === "approved" && f.decided_at && now - new Date(f.decided_at).getTime() < day; });
+    var ag = {}; b.agents.forEach(function (a) { ag[a.id] = a; });
+    var lastRun = (b.runs || [])[0];
+    var h = '<div class="dh-brief"><div class="om-dh"><div><h3>📊 Developer dashboard</h3><div class="om-small">Agents check every hour, 9 am – 8 pm (Mon–Sat). Last check: <b>' + esc(lastRun ? dhAgo(lastRun.started_at) : "–") + "</b>. " +
+      (b.bell ? "Approvers also get bell notifications." : "<b>No bell notifications</b> — everything stays here.") + '</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">' +
+      '<label class="om-small" style="display:flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" id="dhBell"' + (b.bell ? " checked" : "") + "> Bell notifications to approvers</label>" +
+      '<button class="btn secondary" type="button" id="dhRunNow">▶ Check now</button></div></div></div>';
+    h += '<div class="dh-kpis">' +
+      '<button type="button" class="dh-kpi" data-dhgo="inbox"><span>Open issues</span><b>' + open.length + "</b></button>" +
+      '<button type="button" class="dh-kpi bad" data-dhgosev="high"><span>🔴 Urgent</span><b>' + high.length + "</b></button>" +
+      '<div class="dh-kpi"><span>🆕 New today</span><b>' + newToday.length + "</b></div>" +
+      '<div class="dh-kpi"><span>✅ Solved by itself (24 h)</span><b style="color:#16a34a">' + solved.length + "</b></div>" +
+      '<div class="dh-kpi"><span>📨 Sent to staff (24 h)</span><b>' + sent.length + "</b></div>" +
+      '<button type="button" class="dh-kpi" data-dhgo="followups"><span>🤝 Follow-ups pending</span><b>' + b.fu.open + '</b><small class="om-small">' + b.fu.linked + " chased · " + b.fu.closed7 + " answered 7d</small></button></div>";
+    // brief
+    var br = b.briefs || [];
+    var sel = dh.briefIx || 0, cur = br[sel];
+    h += '<div class="dsp-grid2"><div class="dsp-card"><div class="om-dh"><h3 style="margin:0;font-size:15px">👔 CEO report</h3>' + (br.length > 1 ? '<select id="dhBriefSel" style="max-width:220px">' + br.map(function (x, i) { return '<option value="' + i + '"' + (i === sel ? " selected" : "") + ">" + esc(new Date(x.made_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })) + " · " + esc(x.kind) + "</option>"; }).join("") + "</select>" : "") + "</div>" +
+      (cur ? '<pre class="dh-pre" style="margin-top:8px">' + esc(cur.text) + "</pre>" : '<p class="om-small">No report yet — it is made every morning after 10 am, or press 📨 below.</p>') +
+      '<div class="om-actions"><button class="btn secondary" type="button" id="dhBriefNow">📨 Make a fresh report now</button></div></div>';
+    // agents
+    h += '<div class="dsp-card"><h3 style="margin:0 0 8px;font-size:15px">🤖 Agents</h3>' + b.agents.map(function (a) {
+      var n = open.filter(function (f) { return f.agent === a.id; }), hi = n.filter(function (f) { return f.severity === "high"; }).length, l = a.last;
+      return '<div class="om-alert-row" style="align-items:center"><span>' + a.icon + " <b>" + esc(a.name) + '</b> <span class="om-small">· ' + esc(l ? dhAgo(l.started_at) : "never") + (l && l.error ? ' · <b style="color:#dc2626">error</b>' : "") + '</span></span><span><button class="btn secondary" type="button" data-dhgoagent="' + a.id + '" style="padding:3px 10px;font-size:12px">' + n.length + " open" + (hi ? " · " + hi + " 🔴" : "") + "</button></span></div>";
+    }).join("") + "</div></div>";
+    // top urgent with how-to
+    if (high.length) h += '<div class="dsp-card"><h3 style="margin:0 0 8px;font-size:15px">🔴 Needs a decision first</h3>' + high.sort(function (a, c) { return c.cnt - a.cnt; }).slice(0, 6).map(function (f) {
+      var a = ag[f.agent] || { icon: "🤖" };
+      return '<div class="dh-item high" style="margin-bottom:8px"><div class="dh-item-h"><b>' + esc(a.icon + " " + f.title) + '</b><button class="btn" type="button" data-dhact="approve" data-k="' + esc(f.fkey) + '" style="padding:5px 10px;font-size:12px">✅ Approve &amp; send</button></div>' + dhFixBox(f) + "</div>";
+    }).join("") + '<button class="btn secondary" type="button" data-dhgo="inbox">Open the full CEO inbox →</button></div>';
+    // activity feed
+    var ev = [];
+    b.findings.forEach(function (f) {
+      var a = ag[f.agent] || { icon: "🤖" };
+      if (f.first_seen && now - new Date(f.first_seen).getTime() < 2 * day) ev.push({ t: f.first_seen, ic: "🆕", tx: a.icon + " " + f.title, sub: "found" });
+      if (f.status === "resolved" && now - new Date(f.last_seen).getTime() < 2 * day) ev.push({ t: f.last_seen, ic: "✅", tx: f.title, sub: "solved — the data is fixed" });
+      if (f.decided_at && now - new Date(f.decided_at).getTime() < 2 * day) ev.push({ t: f.decided_at, ic: f.status === "approved" ? "📨" : f.status === "snoozed" ? "💤" : "✖", tx: f.title, sub: (f.status === "approved" ? "sent to " + (f.sent_to || []).map(dhPeopleName).join(", ") : f.status) + " by " + (f.decided_name || "–") });
+    });
+    ev.sort(function (a, c) { return new Date(c.t) - new Date(a.t); });
+    h += '<div class="dsp-card"><h3 style="margin:0 0 8px;font-size:15px">🕒 What happened (last 48 h)</h3>' + (ev.slice(0, 40).map(function (e) {
+      return '<div class="om-alert-row"><span>' + e.ic + " " + esc(e.tx) + ' <span class="om-small">· ' + esc(e.sub) + '</span></span><span class="om-small">' + esc(dhAgo(e.t)) + "</span></div>";
+    }).join("") || '<p class="om-small">Nothing yet.</p>') + "</div>";
+    return h;
   }
 
   // ---- 👔 CEO inbox
@@ -8712,7 +8845,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       var a = ag[f.agent] || { icon: "🤖", name: f.agent };
       return '<div class="dh-item ' + f.severity + '"><div class="dh-item-h">' + dhSev(f.severity) + "<b>" + esc(f.title) + '</b><span class="om-small">' + esc(a.icon + " " + a.name) + "</span></div>" +
         '<div class="dh-meta">First seen ' + esc(dhAgo(f.first_seen)) + " · checked " + esc(dhAgo(f.last_seen)) + (f.owner_docs && f.owner_docs.length ? " · goes to: <b>" + esc(f.owner_docs.map(dhPeopleName).join(", ")) + "</b>" : " · <b>pick who should get it</b>") + "</div>" +
-        (f.detail ? '<div class="dh-detail">' + esc(f.detail) + "</div>" : "") +
+        (f.detail ? '<div class="dh-detail">' + esc(f.detail) + "</div>" : "") + dhFixBox(f) +
         '<div class="dh-acts"><button class="btn" type="button" data-dhact="approve" data-k="' + esc(f.fkey) + '">✅ Approve &amp; send</button><button class="btn secondary" type="button" data-dhact="snooze" data-k="' + esc(f.fkey) + '">💤 Later (3 days)</button><button class="btn secondary" type="button" data-dhact="done" data-k="' + esc(f.fkey) + '">✔ Already handled</button><button class="btn secondary" type="button" data-dhact="reject" data-k="' + esc(f.fkey) + '">✖ Not an issue</button></div></div>';
     }).join("") || '<div class="empty">Nothing waiting 🎉</div>';
     var done = b.findings.filter(function (f) { return f.status !== "open"; }).slice(0, 25);
@@ -8970,6 +9103,10 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
 
   function dhWire(root) {
     if (dh.tab === "followups") dhWireFollow(root);
+    root.querySelectorAll("[data-dhgosev]").forEach(function (x) { x.onclick = function () { dh.f = { agent: "", sev: x.dataset.dhgosev }; dh.tab = "inbox"; dhLoad(); }; });
+    root.querySelectorAll("[data-dhgoagent]").forEach(function (x) { x.onclick = function () { dh.f = { agent: x.dataset.dhgoagent, sev: "" }; dh.tab = "inbox"; dhLoad(); }; });
+    var bs = document.getElementById("dhBriefSel"); if (bs) bs.onchange = function () { dh.briefIx = +this.value; dhRender(); };
+    var bl = document.getElementById("dhBell"); if (bl) bl.onchange = function () { var on = this.checked; ahApi("ahBell", { on: on }).then(function () { dh.boot.bell = on; toast(on ? "Approvers will also get bell notifications" : "No bell notifications — everything stays in the Developer module"); dhRender(); }).catch(function (e) { toast(e.message, true); }); };
     root.querySelectorAll("[data-dhgo]").forEach(function (x) { x.onclick = function () { dh.tab = x.dataset.dhgo; dhLoad(); }; });
     root.querySelectorAll("[data-dhf]").forEach(function (x) { x.onclick = function () { dh.f = { agent: x.dataset.dhf, sev: "" }; dhRender(); }; });
     root.querySelectorAll("[data-dhsev]").forEach(function (x) { x.onclick = function () { dh.f = { agent: "", sev: x.dataset.dhsev }; dhRender(); }; });
@@ -9084,7 +9221,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       var tabs = document.getElementById("dhTabs"); if (!tabs || tabs.dataset.wired) return;
       tabs.dataset.wired = "1";
       tabs.addEventListener("click", function (e) { var b = e.target.closest("button[data-dhtab]"); if (!b) return; dh.tab = b.dataset.dhtab; dhLoad(); });
-      document.getElementById("dhRefreshBtn").addEventListener("click", function () { if (dh.tab === "followups") dh.fu = null; else if (["inbox", "agents"].indexOf(dh.tab) >= 0) dh.boot = null; else dh.gh = null; dhLoad(true); });
+      document.getElementById("dhRefreshBtn").addEventListener("click", function () { if (dh.tab === "followups") dh.fu = null; else if (["dash", "inbox", "agents"].indexOf(dh.tab) >= 0) dh.boot = null; else dh.gh = null; dhLoad(true); });
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire); else wire();
   })();
@@ -20834,4 +20971,35 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
+</script>
+<script>
+  // Phone / tablet menu drawer: ☰ opens the sidebar, tapping a menu item / the dark area / Esc closes it.
+  (function () {
+    function q(id) { return document.getElementById(id); }
+    function open(on) {
+      document.body.classList.toggle("rc-nav-open", on);
+      var b = q("rcMBurger"); if (b) { b.setAttribute("aria-expanded", on ? "true" : "false"); b.textContent = on ? "✕" : "☰"; }
+    }
+    function title() {
+      var a = document.querySelector(".sidebar .nav-item.active .nav-label");
+      var v = document.querySelector('main > [id^="view-"]:not(.hidden) h2, main > [id^="view-"]:not(.hidden) h1');
+      var t = (v && v.textContent.trim()) || (a && a.textContent.trim()) || "Workspace";
+      var s = q("rcMSub"); if (s) s.textContent = t.replace(/\s+/g, " ").slice(0, 60);
+    }
+    function init() {
+      var logo = q("rcMLogo"); try { if (logo && typeof RUGS_LOGO_DATA_URI !== "undefined") logo.src = RUGS_LOGO_DATA_URI; } catch (e) {}
+      q("rcMBurger").addEventListener("click", function () { open(!document.body.classList.contains("rc-nav-open")); });
+      q("rcMBack").addEventListener("click", function () { open(false); });
+      q("rcMLogout").addEventListener("click", function () { var b = q("logoutBtn"); if (b) b.click(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") open(false); });
+      var sb = document.querySelector(".sidebar");
+      if (sb) sb.addEventListener("click", function (e) { if (e.target.closest(".nav-item")) setTimeout(function () { open(false); title(); }, 60); });
+      // keep the small title in the top bar in step with the page that is open
+      var main = document.querySelector("main");
+      if (main && window.MutationObserver) { var t; new MutationObserver(function () { clearTimeout(t); t = setTimeout(title, 120); }).observe(main, { attributes: true, subtree: true, attributeFilter: ["class"] }); }
+      window.addEventListener("resize", function () { if (window.innerWidth > 820) open(false); });
+      title();
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+  })();
 </script>
