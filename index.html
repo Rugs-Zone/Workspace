@@ -3180,6 +3180,45 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   .pl-bar{position:sticky;bottom:10px;z-index:30;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--card);border:2px solid var(--brand);border-radius:14px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
   .pl-bar select,.pl-bar input{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px;color:var(--ink);font:inherit;font-size:13px}
   .pl-bar input{flex:1;min-width:180px}
+  /* ---------- 🤖 Help-Bot ---------- */
+  .hb-fab{position:fixed;right:18px;bottom:70px;z-index:95;display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:0;border-radius:999px;padding:8px 16px 8px 8px;font:800 14px/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 12px 28px -8px rgba(109,40,217,.65)}
+  .hb-fab:hover{transform:translateY(-2px)}
+  .hb-face{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#ede9fe;font-size:20px;animation:hbBob 2.4s ease-in-out infinite}
+  .hb-face.big{width:40px;height:40px;font-size:24px}
+  @keyframes hbBob{50%{transform:translateY(-3px) rotate(-6deg)}}
+  .hb-badge{position:absolute;top:-6px;right:-6px;background:#dc2626;color:#fff;border-radius:99px;font-size:11.5px;font-weight:900;min-width:20px;padding:3px 6px;text-align:center;border:2px solid #fff}
+  .hb-panel{position:fixed;right:18px;bottom:124px;z-index:96;width:390px;max-width:calc(100vw - 24px);height:min(600px,calc(100vh - 150px));display:flex;flex-direction:column;background:var(--card,#fff);color:var(--ink,#0f172a);border:1px solid var(--line,#e5e7eb);border-radius:18px;box-shadow:0 24px 60px -12px rgba(0,0,0,.35);overflow:hidden}
+  .hb-head{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff}
+  .hb-head b{display:block;font-size:15px} .hb-head small{display:block;font-size:11.5px;opacity:.85}
+  .hb-head>div{flex:1;min-width:0}
+  .hb-ic{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:15px}
+  .hb-body{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg,#f8fafc)}
+  .hb-msg{max-width:88%;padding:9px 12px;border-radius:14px;font-size:13.5px;line-height:1.45}
+  .hb-msg.bot{background:var(--card,#fff);border:1px solid var(--line,#e5e7eb);border-bottom-left-radius:4px;align-self:flex-start}
+  .hb-msg.me{background:#6d28d9;color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
+  .hb-work{display:grid;gap:6px}
+  .hb-w{display:flex;gap:8px;align-items:center;background:var(--card,#fff);border:1px solid var(--line,#e5e7eb);border-left:4px solid #94a3b8;border-radius:10px;padding:7px 9px;font-size:12.5px;font-weight:700}
+  .hb-w.high{border-left-color:#dc2626} .hb-w.medium{border-left-color:#f59e0b}
+  .hb-w span{flex:1;min-width:0} .hb-w small{display:block;font-weight:600;color:var(--sub,#64748b);font-size:11px;margin-top:2px}
+  .hb-w .btn,.hb-gopage{padding:5px 10px;font-size:12px;white-space:nowrap}
+  .hb-gopage{align-self:flex-start}
+  .hb-link{background:none;border:0;color:#6d28d9;font-weight:800;cursor:pointer;text-align:left;padding:2px}
+  .hb-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .hb-chips button{background:var(--card,#fff);border:1px solid #c4b5fd;color:#5b21b6;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;text-align:left}
+  .hb-ask{display:flex;gap:6px;padding:10px;border-top:1px solid var(--line,#e5e7eb);background:var(--card,#fff)}
+  .hb-ask input{flex:1;min-width:0;background:var(--bg,#f8fafc);border:1px solid var(--line,#e5e7eb);border-radius:10px;padding:9px 10px;color:var(--ink,#0f172a);font:inherit;font-size:13.5px}
+  .hb-intro{position:fixed;inset:0;z-index:300;background:rgba(10,6,25,.82);display:grid;place-items:center;padding:12px}
+  .hb-intro-card{width:min(960px,100%);background:#120a24;border-radius:18px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .hb-intro-card iframe{display:block;width:100%;aspect-ratio:16/9;border:0;background:#120a24}
+  .hb-intro-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;color:#fff;font-size:14px}
+  .hb-intro-bar span{flex:1;min-width:180px}
+  .hb-intro-bar .btn.secondary{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.55)}
+  @media (max-width:700px){
+    .hb-fab{bottom:64px;right:12px;padding:6px}.hb-fab-t{display:none}
+    .hb-panel{right:8px;left:8px;width:auto;max-width:none;bottom:112px;height:calc(100vh - 170px)}
+    .hb-intro-card iframe{aspect-ratio:9/16;max-height:72vh}
+  }
+  @media print{.hb-fab,.hb-panel{display:none}}
 </style>
 <style id="rcMobileNav">
   /* ---------- Phone / tablet: menu goes into a ☰ drawer, compact top bar ---------- */
@@ -3228,7 +3267,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     <div class="sidebar-nav">
       <button class="nav-item active" data-view="home" title="Home"><span class="nav-icon">🏠</span><span class="nav-label">Home</span><span class="soon-badge hidden" id="navHomeBadge" style="background:var(--brand);color:#fff"></span></button>
       <button class="nav-item" id="navModules" data-view="modules" title="Modules"><span class="nav-icon">🧩</span><span class="nav-label">Modules</span></button>
-      <button class="nav-item" id="navHelper" data-view="helper" title="My Helper"><span class="nav-icon">🧑‍🔧</span><span class="nav-label">My Helper</span><span class="soon-badge hidden" id="navHelperBadge" style="background:#dc2626;color:#fff"></span></button>
+      <button class="nav-item" id="navHelper" data-view="helper" title="Help-Bot"><span class="nav-icon">🤖</span><span class="nav-label">Help-Bot</span><span class="soon-badge hidden" id="navHelperBadge" style="background:#dc2626;color:#fff"></span></button>
       <button class="nav-item hidden" id="navScore" data-view="score" title="Score Report"><span class="nav-icon">📊</span><span class="nav-label">Score Report</span></button>
       <button class="nav-item hidden" id="navAudit" data-view="audit" title="Audit &amp; Renewal"><span class="nav-icon">📜</span><span class="nav-label">Audit &amp; Renewal</span></button>
       <button class="nav-item" id="navChat" data-view="chat" title="Team Chat"><span class="nav-icon">💬</span><span class="nav-label">Team Chat</span></button>
@@ -4019,7 +4058,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       <div class="om-head">
         <button class="embed-back-btn" data-goto="modules" style="margin:0">← Back</button>
         <div style="flex:1;min-width:200px">
-          <h2 style="margin:0">🧑‍🔧 My Helper</h2>
+          <h2 style="margin:0">🤖 Help-Bot</h2>
           <div class="om-sub" id="hpSub">Everything waiting for you today — tap Go fix to jump straight to the page.</div>
         </div>
         <button class="btn secondary" type="button" id="hpRefreshBtn">↻ Check again</button>
@@ -6986,7 +7025,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     { key: "devices", icon: "📱", name: "Tablet requests", status: "live", goto: "devices", category: "work" },
     { key: "dispatch", icon: "🚚", name: "Dispatch tracker", status: "live", goto: "dispatch", category: "work" },
     { key: "devhub", icon: "🛠️", name: "Developer", status: "live", goto: "devhub", category: "work" },
-    { key: "helper", icon: "🧑‍🔧", name: "My Helper", status: "live", goto: "helper", category: "work" },
+    { key: "helper", icon: "🤖", name: "Help-Bot", status: "live", goto: "helper", category: "work" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit", category: "production" },
     { key: "fairvisit", icon: "🎪", name: "Fair Visit", status: "live", goto: "fairvisit", category: "production" },
     { key: "fairleads", icon: "🤝", name: "Fair Leads", status: "live", goto: "fairleads", category: "production" },
@@ -9195,7 +9234,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     };
     var c = { done: 0, late: 0, fixed: 0, pending: 0, overdue: 0, other: 0 }; cur.forEach(function (r) { c[stOf(r)]++; });
     var chip = { done: '<span class="om-st ok">✅ Done on time</span>', late: '<span class="om-st warn">✅ Done late</span>', fixed: '<span class="om-st ok">🤖 Fixed — closed by agent</span>', pending: '<span class="om-st mute">⏳ Pending</span>', overdue: '<span class="om-st bad">⏰ Overdue</span>', other: '<span class="om-st mute">–</span>' };
-    var h = '<div class="dh-brief"><div class="om-dh"><div><h3>📋 Auto-tasks</h3><div class="om-small">Every working morning at about <b>9 am</b> each open issue the agents found for a person becomes a <b>delegation task</b> for that person, given from <b>Vinay\'s or Gaurav\'s ID</b>, to be finished by <b>4 pm</b> the same day. The person sees it in ✅ Delegation and in 🧑‍🔧 My Helper (with Go fix). When the agent sees the problem fixed, the task closes by itself. No new task while the old one for the same issue is still pending.</div></div>' +
+    var h = '<div class="dh-brief"><div class="om-dh"><div><h3>📋 Auto-tasks</h3><div class="om-small">Every working morning at about <b>9 am</b> each open issue the agents found for a person becomes a <b>delegation task</b> for that person, given from <b>Vinay\'s or Gaurav\'s ID</b>, to be finished by <b>4 pm</b> the same day. The person sees it in ✅ Delegation and in 🤖 Help-Bot (with Go fix). When the agent sees the problem fixed, the task closes by itself. No new task while the old one for the same issue is still pending.</div></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><label class="om-small" style="display:flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" id="dhAdOn"' + (d.on ? " checked" : "") + '> Make tasks automatically every morning</label><button class="btn" type="button" id="dhAdRun">📋 Make today\'s tasks now</button></div></div>' +
       '<p class="om-small" style="margin:6px 0 0">' + (d.on ? "Automatic: every working day at about 9 am" + (d.lastDay ? " · last morning run <b>" + esc(d.lastDay) + "</b>" : "") : "<b>Automatic tasks are paused</b> — use the button") + "</p></div>";
     h += '<div class="dsp-card"><h3 style="margin:0 0 6px;font-size:15px">👔 Who gives the task</h3><div class="om-sub">Pick whose ID each agent\'s tasks come from.</div><div class="dh-agents" style="margin-top:8px">' +
@@ -9388,6 +9427,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     var b = document.getElementById("navHelperBadge"); if (!b || !hp.data) return;
     var n = hp.data.items.filter(function (x) { return x.sev !== "low"; }).length || hp.data.items.length;
     b.textContent = n ? String(n) : ""; b.classList.toggle("hidden", !n);
+    if (typeof hbSync === "function") hbSync();
   }
   function hpRender() {
     var d = hp.data, body = document.getElementById("hpBody"); if (!body || !d) return;
@@ -9427,7 +9467,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     goToView(v);
   }
   // quietly after sign-in: fill the menu badge
-  function hpAccessCheck() { if (state.demo || !state.doer) return; hpApi("hpMine").then(function (d) { hp.data = d; hpBadge(); }).catch(function () {}); }
+  function hpAccessCheck() { if (state.demo || !state.doer) return; hpApi("hpMine").then(function (d) { hp.data = d; hpBadge(); if (typeof hbStart === "function") hbStart(); }).catch(function () { if (typeof hbStart === "function") hbStart(); }); }
   (function hpInitOnce() {
     function wire() { var b = document.getElementById("hpRefreshBtn"); if (b && !b.dataset.wired) { b.dataset.wired = "1"; b.addEventListener("click", function () { hpLoad(true); }); } }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire); else wire();
@@ -9605,6 +9645,138 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       var btn = this; btn.disabled = true;
       plApi("plSettings", { packDays: +document.getElementById("plPack").value }).then(function () { toast("Saved — plan updated"); plLoad(true); }).catch(function (e) { btn.disabled = false; toast(e.message, true); });
     };
+  }
+
+  // ---------- 🤖 Help-Bot — floating helper on every screen for every employee ----------
+  // Uses My Helper data (helper-api hpMine). The 🤖 button sits above "Report a problem" with a red count.
+  // Panel: today's work with Go fix, quick questions, a question box (built-in guide, no paid AI) and
+  // 🔊 voice (browser speech, free). After login a 10-second intro plays once a day for the first 7 days.
+  var HB_INTRO_HTML = "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>Help-Bot intro</title>\n<style>\n  :root{--brand:#6d28d9;--brand2:#8b5cf6;--ink:#0f172a;--ok:#16a34a;--bad:#dc2626;--warn:#f59e0b}\n  *{box-sizing:border-box}\n  html,body{margin:0;height:100%;background:#120a24;font-family:\"Segoe UI\",system-ui,-apple-system,Roboto,Arial,sans-serif;overflow:hidden}\n  .stage{position:fixed;inset:0;background:radial-gradient(1200px 700px at 20% 10%,#3b1a7a 0%,#1a0d36 45%,#0d0820 100%);color:#fff}\n  .dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:26px 26px}\n  .bar{position:absolute;left:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--brand2),#22d3ee);width:0;animation:bar 10s linear forwards}\n  @keyframes bar{to{width:100%}}\n  .brand{position:absolute;top:22px;left:28px;font-weight:800;letter-spacing:.3px;opacity:.85;font-size:15px}\n  .brand small{display:block;font-weight:600;opacity:.7;font-size:11px}\n  .skip{position:absolute;top:22px;right:28px;font-size:12px;opacity:.6;border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:4px 12px}\n\n  /* robot */\n  .bot{position:absolute;width:210px;left:8%;top:50%;transform:translateY(-50%);animation:botIn .8s cubic-bezier(.2,1.4,.4,1) both}\n  @keyframes botIn{from{transform:translateY(-50%) scale(.2) rotate(-20deg);opacity:0}to{transform:translateY(-50%) scale(1);opacity:1}}\n  .bot svg{width:100%;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45))}\n  .float{animation:float 2.2s ease-in-out infinite}\n  @keyframes float{50%{transform:translateY(-10px)}}\n  .arm{transform-origin:150px 150px;animation:wave .5s ease-in-out 6 alternate}\n  @keyframes wave{from{transform:rotate(0)}to{transform:rotate(-28deg)}}\n  .eye{animation:blink 3s infinite}\n  @keyframes blink{0%,46%,50%,100%{transform:scaleY(1)}48%{transform:scaleY(.1)}}\n  .mouth{transform-origin:105px 118px;animation:talk .22s ease-in-out infinite alternate}\n  @keyframes talk{to{transform:scaleY(.4)}}\n\n  /* scenes */\n  .scene{position:absolute;left:34%;right:5%;top:50%;transform:translateY(-50%);opacity:0}\n  .s1{animation:sc 2.2s .3s both}\n  .s2{animation:sc 2.1s 2.3s both}\n  .s3{animation:sc 2.1s 4.3s both}\n  .s4{animation:sc 2s 6.3s both}\n  .s5{animation:scEnd 1.9s 8.2s both}\n  @keyframes sc{0%{opacity:0;transform:translateY(-40%)}12%{opacity:1;transform:translateY(-50%)}86%{opacity:1;transform:translateY(-50%)}100%{opacity:0;transform:translateY(-58%)}}\n  @keyframes scEnd{0%{opacity:0;transform:translateY(-40%) scale(.96)}15%{opacity:1;transform:translateY(-50%) scale(1)}100%{opacity:1;transform:translateY(-50%)}}\n  h1{font-size:46px;line-height:1.08;margin:0 0 10px;font-weight:900;letter-spacing:-.5px}\n  h1 .hl{background:linear-gradient(90deg,#c4b5fd,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}\n  p.sub{font-size:21px;margin:0;opacity:.88;line-height:1.35}\n  .step{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700;margin-bottom:12px;letter-spacing:.4px}\n\n  .cards{margin-top:16px;display:grid;gap:9px;max-width:560px}\n  .card{background:#fff;color:var(--ink);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;border-left:6px solid var(--bad);box-shadow:0 10px 24px rgba(0,0,0,.25);opacity:0;animation:cardIn .4s both}\n  .card small{margin-left:auto;font-size:12px;font-weight:700;color:#475569;background:#f1f5f9;border-radius:999px;padding:3px 9px}\n  .card.m{border-left-color:var(--warn)} .card.l{border-left-color:#3b82f6}\n  .s2 .card:nth-child(1){animation-delay:2.55s}.s2 .card:nth-child(2){animation-delay:2.75s}.s2 .card:nth-child(3){animation-delay:2.95s}.s2 .card:nth-child(4){animation-delay:3.15s}\n  @keyframes cardIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}\n\n  .phone{margin-top:16px;width:520px;max-width:100%;background:#fff;color:var(--ink);border-radius:16px;padding:14px;box-shadow:0 14px 30px rgba(0,0,0,.3);position:relative;overflow:hidden;height:150px}\n  .row{display:flex;align-items:center;gap:10px;font-weight:700}\n  .gofix{margin-left:auto;background:linear-gradient(90deg,var(--brand),var(--brand2));color:#fff;border-radius:10px;padding:9px 16px;font-weight:800;animation:press .35s 5.15s both}\n  @keyframes press{50%{transform:scale(.9);filter:brightness(1.2)}}\n  .tap{position:absolute;width:34px;height:34px;border-radius:50%;background:rgba(109,40,217,.35);border:3px solid #fff;right:52px;top:12px;opacity:0;animation:tap .9s 4.75s both}\n  @keyframes tap{0%{opacity:0;transform:translate(60px,60px)}50%{opacity:1;transform:none}70%{transform:scale(.8)}100%{opacity:0}}\n  .page2{position:absolute;inset:0;background:#f5f3ff;padding:14px;transform:translateX(100%);animation:slide .5s 5.35s both}\n  @keyframes slide{to{transform:none}}\n  .page2 b{display:block;font-size:17px;margin-bottom:6px}\n  .pill{display:inline-block;background:#ede9fe;color:var(--brand);border-radius:999px;padding:3px 10px;font-size:13px;font-weight:800;margin:3px 4px 0 0}\n\n  .chat{margin-top:16px;max-width:560px;display:grid;gap:9px}\n  .msg{padding:10px 14px;border-radius:14px;font-size:16.5px;font-weight:600;max-width:85%;opacity:0;animation:pop .35s both}\n  .me{justify-self:end;background:#22d3ee;color:#062a33;border-bottom-right-radius:4px;animation-delay:6.6s}\n  .botm{background:#fff;color:var(--ink);border-bottom-left-radius:4px;animation-delay:7.2s}\n  .botm2{background:#fff;color:var(--ink);border-bottom-left-radius:4px;animation-delay:7.6s}\n  @keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}\n  .wave{display:inline-flex;gap:3px;vertical-align:middle;margin-left:6px}\n  .wave i{width:4px;height:14px;background:var(--brand2);border-radius:2px;animation:eq .5s infinite alternate}\n  .wave i:nth-child(2){animation-delay:.15s}.wave i:nth-child(3){animation-delay:.3s}\n  @keyframes eq{from{transform:scaleY(.3)}}\n\n  .done{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}\n  .tick{background:rgba(22,163,74,.18);border:1px solid rgba(74,222,128,.55);color:#bbf7d0;border-radius:999px;padding:7px 14px;font-weight:800;font-size:15px}\n  .clock{display:inline-block;background:#fff;color:var(--ink);border-radius:10px;padding:2px 10px;font-weight:900}\n\n  @media (max-width:760px){\n    .bot{width:120px;left:50%;top:22%;transform:translate(-50%,-50%);animation:none}\n    .scene{left:6%;right:6%;top:62%}\n    h1{font-size:28px} p.sub{font-size:15px} .card{font-size:13.5px} .phone{height:130px} .msg{font-size:14px}\n  }\n</style></head>\n<body>\n<div class=\"stage\">\n  <div class=\"dots\"></div>\n  <div class=\"brand\">Rugs Creation Workspace<small>People &amp; Operations</small></div>\n  \n\n  <div class=\"bot\"><div class=\"float\">\n    <svg viewBox=\"0 0 210 230\" aria-hidden=\"true\">\n      <line x1=\"105\" y1=\"18\" x2=\"105\" y2=\"44\" stroke=\"#c4b5fd\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n      <circle cx=\"105\" cy=\"14\" r=\"10\" fill=\"#22d3ee\"><animate attributeName=\"opacity\" values=\"1;.35;1\" dur=\"1s\" repeatCount=\"indefinite\"/></circle>\n      <rect x=\"35\" y=\"42\" width=\"140\" height=\"104\" rx=\"34\" fill=\"#ede9fe\"/>\n      <rect x=\"49\" y=\"58\" width=\"112\" height=\"72\" rx=\"24\" fill=\"#1e1b4b\"/>\n      <g class=\"eye\" style=\"transform-origin:80px 88px\"><ellipse cx=\"80\" cy=\"88\" rx=\"11\" ry=\"13\" fill=\"#67e8f9\"/></g>\n      <g class=\"eye\" style=\"transform-origin:130px 88px\"><ellipse cx=\"130\" cy=\"88\" rx=\"11\" ry=\"13\" fill=\"#67e8f9\"/></g>\n      <rect class=\"mouth\" x=\"90\" y=\"112\" width=\"30\" height=\"9\" rx=\"4.5\" fill=\"#67e8f9\"/>\n      <rect x=\"22\" y=\"80\" width=\"16\" height=\"34\" rx=\"8\" fill=\"#8b5cf6\"/><rect x=\"172\" y=\"80\" width=\"16\" height=\"34\" rx=\"8\" fill=\"#8b5cf6\"/>\n      <rect x=\"60\" y=\"150\" width=\"90\" height=\"62\" rx=\"22\" fill=\"#8b5cf6\"/>\n      <rect x=\"82\" y=\"166\" width=\"46\" height=\"26\" rx=\"8\" fill=\"#ede9fe\"/>\n      <text x=\"105\" y=\"185\" text-anchor=\"middle\" font-size=\"15\" font-weight=\"900\" fill=\"#6d28d9\" font-family=\"Segoe UI,Arial\">HB</text>\n      <rect x=\"34\" y=\"156\" width=\"22\" height=\"46\" rx=\"11\" fill=\"#7c3aed\"/>\n      <g class=\"arm\"><rect x=\"154\" y=\"110\" width=\"22\" height=\"50\" rx=\"11\" fill=\"#7c3aed\" transform=\"rotate(-150 165 150)\"/><circle cx=\"176\" cy=\"104\" r=\"12\" fill=\"#ede9fe\"/></g>\n    </svg>\n  </div></div>\n\n  <div class=\"scene s1\">\n    <span class=\"step\">\ud83d\udc4b NEW IN YOUR WORKSPACE</span>\n    <h1>Hi! I'm <span class=\"hl\">Help-Bot</span> \ud83e\udd16</h1>\n    <p class=\"sub\">Your personal helper \u2014 every day, for every employee.</p>\n  </div>\n\n  <div class=\"scene s2\">\n    <span class=\"step\">1 \u00b7 EVERY MORNING</span>\n    <h1>I show <span class=\"hl\">your work</span> for today</h1>\n    <div class=\"cards\">\n      <div class=\"card\">\u26a0 12 overdue SKUs need a recovery plan <small>Do first</small></div>\n      <div class=\"card m\">\ud83c\udfed 3 stage updates pending <small>Today</small></div>\n      <div class=\"card\">\ud83d\udccb Task from Vinay \u2014 finish by 4 PM <small>Due 4 PM</small></div>\n      <div class=\"card l\">\u2705 2 checklist points left <small>When you can</small></div>\n    </div>\n  </div>\n\n  <div class=\"scene s3\">\n    <span class=\"step\">2 \u00b7 ONE TAP</span>\n    <h1>Tap <span class=\"hl\">Go fix</span> \u2014 I open the right page</h1>\n    <div class=\"phone\">\n      <div class=\"row\">\u26a0 SO/2627/4631 \u00b7 4 SKUs late <span class=\"gofix\">Go fix \u2192</span></div>\n      <div class=\"tap\"></div>\n      <div class=\"page2\"><b>\ud83d\udce6 Order Master \u00b7 SO/2627/4631</b><span class=\"pill\">Revised ship date</span><span class=\"pill\">Recovery plan</span><span class=\"pill\">Save \u2713</span></div>\n    </div>\n  </div>\n\n  <div class=\"scene s4\">\n    <span class=\"step\">3 \u00b7 ASK ME</span>\n    <h1>I <span class=\"hl\">talk</span> and guide you step by step</h1>\n    <div class=\"chat\">\n      <div class=\"msg me\">How do I update the stitching date?</div>\n      <div class=\"msg botm\">Open Order Master \u2192 your IO \u2192 fill \u201cStitching Actual\u201d \u2192 Save.<span class=\"wave\"><i></i><i></i><i></i></span></div>\n      <div class=\"msg botm2\">Want me to open it for you? \ud83d\udc49 <b>Go fix</b></div>\n    </div>\n  </div>\n\n  <div class=\"scene s5\">\n    <h1>Clear your list by <span class=\"clock\">4:00 PM</span> \u2705</h1>\n    <p class=\"sub\">Look for <b>\ud83e\udd16 Help-Bot</b> at the bottom of every screen.</p>\n    <div class=\"done\"><span class=\"tick\">\u2713 Less follow-up</span><span class=\"tick\">\u2713 No missed tasks</span><span class=\"tick\">\u2713 Better score</span></div>\n  </div>\n\n  <div class=\"bar\"></div>\n</div>\n</body></html>\n";
+  var hb = { open: false, msgs: [], voice: true, inited: false };
+  try { hb.voice = localStorage.getItem("hb_voice") !== "0"; } catch (e) {}
+  var HB_KB = [
+    { k: ["stitching", "latex", "latexing", "weaving", "tufting", "knitting", "dyeing", "packing", "stage", "actual", "tna", "date update", "silai"], q: "How do I update a stage date (stitching, latex, packing…)?", a: ["Open 📦 Order Master.", "Search your IO and tap the SKU.", "Fill the Actual date of the stage (or a revised planned date).", "Press Save — the sheet is updated for you and the follow-up closes by itself."], go: "ordermaster" },
+    { k: ["recovery", "revised", "ship date", "overdue", "late", "delay"], q: "How do I add a recovery plan / revised ship date?", a: ["Open 📦 Order Master → tap the ⚠ Overdue tile.", "Open each IO, fill Revised ship date and the Recovery plan (risk owner, issue, plan, recovery date).", "Save. The overdue issue goes away when every SKU has a plan."], go: "ordermaster" },
+    { k: ["task", "delegation", "complete", "done", "4 pm", "deadline", "kaam"], q: "How do I complete my delegation task?", a: ["Open ✅ Delegation (Tasks).", "Find the task, do the work, then press Done with a remark / photo.", "If you need more time, ask for a revised date before 4 PM.", "Auto-tasks from the agents also close by themselves when the problem is fixed."], go: "tasks" },
+    { k: ["dispatch plan", "planner", "shift", "next week", "week"], q: "How do I shift SKUs to another dispatch week?", a: ["Open 🚚 Dispatch tracker → 🗓️ Planner.", "Pick the week, tick the SKUs (or the IO box for all its SKUs).", "Choose the new week, write the reason and press ↪ Shift."], go: "dispatch" },
+    { k: ["dispatch", "target", "shipment", "shipped"], q: "Where do I see my dispatch vs target?", a: ["Open 🚚 Dispatch tracker.", "🏭 Company / 📈 My dispatch shows this month vs the +5% target and what is needed per day."], go: "dispatch" },
+    { k: ["leave", "chutti", "chhutti", "holiday off"], q: "How do I apply for leave?", a: ["Open 🏖️ Leave Request → New request.", "Pick the dates and type, write the reason and submit.", "Your team leader approves it; you get a notification."], go: "leave" },
+    { k: ["reimbursement", "expense", "bill", "travel", "claim"], q: "How do I claim a reimbursement?", a: ["Open 🧳 Reimbursement → New claim.", "Add each expense with the bill photo.", "Submit — it goes to your team leader, then accounts."], go: "reimbursement" },
+    { k: ["checklist", "check point", "checkpoint"], q: "How do I fill today's checklist?", a: ["Open 📋 Checklist FMS.", "Tick each point Done, or mark Not done and write what went wrong.", "Finish before the end of your shift."], go: "checklist" },
+    { k: ["tablet", "device", "return"], q: "How do I request or return a tablet?", a: ["Open 📱 Tablet requests.", "Request one with the date you need it till, or press Return when you give it back to IT."], go: "devices" },
+    { k: ["problem", "error", "not working", "bug", "issue", "help", "tech"], q: "Something is not working — what do I do?", a: ["Tap 🛠️ Report a problem (bottom right).", "Write what happened and add a screenshot.", "The IT team gets it straight away."], go: "techsupport" },
+    { k: ["quality", "lot", "dqa", "gate", "4 point", "inspection"], q: "How do I pass or reject a quality lot?", a: ["Open 🧪 Quality Portal → today's list.", "Open the lot, fill the lot number from the challan, then Pass or Reject within the time limit."], go: "quality" },
+    { k: ["sampling", "costing", "shade"], q: "How do I finish a sampling step?", a: ["Open 🧵 Sampling FMS → your IOs.", "Finish the costing / shade-card step, or write why it is waiting."], go: "samplingfms" },
+    { k: ["complaint", "buyer complaint", "claim from buyer"], q: "How do I close a buyer complaint?", a: ["Open 📣 Client Complaints → the complaint.", "Fill root cause and corrective action, inform the buyer, then close it."], go: "complaints" },
+    { k: ["score", "marks", "performance", "rating"], q: "Where do I see my score?", a: ["Open 📊 Score Report.", "It shows your delegation, checklist and FMS score for the week."], go: "score" },
+    { k: ["production planning", "ppc", "capacity"], q: "Where is production planning?", a: ["Open 🏭 Production Planning (PPC).", "Filter by your merchant / department to see stage-wise status."], go: "ppc" },
+    { k: ["notification", "bell", "alerts"], q: "How do I clear my notifications?", a: ["Open 🤖 Help-Bot's full list.", "Tap 🔔 Mark notifications read — or open the bell and read them one by one."], go: "helper" }
+  ];
+  function hbUser() { return state && state.doer && !state.demo ? state.doer : null; }
+  function hbItems() { return (hp.data && hp.data.items) || []; }
+  function hbCount() { var it = hbItems(); return it.filter(function (x) { return x.sev !== "low"; }).length || it.length; }
+  function hbEl() {
+    var f = document.getElementById("hbFab");
+    if (f) return f;
+    f = document.createElement("button"); f.id = "hbFab"; f.type = "button"; f.className = "hb-fab hidden"; f.title = "Help-Bot — your daily helper";
+    f.innerHTML = '<span class="hb-face">🤖</span><span class="hb-fab-t">Help-Bot</span><span id="hbFabBadge" class="hb-badge hidden"></span>';
+    f.onclick = function () { hbToggle(); };
+    document.body.appendChild(f);
+    var p = document.createElement("div"); p.id = "hbPanel"; p.className = "hb-panel hidden"; p.setAttribute("role", "dialog"); p.setAttribute("aria-label", "Help-Bot");
+    document.body.appendChild(p);
+    return f;
+  }
+  function hbSync() {
+    var u = hbUser(), f = hbEl();
+    f.classList.toggle("hidden", !u);
+    if (!u) { document.getElementById("hbPanel").classList.add("hidden"); hb.open = false; return; }
+    var n = hbCount(), b = document.getElementById("hbFabBadge");
+    b.textContent = n ? String(n) : ""; b.classList.toggle("hidden", !n);
+  }
+  function hbSay(text, who, extra) { hb.msgs.push({ who: who || "bot", text: text, extra: extra || null }); if (who !== "me") hbSpeak(text); hbRender(); }
+  function hbSpeak(t) {
+    if (!hb.voice || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(String(t).replace(/[\u{1F300}-\u{1FAFF}☀-➿→←↪↩✓✅⚠]/gu, " ").replace(/\s+/g, " ").slice(0, 400));
+      var vs = window.speechSynthesis.getVoices(), v = vs.filter(function (x) { return /en-IN/i.test(x.lang); })[0] || vs.filter(function (x) { return /^en/i.test(x.lang); })[0];
+      if (v) u.voice = v; u.rate = 1; u.pitch = 1.1;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  function hbGreet() {
+    var u = hbUser(); if (!u) return;
+    var it = hbItems(), name = (hp.data && hp.data.name) || stripRoleSafe(u.delegation_name || u.name || "");
+    var hour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", hour12: false }).format(new Date()));
+    var hello = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+    hb.msgs = [];
+    if (!hp.data) { hbSay(hello + " " + name + "! I'm Help-Bot. Let me check your work…"); return; }
+    var hi = it.filter(function (x) { return x.sev === "high"; }).length;
+    hbSay(it.length ? hello + " " + name + "! You have " + it.length + " thing" + (it.length > 1 ? "s" : "") + " to do" + (hi ? ", " + hi + " urgent" : "") + ". Start from the top — tap Go fix and I'll open the right page." : hello + " " + name + "! Nothing is waiting for you right now. 🎉 Ask me anything about Workspace.", "bot", { work: true });
+  }
+  function stripRoleSafe(n) { n = String(n || ""); var i = n.indexOf(" - "); return (i < 0 ? n : n.slice(0, i)).trim(); }
+  function hbToggle(force) {
+    hbEl(); var p = document.getElementById("hbPanel");
+    hb.open = force === undefined ? !hb.open : force;
+    p.classList.toggle("hidden", !hb.open);
+    if (hb.open) { if (!hb.msgs.length) hbGreet(); hbRender(); if (!hp.data) hpApi("hpMine").then(function (d) { hp.data = d; hpBadge(); hbSync(); hbGreet(); }).catch(function () {}); }
+    else if (window.speechSynthesis) try { window.speechSynthesis.cancel(); } catch (e) {}
+  }
+  function hbAnswer(q) {
+    var t = " " + String(q || "").toLowerCase().replace(/[^a-z0-9ऀ-ॿ ]+/g, " ") + " ";
+    if (/\b(my work|what to do|kya karna|aaj ka kaam|pending|to do|todo)\b/.test(t)) { hbSay("Here is your work for today 👇", "bot", { work: true }); return; }
+    var best = null, bs = 0;
+    HB_KB.forEach(function (e) { var sc = 0; e.k.forEach(function (k) { if (t.indexOf(" " + k) >= 0 || t.indexOf(k + " ") >= 0) sc += k.split(" ").length + 1; }); if (sc > bs) { bs = sc; best = e; } });
+    if (!best) { hbSay("Sorry, I didn't get that yet. Try one of these questions — or tap 🛠️ Report a problem and the IT team will help.", "bot", { chips: true }); return; }
+    hbSay(best.q.replace(/\?$/, "") + ":\n" + best.a.map(function (s, i) { return (i + 1) + ". " + s; }).join("\n"), "bot", { go: best.go });
+  }
+  function hbRender() {
+    var p = document.getElementById("hbPanel"); if (!p || !hb.open) return;
+    var it = hbItems();
+    var h = '<div class="hb-head"><span class="hb-face big">🤖</span><div><b>Help-Bot</b><small>Your daily helper</small></div>' +
+      '<button type="button" class="hb-ic" id="hbVoice" title="Voice on / off">' + (hb.voice ? "🔊" : "🔇") + '</button><button type="button" class="hb-ic" id="hbIntro" title="Watch the intro">▶</button><button type="button" class="hb-ic" id="hbClose" title="Close">✕</button></div><div class="hb-body" id="hbBody">';
+    h += hb.msgs.map(function (m, mi) {
+      var x = '<div class="hb-msg ' + m.who + '">' + esc(m.text).replace(/\n/g, "<br>") + "</div>";
+      if (m.extra && m.extra.work && it.length) x += '<div class="hb-work">' + it.slice(0, 5).map(function (w, i) { return '<div class="hb-w ' + w.sev + '"><span>' + esc(w.title) + (w.note ? "<small>" + esc(w.note) + "</small>" : "") + "</span>" + (w.go ? '<button type="button" class="btn" data-hbgo="' + i + '">Go fix →</button>' : "") + "</div>"; }).join("") + (it.length > 5 ? '<button type="button" class="hb-link" data-hbview="helper">See all ' + it.length + " →</button>" : "") + "</div>";
+      if (m.extra && m.extra.go) x += '<button type="button" class="btn hb-gopage" data-hbview="' + m.extra.go + '">Open it for me →</button>';
+      if (m.extra && m.extra.chips || mi === hb.msgs.length - 1) x += '<div class="hb-chips">' + ["What is my work today?"].concat(HB_KB.slice(0, 6).map(function (e) { return e.q; })).map(function (q) { return '<button type="button" data-hbq="' + esc(q) + '">' + esc(q) + "</button>"; }).join("") + "</div>";
+      return x;
+    }).join("");
+    h += '</div><form class="hb-ask" id="hbAsk"><input id="hbQ" type="text" placeholder="Ask me… e.g. how to update stitching date" autocomplete="off" maxlength="200"><button class="btn" type="submit">Ask</button></form>';
+    p.innerHTML = h;
+    var body = document.getElementById("hbBody"); body.scrollTop = body.scrollHeight;
+    document.getElementById("hbClose").onclick = function () { hbToggle(false); };
+    document.getElementById("hbVoice").onclick = function () { hb.voice = !hb.voice; try { localStorage.setItem("hb_voice", hb.voice ? "1" : "0"); } catch (e) {} if (!hb.voice && window.speechSynthesis) window.speechSynthesis.cancel(); hbRender(); };
+    document.getElementById("hbIntro").onclick = function () { hbIntro(true); };
+    p.querySelectorAll("[data-hbgo]").forEach(function (x) { x.onclick = function () { var w = hbItems()[+x.dataset.hbgo]; hbToggle(false); if (typeof hpGo === "function") hpGo(w); }; });
+    p.querySelectorAll("[data-hbview]").forEach(function (x) { x.onclick = function () { hbToggle(false); goToView(x.dataset.hbview); }; });
+    p.querySelectorAll("[data-hbq]").forEach(function (x) { x.onclick = function () { hbSay(x.dataset.hbq, "me"); hbAnswer(x.dataset.hbq); }; });
+    document.getElementById("hbAsk").onsubmit = function (e) { e.preventDefault(); var v = document.getElementById("hbQ").value.trim(); if (!v) return; hbSay(v, "me"); hbAnswer(v); };
+  }
+  // 10-second intro: once a day for the first 7 days after a person first sees Help-Bot
+  function hbIntro(force) {
+    var u = hbUser(); if (!u) return;
+    var key = "hb_intro_" + u.doc_id, today = new Date().toISOString().slice(0, 10), rec = {};
+    try { rec = JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch (e) {}
+    if (!force) {
+      if (!rec.first) rec.first = today;
+      var days = Math.round((Date.parse(today) - Date.parse(rec.first)) / 86400000);
+      if (days >= 7 || rec.last === today) return;
+    }
+    rec.last = today; try { localStorage.setItem(key, JSON.stringify(rec)); } catch (e) {}
+    var o = document.createElement("div"); o.className = "hb-intro"; o.id = "hbIntroBox";
+    o.innerHTML = '<div class="hb-intro-card"><iframe title="Help-Bot intro" sandbox="" id="hbIntroFrame"></iframe><div class="hb-intro-bar"><span>🤖 Meet <b>Help-Bot</b> — your daily helper</span><button type="button" class="btn" id="hbIntroGo">Got it — show my work</button><button type="button" class="btn secondary" id="hbIntroSkip">Skip</button></div></div>';
+    document.body.appendChild(o);
+    document.getElementById("hbIntroFrame").srcdoc = HB_INTRO_HTML;
+    var done = function (openBot) { clearTimeout(hb.introT); if (o.parentNode) o.parentNode.removeChild(o); if (openBot) { hb.msgs = []; hbToggle(true); } };
+    document.getElementById("hbIntroGo").onclick = function () { done(true); };
+    document.getElementById("hbIntroSkip").onclick = function () { done(false); };
+    hb.introT = setTimeout(function () { done(true); }, 11000);
+  }
+  function hbStart() {
+    hbEl(); hbSync();
+    if (!hb.inited) { hb.inited = true; setInterval(hbSync, 2000); }
+    if (hbUser() && !document.getElementById("hbIntroBox")) setTimeout(function () { hbIntro(false); }, 1200);
   }
 
   var FOLLOWUP_FN_URL = SUPABASE_URL + "/functions/v1/followup-api";
