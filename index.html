@@ -4734,35 +4734,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       </div>
     </div>
 
-    <div id="view-messaging" class="hidden">
-      <style>
-        #view-messaging .msg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px;margin-bottom:14px}
-        #view-messaging .card{padding:16px}
-        #view-messaging h3{margin:0 0 4px;font-size:15px;display:flex;gap:8px;align-items:center}
-        #view-messaging .msg-sub{color:var(--sub);font-size:12.5px;margin:0 0 12px}
-        #view-messaging .msg-dot{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border-radius:999px;padding:2px 10px;background:var(--line);color:var(--sub)}
-        #view-messaging .msg-dot.on{background:var(--completed);color:var(--completed-ink)}
-        #view-messaging .msg-dot.off{background:var(--danger-soft);color:var(--danger-soft-ink)}
-        #view-messaging .msg-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-        #view-messaging .msg-chk{display:flex;gap:8px;align-items:center;font-size:13.5px;margin:6px 0}
-        #view-messaging .msg-chk input{width:auto;margin:0}
-        #view-messaging table{width:100%;border-collapse:collapse;font-size:13px}
-        #view-messaging th{text-align:left;font-size:11.5px;color:var(--sub);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-        #view-messaging td{padding:7px 8px;border-bottom:1px dashed var(--line);vertical-align:top}
-        #view-messaging td input[type=checkbox]{width:auto;margin:0}
-        #view-messaging .msg-pill{font-size:11px;border-radius:6px;padding:1px 7px;font-weight:600;white-space:nowrap;background:var(--line);color:var(--sub)}
-        #view-messaging .msg-pill.sent{background:var(--completed);color:var(--completed-ink)}
-        #view-messaging .msg-pill.failed,#view-messaging .msg-pill.expired{background:var(--danger-soft);color:var(--danger-soft-ink)}
-        #view-messaging .msg-pill.queued,#view-messaging .msg-pill.sending{background:var(--pending);color:var(--pending-ink)}
-        #view-messaging .msg-scroll{overflow:auto;max-height:420px;overscroll-behavior:contain}
-        #view-messaging ol{margin:6px 0 0;padding-left:20px;font-size:13px}
-        #view-messaging ol li{margin:3px 0}
-      </style>
-      <div class="page-head"><h2>📲 Messaging</h2><button class="btn secondary" id="msgRefresh" type="button">↻ Refresh</button></div>
-      <div class="page-sub" style="margin-top:-14px">Reminders go out on WhatsApp (from the office WhatsApp on your laptop) and SMS (from the office phone's SIM). Only admins see this page.</div>
-      <div id="msgBody"><div class="card empty">Loading…</div></div>
-    </div>
-
     <div id="view-myday" class="hidden" style="height:calc(100vh - var(--topbar-offset));display:flex;flex-direction:column">
       <button class="embed-back-btn" data-goto="modules">← Back to Workspace</button>
       <div class="card embed-frame-wrap" style="padding:0;border-radius:0;border-width:0">
@@ -7562,7 +7533,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   var MODULE_DEFS = [
     { key: "myday", icon: "☀️", name: "My Day", status: "live", goto: "myday", category: "work" },
     { key: "management", icon: "📊", name: "Management", status: "live", goto: "management", category: "work" },
-    { key: "messaging", icon: "📲", name: "Messaging (WhatsApp & SMS)", status: "live", goto: "messaging", category: "work" },
     { key: "delegation", icon: "✅", name: "Delegation", status: "live", goto: "tasks", category: "work" },
     { key: "score", icon: "📊", name: "Score Report", status: "live", goto: "score", category: "work" },
     { key: "chat", icon: "💬", name: "Team Chat", status: "live", goto: "chat", category: "work" },
@@ -11913,7 +11883,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     else if (msg.type === "RC_CFMS_REFRESH") done(clApi("checklistBootstrap", { date: msg.date || undefined }));
   });
 
-  var ALL_VIEWS = ["myday", "management", "messaging", "emailtracker", "home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "courier", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "complaints", "spareparts", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup", "mktportal", "ordermaster", "devices", "dispatch", "devhub", "helper"];
+  var ALL_VIEWS = ["myday", "management", "emailtracker", "home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "courier", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "complaints", "spareparts", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup", "mktportal", "ordermaster", "devices", "dispatch", "devhub", "helper"];
   // Per-module choice of whether an external-URL-backed module opens in a
   // real new browser tab ("redirect") or is framed inside Workspace
   // ("embed") — Settings → Modules → Module Open Behavior for the 3
@@ -12005,7 +11975,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     if (view === "samplingfms" || view === "ppc") fuToggleButtons();
     if (view === "samplingfms") loadSamplingFmsFrame();
     if (view === "myday") loadMydayFrame();
-    if (view === "messaging") msgLoad();
     if (view === "management") loadManagementFrame();
     if (view === "ppc") loadPpcFrame();
     if (view === "counterroom") loadCounterRoomFrame();
@@ -12635,8 +12604,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       if (state.doer && !state.demo) { var tbltDef = allModuleDefs.find(function (m) { return m.key === "devices"; }); if (tbltDef) modules.push(tbltDef); }
       if (state.omAccess) { var omDef = allModuleDefs.find(function (m) { return m.key === "ordermaster"; }); if (omDef) modules.push(omDef); }
       // 28 Oct 2026: My Day + Attendance calendar for everyone signed in; Management for admins only.
-      modules = modules.filter(function (m) { return m.key !== "myday" && m.key !== "management" && m.key !== "messaging"; });
-      if (state.doer && state.doer.is_admin && !state.demo) { var msgDef = allModuleDefs.find(function (m) { return m.key === "messaging"; }); if (msgDef) modules.push(msgDef); }
+      modules = modules.filter(function (m) { return m.key !== "myday" && m.key !== "management"; });
       ["myday"].forEach(function (k) { var df = allModuleDefs.find(function (m) { return m.key === k; }); if (df && state.doer) modules.unshift(df); });
       if (state.doer && state.doer.is_admin) { var mgDef = allModuleDefs.find(function (m) { return m.key === "management"; }); if (mgDef) modules.push(mgDef); }
       modules = modules.filter(function (m) { return m.key !== "followup"; });
@@ -18497,94 +18465,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     track.innerHTML = items.join("") + items.join("");
     track.style.setProperty("--ticker-dur", Math.max(18, items.length * 5) + "s");
   }
-
-  // ---------- 📲 Messaging (WhatsApp + SMS reminders) — admins only ----------
-  var MSG_TYPES = [
-    ["help_slip", "🆘 Help Slip raised / updated"], ["query", "📩 Query raised / updated"], ["leave", "🏖️ Leave request & decision"],
-    ["task_new", "✅ New task given"], ["task_overdue", "⏰ Morning list of late tasks (9:40 AM)"], ["courier", "🚚 Courier invoice (submitted / approved / sent back)"],
-    ["sampling", "🧵 Sampling step for you"], ["sampling_digest", "🧵 Sampling daily summary"], ["om_late", "🏭 Late orders (Order Master)"],
-    ["checklist_flag", "📋 Checklist flags"], ["quality_alert", "🔍 Quality alerts"], ["agent_brief", "🤖 Morning brief"], ["agent_task", "🤖 Agent alerts"],
-    ["buyer_visit", "🤝 Buyer visit"], ["todo", "📝 To-do reminders"], ["general", "🔔 Other notifications"]
-  ];
-  var MSG = null;
-  function msgFmt(t) { return t ? new Date(t).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "—"; }
-  function msgLoad() {
-    var body = document.getElementById("msgBody");
-    if (!body) return;
-    if (!(state.doer && state.doer.is_admin) || state.demo) { body.innerHTML = '<div class="card empty">Only admins can open Messaging.</div>'; return; }
-    rzbRpc("rz_msg_admin_get").then(function (d) { MSG = d; msgDraw(); }).catch(function (e) { body.innerHTML = '<div class="card empty">' + esc(e.message) + "</div>"; });
-  }
-  function msgDraw() {
-    var d = MSG, sms = d.sms || {}, wa = d.wa || {}, st = d.stats || {}, rules = d.rules || {};
-    var waOnline = wa.last_seen && Date.now() - Date.parse(wa.last_seen) < 2 * 60 * 1000;
-    var waState = !wa.key_set ? '<span class="msg-dot">Not set up yet</span>' : waOnline ? '<span class="msg-dot on">● Online' + (wa.me ? " · +" + esc(wa.me) : "") + "</span>" : '<span class="msg-dot off">● Offline · last seen ' + esc(msgFmt(wa.last_seen)) + "</span>";
-    var n = function (k) { return st[k] || 0; };
-    var hrs = []; for (var h = 0; h <= 24; h++) hrs.push(h);
-    var hourSel = function (id, v) { return '<select id="' + id + '">' + hrs.map(function (h) { return '<option value="' + h + '"' + (+v === h ? " selected" : "") + ">" + (h === 0 ? "12 AM" : h < 12 ? h + " AM" : h === 12 ? "12 PM" : h === 24 ? "12 AM (midnight)" : (h - 12) + " PM") + "</option>"; }).join("") + "</select>"; };
-    document.getElementById("msgBody").innerHTML =
-      '<div class="msg-grid">' +
-      // WhatsApp card
-      '<div class="card"><h3>💬 WhatsApp sender ' + waState + '</h3><p class="msg-sub">Runs on your laptop with the office WhatsApp logged in. Last 24 h: <b>' + n("whatsapp_sent") + "</b> sent · <b>" + (n("whatsapp_queued") + n("whatsapp_sending")) + "</b> waiting · <b>" + (n("whatsapp_failed") + n("whatsapp_expired")) + "</b> not sent</p>" +
-        '<div class="msg-row"><button class="btn" type="button" id="msgKey">🔑 ' + (wa.key_set ? "Make a new sender key" : "Make sender key") + '</button><button class="btn secondary" type="button" id="msgWaPause">' + (wa.enabled ? "⏸ Pause WhatsApp" : "▶ Resume WhatsApp") + "</button></div>" +
-        '<ol><li>Download <b>RugsZone-WhatsApp-Sender.zip</b> (from Claude) and unzip it on the laptop.</li><li>Install Node.js (LTS) from nodejs.org.</li><li>Press <b>Make sender key</b>, paste the key into <b>config.json</b>.</li><li>Double-click <b>START.bat</b> and scan the QR with the office WhatsApp → Linked devices.</li></ol></div>' +
-      // SMS card
-      '<div class="card"><h3>📱 SMS phone <span class="msg-dot ' + (sms.enabled && sms.username && sms.has_password ? "on" : "") + '">' + (sms.enabled ? (sms.username && sms.has_password ? "● On" : "Needs login") : "Off") + '</span></h3><p class="msg-sub">Sends from the office SIM through the free <b>SMS Gateway for Android</b> app (sms-gate.app). Last 24 h: <b>' + n("sms_sent") + "</b> sent · <b>" + (n("sms_queued") + n("sms_sending")) + "</b> waiting · <b>" + (n("sms_failed") + n("sms_expired")) + "</b> not sent</p>" +
-        '<label class="msg-chk"><input type="checkbox" id="msgSmsOn"' + (sms.enabled ? " checked" : "") + "> Send SMS reminders</label>" +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 10px"><div class="field"><label for="msgSmsU">Username (from the app)</label><input id="msgSmsU" autocomplete="off" value="' + esc(sms.username || "") + '"></div><div class="field"><label for="msgSmsP">Password (from the app)</label><input id="msgSmsP" type="password" autocomplete="new-password" placeholder="' + (sms.has_password ? "•••••• saved — type to change" : "") + '"></div>' +
-        '<div class="field"><label for="msgSmsSim">Which SIM</label><select id="msgSmsSim"><option value="0"' + (+sms.sim === 0 ? " selected" : "") + '>Phone default</option><option value="1"' + (+sms.sim === 1 ? " selected" : "") + '>SIM 1</option><option value="2"' + (+sms.sim === 2 ? " selected" : "") + '>SIM 2</option></select></div><div class="field"><label for="msgSmsCap">Max SMS per day</label><input id="msgSmsCap" type="number" min="1" max="1000" value="' + esc(sms.daily_cap || 90) + '"></div>' +
-        '<div class="field"><label for="msgSmsFrom">Send from</label>' + hourSel("msgSmsFrom", sms.from_hour == null ? 9 : sms.from_hour) + '</div><div class="field"><label for="msgSmsTo">Until</label>' + hourSel("msgSmsTo", sms.to_hour == null ? 20 : sms.to_hour) + "</div></div>" +
-        '<div class="msg-row"><button class="btn" type="button" id="msgSmsSave">Save SMS settings</button></div>' +
-        '<ol><li>On the office Android phone install <b>SMS Gateway for Android</b> (sms-gate.app).</li><li>Open it → turn on <b>Cloud server</b> → tap <b>Online</b>.</li><li>Copy the <b>username</b> and <b>password</b> it shows into the boxes above, tick “Send SMS reminders”, Save.</li><li>Keep the phone charged, on Wi-Fi/data, and turn battery saver <b>off</b> for that app.</li></ol></div>' +
-      "</div>" +
-      // rules
-      '<div class="card" style="margin-bottom:14px"><h3>🔔 What goes where</h3><p class="msg-sub">Each reminder still shows in the Workspace bell. Tick where else it should go. Messages go to the phone number saved for each person in Staff.</p><div class="msg-scroll"><table><thead><tr><th>Reminder</th><th>WhatsApp</th><th>SMS</th></tr></thead><tbody>' +
-        MSG_TYPES.map(function (t) { var r = rules[t[0]] || {}; return "<tr><td>" + t[1] + '</td><td><input type="checkbox" class="msgR" data-t="' + t[0] + '" data-c="wa"' + (r.wa ? " checked" : "") + ' aria-label="WhatsApp for ' + esc(t[1]) + '"></td><td><input type="checkbox" class="msgR" data-t="' + t[0] + '" data-c="sms"' + (r.sms ? " checked" : "") + ' aria-label="SMS for ' + esc(t[1]) + '"></td></tr>'; }).join("") +
-        '</tbody></table></div><div class="msg-row" style="margin-top:10px"><button class="btn" type="button" id="msgRulesSave">Save choices</button></div></div>' +
-      // test
-      '<div class="card" style="margin-bottom:14px"><h3>🧪 Send a test message</h3><div class="msg-row" style="align-items:flex-end"><div class="field" style="margin:0"><label for="msgTCh">Send by</label><select id="msgTCh"><option value="whatsapp">WhatsApp</option><option value="sms">SMS</option></select></div><div class="field" style="margin:0"><label for="msgTPh">Mobile number</label><input id="msgTPh" inputmode="tel" placeholder="10-digit number" value="' + esc((state.doer && state.doer.phone) || "") + '"></div><div class="field" style="margin:0;flex:1;min-width:200px"><label for="msgTTx">Message</label><input id="msgTTx" value="Test message from Rugs Zone ✅"></div><button class="btn" type="button" id="msgTSend">Send test</button></div></div>' +
-      // log
-      '<div class="card"><h3>📜 Recent messages</h3><div class="msg-scroll"><table><thead><tr><th>When</th><th>To</th><th>By</th><th>Message</th><th>Status</th><th></th></tr></thead><tbody>' +
-        ((d.log || []).length ? d.log.map(function (m) { return "<tr><td style=\"white-space:nowrap\">" + esc(msgFmt(m.created_at)) + "</td><td>" + esc(m.who || "") + '<div class="msg-sub" style="margin:0">+' + esc(m.to_phone) + "</div></td><td>" + (m.channel === "sms" ? "SMS" : "WhatsApp") + "</td><td style=\"max-width:360px;overflow-wrap:anywhere\">" + esc(m.body).replace(/\n/g, "<br>") + '</td><td><span class="msg-pill ' + esc(m.status) + '">' + esc(m.status) + "</span>" + (m.error ? '<div class="msg-sub" style="margin:2px 0 0">' + esc(m.error) + "</div>" : "") + "</td><td>" + (m.status === "failed" || m.status === "expired" ? '<button class="btn secondary" type="button" data-msg-retry="' + m.id + '">Retry</button>' : "") + "</td></tr>"; }).join("") : '<tr><td colspan="6" class="msg-sub">No messages yet.</td></tr>') +
-        "</tbody></table></div></div>";
-  }
-  document.addEventListener("click", function (e) {
-    if (!e.target.closest("#view-messaging")) return;
-    var b = e.target.closest("button");
-    if (!b) return;
-    var done = function (msg) { return function () { toast(msg); msgLoad(); }; }, fail = function (er) { toast(er.message, true); };
-    if (b.id === "msgRefresh") msgLoad();
-    else if (b.id === "msgKey") {
-      if (MSG && MSG.wa && MSG.wa.key_set && !b.dataset.sure) {
-        openModal('<h3 style="margin-top:0">Make a new sender key?</h3><p>The laptop sender stops until you paste the new key into <b>config.json</b> and start it again.</p><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn secondary" type="button" id="msgKeyNo">Cancel</button><button class="btn" type="button" id="msgKeyYes">Make new key</button></div>');
-        document.getElementById("msgKeyNo").onclick = closeModal;
-        document.getElementById("msgKeyYes").onclick = function () { closeModal(); b.dataset.sure = "1"; b.click(); delete b.dataset.sure; };
-        return;
-      }
-      rzbRpc("rz_msg_admin_newkey").then(function (r) {
-        openModal('<h3 style="margin-top:0">🔑 Your sender key</h3><p>Copy this key into <b>config.json</b> on the laptop (in place of PASTE-THE-KEY…), then start <b>START.bat</b> again. It is shown only once.</p><input id="msgKeyBox" readonly value="' + esc(r.key) + '" style="font-family:monospace"><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn secondary" type="button" id="msgKeyCopy">Copy</button><button class="btn" type="button" id="msgKeyClose">Done</button></div>');
-        document.getElementById("msgKeyCopy").onclick = function () { var i = document.getElementById("msgKeyBox"); i.select(); try { navigator.clipboard.writeText(i.value); } catch (er) { document.execCommand("copy"); } toast("Key copied"); };
-        document.getElementById("msgKeyClose").onclick = function () { closeModal(); msgLoad(); };
-      }).catch(fail);
-    }
-    else if (b.id === "msgWaPause") rzbRpc("rz_msg_admin_save", { p: { wa_enabled: !(MSG && MSG.wa && MSG.wa.enabled) } }).then(done("Saved")).catch(fail);
-    else if (b.id === "msgSmsSave") {
-      var v = function (id) { return document.getElementById(id).value; };
-      if (+v("msgSmsTo") <= +v("msgSmsFrom")) { toast("“Until” must be later than “Send from”.", true); return; }
-      rzbRpc("rz_msg_admin_save", { p: { sms: { enabled: document.getElementById("msgSmsOn").checked, username: v("msgSmsU").trim(), password: v("msgSmsP"), sim: +v("msgSmsSim"), daily_cap: Math.max(1, +v("msgSmsCap") || 90), from_hour: +v("msgSmsFrom"), to_hour: +v("msgSmsTo") } } }).then(done("SMS settings saved")).catch(fail);
-    }
-    else if (b.id === "msgRulesSave") {
-      var rules = {};
-      MSG_TYPES.forEach(function (t) { rules[t[0]] = { wa: false, sms: false }; });
-      document.querySelectorAll("#view-messaging .msgR").forEach(function (c) { rules[c.dataset.t][c.dataset.c] = c.checked; });
-      rzbRpc("rz_msg_admin_save", { p: { rules: rules } }).then(done("Choices saved")).catch(fail);
-    }
-    else if (b.id === "msgTSend") {
-      b.disabled = true;
-      rzbRpc("rz_msg_admin_test", { p_channel: document.getElementById("msgTCh").value, p_phone: document.getElementById("msgTPh").value, p_text: document.getElementById("msgTTx").value })
-        .then(done("Test message queued — it goes out within a minute")).catch(fail).then(function () { b.disabled = false; });
-    }
-    else if (b.dataset.msgRetry) rzbRpc("rz_msg_admin_retry", { p_id: +b.dataset.msgRetry }).then(done("Will try again")).catch(fail);
-  });
 
   // ---------- Login banners (custom announcements shown after login) ----------
   // Data lives in rz_banners; every call proves who you are with session_token
