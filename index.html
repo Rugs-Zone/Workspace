@@ -4292,8 +4292,24 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
 
     <div id="view-leave" class="hidden">
       <div class="page-head">
-        <h2>Leave Request</h2>
+        <h2>Leave &amp; Attendance</h2>
         <button class="btn" id="newLeaveBtn">+ New Leave Request</button>
+      </div>
+      <style>
+        #leaveModeBar{display:flex;gap:4px;background:var(--line);border-radius:12px;padding:4px;width:max-content;max-width:100%;margin:0 0 16px;flex-wrap:wrap}
+        #leaveModeBar button{border:0;background:transparent;color:var(--ink);font:inherit;font-weight:600;padding:8px 16px;border-radius:9px;cursor:pointer}
+        #leaveModeBar button[aria-selected=true]{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12);color:var(--brand)}
+        #view-leave.lv-cal > :not(.page-head):not(#leaveModeBar):not(#leaveCalPane):not(style){display:none!important}
+        #leaveCalPane{position:relative;height:calc(100vh - var(--topbar-offset) - 150px);min-height:560px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+        #leaveCalPane iframe{width:100%;height:100%;border:0;display:block}
+      </style>
+      <div id="leaveModeBar" role="tablist" aria-label="Leave and attendance">
+        <button type="button" role="tab" data-lvmode="req" aria-selected="true">📝 Leave requests</button>
+        <button type="button" role="tab" data-lvmode="cal" aria-selected="false">📅 Attendance &amp; leave calendar</button>
+      </div>
+      <div id="leaveCalPane" class="hidden">
+        <div class="embed-loading-overlay" id="attcalendarLoading"><span class="spinner"></span><span>Loading calendar…</span></div>
+        <iframe id="attcalendarFrame" title="Attendance &amp; leave calendar" allow="clipboard-write"></iframe>
       </div>
       <div class="page-sub" style="margin-top:-14px">Leave balance isn't tracked yet, so it shows as NA — request leave here and your TL approves or rejects it, with confirmation right on this page. Short leaves go through the same form.</div>
       <div class="toolbar">
@@ -4731,14 +4747,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       <div class="card embed-frame-wrap" style="padding:0;border-radius:0;border-width:0">
         <div class="embed-loading-overlay" id="managementLoading"><span class="spinner"></span><span>Loading Management…</span></div>
         <iframe id="managementFrame" title="Management" allow="fullscreen; clipboard-write" allowfullscreen></iframe>
-      </div>
-    </div>
-
-    <div id="view-attcalendar" class="hidden" style="height:calc(100vh - var(--topbar-offset));display:flex;flex-direction:column">
-      <button class="embed-back-btn" data-goto="modules">← Back to Workspace</button>
-      <div class="card embed-frame-wrap" style="padding:0;border-radius:0;border-width:0">
-        <div class="embed-loading-overlay" id="attcalendarLoading"><span class="spinner"></span><span>Loading Attendance & leave…</span></div>
-        <iframe id="attcalendarFrame" title="Attendance & leave" allow="fullscreen; clipboard-write" allowfullscreen></iframe>
       </div>
     </div>
 
@@ -6920,6 +6928,8 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       eaDirN ? api("getMyNotifications", { doc_id: eaDirN.doc_id }).catch(function () { return []; }) : Promise.resolve([])
     ]).then(function (res) {
       var list = res[0] || [];
+      var NOTIF_GO = { help_slip: "helpslip", query: "tickets", sampling: "samplingfms", sampling_digest: "samplingfms", om_late: "ordermaster", checklist_flag: "checklist", buyer_visit: "buyervisit", todo: "todo" };
+      list.forEach(function (n) { if (!n._goto && NOTIF_GO[n.type]) n._goto = NOTIF_GO[n.type]; });
       if (eaDirN && (res[1] || []).length) {
         var seenMap = eaSeenMap(), dShort = String(eaDirN.name || eaDirN.delegation_name).split(" - ")[0];
         (res[1] || []).forEach(function (n) {
@@ -7523,7 +7533,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   var MODULE_DEFS = [
     { key: "myday", icon: "☀️", name: "My Day", status: "live", goto: "myday", category: "work" },
     { key: "management", icon: "📊", name: "Management", status: "live", goto: "management", category: "work" },
-    { key: "attcalendar", icon: "📅", name: "Attendance & Leave Calendar", status: "live", goto: "attcalendar", category: "work" },
     { key: "delegation", icon: "✅", name: "Delegation", status: "live", goto: "tasks", category: "work" },
     { key: "score", icon: "📊", name: "Score Report", status: "live", goto: "score", category: "work" },
     { key: "chat", icon: "💬", name: "Team Chat", status: "live", goto: "chat", category: "work" },
@@ -7552,7 +7561,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     { key: "teamworkspace", icon: "🗂️", name: "Team Workspace", status: "live", goto: "teamworkspace", category: "work" },
     { key: "samplingfms", icon: "🧵", name: "Sampling FMS", status: "live", goto: "samplingfms", category: "production" },
     { key: "buyersampling", icon: "🛡️", name: "Buyer Admin", status: "live", goto: "buyersampling", category: "production" },
-    { key: "leave", icon: "🏖️", name: "Leave Request", status: "live", goto: "leave", category: "people" },
+    { key: "leave", icon: "🏖️", name: "Leave & Attendance Calendar", status: "live", goto: "leave", category: "people" },
     { key: "reimbursement", icon: "🧳", name: "Travel/Outstation Reimbursement", status: "live", goto: "reimbursement", category: "people" },
     { key: "attendance", icon: "🕒", name: "Attendance", status: "live", goto: "attendance", category: "people" },
     { key: "salary", icon: "💰", name: "Salary", status: "live", goto: "salary", category: "people" },
@@ -11687,7 +11696,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     var frame = document.getElementById(frameId);
     if (!frame || !b64) return false;
     wireEmbedFrameLoading(frameId, overlayId, label);
-    var sso = { sessionToken: (state.doer && !state.demo && state.doer.session_token) || "", anonKey: ANON_KEY };
+    var sso = { sessionToken: (state.doer && !state.demo && state.doer.session_token) || "", anonKey: ANON_KEY, supabaseUrl: SUPABASE_URL, mydayApi: SUPABASE_URL + "/functions/v1/myday-api" };
     var html = new TextDecoder("utf-8").decode(Uint8Array.from(atob(b64), function (c) { return c.charCodeAt(0); }));
     frame.srcdoc = "<" + "script>window.__RC_SSO__=" + JSON.stringify(sso).replace(/</g, "\\u003c") + ";<" + "/script>" + html;
     return true;
@@ -11702,9 +11711,30 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     if (!d || d.type !== "RC_GOTO" || !d.view) return;
     var ok = ["mydayFrame", "managementFrame", "attcalendarFrame"].some(function (id) { var f = document.getElementById(id); return f && e.source === f.contentWindow; });
     if (!ok) return;
+    var calFrame = document.getElementById("attcalendarFrame");
+    if (d.view === "leave" && calFrame && e.source === calFrame.contentWindow) {
+      leaveMode("req");
+      var nb = document.getElementById("newLeaveBtn"); if (nb) nb.click();
+      return;
+    }
+    if (d.view === "attcalendar") { goToView("leave"); leaveMode("cal"); return; }
     var alias = { agents: "devhub" };
     var v = alias[d.view] || d.view;
     if (ALL_VIEWS.indexOf(v) !== -1) goToView(v);
+  });
+  // Leave Request + Attendance calendar live in one module: two tabs on the Leave page.
+  function leaveMode(m) {
+    var view = document.getElementById("view-leave"), pane = document.getElementById("leaveCalPane");
+    if (!view || !pane) return;
+    var cal = m === "cal";
+    view.classList.toggle("lv-cal", cal);
+    pane.classList.toggle("hidden", !cal);
+    document.querySelectorAll("#leaveModeBar [data-lvmode]").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.lvmode === m)); });
+    if (cal) loadAttcalendarFrame();
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("#leaveModeBar [data-lvmode]");
+    if (b) leaveMode(b.dataset.lvmode);
   });
 
   var samplingfmsFrameLoaded = false;
@@ -11853,7 +11883,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     else if (msg.type === "RC_CFMS_REFRESH") done(clApi("checklistBootstrap", { date: msg.date || undefined }));
   });
 
-  var ALL_VIEWS = ["myday", "management", "attcalendar", "emailtracker", "home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "courier", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "complaints", "spareparts", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup", "mktportal", "ordermaster", "devices", "dispatch", "devhub", "helper"];
+  var ALL_VIEWS = ["myday", "management", "emailtracker", "home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "courier", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "complaints", "spareparts", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup", "mktportal", "ordermaster", "devices", "dispatch", "devhub", "helper"];
   // Per-module choice of whether an external-URL-backed module opens in a
   // real new browser tab ("redirect") or is framed inside Workspace
   // ("embed") — Settings → Modules → Module Open Behavior for the 3
@@ -11946,7 +11976,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     if (view === "samplingfms") loadSamplingFmsFrame();
     if (view === "myday") loadMydayFrame();
     if (view === "management") loadManagementFrame();
-    if (view === "attcalendar") loadAttcalendarFrame();
     if (view === "ppc") loadPpcFrame();
     if (view === "counterroom") loadCounterRoomFrame();
     if (view === "quality") loadQualityFrame();
@@ -11973,7 +12002,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     // when set to "embed" mode; otherwise they're intercepted and sent
     // straight to a new browser tab instead. Counter Room, like
     // Checklist/CBM/Sampling FMS, is always embedded in place below.
-    document.body.classList.toggle("embed-focus", view === "myday" || view === "management" || view === "attcalendar" || view === "checklist" || view === "cbm" || view === "costing" || view === "courier" || view === "samplingfms" || view === "counterroom" || view === "quality" || view === "ppc" || view === "passing" || view === "emailtracker" || view === "scoring" || view === "merchant" || view === "mktportal");
+    document.body.classList.toggle("embed-focus", view === "myday" || view === "management" || view === "checklist" || view === "cbm" || view === "costing" || view === "courier" || view === "samplingfms" || view === "counterroom" || view === "quality" || view === "ppc" || view === "passing" || view === "emailtracker" || view === "scoring" || view === "merchant" || view === "mktportal");
     applySidebarState();
     ALL_VIEWS.forEach(function (v) {
       var el = document.getElementById("view-" + v);
@@ -12575,8 +12604,8 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       if (state.doer && !state.demo) { var tbltDef = allModuleDefs.find(function (m) { return m.key === "devices"; }); if (tbltDef) modules.push(tbltDef); }
       if (state.omAccess) { var omDef = allModuleDefs.find(function (m) { return m.key === "ordermaster"; }); if (omDef) modules.push(omDef); }
       // 28 Oct 2026: My Day + Attendance calendar for everyone signed in; Management for admins only.
-      modules = modules.filter(function (m) { return m.key !== "myday" && m.key !== "attcalendar" && m.key !== "management"; });
-      ["myday", "attcalendar"].forEach(function (k) { var df = allModuleDefs.find(function (m) { return m.key === k; }); if (df && state.doer) modules.unshift(df); });
+      modules = modules.filter(function (m) { return m.key !== "myday" && m.key !== "management"; });
+      ["myday"].forEach(function (k) { var df = allModuleDefs.find(function (m) { return m.key === k; }); if (df && state.doer) modules.unshift(df); });
       if (state.doer && state.doer.is_admin) { var mgDef = allModuleDefs.find(function (m) { return m.key === "management"; }); if (mgDef) modules.push(mgDef); }
       modules = modules.filter(function (m) { return m.key !== "followup"; });
       if (canManageModule("followup")) { var fuDef = allModuleDefs.find(function (m) { return m.key === "followup"; }); if (fuDef) modules.push(fuDef); }
