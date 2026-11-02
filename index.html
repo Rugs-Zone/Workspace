@@ -74,7 +74,7 @@
   try { if (!/Electron/i.test(navigator.userAgent)) { window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); } } catch (e) {}
 })();
 </script>
-<style>html.rz-app #emInstall,html.rz-app #rzAppBtn,html.rz-app #rzAppLogin{display:none!important}</style>
+<style>html.rz-app #emInstall,html.rz-app #rzAppBtn,html.rz-app #rzAppLogin,html.rz-app #rzAppHero{display:none!important}</style>
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#1f1410" />
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f0a08" />
 <meta name="color-scheme" content="light dark" />
@@ -2861,6 +2861,7 @@ window.RCBuyerUI = (function () {
       <h1>Run your whole workday<br/>from <span class="landing-accent">one workspace</span></h1>
       <p>Tasks, attendance, checklists, buyer visits, and every team tool your role needs — in one place, built for how Rugs Creation actually works.</p>
       <button class="btn landing-cta" id="landingSignInBtnHero">Sign In to your workspace</button>
+      <button type="button" id="rzAppHero" class="btn landing-cta" style="margin-left:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.35);color:#fff">📲 Get the app</button>
     </div>
     <div class="landing-illustration" aria-hidden="true">
       <div class="li-ring"></div>
@@ -2971,7 +2972,7 @@ window.RCBuyerUI = (function () {
           <button type="submit" class="btn login-submit" id="loginBtn"><span id="btnLabel">Sign in</span></button>
         </form>
         <p class="login-foot" style="margin-top:14px;text-align:center;font-size:.78rem;color:#6b6b6b">Rugs Creation Operations Portal</p>
-        <p style="margin-top:10px;text-align:center"><button type="button" id="rzAppLogin" class="btn secondary" style="padding:7px 14px;font-size:.82rem">📲 Get the app — phone, computer or Windows setup</button></p>
+        <p style="margin-top:10px;text-align:center"><button type="button" id="rzAppLogin" class="btn secondary" style="padding:8px 14px;font-size:.85rem;font-weight:700;color:#fff!important;background:rgba(255,80,1,.18)!important;border:1px solid #ff6a1a!important">📲 Get the app — phone, computer or Windows setup</button></p>
       </div>
     </div>
   </div>
@@ -23205,7 +23206,7 @@ var COURIER_HTML_B64 = "PCFkb2N0eXBlIGh0bWw+CjxodG1sIGxhbmc9ImVuIj48aGVhZD48c2Ny
   }
   window.rzGetApp = rzGetApp;
   document.addEventListener("click", function (e) {
-    if (!e.target.closest || !e.target.closest("#emInstall,#rzAppBtn,#rzAppLogin")) return;
+    if (!e.target.closest || !e.target.closest("#emInstall,#rzAppBtn,#rzAppLogin,#rzAppHero")) return;
     e.preventDefault(); rzGetApp();
   });
   // Nov 2026: opening the Email Tracker goes straight to full screen; "Exit full screen", Esc or Back leave it.
