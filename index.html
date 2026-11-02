@@ -65,6 +65,16 @@
      one — manifest.json, sw.js, icons/ — see PWA_README.md for what each
      does and how to deploy them. -->
 <link rel="manifest" href="manifest.json" />
+<script>
+/* Nov 2026: opened as an installed app (browser app or Windows .exe) → fill the screen, no "Install app" button */
+(function () {
+  var app = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone || /Electron/i.test(navigator.userAgent);
+  if (!app) return;
+  document.documentElement.classList.add("rz-app");
+  try { if (!/Electron/i.test(navigator.userAgent)) { window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); } } catch (e) {}
+})();
+</script>
+<style>html.rz-app #emInstall,html.rz-app #rzAppBtn,html.rz-app #rzAppLogin{display:none!important}</style>
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#1f1410" />
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f0a08" />
 <meta name="color-scheme" content="light dark" />
@@ -2961,6 +2971,7 @@ window.RCBuyerUI = (function () {
           <button type="submit" class="btn login-submit" id="loginBtn"><span id="btnLabel">Sign in</span></button>
         </form>
         <p class="login-foot" style="margin-top:14px;text-align:center;font-size:.78rem;color:#6b6b6b">Rugs Creation Operations Portal</p>
+        <p style="margin-top:10px;text-align:center"><button type="button" id="rzAppLogin" class="btn secondary" style="padding:7px 14px;font-size:.82rem">📲 Get the app — phone, computer or Windows setup</button></p>
       </div>
     </div>
   </div>
@@ -3884,6 +3895,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       <div class="account-row">
         <div class="who who-text" id="whoName" title="My Profile">—</div>
         <button class="footer-icon-btn" id="themeToggleBtn" title="Switch theme (system / light / dark)">🖥️</button>
+        <button class="footer-icon-btn" id="rzAppBtn" type="button" title="Get the app — computer, phone or Windows setup" aria-label="Get the app">📲</button>
         </div>
       <button type="button" class="logout-btn" id="logoutBtn" title="Log out" aria-label="Log out"><span class="lo-ic" aria-hidden="true">⏻</span><span class="lo-tx">Log out</span></button>
     </div>
@@ -4594,7 +4606,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     <div id="view-emailtracker" class="hidden" style="height:calc(100vh - var(--topbar-offset));display:flex;flex-direction:column">
       <div class="embed-toolbar em-bar"><button class="embed-back-btn" data-goto="modules">← Back to Workspace</button>
         <span class="em-tools" role="group" aria-label="Email screen"><button class="btn secondary" id="emZOut" type="button" title="Smaller text" aria-label="Smaller text">A−</button><span id="emZv" aria-live="polite">100%</span><button class="btn secondary" id="emZIn" type="button" title="Bigger text" aria-label="Bigger text">A+</button>
-        <button class="btn secondary" id="emMax" type="button" title="Use the whole screen for email (Esc to exit)">⤢ Maximise</button><button class="btn secondary" id="emInstall" type="button" title="Install Rugs Creation Workspace as an app on this computer or phone">📲 Install app</button></span></div>
+        <button class="btn secondary" id="emMax" type="button" title="Use the whole screen for email (Esc to exit)">⤢ Maximise</button><button class="btn secondary" id="emInstall" type="button" title="Install the app on this computer, download the Windows setup, or get it on a phone">📲 Get the app</button></span></div>
       <div class="card embed-frame-wrap" style="padding:0;border-radius:0;border-width:0">
         <div class="embed-loading-overlay" id="emailLoading"><span class="spinner"></span><span>Loading Rugs Email…</span></div>
         <iframe id="emailFrame" title="Rugs Email — Email Tracker" style="background:var(--bg)" allow="fullscreen; clipboard-write" allowfullscreen></iframe>
@@ -23153,21 +23165,48 @@ var COURIER_HTML_B64 = "PCFkb2N0eXBlIGh0bWw+CjxodG1sIGxhbmc9ImVuIj48aGVhZD48c2Ny
     if (t.id === "emZIn") zoom("in"); else if (t.id === "emZOut") zoom("out"); else if (t.id === "emMax") setMax(!document.body.classList.contains("email-max")); else setMax(false);
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && document.body.classList.contains("email-max")) setMax(false); });
-  // Nov 2026: "📲 Install app" — uses the browser's own install (Chrome / Edge). Already installed or not offered → short help.
-  document.addEventListener("click", function (e) {
-    if (!e.target.closest || !e.target.closest("#emInstall")) return;
-    var standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone;
-    var say = function (m) {   // small panel under the button — no browser pop-up
-      var old = document.getElementById("emInstallTip"); if (old) old.remove();
-      var d = document.createElement("div"); d.id = "emInstallTip"; d.setAttribute("role", "status");
-      d.style.cssText = "position:fixed;top:64px;right:18px;z-index:9999;max-width:340px;background:#14161c;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.3);font:600 13px/1.5 inherit;display:flex;gap:10px;align-items:flex-start";
-      d.innerHTML = "<span style=\"font-size:18px\">📲</span><span style=\"flex:1\"></span><button type=\"button\" aria-label=\"Close\" style=\"background:none;border:0;color:#fff;font-size:16px;cursor:pointer\">✕</button>";
-      d.children[1].textContent = m; d.querySelector("button").onclick = function () { d.remove(); };
-      document.body.appendChild(d); setTimeout(function () { if (d.parentNode) d.remove(); }, 9000);
+  // Nov 2026: "📲 Get the app" — 1) install from the website (browser app), 2) Windows setup (.exe), 3) phone (Android / iPhone).
+  var RZ_SITE = "https://rugs-zone.github.io/Workspace/";
+  var RZ_EXE = "https://github.com/rugs-zone/Workspace/releases/latest/download/Rugs-Creation-Workspace-Setup.exe";
+  function rzInstallNow(note) {
+    var standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone || /Electron/i.test(navigator.userAgent);
+    if (standalone) { note.textContent = "✓ You are already using the app."; return; }
+    if (window.__pwaPrompt) { var pr = window.__pwaPrompt; window.__pwaPrompt = null; pr.prompt(); if (pr.userChoice) pr.userChoice.then(function (c) { note.textContent = c && c.outcome === "accepted" ? "✓ Installed — open it from the Start menu / home screen." : "Not installed."; }); return; }
+    note.textContent = /iPhone|iPad/i.test(navigator.userAgent) ? "On iPhone (Safari): tap Share ⬆ → Add to Home Screen." : "Use the install icon at the right end of the address bar, or browser menu ⋮ → Install / Apps → Install this site as an app.";
+  }
+  function rzGetApp() {
+    var old = document.getElementById("rzAppDlg"); if (old) old.remove();
+    var phone = /Android|iPhone|iPad/i.test(navigator.userAgent), ios = /iPhone|iPad/i.test(navigator.userAgent);
+    var w = document.createElement("div"); w.id = "rzAppDlg";
+    w.style.cssText = "position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px";
+    var card = function (ic, t, d, body) { return '<div style="border:1px solid #e5e5e5;border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:#fff"><div style="display:flex;gap:10px;align-items:center"><span style="font-size:24px">' + ic + '</span><b style="font-size:15px">' + t + '</b></div><div style="font-size:13px;color:#555;line-height:1.5">' + d + "</div>" + body + "</div>"; };
+    var btn = 'style="background:#ff5001;color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:700;font-size:14px;font-family:inherit;cursor:pointer;text-decoration:none;text-align:center;display:inline-block"';
+    var pc = card("💻", "Install from the website", "Adds Rugs Creation Workspace to this " + (phone ? "phone" : "computer") + " with the RC icon. Opens in its own full window and updates by itself.", '<button type="button" id="rzA1" ' + btn + ">📲 Install now</button><small id=\"rzA1n\" style=\"color:#666\"></small>");
+    var exe = card("🪟", "Download the Windows setup", "A normal Windows installer (.exe) — install it like any software. Desktop + Start-menu icon; always shows the latest Workspace.", '<a href="' + RZ_EXE + '" ' + btn + ">⬇ Download setup (.exe)</a>");
+    var mob = card("📱", "On a phone", (ios ? "iPhone: open the link in Safari → Share ⬆ → Add to Home Screen." : "Android: open the link in Chrome → tap Install (or ⋮ → Install app).") + " Scan the code with the phone camera, or send the link on WhatsApp.",
+      '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div id="rzQR" style="width:132px;height:132px;display:grid;place-items:center;border:1px solid #eee;border-radius:10px;font-size:11px;color:#999">QR code…</div>' +
+      '<div style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:6px"><input id="rzPh" type="tel" inputmode="numeric" placeholder="Phone number, e.g. 98XXXXXXXX" style="padding:9px 10px;border:1px solid #ddd;border-radius:10px;font:inherit">' +
+      '<button type="button" id="rzWa" ' + btn.replace("#ff5001", "#25d366") + ">Send link on WhatsApp</button><small style=\"color:#666\">Opens WhatsApp with the download link ready — press Send.</small></div></div>");
+    w.innerHTML = '<div role="dialog" aria-modal="true" aria-label="Get the app" style="background:#fafafa;color:#111;border-radius:18px;max-width:560px;width:100%;max-height:92vh;overflow:auto;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:12px;font-family:inherit">' +
+      '<div style="display:flex;align-items:center;gap:10px"><b style="font-size:18px;flex:1">📲 Get the Rugs Creation app</b><button type="button" id="rzAx" aria-label="Close" style="background:none;border:0;font-size:20px;cursor:pointer">✕</button></div>' +
+      (phone ? mob + pc : pc + exe + mob) + "</div>";
+    document.body.appendChild(w);
+    w.addEventListener("click", function (e) { if (e.target === w || e.target.id === "rzAx") w.remove(); });
+    var b1 = w.querySelector("#rzA1"); if (b1) b1.onclick = function () { rzInstallNow(w.querySelector("#rzA1n")); };
+    w.querySelector("#rzWa").onclick = function () {
+      var n = String(w.querySelector("#rzPh").value || "").replace(/\D/g, ""); if (n.length === 10) n = "91" + n;
+      if (n.length < 11) { w.querySelector("#rzPh").focus(); w.querySelector("#rzPh").style.borderColor = "#dc2626"; return; }
+      var msg = "Rugs Creation Workspace app 📲\nOpen this link on your phone and tap Install:\n" + RZ_SITE + "\n\nWindows setup: " + RZ_EXE;
+      window.open("https://wa.me/" + n + "?text=" + encodeURIComponent(msg), "_blank", "noopener");
     };
-    if (standalone) { say("Already installed — you are using the app ✓"); return; }
-    if (window.__pwaPrompt) { var pr = window.__pwaPrompt; window.__pwaPrompt = null; pr.prompt(); if (pr.userChoice) pr.userChoice.then(function (c) { say(c && c.outcome === "accepted" ? "Installed ✓ — open it from your Start menu / home screen" : "Not installed"); }); return; }
-    say(/iPhone|iPad/i.test(navigator.userAgent) ? "On iPhone: tap Share → Add to Home Screen" : "Use the install icon at the right end of the address bar, or browser menu ⋮ → Install / Apps → Install this site as an app");
+    var qrBox = w.querySelector("#rzQR");
+    var drawQR = function () { try { var q = window.qrcode(0, "M"); q.addData(RZ_SITE); q.make(); qrBox.innerHTML = q.createImgTag(4, 6); var im = qrBox.querySelector("img"); if (im) { im.style.width = "128px"; im.style.height = "128px"; } } catch (e) { qrBox.textContent = RZ_SITE; } };
+    if (window.qrcode) drawQR(); else { var sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"; sc.onload = drawQR; sc.onerror = function () { qrBox.innerHTML = '<a href="' + RZ_SITE + '" target="_blank" rel="noopener" style="font-size:12px;word-break:break-all">' + RZ_SITE + "</a>"; }; document.head.appendChild(sc); }
+  }
+  window.rzGetApp = rzGetApp;
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest || !e.target.closest("#emInstall,#rzAppBtn,#rzAppLogin")) return;
+    e.preventDefault(); rzGetApp();
   });
   // Nov 2026: opening the Email Tracker goes straight to full screen; "Exit full screen", Esc or Back leave it.
   (function () {
