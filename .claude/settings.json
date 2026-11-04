@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git add -A; git commit -q -m \"auto update\" >/dev/null 2>&1; git pull --rebase -q >/dev/null 2>&1; git push -q >/dev/null 2>&1 && [ -z \"$(git status --porcelain)\" ] || echo '{\"systemMessage\":\"UPLOAD FAILED: changes did not reach GitHub. Run git status in the project folder.\"}'"
+          }
+        ]
+      }
+    ]
+  }
+}

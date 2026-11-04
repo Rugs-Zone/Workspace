@@ -1,0 +1,13 @@
+node_modules/
+.env
+*.log
+
+# Temp files
+*.tmp
+*.temp
+*~
+tmp/
+temp/
+
+# Old copies
+index (*).html
