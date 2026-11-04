@@ -34,3 +34,4 @@
 - 4 Nov 2026: `CLAUDE.md` now loads this file every session and requires a short update here after every finished task.
 - 4 Nov 2026: Added `Rugs Claude.bat` to the Desktop (outside this repo); it opens this folder and continues the last Claude session.
 - 4 Nov 2026: Email Tracker folders are now personal (saved in each person's prefs, only the maker sees them), with a delete button that sends the mail back to Inbox. Old shared folders show only while they hold mail in that person's own mailbox.
+- 4 Nov 2026: Email Tracker delegation queue on Home now shows newest to oldest.
