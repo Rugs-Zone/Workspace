@@ -36,3 +36,4 @@
 - 4 Nov 2026: Email Tracker folders are now personal (saved in each person's prefs, only the maker sees them), with a delete button that sends the mail back to Inbox. Old shared folders show only while they hold mail in that person's own mailbox.
 - 4 Nov 2026: Email Tracker delegation queue on Home now shows newest to oldest.
 - 4 Nov 2026: Email Tracker now fits the visible tablet screen (browser bars, keyboard), so Send stays reachable in New mail.
+- 4 Nov 2026: Supabase `rz_msg_from_notification`: Priya's "courier invoice approved" notice now stays on her dashboard only, with no SMS or WhatsApp. Other invoice makers still get messages.
