@@ -29,3 +29,6 @@
 
 ## To check after upload
 - Press Activate in Sampling FMS and in Email → Departments; status must turn Active.
+
+## Change log
+- 4 Nov 2026: `CLAUDE.md` now loads this file every session and requires a short update here after every finished task.
