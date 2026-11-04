@@ -1681,7 +1681,8 @@
     .fu-tbl tr.late td:first-child{box-shadow:none}
   }
 .ba-vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}.ba-vcard{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:12px}.ba-vcard .btn{flex-shrink:0}
-body.email-max #view-emailtracker{position:fixed;inset:0;z-index:9000;height:100vh!important;background:var(--bg)}
+body.email-max #view-emailtracker{position:fixed;inset:0;bottom:auto;top:var(--em-top,0px);z-index:9000;height:100vh!important;height:var(--em-vh,100dvh)!important;padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;background:var(--bg)}
+@supports (height:100dvh){#view-emailtracker{height:calc(100dvh - var(--topbar-offset))!important}}
 body.em-open .hb-fab,body.em-open .ts-fab,body.em-open #tsFab,body.em-open #hbPanel,body.em-open .hb-panel{display:none!important;visibility:hidden!important;pointer-events:none!important}
 body.em-open .rc-buddy{z-index:9500!important}
 body.email-max #view-emailtracker .em-bar{margin:6px 10px!important}
@@ -23158,6 +23159,12 @@ var COURIER_HTML_B64 = "PCFkb2N0eXBlIGh0bWw+CjxodG1sIGxhbmc9ImVuIj48aGVhZD48c2Ny
 /* Email Tracker: maximise to the whole window + text size (A− / A+) */
 (function () {
   function frame() { return document.getElementById("emailFrame"); }
+  // Nov 2026: fit the tracker to the part of the screen really visible (browser bars and tablet keyboard take the rest), so Send stays on screen.
+  (function () {
+    var vv = window.visualViewport; if (!vv) return;
+    function fit() { var r = document.documentElement.style; if (vv.scale > 1.01) { r.removeProperty("--em-vh"); r.removeProperty("--em-top"); return; } r.setProperty("--em-vh", vv.height + "px"); r.setProperty("--em-top", vv.offsetTop + "px"); }
+    vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); fit();
+  })();
   function zoom(dir) { var f = frame(); if (f && f.contentWindow) f.contentWindow.postMessage({ type: "RC_EMAIL_ZOOM", dir: dir }, "*"); }
   function setMax(on) { document.body.classList.toggle("email-max", on); var b = document.getElementById("emMax"); if (b) b.textContent = on ? "⤡ Exit full screen" : "⤢ Maximise"; }
   document.addEventListener("click", function (e) {
