@@ -37,3 +37,4 @@
 - 4 Nov 2026: Email Tracker delegation queue on Home now shows newest to oldest.
 - 4 Nov 2026: Email Tracker now fits the visible tablet screen (browser bars, keyboard), so Send stays reachable in New mail.
 - 4 Nov 2026: Supabase `rz_msg_from_notification`: Priya's "courier invoice approved" notice now stays on her dashboard only, with no SMS or WhatsApp. Other invoice makers still get messages.
+- 4 Nov 2026: Courier invoice form: Buyer code moved to 5th place; Ship to, Country and Buyer ID removed; Payment terms is a mandatory Self/Buyer dropdown; International adds a mandatory "Expense borne by" (Company/Self), saved as `expense_by`. New invoices still send the Buyer master's Ship To (flag `no_shipto` stops it printing), because `cd_inv_save` would otherwise blank it in the master.
