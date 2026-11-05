@@ -39,3 +39,4 @@
 - 4 Nov 2026: Supabase `rz_msg_from_notification`: Priya's "courier invoice approved" notice now stays on her dashboard only, with no SMS or WhatsApp. Other invoice makers still get messages.
 - 4 Nov 2026: Courier invoice form: Buyer code moved to 5th place; Ship to, Country and Buyer ID removed; Payment terms is a mandatory Self/Buyer dropdown; International adds a mandatory "Expense borne by" (Company/Self), saved as `expense_by`. New invoices still send the Buyer master's Ship To (flag `no_shipto` stops it printing), because `cd_inv_save` would otherwise blank it in the master.
 - 5 Nov 2026: Courier "Tracking no. is mandatory" banner now shows only to Preeti (role `rec`), no longer to admins.
+- 5 Nov 2026: Courier invoice form: Payment terms removed. Entering a buyer name or a buyer code fills the address and details from Buyer master, and they stay editable. A code shared by two buyers fills nothing and asks for the name.
