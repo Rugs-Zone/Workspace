@@ -42,3 +42,4 @@
 - 5 Nov 2026: Courier invoice form: Payment terms removed. Entering a buyer name or a buyer code fills the address and details from Buyer master, and they stay editable. A code shared by two buyers fills nothing and asks for the name.
 - 5 Nov 2026: Sampling FMS: a merchant entering a sample's courier and tracking no longer sends the handler a "Sample dispatched" notice. The "Remaining pieces" notice is unchanged.
 - 6 Nov 2026: Reimbursement Details popup has a Print button: details on page 1, then every bill and slip on its own page (photos, and PDFs page by page using pdf.js from cdnjs). A bill that fails to load is named on the printout.
+- 6 Nov 2026: Reimbursement Details popup and printout now list who approved each step and when (team leader, senior, final sign-off, bills verified, rejected). The same time on both final sign-offs shows as an admin override.

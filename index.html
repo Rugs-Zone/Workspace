@@ -18496,6 +18496,21 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       img.onerror = function () { clearTimeout(t); reject(new Error("did not load")); };
     });
   }
+  // Who approved, from the times each stage records. An admin override stamps both final sign-offs with the same time.
+  function reimbApprovalsHtml(r) {
+    var when = function (t) { return t ? new Date(t).toLocaleString() : ""; }, rows = [];
+    var add = function (step, who, t, note) { rows.push("<tr><td>" + step + "</td><td>" + esc(who) + (note ? " · " + esc(note) : "") + "</td><td>" + esc(when(t)) + "</td></tr>"); };
+    if (r.tl_decided_at) add("Team leader", doerName(r.tl_decided_by), r.tl_decided_at, r.tl_note);
+    if (r.second_decided_at) add("Senior approval", doerName(r.second_decided_by), r.second_decided_at, r.second_note);
+    if (r.final_vinay_at && r.final_vinay_at === r.final_gaurav_at && r.second_decided_by !== "vinay" && r.second_decided_by !== "gaurav") add("Final sign-off", "Admin, on behalf of " + doerName("vinay") + " and " + doerName("gaurav"), r.final_vinay_at);
+    else {
+      if (r.final_vinay_at) add("Final sign-off", doerName("vinay"), r.final_vinay_at);
+      if (r.final_gaurav_at) add("Final sign-off", doerName("gaurav"), r.final_gaurav_at);
+    }
+    if (r.settle_verified_at) add("Bills verified", doerName(r.settle_verified_by), r.settle_verified_at);
+    if (r.rejected_at) add("Rejected", doerName(r.rejected_by), r.rejected_at);
+    return rows.length ? "<table><thead><tr><th>Approval step</th><th>By</th><th>Date and time</th></tr></thead><tbody>" + rows.join("") + "</tbody></table>" : '<div class="sub">Not approved by anyone yet.</div>';
+  }
   function printReimbDetail(r) {
     var w = window.open("about:blank", "_blank");
     if (!w) { toast("Your browser blocked the print page. Allow pop-ups for this site and press Print again.", true); return; }
@@ -18516,6 +18531,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       (r.accounts_paid_at ? '<div class="sub">Accounts paid on ' + new Date(r.accounts_paid_at).toLocaleString() + " by " + esc(doerName(r.accounts_paid_by)) + (rbPayInfo(r) ? " · " + rbPayInfo(r) : "") + (r.accounts_note ? " · " + esc(r.accounts_note) : "") + "</div>" : "") +
       (r.received_at ? '<div class="sub">Employee confirmed receipt on ' + new Date(r.received_at).toLocaleString() + (r.received_note ? " · " + esc(r.received_note) : "") + "</div>" : "") +
       '<div class="sub">' + reimbStageLabel(r) + "</div>" +
+      '<h2 style="font-size:15px;margin:16px 0 0">Approved by</h2>' + reimbApprovalsHtml(r) +
       '<div class="sub">' + files.length + (files.length === 1 ? " bill" : " bills") + " attached</div>" +
       '<div id="rbBills"></div></body></html>');
     w.document.close();
@@ -18564,6 +18580,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
         ((r.settle_bill_urls || []).length ? '<div style="margin-top:4px">' + (r.settle_bill_urls || []).map(function (u, i) { return '<a href="' + esc(u) + '" target="_blank" rel="noopener">Slip ' + (i + 1) + "</a>"; }).join(" · ") + "</div>" : "") + "</div>" : "") +
       (r.accounts_paid_at ? '<div class="sub" style="margin-top:8px">Accounts paid on ' + new Date(r.accounts_paid_at).toLocaleString() + " by " + esc(doerName(r.accounts_paid_by)) + (rbPayInfo(r) ? " · " + rbPayInfo(r) : "") + (r.accounts_note ? " · " + esc(r.accounts_note) : "") + "</div>" : "") +
       (r.received_at ? '<div class="sub">Employee confirmed receipt on ' + new Date(r.received_at).toLocaleString() + (r.received_note ? " · " + esc(r.received_note) : "") + "</div>" : "") +
+      '<div style="margin-top:12px"><b>Approved by</b></div>' + reimbApprovalsHtml(r) +
       '<div class="sub" style="margin-top:10px">' + reimbStageLabel(r) + "</div>" +
       '<div class="modal-actions"><button class="btn secondary" id="rbDetailClose">Close</button><button class="btn" id="rbDetailPrint">🖨 Print</button></div>'
     );
