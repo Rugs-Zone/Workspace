@@ -18535,35 +18535,62 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       '<div class="sub">' + files.length + (files.length === 1 ? " bill" : " bills") + " attached</div>" +
       '<div id="rbBills"></div></body></html>');
     w.document.close();
-    var host = w.document.getElementById("rbBills"), failed = [];
+    var host = w.document.getElementById("rbBills"), st = w.document.getElementById("rbSt"), failed = [];
+    // A bill that fails is tried 3 times. Once one has failed the connection is probably down, so the rest get 1 try.
+    var retry = function (fn, tries, n) {
+      n = n || 0;
+      return fn(n).catch(function (e) {
+        if (n + 1 >= tries || w.closed) throw e;
+        return new Promise(function (done) { setTimeout(done, 3000 * (n + 1)); }).then(function () { return retry(fn, tries, n + 1); });
+      });
+    };
     var addSheet = function (cap) {
       var d = w.document.createElement("div"); d.className = "sheet";
       var c = w.document.createElement("div"); c.className = "cap"; c.textContent = cap; d.appendChild(c);
       host.appendChild(d); return d;
     };
-    var addImage = function (cap, src) {
-      var img = w.document.createElement("img"); img.alt = cap;
-      var ready = rbWaitImage(img); img.src = src; addSheet(cap).appendChild(img);
-      return ready;
+    var addImage = function (cap, src, tries) {
+      var sheet = addSheet(cap);
+      return retry(function (n) {
+        var img = w.document.createElement("img"); img.alt = cap;
+        var ready = rbWaitImage(img);
+        img.src = n ? src + (src.indexOf("?") === -1 ? "?" : "&") + "try=" + n : src;
+        sheet.appendChild(img);
+        return ready.catch(function (e) { img.remove(); throw e; });
+      }, tries);
     };
     var one = function (f) {
-      var cap = r.id + " — " + f.label, isPdf = /\.pdf$/i.test(String(f.url).split("?")[0]);
-      var job = isPdf ? Promise.race([rbPdfTimeout(), rbPdfPages(f.url)]).then(function (pages) {
-        return Promise.all(pages.map(function (src, i) { return addImage(cap + (pages.length > 1 ? " — page " + (i + 1) + " of " + pages.length : ""), src); }));
-      }) : addImage(cap, f.url);
+      var cap = r.id + " — " + f.label, isPdf = /\.pdf$/i.test(String(f.url).split("?")[0]), tries = failed.length ? 1 : 3;
+      var job = isPdf ? retry(function () { return Promise.race([rbPdfTimeout(), rbPdfPages(f.url)]); }, tries).then(function (pages) {
+        return Promise.all(pages.map(function (src, i) { return addImage(cap + (pages.length > 1 ? " — page " + (i + 1) + " of " + pages.length : ""), src, 1); }));
+      }) : addImage(cap, f.url, tries);
       return job.catch(function () {
         failed.push(f.label);
-        var sheets = host.querySelectorAll(".sheet"), last = sheets[sheets.length - 1];
-        if (!isPdf && last) { var bad = last.querySelector("img"); if (bad) bad.remove(); } else last = addSheet(cap);
+        var last = isPdf ? addSheet(cap) : host.lastChild;
         var m = w.document.createElement("div"); m.className = "bad"; m.textContent = f.label + " could not be loaded. Open it here: " + f.url; last.appendChild(m);
       });
     };
-    files.reduce(function (p, f) { return p.then(function () { return w.closed ? null : one(f); }); }, Promise.resolve()).then(function () {
-      if (w.closed) return;
-      var st = w.document.getElementById("rbSt");
-      st.textContent = failed.length ? "Could not load: " + failed.join(", ") + ". Check the printout before you file it." : "Ready. You can close this tab after printing.";
-      w.focus(); w.print();
-    });
+    var stButton = function (label, action) {
+      var b = w.document.createElement("button"); b.type = "button"; b.textContent = label; b.style.cssText = "margin:8px 8px 0 0;padding:6px 12px;font:inherit;cursor:pointer";
+      b.addEventListener("click", action); st.appendChild(b);
+    };
+    var run = function () {
+      host.innerHTML = ""; failed = [];
+      st.textContent = "Preparing the bills for printing…";
+      files.reduce(function (p, f) { return p.then(function () { return w.closed ? null : one(f); }); }, Promise.resolve()).then(function () {
+        if (w.closed) return;
+        if (failed.length) {
+          // Do not open the print window with a bill missing: that wastes paper and the proof is incomplete.
+          st.textContent = "Could not load: " + failed.join(", ") + ". Nothing has been printed. Check the internet connection, then press Try again.";
+          st.appendChild(w.document.createElement("br"));
+          stButton("Try again", run); stButton("Print without these bills", function () { w.focus(); w.print(); });
+          return;
+        }
+        st.textContent = "Ready. You can close this tab after printing.";
+        w.focus(); w.print();
+      });
+    };
+    run();
   }
   function openReimbDetailModal(id) {
     var r = (state.reimbursements || []).find(function (x) { return x.id === id; });

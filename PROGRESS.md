@@ -44,3 +44,4 @@
 - 6 Nov 2026: Reimbursement Details popup has a Print button: details on page 1, then every bill and slip on its own page (photos, and PDFs page by page using pdf.js from cdnjs). A bill that fails to load is named on the printout.
 - 6 Nov 2026: Reimbursement Details popup and printout now list who approved each step and when (team leader, senior, final sign-off, bills verified, rejected). The same time on both final sign-offs shows as an admin override.
 - 6 Nov 2026: Reimbursement printout: fixed blank sheets with only a bill's heading on them. It now prints on A4 portrait and each bill keeps its heading on one page.
+- 6 Nov 2026: Reimbursement printout: a bill that fails to load is retried 3 times. If one is still missing, the print window stays closed and the tab offers "Try again" or "Print without these bills".
