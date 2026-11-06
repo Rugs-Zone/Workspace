@@ -18462,6 +18462,93 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       }).catch(function (e) { document.getElementById("rbPayErr").textContent = e.message; btn.disabled = false; btn.textContent = "Try again"; });
     });
   }
+  // Print = the details on page 1, then every bill / slip on its own page (photos and each page of a PDF).
+  var RB_PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+  function rbLoadPdfJs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    return new Promise(function (resolve, reject) {
+      var sc = document.createElement("script"); sc.src = RB_PDFJS + "pdf.min.js";
+      sc.onload = function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = RB_PDFJS + "pdf.worker.min.js"; resolve(window.pdfjsLib); };
+      sc.onerror = function () { reject(new Error("PDF reader did not load")); };
+      document.head.appendChild(sc);
+    });
+  }
+  function rbPdfPages(url) {
+    return rbLoadPdfJs().then(function (lib) { return lib.getDocument({ url: url }).promise; }).then(function (doc) {
+      var pages = [], next = function (n) {
+        if (n > doc.numPages) return pages;
+        return doc.getPage(n).then(function (pg) {
+          var vp = pg.getViewport({ scale: 2 }), cv = document.createElement("canvas"), ctx = cv.getContext("2d");
+          cv.width = vp.width; cv.height = vp.height;
+          ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+          return pg.render({ canvasContext: ctx, viewport: vp, intent: "print" }).promise.then(function () { pages.push(cv.toDataURL("image/jpeg", 0.9)); return next(n + 1); });
+        });
+      };
+      return next(1);
+    });
+  }
+  function rbPdfTimeout() { return new Promise(function (_, reject) { setTimeout(function () { reject(new Error("timed out")); }, 90000); }); }
+  function rbWaitImage(img) {
+    return new Promise(function (resolve, reject) {
+      if (img.complete && img.naturalWidth) { resolve(); return; }
+      var t = setTimeout(function () { reject(new Error("timed out")); }, 30000);
+      img.onload = function () { clearTimeout(t); resolve(); };
+      img.onerror = function () { clearTimeout(t); reject(new Error("did not load")); };
+    });
+  }
+  function printReimbDetail(r) {
+    var w = window.open("about:blank", "_blank");
+    if (!w) { toast("Your browser blocked the print page. Allow pop-ups for this site and press Print again.", true); return; }
+    var files = (r.bill_urls || []).map(function (u, i) { return { url: u, label: "Bill " + (i + 1) }; })
+      .concat((r.settle_bill_urls || []).map(function (u, i) { return { url: u, label: "Slip " + (i + 1) }; }));
+    var rows = (r.expenses || []).map(function (e) { return "<tr><td>" + esc(e.date || "") + "</td><td>" + esc(e.category || "") + "</td><td>" + esc(e.description || "") + '</td><td class="amt">₹' + Number(e.amount || 0).toLocaleString("en-IN") + "</td></tr>"; }).join("");
+    w.document.open();
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + esc(r.id) + "</title><style>" +
+      "@page{margin:12mm}body{font-family:Arial,sans-serif;color:#111;font-size:13px;margin:0}h1{font-size:18px;margin:0 0 4px}.sub{color:#555;margin-top:6px}" +
+      "table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #bbb;padding:6px 8px;text-align:left;vertical-align:top}th{background:#f1f1f1}.amt{text-align:right;white-space:nowrap}" +
+      ".total{margin-top:12px;font-weight:700;font-size:15px}.sheet{break-before:page;page-break-before:always}.cap{font-weight:700;margin-bottom:8px}.sheet img{display:block;max-width:100%;max-height:255mm;margin:0 auto}.bad{border:2px solid #b91c1c;color:#b91c1c;padding:12px;overflow-wrap:anywhere}" +
+      "#rbSt{background:#fff7ed;border:1px solid #fdba74;padding:10px 12px;margin-bottom:14px;font-weight:700}@media print{#rbSt{display:none}}" +
+      '</style></head><body><div id="rbSt">Preparing the bills for printing…</div>' +
+      "<h1>" + esc(r.id) + " — " + esc(doerName(r.doc_id)) + "</h1>" + (r.purpose ? '<div class="sub">' + esc(r.purpose) + "</div>" : "") +
+      "<table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>" + rows + "</tbody></table>" +
+      '<div class="total">' + (r.kind === "advance" ? "Advance asked" : "Total") + ": ₹" + Number(r.total_amount).toLocaleString("en-IN") + "</div>" +
+      (r.kind === "advance" && r.settle_total != null ? '<div class="total">Actual spent: ' + rbMoney(r.settle_total) + (r.settle_verified_at ? " · verified" : "") + "</div>" : "") +
+      (r.accounts_paid_at ? '<div class="sub">Accounts paid on ' + new Date(r.accounts_paid_at).toLocaleString() + " by " + esc(doerName(r.accounts_paid_by)) + (rbPayInfo(r) ? " · " + rbPayInfo(r) : "") + (r.accounts_note ? " · " + esc(r.accounts_note) : "") + "</div>" : "") +
+      (r.received_at ? '<div class="sub">Employee confirmed receipt on ' + new Date(r.received_at).toLocaleString() + (r.received_note ? " · " + esc(r.received_note) : "") + "</div>" : "") +
+      '<div class="sub">' + reimbStageLabel(r) + "</div>" +
+      '<div class="sub">' + files.length + (files.length === 1 ? " bill" : " bills") + " attached</div>" +
+      '<div id="rbBills"></div></body></html>');
+    w.document.close();
+    var host = w.document.getElementById("rbBills"), failed = [];
+    var addSheet = function (cap) {
+      var d = w.document.createElement("div"); d.className = "sheet";
+      var c = w.document.createElement("div"); c.className = "cap"; c.textContent = cap; d.appendChild(c);
+      host.appendChild(d); return d;
+    };
+    var addImage = function (cap, src) {
+      var img = w.document.createElement("img"); img.alt = cap;
+      var ready = rbWaitImage(img); img.src = src; addSheet(cap).appendChild(img);
+      return ready;
+    };
+    var one = function (f) {
+      var cap = r.id + " — " + f.label, isPdf = /\.pdf$/i.test(String(f.url).split("?")[0]);
+      var job = isPdf ? Promise.race([rbPdfTimeout(), rbPdfPages(f.url)]).then(function (pages) {
+        return Promise.all(pages.map(function (src, i) { return addImage(cap + (pages.length > 1 ? " — page " + (i + 1) + " of " + pages.length : ""), src); }));
+      }) : addImage(cap, f.url);
+      return job.catch(function () {
+        failed.push(f.label);
+        var sheets = host.querySelectorAll(".sheet"), last = sheets[sheets.length - 1];
+        if (!isPdf && last) { var bad = last.querySelector("img"); if (bad) bad.remove(); } else last = addSheet(cap);
+        var m = w.document.createElement("div"); m.className = "bad"; m.textContent = f.label + " could not be loaded. Open it here: " + f.url; last.appendChild(m);
+      });
+    };
+    files.reduce(function (p, f) { return p.then(function () { return w.closed ? null : one(f); }); }, Promise.resolve()).then(function () {
+      if (w.closed) return;
+      var st = w.document.getElementById("rbSt");
+      st.textContent = failed.length ? "Could not load: " + failed.join(", ") + ". Check the printout before you file it." : "Ready. You can close this tab after printing.";
+      w.focus(); w.print();
+    });
+  }
   function openReimbDetailModal(id) {
     var r = (state.reimbursements || []).find(function (x) { return x.id === id; });
     if (!r) return;
@@ -18478,9 +18565,10 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       (r.accounts_paid_at ? '<div class="sub" style="margin-top:8px">Accounts paid on ' + new Date(r.accounts_paid_at).toLocaleString() + " by " + esc(doerName(r.accounts_paid_by)) + (rbPayInfo(r) ? " · " + rbPayInfo(r) : "") + (r.accounts_note ? " · " + esc(r.accounts_note) : "") + "</div>" : "") +
       (r.received_at ? '<div class="sub">Employee confirmed receipt on ' + new Date(r.received_at).toLocaleString() + (r.received_note ? " · " + esc(r.received_note) : "") + "</div>" : "") +
       '<div class="sub" style="margin-top:10px">' + reimbStageLabel(r) + "</div>" +
-      '<div class="modal-actions"><button class="btn secondary" id="rbDetailClose">Close</button></div>'
+      '<div class="modal-actions"><button class="btn secondary" id="rbDetailClose">Close</button><button class="btn" id="rbDetailPrint">🖨 Print</button></div>'
     );
     document.getElementById("rbDetailClose").addEventListener("click", closeModal);
+    document.getElementById("rbDetailPrint").addEventListener("click", function () { printReimbDetail(r); });
   }
   function openNewReimbModal() {
     state.reimbExpenseRows = [{ date: "", category: "Travel", description: "", amount: "" }];
