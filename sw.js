@@ -10,7 +10,9 @@ self.addEventListener('fetch', e => {
   const req = e.request; if (req.method !== 'GET') return;
   const url = new URL(req.url); if (url.origin !== self.location.origin) return;           // never touch other sites
   if (req.mode === 'navigate') {                                                           // the Workspace page: network first
-    e.respondWith(fetch(req).then(r => { if (r.ok) { const cp = r.clone(); caches.open(CACHE).then(c => c.put('./', cp)); } return r; })
+    // only the Workspace page itself is kept as the offline copy (not mail.html or other pages)
+    const isHome = /\/(index\.html)?$/.test(url.pathname);
+    e.respondWith(fetch(req).then(r => { if (r.ok && isHome) { const cp = r.clone(); caches.open(CACHE).then(c => c.put('./', cp)); } return r; })
       .catch(() => caches.match('./').then(r => r || new Response('<h2 style="font-family:sans-serif">You are offline — connect to the internet and try again.</h2>', { headers: { 'Content-Type': 'text/html' } }))));
     return;
   }

@@ -12291,6 +12291,9 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     if (view === "customModule" && PPC_BUILTIN_ENABLED && state.activeCustomModuleKey === PPC_MODULE_KEY) view = "ppc";
     if (view === "customModule" && state.activeCustomModuleKey === PASSING_MODULE_KEY) view = "passing";
     if (view === "customModule" && state.activeCustomModuleKey === EMAIL_MODULE_KEY) view = "emailtracker";
+    // Nov 2026: Email Tracker opens on its own full-screen page (mail.html, Outlook style) in a new tab.
+    // If the browser blocks the new tab (e.g. a page refresh, not a click), it opens here as before.
+    if (view === "emailtracker") { var mailWin = null; try { mailWin = window.open("mail.html", "rugs-email"); } catch (e) {} if (mailWin) { try { mailWin.focus(); } catch (e) {} return; } }
     if (view === "customModule" && state.activeCustomModuleKey === MERCHANT_MODULE_KEY) view = "merchant";
     if (view === "merchant" && !(state.doer && (state.doer.is_admin || state.merchantAccess))) { toast("You don't have a Merchant Dashboard. Ask your admin."); return; }
     if (view === "fairleads" && !canSeeFairLeads()) { toast("Fair Leads isn't turned on for you. Ask your admin."); return; }
