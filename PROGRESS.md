@@ -47,3 +47,4 @@
 - 6 Nov 2026: Reimbursement printout: a bill that fails to load is retried 3 times. If one is still missing, the print window stays closed and the tab offers "Try again" or "Print without these bills".
 - 6 Nov 2026: Courier: Local invoices are approved automatically when locked, with no Preeti step and no "approved" notice to the maker (Supabase `cd_inv_submit`, `rz_courier_notify`; approver shows as "Automatic (Local invoice)"). International is unchanged.
 - 14 Nov 2026: Buyer weekly email (Mon 2 PM): order-status mail switched off (setting "orders" = false), only sample tracking is sent. Added a one-time notice (Supabase `buyer-orders-api`, setting `notice`) with the "order tracking upgrade, bear with us 7–10 days" letter, sent to every buyer in the Mon 16 Nov mail only.
+- 14 Nov 2026: The order-status pause is for Mon 16 Nov only: one-time Supabase cron `buyer-weekly-orders-back-on` turns "orders" back on at 6 PM IST that day, then removes itself.
