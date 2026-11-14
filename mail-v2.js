@@ -61,6 +61,7 @@
     'body.v2 .v2vmain{flex:1;min-height:0;display:flex;align-items:stretch;position:relative}',
     'body.v2 .v2vbody{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:12px}',
     'body.v2 .v2vframe{flex:1;width:100%;max-width:1100px;border:0;background:#fff;border-radius:2px}',
+    'body.v2 .v2voffice{flex:1;width:100%;max-width:1100px;background:#fff;color:#242424;overflow:auto;border-radius:2px;display:flex;flex-direction:column}',
     'body.v2 .v2vnote{font-size:12px;color:#adadad;margin:6px 0 0}',
     'body.v2 .v2vimgwrap{overflow:auto;max-width:100%;max-height:100%;display:flex;align-items:center;justify-content:center}',
     'body.v2 .v2vimg{max-width:100%;max-height:calc(100vh - 90px);transform-origin:center;transition:transform .12s ease-out;background:#fff}',
@@ -220,8 +221,16 @@
         '<p class="v2vnote">Shown with Google Drive. Sign in to Google with your @rugscreation.com account if it asks.</p>';
       return;
     }
+    // no Drive copy yet: draw Excel / Word / PowerPoint in the browser from the original file (same viewer as in New mail)
+    if (k.v === "office" && a.gid && typeof window.officeRender === "function" && window.ofxCan && window.ofxCan(a.name)) {
+      body.innerHTML = '<div class="v2voffice"><div class="v2vmsg" style="color:#424242;margin:auto">Opening ' + txt(a.name) + '…</div></div>';
+      var box = body.firstChild;
+      bytes(a).then(function (b) { if (VW !== me || VW.cur !== a) return; return window.officeRender(b.u8.buffer, a.name, box); })
+        .catch(function (e) { fail(e && e.message ? e.message : "Could not open the file."); });
+      return;
+    }
     if (k.v === "office") {
-      body.innerHTML = '<div class="v2vmsg"><b>' + txt(a.name) + '</b><span>' + (a.saving ? "This file is being copied to Google Drive — the preview works within a minute or two. You can download it now." : "This file has no Google Drive copy, so it can't be previewed here. Download it to open it.") + '</span><div class="v2vacts"><button type="button" class="v2vb" data-vw="dl">⬇ Download</button>' + (a.saving ? '<button type="button" class="v2vb" data-vw="retry">Try again</button>' : '') + '</div></div>';
+      body.innerHTML ='<div class="v2vmsg"><b>' + txt(a.name) + '</b><span>' + (a.saving ? "This file is being copied to Google Drive — the preview works within a minute or two. You can download it now." : "This file has no Google Drive copy, so it can't be previewed here. Download it to open it.") + '</span><div class="v2vacts"><button type="button" class="v2vb" data-vw="dl">⬇ Download</button>' + (a.saving ? '<button type="button" class="v2vb" data-vw="retry">Try again</button>' : '') + '</div></div>';
       return;
     }
     if (k.v === "none") { fail("This kind of file can't be previewed. Download it to open it."); return; }
