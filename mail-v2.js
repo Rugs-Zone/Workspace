@@ -225,20 +225,21 @@
         '<button type="button" class="v2vb" data-vw="retry">Try again</button><button type="button" class="v2vb" data-vw="dl">⬇ Download</button>' +
         (a.link ? '<a class="v2vb" href="' + txt(a.link) + '" target="_blank" rel="noopener">Open in Drive ↗</a>' : '') + '</div></div>';
     };
-    // Word / Excel / PowerPoint (and PDF on phones): Google Drive's own viewer, from the copy in the team's Drive
-    if (did && (k.v === "office" || (k.v === "pdf" && phone))) {
+    var drivePreview = function (note) {
       body.innerHTML = '<iframe class="v2vframe" title="' + txt(a.name) + '" src="https://drive.google.com/file/d/' + did + '/preview" allow="autoplay"></iframe>' +
-        '<p class="v2vnote">Shown with Google Drive. Sign in to Google with your @rugscreation.com account if it asks.</p>';
-      return;
-    }
-    // no Drive copy yet: draw Excel / Word / PowerPoint in the browser from the original file (same viewer as in New mail)
+        '<p class="v2vnote">' + (note || "Shown with Google Drive. Sign in to Google with your @rugscreation.com account if it asks.") + '</p>';
+    };
+    // Excel / Word / PowerPoint: drawn right here in Rugs Email from the original file — no Google sign-in needed
+    // (Google Drive's viewer is only the backup, e.g. for very big files or old .doc / .ppt)
     if (k.v === "office" && a.gid && typeof window.officeRender === "function" && window.ofxCan && window.ofxCan(a.name)) {
       body.innerHTML = '<div class="v2voffice"><div class="v2vmsg" style="color:#424242;margin:auto">Opening ' + txt(a.name) + '…</div></div>';
       var box = body.firstChild;
       bytes(a).then(function (b) { if (VW !== me || VW.cur !== a) return; return window.officeRender(b.u8.buffer, a.name, box); })
-        .catch(function (e) { fail(e && e.message ? e.message : "Could not open the file."); });
+        .catch(function (e) { if (VW !== me || VW.cur !== a) return; if (did) drivePreview("Could not draw it here (" + (e && e.message ? e.message : "error") + ") — shown with Google Drive instead. Sign in to Google with your @rugscreation.com account if it asks."); else fail(e && e.message ? e.message : "Could not open the file."); });
       return;
     }
+    // other Office files (old .doc / .ppt) and PDF on phones: Google Drive's viewer, from the copy in the team's Drive
+    if (did && (k.v === "office" || (k.v === "pdf" && phone))) { drivePreview(); return; }
     if (k.v === "office") {
       body.innerHTML ='<div class="v2vmsg"><b>' + txt(a.name) + '</b><span>' + (a.saving ? "This file is being copied to Google Drive — the preview works within a minute or two. You can download it now." : "This file has no Google Drive copy, so it can't be previewed here. Download it to open it.") + '</span><div class="v2vacts"><button type="button" class="v2vb" data-vw="dl">⬇ Download</button>' + (a.saving ? '<button type="button" class="v2vb" data-vw="retry">Try again</button>' : '') + '</div></div>';
       return;
