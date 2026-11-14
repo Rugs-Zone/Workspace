@@ -99,7 +99,7 @@ Suggested first: 1, then 3–5, then 10.
    - **Web push notifications** on phone (installed app) with an on/off setting
    - **Private "My mailbox"** per user (each person's own @rugscreation.com, visible to them and Admin)
 4. Mail with no matching rule waits in "To assign" for Priya. Ask whether it should go to the Manager or the least busy teammate after 1 minute.
-5. Choose **classic vs 2.0** (mail.html vs mail2.html). Then remove the invented-banner demo code from classic too.
+5. ~~Choose classic vs 2.0~~ **Done: 2.0 is final** (mail.html runs 2.0, mail2.html forwards to it, invented-banner code removed).
 6. Sometimes a sync run stops with 546 (server out of resources) during the 180-day history loading; the next run continues.
 7. Older open items:
    - **Quick reply**: still needs a screenshot.

@@ -99,7 +99,7 @@
     // It goes right after the app's <title> (the word </head> also appears inside the app's own code, so not there).
     var extra = '<meta name="theme-color" content="#0f6cbd"><link rel="manifest" href="mail-manifest.json"><link rel="icon" href="icons/icon-192.png">' +
                 '<script>window.__RUGS_STANDALONE__=true;window.__OUTLOOK_CSS__=' + JSON.stringify(OUTLOOK).replace(/</g, "\\u003c") + ';' +
-                'document.addEventListener("DOMContentLoaded",function(){var s=document.createElement("style");s.id="outlook-theme";s.textContent=window.__OUTLOOK_CSS__;document.head.appendChild(s)});<\/script>';
+                'document.addEventListener("DOMContentLoaded",function(){var s=document.createElement("style");s.id="outlook-theme";s.textContent=window.__OUTLOOK_CSS__;document.head.appendChild(s);var v=document.createElement("script");v.src="mail-v2.js";document.body.appendChild(v)});<\/script>';   // Rugs Email 2.0 layout (final, 14 Nov 2026)
     var at = html.indexOf("</title>");
     html = at > 0 ? html.slice(0, at + 8) + extra + html.slice(at + 8) : extra + html;
     document.open(); document.write(html); document.close();
