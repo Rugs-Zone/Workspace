@@ -41,3 +41,71 @@ Suggested first: 1, then 3–5, then 10.
 - `rugs-sa-modify-test` stub can be deleted in the Supabase dashboard.
 - VACUUM FULL on `rm_messages` to shrink the file (locks the table for a few seconds).
 - Sampling FMS bugs above — none fixed yet.
+
+## Rugs Email — 14 Nov, afternoon / evening (part 2)
+
+### Done and live
+- **180-day history** (rm_settings `history_days`=180), loading older mail in the background. **Keyword topics** instead of Gemini (cron `rm-keyword-topics`).
+- **Mail kept on the device** (IndexedDB): sign-in shows mail at once, then fetches only what changed.
+- **Auto-assign**:
+  - **Name rule**: "Hi Imran" goes to Imran.
+  - **Trail rule**: mail goes to whoever replied last.
+  - **Alias rule**: `perm.aliases`. Jagjit is merchandiser2@, Imran merchandiser4@, Gulab amr1@, Viney merchandiser7@. Admin → Users has an "Aliases" field.
+  - **Leave rule**: owner on leave → Manager → least busy teammate → stays for the CRM. Shows a tag "for X (on leave)".
+  - **Timing**: all rules run the moment a mail is saved (trigger `rm_assign_now`), plus a 1-minute cron `rm-alias-assign` as backup.
+- **Roles**:
+  - Priya is the **only Admin** and the CRM for all teams except Shipping (`perm.crm_depts`).
+  - Priyanshu (marketing@) is **Manager** of Marketing & Ops.
+  - Karamjot is Executive.
+- **Own page `mail.html`**: Outlook look. The Email Tracker tile opens it in a new tab.
+- **Rugs Email 2.0 `mail2.html` + `mail-v2.js`** (for comparison; the tile still opens classic):
+  - **Layout**: simpler open mail, Outlook attachment cards, and a full-screen viewer for pictures, PDF, Word, Excel and PowerPoint.
+  - **Trail**: To/Cc on each mail, and folded "··· Show earlier messages".
+  - **No invented banners.**
+- **All versions**:
+  - **View menu**: sort, show filter, reading pane Right/Bottom/Off, conversations, preview lines; saved per person.
+  - **All inboxes.**
+  - **Right-click menu**: Reply, Forward, Assign to me, Move, Flag, Unread, **Ignore conversation** (trigger `rm_ignore`), Delete.
+  - **Compose like Outlook**: docks in the reading pane, Send/Discard/Attach/Pop out on top, one Attach button, file cards with View (Excel/Word/PowerPoint drawn in the browser) and Remove.
+  - **Pictures shown by default** like Gmail. Junk and spoofed mail still ask. "Ask before showing pictures" setting in My profile.
+  - **Outlook header on each mail**: Name <email>, To/Cc, full date, Reply/Reply all/Forward/⋯.
+  - **Attachments** sit under each mail's own header, with a 📎 count.
+  - **Colleague mail** (e.g. storedept@ → marketing@) shows in the **Inbox**, not Sent.
+- **Speed**:
+  - Gmail sync every **30 s** (cron `rugs-mail-1min`).
+  - The app checks every **15 s** and again when the tab comes back.
+  - The Sync button and sign-in no longer force a heavy Gmail sync (that caused error 546).
+- **Fix "no new mail after 4 PM"**: `rm_list` was timing out.
+  - It is now a dispatcher: refreshes use `rm_list_since` (last 60 days, changed only, 0.17 s), sign-in uses `rm_list_full` (60 s allowed).
+- **rugs-mail v35**: pictures 40 MB per conversation, big mails keep their HTML, To/Cc/Delivered-To saved (`to_addrs`), and a `threadPreview` action (timer key, for checks).
+- `schema.md` describes the email tables and rules.
+
+### Gmail push (instant mail) — almost done
+- Edge function `rugs-mail-push`. Cron `rm-push-watch` renews the Gmail watch daily.
+- Google Cloud project **rugs-email-512510**: topic `rugs-mail-push` created, org policy relaxed, `gmail-api-push@system.gserviceaccount.com` is Publisher.
+- The watch is **OK for all 6 mailboxes** (expires 21 Nov, renewed daily).
+- The user created subscription `rugs-mail-push-sub`. **No push has been received yet.**
+  - **Next**: send a test mail to teamalpha@, then check `rm_settings.push_last` (count > 1).
+  - **If no push**: check the subscription endpoint is exactly
+    `https://asbgfjngxsabnnzgxugu.supabase.co/functions/v1/rugs-mail-push?k=323616addae338375fc3c44624aae8205f15`
+
+### Still open / to do
+1. Confirm push works (above).
+2. **OTP / login-code mails**: these are hidden from the team (only the owner sees them). The user's request "otp also come… so it will show" is unclear. Ask: show them to the team?
+3. Requested, not built yet:
+   - "Open in new window" for reading and composing (several drafts at once)
+   - **Quick Steps** (one-click buttons for several actions)
+   - **Save a search** as a folder under Favorites
+   - **Web push notifications** on phone (installed app) with an on/off setting
+   - **Private "My mailbox"** per user (each person's own @rugscreation.com, visible to them and Admin)
+4. Mail with no matching rule waits in "To assign" for Priya. Ask whether it should go to the Manager or the least busy teammate after 1 minute.
+5. Choose **classic vs 2.0** (mail.html vs mail2.html). Then remove the invented-banner demo code from classic too.
+6. Sometimes a sync run stops with 546 (server out of resources) during the 180-day history loading; the next run continues.
+7. Older open items:
+   - **Quick reply**: still needs a screenshot.
+   - **VACUUM FULL** on `rm_messages`.
+   - **Sampling FMS bugs** from the audit are still not fixed.
+   - The **"promise in your reply"** box sometimes picks up quoted "From:/Sent:" text.
+
+### How to continue in a new chat
+Open the Workspace folder, start Claude, and say: "Read chat-14-nov-2026.md and PROGRESS.md, then continue with the open items."
