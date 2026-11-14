@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rugs Email 2.0</title>
+<meta name="description" content="Rugs Creation team mail — full screen, Outlook style.">
+<meta name="theme-color" content="#0f6cbd">
+<link rel="manifest" href="mail-manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  /* loading screen only — the mail app replaces this page once it is loaded */
+  :root{--bg:#f5f5f5;--fg:#242424;--muted:#616161;--blue:#0f6cbd}
+  @media (prefers-color-scheme:dark){:root{--bg:#1f1f1f;--fg:#fff;--muted:#adadad;--blue:#479ef5}}
+  html,body{height:100%;margin:0}
+  body{background:var(--bg);color:var(--fg);font:14px/1.45 "Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",sans-serif;display:grid;place-items:center;padding:16px;box-sizing:border-box}
+  .ld{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+  .sp{width:34px;height:34px;border-radius:50%;border:3px solid color-mix(in srgb,var(--blue) 25%,transparent);border-top-color:var(--blue);animation:r .8s linear infinite}
+  @keyframes r{to{transform:rotate(360deg)}}
+  .ld b{font-size:18px;font-weight:600}
+  .ld span{color:var(--muted)}
+  .ld a{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="ld" id="ld"><div class="sp" aria-hidden="true"></div><b>Rugs Email 2.0</b><span>Opening your mailbox…</span></div>
+<script>
+// Rugs Email 2.0 (Nov 2026): same as mail.html plus the 2.0 layout layer (mail-v2.js).
+  // Rugs Email on its own page (Nov 2026). The mail app itself lives inside the Workspace file (index.html,
+// EMAIL_HTML_B64), so this page always runs the same, latest version — only the look is Outlook-style.
+(function () {
+  try { if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {}); } catch (e) {}
+
+  var OUTLOOK = [
+    /* Outlook colours and font (light) */
+    ':root{--bg:#f5f5f5;--pane:#ffffff;--pane2:#fafafa;--fg:#242424;--muted:#616161;--line:#e0e0e0;--hover:#f5f5f5;',
+    '--brand:#0f6cbd;--brand2:#ebf3fc;--brandfg:#115ea3;--brand-strong:#0f548c;--ink:#0f6cbd;',
+    '--red:#c50f1f;--redbg:#fdf3f4;--amber:#bc4b09;--amberbg:#fff9f5;--green:#107c10;--greenbg:#f1faf1;--blue:#0f6cbd;--bluebg:#ebf3fc;--violet:#5c2e91;--violetbg:#f7f4fb;',
+    '--shadow:0 8px 16px rgba(0,0,0,.14),0 0 2px rgba(0,0,0,.12);--r:4px;',
+    '--ui:"Segoe UI","Segoe UI Web (West European)",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",sans-serif}',
+    /* Outlook dark */
+    '@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1f1f1f;--pane:#292929;--pane2:#242424;--fg:#ffffff;--muted:#adadad;--line:#3d3d3d;--hover:#333333;',
+    '--brand:#479ef5;--brand2:#082338;--brandfg:#62abf5;--brand-strong:#2886de;--ink:#0f548c;--blue:#479ef5;--bluebg:#082338;color-scheme:dark}}',
+    ':root[data-theme="dark"]{--bg:#1f1f1f;--pane:#292929;--pane2:#242424;--fg:#ffffff;--muted:#adadad;--line:#3d3d3d;--hover:#333333;',
+    '--brand:#479ef5;--brand2:#082338;--brandfg:#62abf5;--brand-strong:#2886de;--ink:#0f548c;--blue:#479ef5;--bluebg:#082338;color-scheme:dark}',
+    'body{font-size:14px}',
+    /* top bar = Outlook blue header */
+    '.top{background:var(--ink);color:#fff;min-height:48px}',
+    /* left app rail like Outlook\'s app bar */
+    '.rail{background:var(--bg);border-right:0}',
+    '.folders{background:var(--bg)!important;border-right:0!important}',
+    /* folders: flat rows, selected = light blue */
+    '.fi{border-radius:4px;padding:6px 10px}',
+    '.fi[aria-current="true"]{background:var(--brand2);color:var(--fg);font-weight:600;box-shadow:inset 3px 0 0 var(--brand)}',
+    '.fi .c,.fi .c.hot{color:var(--brand);font-weight:600}',
+    /* message list: Outlook rows */
+    '.list{background:var(--pane);border-right:1px solid var(--line)}',
+    '.m{padding:9px 12px 9px 10px;border-left:3px solid transparent;border-bottom:1px solid var(--line)}',
+    '.m:hover{background:var(--hover)}',
+    '.m.open{background:#cfe4fa;border-left-color:var(--brand)}',
+    '@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .m.open{background:#0e3a5c}}:root[data-theme="dark"] .m.open{background:#0e3a5c}',
+    '.m.unread{border-left-color:var(--brand)}',
+    '.m .who{font-weight:400}',
+    '.m.unread .who{font-weight:600}',
+    '.m.unread .sub{font-weight:600;color:var(--brand)}',
+    '.m .sub{font-size:13.5px}',
+    '.m.unread .time{color:var(--brand);font-weight:600}',
+    /* buttons: square-ish, Outlook blue primary, flat toolbar */
+    '.btn{border-radius:4px;font-weight:600;background:var(--pane);border:1px solid var(--line)}',
+    '.btn:hover{background:var(--hover);border-color:var(--line)}',
+    '.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}',
+    '.btn.pri:hover{background:var(--brand-strong);border-color:var(--brand-strong)}',
+    '.read .acts .btn:not(.pri){background:transparent;border-color:transparent}',
+    '.read .acts .btn:not(.pri):hover{background:var(--hover)}',
+    '.chip{border-radius:4px}',
+    '.chip[aria-pressed="true"]{background:var(--brand2);color:var(--brandfg);border-color:var(--brand)}',
+    '.tag{border-radius:3px}',
+    'input,select,textarea{border-radius:4px}',
+    ':focus-visible{outline:2px solid var(--brand);border-radius:4px}',
+    /* reading pane */
+    '.read{background:var(--pane)}',
+    '.rtop h1{font-weight:600}'
+  ].join("\n");
+
+  function fail(msg) {
+    document.getElementById("ld").innerHTML = '<b>Rugs Email</b><span>' + msg + '</span><a href="mail.html">Try again</a> · <a href="./">Open the Workspace</a>';
+  }
+
+  // "no-cache" = ask GitHub each time, but it answers "not changed" (no download) when the Workspace file is the same
+  fetch("index.html", { cache: "no-cache" }).then(function (r) {
+    if (!r.ok) throw new Error("Server error " + r.status);
+    return r.text();
+  }).then(function (s) {
+    var m = s.match(/var EMAIL_HTML_B64 = "([^"]+)"/);
+    if (!m) throw new Error("Mail app not found");
+    var bytes = Uint8Array.from(atob(m[1]), function (c) { return c.charCodeAt(0); });
+    var html = new TextDecoder("utf-8").decode(bytes);
+    // the Outlook theme is added after the app has loaded (last style on the page), so it wins over the app's own colours.
+    // It goes right after the app's <title> (the word </head> also appears inside the app's own code, so not there).
+    var extra = '<meta name="theme-color" content="#0f6cbd"><link rel="manifest" href="mail-manifest.json"><link rel="icon" href="icons/icon-192.png">' +
+                '<script>window.__RUGS_STANDALONE__=true;window.__OUTLOOK_CSS__=' + JSON.stringify(OUTLOOK).replace(/</g, "\\u003c") + ';' +
+                'document.addEventListener("DOMContentLoaded",function(){var s=document.createElement("style");s.id="outlook-theme";s.textContent=window.__OUTLOOK_CSS__;document.head.appendChild(s);var v=document.createElement("script");v.src="mail-v2.js";document.body.appendChild(v)});document.title="Rugs Email 2.0";<\/script>';
+    var at = html.indexOf("</title>");
+    html = at > 0 ? html.slice(0, at + 8) + extra + html.slice(at + 8) : extra + html;
+    document.open(); document.write(html); document.close();
+  }).catch(function (e) { fail("Could not open the mail: " + (e && e.message ? e.message : e) + ". Check the internet connection."); });
+})();
+</script>
+</body>
+</html>
