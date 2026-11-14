@@ -36,6 +36,16 @@
     'body.v2 .lbrow{display:none!important}',
     'body.v2.v2-topics .lbrow{display:flex!important}',
     'body.v2 .lsync .v2sel{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-left:8px;cursor:pointer}',
+    /* tidy list header: one title row + one filter row */
+    'body.v2 .lsync.v2hide{display:none!important}',
+    'body.v2 .v2top{display:flex;align-items:center;gap:10px;margin:0 0 8px;min-height:32px}',
+    'body.v2 .v2top h2{margin:0;font-size:20px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}',
+    'body.v2 .v2top .v2sp{flex:1}',
+    'body.v2 .v2top .v2sel{font-size:0;margin:0;display:inline-flex;align-items:center;cursor:pointer;flex:none}',
+    'body.v2 .v2top .v2sel input{width:16px;height:16px;margin:0;cursor:pointer}',
+    'body.v2 .v2top .lbtog,body.v2 .v2top .vmbtn{flex:none;margin:0!important;padding:5px 10px;min-height:30px;font-size:12.5px;font-weight:600;border:1px solid var(--line);border-radius:4px;background:var(--pane);color:var(--fg);cursor:pointer}',
+    'body.v2 .v2top .lbtog:hover,body.v2 .v2top .vmbtn:hover{background:var(--hover)}',
+    'body.v2 .lhead .seg{margin:0}',
     /* ---------- Outlook: attachment cards ---------- */
     'body.v2 .v2atts{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px}',
     'body.v2 .v2att{display:flex;align-items:center;gap:10px;width:240px;max-width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--pane);text-align:left;cursor:pointer;min-height:44px}',
@@ -314,6 +324,21 @@
       if (lab) { lab.classList.add("v2sel"); ls.insertBefore(lab, tb || null); }
       bk.style.display = "none";
     }
+    // Tidy header (Outlook): row 1 = [select all] Inbox 5 ……… Topics ▾  View ▾ ; row 2 = filter chips.
+    // The Sync button / "Synced …" text are dropped here — Sync is already in the top bar (its tooltip shows the time).
+    var h2 = h.querySelector(":scope > h2");
+    if (h2 && !h.querySelector(".v2top")) {
+      var top = document.createElement("div"); top.className = "v2top";
+      var sel = h.querySelector(".v2sel"), vb = h.querySelector("[data-vmbtn]");
+      if (sel) { sel.title = "Select all"; sel.setAttribute("aria-label", "Select all"); top.appendChild(sel); }
+      h2.parentNode.insertBefore(top, h2); top.appendChild(h2);
+      var sp = document.createElement("span"); sp.className = "v2sp"; top.appendChild(sp);
+      if (tb) top.appendChild(tb);
+      if (vb) top.appendChild(vb);
+      if (ls) ls.classList.add("v2hide");
+    }
+    var sb = document.getElementById("syncBtn");
+    if (sb && typeof S !== "undefined" && S.lastSync) sb.title = "Sync · last synced " + new Date(S.lastSync).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
   }
 
   function start() {
