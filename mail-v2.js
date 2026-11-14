@@ -36,6 +36,44 @@
     'body.v2 .lbrow{display:none!important}',
     'body.v2.v2-topics .lbrow{display:flex!important}',
     'body.v2 .lsync .v2sel{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-left:8px;cursor:pointer}',
+    /* ---------- Outlook: attachment cards ---------- */
+    'body.v2 .v2atts{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px}',
+    'body.v2 .v2att{display:flex;align-items:center;gap:10px;width:240px;max-width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--pane);text-align:left;cursor:pointer;min-height:44px}',
+    'body.v2 .v2att:hover{background:var(--hover);border-color:#c7c7c7}',
+    'body.v2 .v2badge{flex:none;display:grid;place-items:center;min-width:32px;height:32px;padding:0 4px;border-radius:3px;color:#fff;font:700 11px/1 "Segoe UI",Arial,sans-serif}',
+    'body.v2 .v2an{min-width:0;display:flex;flex-direction:column}',
+    'body.v2 .v2an b{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    'body.v2 .v2an small{font-size:12px;color:var(--muted)}',
+    /* ---------- Outlook: trail ---------- */
+    'body.v2 .v2to{display:block;font-size:12px;color:var(--muted);overflow-wrap:anywhere}',
+    'body.v2 .v2ma{display:flex;gap:2px;flex:none}',
+    'body.v2 .v2mb{width:32px;height:32px;border-radius:4px;color:var(--brand);font-size:15px}',
+    'body.v2 .v2mb:hover{background:var(--hover)}',
+    /* ---------- Outlook: full-screen attachment viewer ---------- */
+    'body.v2 .v2vw{position:fixed;inset:0;z-index:9999;background:rgba(20,20,20,.92);display:flex;flex-direction:column;color:#fff}',
+    'body.v2 .v2vbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1f1f1f;border-bottom:1px solid #333;flex-wrap:wrap}',
+    'body.v2 .v2vt{flex:1;min-width:120px;display:flex;flex-direction:column}',
+    'body.v2 .v2vt b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    'body.v2 .v2vt small{color:#adadad;font-size:12px}',
+    'body.v2 .v2vb{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:4px 12px;border-radius:4px;background:#333;color:#fff;border:1px solid #474747;font-size:13px;text-decoration:none}',
+    'body.v2 .v2vb:hover{background:#3d3d3d}',
+    'body.v2 .v2vx{min-width:36px;justify-content:center}',
+    'body.v2 .v2vmain{flex:1;min-height:0;display:flex;align-items:stretch;position:relative}',
+    'body.v2 .v2vbody{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:auto;padding:12px}',
+    'body.v2 .v2vframe{flex:1;width:100%;max-width:1100px;border:0;background:#fff;border-radius:2px}',
+    'body.v2 .v2vnote{font-size:12px;color:#adadad;margin:6px 0 0}',
+    'body.v2 .v2vimgwrap{overflow:auto;max-width:100%;max-height:100%;display:flex;align-items:center;justify-content:center}',
+    'body.v2 .v2vimg{max-width:100%;max-height:calc(100vh - 90px);transform-origin:center;transition:transform .12s ease-out;background:#fff}',
+    'body.v2 .v2vimg.zoomed{max-width:none;max-height:none}',
+    'body.v2 .v2vtext{white-space:pre-wrap;background:#fff;color:#242424;padding:16px;border-radius:2px;max-width:1000px;width:100%;margin:0;font:13px/1.5 Consolas,monospace;overflow:auto}',
+    'body.v2 .v2vmsg{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;max-width:420px;color:#e0e0e0}',
+    'body.v2 .v2vacts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}',
+    'body.v2 .v2vnav{align-self:center;width:44px;height:64px;margin:0 6px;border-radius:4px;background:rgba(255,255,255,.08);color:#fff;font-size:30px;flex:none}',
+    'body.v2 .v2vnav:hover{background:rgba(255,255,255,.18)}',
+    'body.v2 .v2spin{width:28px;height:28px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;animation:v2r .8s linear infinite}',
+    '@keyframes v2r{to{transform:rotate(360deg)}}',
+    '@media (prefers-reduced-motion:reduce){body.v2 .v2spin{animation-duration:2.4s}body.v2 .v2vimg{transition:none}}',
+    '@media (max-width:760px){body.v2 .v2vnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:40px;height:56px}body.v2 .v2vnav.prev{left:0}body.v2 .v2vnav.next{right:0}body.v2 .v2att{width:100%}}',
     /* ---------- phone: actions fixed at the bottom of the open mail ---------- */
     '@media (max-width:760px){body.v2 .maxb{display:none!important}body.v2 #read>.acts.v2bottom{position:sticky;bottom:0;z-index:5;background:var(--pane);border-top:1px solid var(--line);border-bottom:0!important;margin:0!important;padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px))!important;justify-content:space-around;flex-wrap:nowrap}',
     'body.v2 #read>.acts.v2bottom .btn{flex-direction:column;gap:2px;font-size:11.5px;padding:4px 6px}}'
@@ -67,8 +105,188 @@
     }
     // phone: Reply / Reply all / Forward / Done fixed at the bottom
     if (acts && window.matchMedia("(max-width:760px)").matches) { acts.classList.add("v2bottom"); R.appendChild(acts); }
+    try { v2Trail(R); } catch (e) { console.log("v2Trail", e); }
     // the mail body sizes itself (no second scrollbar) — again once pictures have loaded
     if (typeof fitFrames === "function") { setTimeout(fitFrames, 300); setTimeout(fitFrames, 1200); }
+  }
+
+  /* ================= Outlook features: attachment cards + viewer, conversation trail ================= */
+  var KIND = [   // file type → badge colour / label / how it is shown
+    { re: /\.pdf$/i, c: "#c50f1f", l: "PDF", v: "pdf" },
+    { re: /\.(docx?|rtf|odt)$/i, c: "#185abd", l: "W", v: "office" },
+    { re: /\.(xlsx?|xlsm|csv|ods)$/i, c: "#107c41", l: "X", v: "office" },
+    { re: /\.(pptx?|pps|ppsx|odp)$/i, c: "#c43e1c", l: "P", v: "office" },
+    { re: /\.(png|jpe?g|gif|webp|bmp|heic|svg)$/i, c: "#8764b8", l: "IMG", v: "img" },
+    { re: /\.(txt|log|json|xml)$/i, c: "#616161", l: "TXT", v: "text" },
+    { re: /\.(zip|rar|7z)$/i, c: "#986f0b", l: "ZIP", v: "none" }
+  ];
+  function kindOf(name, mime) {
+    for (var i = 0; i < KIND.length; i++) if (KIND[i].re.test(name || "")) return KIND[i];
+    if (/^image\//i.test(mime || "")) return KIND[4];
+    if (/pdf/i.test(mime || "")) return KIND[0];
+    return { c: "#616161", l: "FILE", v: "none" };
+  }
+  function driveId(link) { var m = String(link || "").match(/\/d\/([\w-]{20,})/) || String(link || "").match(/[?&]id=([\w-]{20,})/); return m ? m[1] : ""; }
+  function sizeTxt(b) { return typeof fsize === "function" ? fsize(b) : (b ? Math.round(b / 1024) + " KB" : ""); }
+
+  // the attachments of one mail as Outlook-style cards (replaces the plain chips)
+  function attCards(m, t) {
+    var list = [];
+    (m.files || []).forEach(function (x) { if (x && x.name) list.push({ name: x.name, size: x.size, link: x.link || "", big: !!x.big }); });
+    if (!list.length) (m.atts || []).forEach(function (x) { if (x && x.name && !(/^image\//i.test(x.mime || "") && (x.size || 0) < 40000)) list.push({ name: x.name, size: x.size, mime: x.mime, link: "", saving: true }); });
+    if (!list.length) return "";
+    var box = t ? t.box : "";
+    return '<div class="v2atts" role="list">' + list.map(function (a) {
+      var k = kindOf(a.name, a.mime);
+      return '<button type="button" role="listitem" class="v2att" data-v2att data-box="' + txt(box) + '" data-gid="' + txt(m.gid || "") + '" data-name="' + txt(a.name) + '" data-size="' + (a.size || 0) + '" data-mime="' + txt(a.mime || "") + '" data-link="' + txt(a.link) + '" title="Open ' + txt(a.name) + '">' +
+        '<span class="v2badge" style="background:' + k.c + '" aria-hidden="true">' + k.l + '</span><span class="v2an"><b>' + txt(a.name) + '</b><small>' + txt(sizeTxt(a.size)) + (a.big ? " · over 20 MB, open in Gmail" : a.saving ? " · copying to Drive…" : "") + '</small></span></button>';
+    }).join("") + '</div>';
+  }
+
+  // full-screen viewer: pictures (zoom, next / previous), PDF, Word / Excel / PowerPoint (Google Drive preview), text
+  var VW = null;
+  function vwClose() {
+    if (!VW) return;
+    if (VW.url) URL.revokeObjectURL(VW.url);
+    VW.el.remove(); document.removeEventListener("keydown", vwKey, true);
+    var back = VW.opener; VW = null;
+    if (back && back.isConnected) back.focus();
+  }
+  function vwKey(e) {
+    if (!VW) return;
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); vwClose(); }
+    else if (e.key === "ArrowRight" && !/INPUT|TEXTAREA/.test((e.target && e.target.tagName) || "")) { e.preventDefault(); vwGo(1); }
+    else if (e.key === "ArrowLeft" && !/INPUT|TEXTAREA/.test((e.target && e.target.tagName) || "")) { e.preventDefault(); vwGo(-1); }
+    else if ((e.key === "+" || e.key === "=") && VW.kind === "img") vwZoom(1.25);
+    else if (e.key === "-" && VW.kind === "img") vwZoom(0.8);
+  }
+  function vwGo(d) { if (!VW || VW.items.length < 2) return; var i = (VW.i + d + VW.items.length) % VW.items.length; vwShow(VW.items, i, VW.opener); }
+  function vwZoom(f) { if (!VW) return; var img = VW.el.querySelector(".v2vimg"); if (!img) return; VW.z = f === 0 ? 1 : Math.min(8, Math.max(0.1, (VW.z || 1) * f)); img.style.transform = "scale(" + VW.z + ")"; img.classList.toggle("zoomed", VW.z !== 1); }
+  function bytes(a) {
+    return api("attachment", { mailbox: a.box, gmailId: a.gid, name: a.name }).then(function (r) {
+      var bin = atob(r.b64 || ""), u8 = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      return { u8: u8, mime: r.mime || a.mime || "application/octet-stream" };
+    });
+  }
+  function vwDownload(a) {
+    var go = function (blobUrl) { var l = document.createElement("a"); l.href = blobUrl; l.download = a.name; document.body.appendChild(l); l.click(); l.remove(); };
+    if (VW && VW.url && VW.cur === a) return go(VW.url);
+    if (typeof toast === "function") toast("Downloading " + a.name + "…");
+    bytes(a).then(function (b) { var u = URL.createObjectURL(new Blob([b.u8], { type: b.mime })); go(u); setTimeout(function () { URL.revokeObjectURL(u); }, 60000); })
+      .catch(function (e) { if (typeof toast === "function") toast("Could not download: " + e.message + (a.link ? " — use Open in Drive" : "")); });
+  }
+  function vwShow(items, i, opener) {
+    if (VW && VW.url) { URL.revokeObjectURL(VW.url); }
+    var a = items[i], k = kindOf(a.name, a.mime), phone = window.matchMedia("(max-width:760px)").matches, did = driveId(a.link);
+    if (!VW) {
+      var el = document.createElement("div");
+      el.className = "v2vw"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+      document.body.appendChild(el); document.addEventListener("keydown", vwKey, true);
+      VW = { el: el };
+      el.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-vw]"); if (!b) { if (e.target === el.querySelector(".v2vmain")) vwClose(); return; }
+        var act = b.getAttribute("data-vw");
+        if (act === "close") vwClose(); else if (act === "prev") vwGo(-1); else if (act === "next") vwGo(1);
+        else if (act === "dl") vwDownload(VW.cur); else if (act === "zin") vwZoom(1.25); else if (act === "zout") vwZoom(0.8); else if (act === "zfit") vwZoom(0);
+        else if (act === "retry") vwShow(VW.items, VW.i, VW.opener);
+      });
+    }
+    VW.items = items; VW.i = i; VW.cur = a; VW.opener = opener || VW.opener; VW.url = ""; VW.z = 1; VW.kind = k.v;
+    VW.el.setAttribute("aria-label", "Preview of " + a.name);
+    var many = items.length > 1;
+    VW.el.innerHTML =
+      '<div class="v2vbar"><span class="v2badge" style="background:' + k.c + '" aria-hidden="true">' + k.l + '</span>' +
+      '<div class="v2vt"><b>' + txt(a.name) + '</b><small>' + txt(sizeTxt(a.size)) + (many ? " · " + (i + 1) + " of " + items.length : "") + '</small></div>' +
+      (k.v === "img" ? '<button type="button" class="v2vb" data-vw="zout" aria-label="Zoom out">−</button><button type="button" class="v2vb" data-vw="zfit">Fit</button><button type="button" class="v2vb" data-vw="zin" aria-label="Zoom in">+</button>' : '') +
+      '<button type="button" class="v2vb" data-vw="dl">⬇ Download</button>' +
+      (a.link ? '<a class="v2vb" href="' + txt(a.link) + '" target="_blank" rel="noopener">Open in Drive ↗</a>' : '') +
+      '<button type="button" class="v2vb v2vx" data-vw="close" aria-label="Close preview (Esc)">✕</button></div>' +
+      '<div class="v2vmain">' + (many ? '<button type="button" class="v2vnav prev" data-vw="prev" aria-label="Previous attachment">‹</button>' : '') +
+      '<div class="v2vbody" aria-live="polite"><div class="v2vmsg"><div class="v2spin" aria-hidden="true"></div>Opening ' + txt(a.name) + '…</div></div>' +
+      (many ? '<button type="button" class="v2vnav next" data-vw="next" aria-label="Next attachment">›</button>' : '') + '</div>';
+    var body = VW.el.querySelector(".v2vbody");
+    var x = VW.el.querySelector('[data-vw="close"]'); if (x) x.focus();
+    var me = VW;
+    var fail = function (msg) {
+      if (VW !== me || VW.cur !== a) return;
+      body.innerHTML = '<div class="v2vmsg"><b>' + txt(a.name) + ' could not be shown here</b><span>' + txt(msg) + '</span><div class="v2vacts">' +
+        '<button type="button" class="v2vb" data-vw="retry">Try again</button><button type="button" class="v2vb" data-vw="dl">⬇ Download</button>' +
+        (a.link ? '<a class="v2vb" href="' + txt(a.link) + '" target="_blank" rel="noopener">Open in Drive ↗</a>' : '') + '</div></div>';
+    };
+    // Word / Excel / PowerPoint (and PDF on phones): Google Drive's own viewer, from the copy in the team's Drive
+    if (did && (k.v === "office" || (k.v === "pdf" && phone))) {
+      body.innerHTML = '<iframe class="v2vframe" title="' + txt(a.name) + '" src="https://drive.google.com/file/d/' + did + '/preview" allow="autoplay"></iframe>' +
+        '<p class="v2vnote">Shown with Google Drive. Sign in to Google with your @rugscreation.com account if it asks.</p>';
+      return;
+    }
+    if (k.v === "office") {
+      body.innerHTML = '<div class="v2vmsg"><b>' + txt(a.name) + '</b><span>' + (a.saving ? "This file is being copied to Google Drive — the preview works within a minute or two. You can download it now." : "This file has no Google Drive copy, so it can't be previewed here. Download it to open it.") + '</span><div class="v2vacts"><button type="button" class="v2vb" data-vw="dl">⬇ Download</button>' + (a.saving ? '<button type="button" class="v2vb" data-vw="retry">Try again</button>' : '') + '</div></div>';
+      return;
+    }
+    if (k.v === "none") { fail("This kind of file can't be previewed. Download it to open it."); return; }
+    if (!a.gid) { fail("The original mail is not available."); return; }
+    bytes(a).then(function (b) {
+      if (VW !== me || VW.cur !== a) return;
+      var url = URL.createObjectURL(new Blob([b.u8], { type: b.mime })); VW.url = url;
+      if (k.v === "img" || /^image\//i.test(b.mime)) { VW.kind = "img"; body.innerHTML = '<div class="v2vimgwrap"><img class="v2vimg" src="' + url + '" alt="' + txt(a.name) + '"></div>'; }
+      else if (k.v === "pdf" || /pdf/i.test(b.mime)) body.innerHTML = '<iframe class="v2vframe" title="' + txt(a.name) + '" src="' + url + '"></iframe>';
+      else body.innerHTML = '<pre class="v2vtext">' + txt(new TextDecoder().decode(b.u8).slice(0, 300000)) + '</pre>';
+    }).catch(function (e) { fail(e && e.message ? e.message : "Could not load the file."); });
+  }
+  document.addEventListener("click", function (e) {
+    var c = e.target.closest && e.target.closest("[data-v2att]"); if (!c) return;
+    e.preventDefault(); e.stopPropagation();   // handled here first, so the mail does not fold/redraw under the click
+    var all = Array.prototype.slice.call(document.querySelectorAll("#read [data-v2att]"));
+    var items = all.map(function (b) { return { box: b.getAttribute("data-box"), gid: b.getAttribute("data-gid"), name: b.getAttribute("data-name"), size: +b.getAttribute("data-size") || 0, mime: b.getAttribute("data-mime"), link: b.getAttribute("data-link"), saving: /copying/.test(b.textContent) }; });
+    if (!items.length) return;
+    vwShow(items, Math.max(0, all.indexOf(c)), c);
+  }, true);
+
+  // conversation trail like Outlook: To / Cc on every mail, quoted older text folded behind "···"
+  var QUOTE_SEL = ".gmail_quote,blockquote[type=cite],#divRplyFwdMsg,div[id^=divRplyFwdMsg],#appendonsend,.yahoo_quoted,.moz-cite-prefix";
+  function foldQuotes(f) {
+    var d; try { d = f.contentDocument; } catch (e) { return; }
+    if (!d || !d.body || d.body.getAttribute("data-v2q")) return;
+    d.body.setAttribute("data-v2q", "1");
+    d.addEventListener("toggle", function () { if (typeof fitFrames === "function") fitFrames(); }, true);   // plain-text folds too
+    // a mail that sets no font of its own shows in Outlook's font (not the browser's Times)
+    try { if (/times/i.test(d.defaultView.getComputedStyle(d.body).fontFamily)) d.body.style.font = "14px/1.5 'Segoe UI',-apple-system,Roboto,Arial,sans-serif"; } catch (e) {}
+    var q = d.querySelector(QUOTE_SEL);
+    if (!q || !q.parentNode) return;
+    var start = q, prev = q.previousElementSibling;
+    if (prev && prev.tagName === "HR") start = prev;          // Outlook puts a line above "From: … Sent: …"
+    // only fold when something new was written above the quote
+    var r = d.createRange(); r.setStart(d.body, 0); r.setEndBefore(start);
+    if (String(r.toString()).replace(/\s+/g, "").length < 15) return;
+    var det = d.createElement("details"); det.className = "v2q";
+    var sum = d.createElement("summary"); sum.textContent = "··· Show earlier messages"; sum.setAttribute("style", "cursor:pointer;color:#0f6cbd;font:13px 'Segoe UI',Arial,sans-serif;margin:8px 0;list-style:none");
+    det.appendChild(sum);
+    start.parentNode.insertBefore(det, start);
+    var n = start; while (n) { var nx = n.nextSibling; det.appendChild(n); n = nx; }
+    det.addEventListener("toggle", function () { sum.textContent = det.open ? "··· Hide earlier messages" : "··· Show earlier messages"; if (typeof fitFrames === "function") fitFrames(); });
+    if (typeof fitFrames === "function") fitFrames();
+  }
+  function v2Trail(R) {
+    var t = typeof T_ === "function" ? T_(openId) : null; if (!t) return;
+    Array.prototype.slice.call(R.querySelectorAll("article.mail")).forEach(function (art) {
+      var mi = +String(art.id).split("-").pop(), m = t.msgs[mi]; if (!m || art.querySelector(".v2to")) return;
+      var hd = art.querySelector("header .w span");
+      var to = String(m.to || "").trim(), cc = String(m.cc || "").trim();
+      if (hd && (to || cc)) { var s = document.createElement("span"); s.className = "v2to"; s.textContent = (to ? "To: " + to : "") + (cc ? (to ? "   Cc: " : "Cc: ") + cc : ""); hd.replaceWith(s); }
+      // Reply / Reply all / Forward on each mail, like Outlook
+      var h = art.querySelector("header");
+      if (h && !h.querySelector(".v2ma") && !art.classList.contains("collapsed")) {
+        var g = document.createElement("span"); g.className = "v2ma";
+        g.innerHTML = '<button type="button" class="v2mb" data-reply="' + txt(t.id) + '" title="Reply" aria-label="Reply">↩</button><button type="button" class="v2mb" data-reply="' + txt(t.id) + '" data-all title="Reply all" aria-label="Reply all">↩↩</button><button type="button" class="v2mb" data-fwd="' + txt(t.id) + '" title="Forward" aria-label="Forward">↪</button>';
+        h.appendChild(g);
+      }
+    });
+    Array.prototype.slice.call(R.querySelectorAll(".raw iframe")).forEach(function (f) {
+      var go = function () { foldQuotes(f); };
+      if (f.contentDocument && f.contentDocument.readyState === "complete") go();
+      f.addEventListener("load", go);
+    });
   }
 
   function v2List() {
@@ -100,6 +318,18 @@
         return '<!doctype html><meta charset="utf-8"><body style="margin:0;padding:2px 0;font:14px/1.55 \'Segoe UI\',-apple-system,Roboto,Arial,sans-serif;color:#242424;background:#fff;white-space:pre-wrap;overflow-wrap:anywhere">' + txt(m && m.body) + "</body>";
       };
     }
+    // plain-text mail: older quoted text ("On … wrote:", "From: … Sent:", "-----Original Message-----") folded like Outlook
+    var plain = window.originalHTML;
+    window.originalHTML = function (m) {
+      var b = String((m && m.body) || ""), cut = b.search(/\n[ \t]*(On .{4,220}wrote:|-{2,}\s*Original Message\s*-{2,}|-{2,}\s*Forwarded message\s*-{2,}|From:[^\n]{3,200}\n\s*(Sent|Date):)/i);
+      if (cut < 15) return plain(m);
+      var head = plain({ body: b.slice(0, cut) });
+      return head.replace(/<\/body>$/, "") + '<details><summary style="cursor:pointer;color:#0f6cbd;font:13px \'Segoe UI\',Arial,sans-serif;margin:8px 0;list-style:none">··· Show earlier messages</summary><div style="color:#616161;border-left:2px solid #e0e0e0;padding-left:10px">' + txt(b.slice(cut).replace(/^\n+/, "")) + "</div></details></body>";
+    };
+    // attachments as Outlook cards with a full-screen viewer
+    if (typeof attHTML === "function") window.attHTML = function (m, t) { try { return attCards(m, t || (typeof T_ === "function" ? T_(openId) : null)); } catch (e) { return ""; } };
+    // quoted text folded/unfolded → resize the mail body
+    document.addEventListener("toggle", function () { if (typeof fitFrames === "function") fitFrames(); }, true);
     // 2) open mail and list header layout
     if (typeof renderRead === "function") { var rr = renderRead; window.renderRead = function () { var r = rr.apply(this, arguments); try { v2Read(); } catch (e) { console.log("v2Read", e); } return r; }; }
     if (typeof renderList === "function") { var rl = renderList; window.renderList = function () { var r = rl.apply(this, arguments); try { v2List(); } catch (e) { console.log("v2List", e); } return r; }; }
