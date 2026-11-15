@@ -1,8 +1,15 @@
 # Rugs Email — server fixes (15 Nov 2026) — ✅ APPLIED AND TESTED
 
-Both faults below are **fixed on the live server**. `rugs-mail` is now **v37** and the SQL is in place.
-Tested after deploying: a Switch ID session really sent a mail (Gmail id `1a1e0873a8de61c4`,
-teamalpha@ → marketing@), which is exactly what was refused before.
+All three faults below are **fixed on the live server**. `rugs-mail` is now **v38** and the SQL is in place.
+
+Tested after deploying:
+
+* a Switch ID session really sent a mail (Gmail id `1a1e0873a8de61c4`, teamalpha@ → marketing@) — exactly
+  what was refused before;
+* every mailbox is **live**, note "scanned N, saved N · history complete", no "could not list";
+* "Gmail sent an incomplete reply" went from **8–13 every minute to 0**;
+* run time 53–57 s → 25–30 s;
+* a 12-hour re-read of all six mailboxes found **nothing missing**, so no mail was actually lost today.
 
 **How `rugs-mail` is deployed now:** the function's own file in Supabase is only a short note plus one
 line that pulls in `server/rugs-mail.index.ts` from this repo, pinned to commit `0d17694`. Supabase
@@ -32,7 +39,25 @@ them the app forces the "set your password" screen at sign-in, so they are fine.
 **Fix:** `rugs-mail.index.ts` (v37) below — a switched session is the admin acting for that person,
 so it is no longer blocked. The session is still recorded as `rm_sessions.switched_by = 'adm'`.
 
-## 2. Why the Gmail sync keeps failing
+## 2. Why the Gmail sync kept failing — the real cause (found after v37 went live)
+
+v37's better error text showed it at once:
+
+```
+skip window vinay@rugscreation.com … Gmail sent an incomplete reply
+            (status 204, type application/json; charset=UTF-8, 0 chars: )
+```
+
+**Gmail answers HTTP 204 "No Content" with an empty body when a time window has no mail in it.**
+(Google does that whenever a short reply — our `fields=messages(id),nextPageToken` — would be an empty
+object.) The code ran `JSON.parse("")` on it, which throws, so **"nothing found" was handled as a Gmail
+failure**. That is where the hundreds of errors came from, and in v36 that window was then marked done
+and its mail never fetched. Quiet mailboxes (neetu@, vinay@) failed on almost every run, never reached
+"live", and stopped loading older history.
+
+**Fix (v38):** an empty reply, or status 204, means "nothing in this window" — not a failure.
+
+## 3. Why the sync was also overloading itself
 
 The sync is started from three places — the 30-second timer, Gmail push and the app's Sync — and one
 run takes 45–55 s in v36, so 3–4 copies run on top of each other all the time. Result on 14–15 Nov:
