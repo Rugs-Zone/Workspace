@@ -11,3 +11,6 @@ temp/
 
 # Old copies
 index (*).html
+
+# Claude Code working folders (never commit these)
+.claude/worktrees/
