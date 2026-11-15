@@ -1,4 +1,5 @@
 // Rugs Email — one API for login, admin, mailbox sync (Gmail), send, tracking, Drive copies and Gemini.
+// 15 Nov 2026 (v38): an empty Gmail reply (HTTP 204, "no mail in this window") is no longer read as a failure.
 // 15 Nov 2026 (v37): one sync at a time (sync_lock), 25-second runs, a window Gmail fails to list is retried instead of skipped,
 // Gmail errors say what was answered, and a switched (Switch ID) session is not blocked by "set your own password first".
 // 14 Nov 2026: thread pictures limit 40 MB per conversation, big mails keep their HTML; threadPreview (timer key) for checks.
@@ -74,6 +75,11 @@ async function gmail(tok: string, path: string, init?: RequestInit) {
     if (r.status === 429 || r.status >= 500) { last = "Gmail " + r.status; try { await r.body?.cancel(); } catch { /* ignore */ } await new Promise((s) => setTimeout(s, 1000 * (i + 1))); continue; }
     const txt = await r.text();
     if (!r.ok) throw new E("Gmail " + r.status + ": " + txt.slice(0, 200), r.status === 404 ? 404 : 502);
+    // 15 Nov 2026 (v38): Google answers 204 with an empty body when a short reply (fields=…) would be an
+    // empty object — a time window with no mail in it, for example. That means "nothing found", NOT a
+    // failure. Reading it as a failure is what filled the log with "Gmail sent an incomplete reply" and
+    // made whole windows be skipped (and, in v36, their mail never fetched).
+    if (r.status === 204 || !txt.trim()) return {};
     try { return JSON.parse(txt); }
     catch {
       last = `Gmail sent an incomplete reply (status ${r.status}, type ${r.headers.get("content-type") || "?"}, ${txt.length} chars: ${txt.slice(0, 120).replace(/\s+/g, " ")})`;

@@ -1,8 +1,21 @@
-# Rugs Email — server fixes ready to apply (15 Nov 2026)
+# Rugs Email — server fixes (15 Nov 2026) — ✅ APPLIED AND TESTED
 
-Everything here is **prepared but NOT applied**. Claude was not allowed to write to the live
-Supabase project in this session (deploys, SQL and test logins were all refused by the safety
-check), so the two fixes below are waiting for you.
+All three faults below are **fixed on the live server**. `rugs-mail` is now **v38** and the SQL is in place.
+
+Tested after deploying:
+
+* a Switch ID session really sent a mail (Gmail id `1a1e0873a8de61c4`, teamalpha@ → marketing@) — exactly
+  what was refused before;
+* every mailbox is **live**, note "scanned N, saved N · history complete", no "could not list";
+* "Gmail sent an incomplete reply" went from **8–13 every minute to 0**;
+* run time 53–57 s → 25–30 s;
+* a 12-hour re-read of all six mailboxes found **nothing missing**, so no mail was actually lost today.
+
+**How `rugs-mail` is deployed now:** the function's own file in Supabase is only a short note plus one
+line that pulls in `server/rugs-mail.index.ts` from this repo, pinned to commit `0d17694`. Supabase
+copies that file into the function at deploy time, so nothing is fetched from GitHub while it runs.
+**To change the server:** edit `server/rugs-mail.index.ts`, push it, and deploy again with the new
+commit in that import line — or paste the whole file into the Supabase editor instead.
 
 ---
 
@@ -26,7 +39,25 @@ them the app forces the "set your password" screen at sign-in, so they are fine.
 **Fix:** `rugs-mail.index.ts` (v37) below — a switched session is the admin acting for that person,
 so it is no longer blocked. The session is still recorded as `rm_sessions.switched_by = 'adm'`.
 
-## 2. Why the Gmail sync keeps failing
+## 2. Why the Gmail sync kept failing — the real cause (found after v37 went live)
+
+v37's better error text showed it at once:
+
+```
+skip window vinay@rugscreation.com … Gmail sent an incomplete reply
+            (status 204, type application/json; charset=UTF-8, 0 chars: )
+```
+
+**Gmail answers HTTP 204 "No Content" with an empty body when a time window has no mail in it.**
+(Google does that whenever a short reply — our `fields=messages(id),nextPageToken` — would be an empty
+object.) The code ran `JSON.parse("")` on it, which throws, so **"nothing found" was handled as a Gmail
+failure**. That is where the hundreds of errors came from, and in v36 that window was then marked done
+and its mail never fetched. Quiet mailboxes (neetu@, vinay@) failed on almost every run, never reached
+"live", and stopped loading older history.
+
+**Fix (v38):** an empty reply, or status 204, means "nothing in this window" — not a failure.
+
+## 3. Why the sync was also overloading itself
 
 The sync is started from three places — the 30-second timer, Gmail push and the app's Sync — and one
 run takes 45–55 s in v36, so 3–4 copies run on top of each other all the time. Result on 14–15 Nov:
@@ -41,7 +72,18 @@ where it is and is listed again 30 s later, and Gmail errors now say what Gmail 
 
 ---
 
-## How to apply
+## What was applied (15 Nov 2026, ~00:15 IST)
+
+1. `rugs-mail` deployed as **v37** (see the import note above) — fixes both faults.
+2. SQL: `rm_sync_tick()` (start-lock, kept only as a fallback — the cron job still calls `rugs-mail`
+   directly every 30 s because v37 has its own lock) and `rm_sync_recheck()`, with cron job
+   **`rm-sync-recheck` every 10 minutes**.
+3. One-off: every mailbox's cursor moved back 12 hours, so anything today's skipped windows missed
+   was read again (mail already saved is skipped).
+4. The scratch function `rugs-mail-v37-test` was used to test the deploy and then emptied — it answers
+   410 "gone" and can be deleted in Supabase → Edge Functions.
+
+## How it was applied (keep for next time)
 
 ### A. Deploy `rugs-mail` v37  (fixes both problems)
 
