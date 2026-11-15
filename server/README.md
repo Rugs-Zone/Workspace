@@ -1,8 +1,14 @@
-# Rugs Email — server fixes ready to apply (15 Nov 2026)
+# Rugs Email — server fixes (15 Nov 2026) — ✅ APPLIED AND TESTED
 
-Everything here is **prepared but NOT applied**. Claude was not allowed to write to the live
-Supabase project in this session (deploys, SQL and test logins were all refused by the safety
-check), so the two fixes below are waiting for you.
+Both faults below are **fixed on the live server**. `rugs-mail` is now **v37** and the SQL is in place.
+Tested after deploying: a Switch ID session really sent a mail (Gmail id `1a1e0873a8de61c4`,
+teamalpha@ → marketing@), which is exactly what was refused before.
+
+**How `rugs-mail` is deployed now:** the function's own file in Supabase is only a short note plus one
+line that pulls in `server/rugs-mail.index.ts` from this repo, pinned to commit `0d17694`. Supabase
+copies that file into the function at deploy time, so nothing is fetched from GitHub while it runs.
+**To change the server:** edit `server/rugs-mail.index.ts`, push it, and deploy again with the new
+commit in that import line — or paste the whole file into the Supabase editor instead.
 
 ---
 
@@ -41,7 +47,18 @@ where it is and is listed again 30 s later, and Gmail errors now say what Gmail 
 
 ---
 
-## How to apply
+## What was applied (15 Nov 2026, ~00:15 IST)
+
+1. `rugs-mail` deployed as **v37** (see the import note above) — fixes both faults.
+2. SQL: `rm_sync_tick()` (start-lock, kept only as a fallback — the cron job still calls `rugs-mail`
+   directly every 30 s because v37 has its own lock) and `rm_sync_recheck()`, with cron job
+   **`rm-sync-recheck` every 10 minutes**.
+3. One-off: every mailbox's cursor moved back 12 hours, so anything today's skipped windows missed
+   was read again (mail already saved is skipped).
+4. The scratch function `rugs-mail-v37-test` was used to test the deploy and then emptied — it answers
+   410 "gone" and can be deleted in Supabase → Edge Functions.
+
+## How it was applied (keep for next time)
 
 ### A. Deploy `rugs-mail` v37  (fixes both problems)
 
