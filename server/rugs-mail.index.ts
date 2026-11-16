@@ -362,9 +362,14 @@ async function send(u: any, p: any) {
   subject = oneLine(subject) || "(no subject)";
   const cc = oneLine(p.cc), bcc = oneLine(p.bcc);
   const fromName = oneLine(`${u.name} – Rugs Creation`.replace(/"/g, ""));
+  // 16 Nov 2026: the name holds an en-dash, which is not plain ASCII. A raw non-ASCII From header
+  // reached buyers as "Priyanshu Tomar a?? Rugs Creation", so encode it the same way as the subject.
+  const fromHdr = /[^ -~]/.test(fromName)
+    ? `=?UTF-8?B?${btoa(unescape(encodeURIComponent(fromName)))}?= <${box}>`
+    : `"${fromName}" <${box}>`;
   const files = (Array.isArray(p.files) ? p.files : []).slice(0, 20).map((f: any) => ({ name: String(f.name || "file"), type: String(f.type || ""), b64: String(f.b64 || "") }));
   if (files.reduce((a: number, f: any) => a + f.b64.length * 0.75, 0) > 24 * 1024 * 1024) throw new E("Attachments are over 25 MB — share big files as a Drive link instead");
-  const raw = mime({ from: `"${fromName}" <${box}>`, to, cc, bcc, subject, html: String(p.html || ""), inReplyTo, refs, important: !!p.important, receipt: p.receipt ? box : "", files });
+  const raw = mime({ from: fromHdr, to, cc, bcc, subject, html: String(p.html || ""), inReplyTo, refs, important: !!p.important, receipt: p.receipt ? box : "", files });
   const tok = await gToken(box, SEND);
   const sent = await gmail(tok, "messages/send", { method: "POST", body: JSON.stringify({ raw: b64u(raw), ...(threadId ? { threadId } : {}) }) });
   // store immediately so it shows in Sent without waiting for the next sync
