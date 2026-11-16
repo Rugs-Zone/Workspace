@@ -368,7 +368,10 @@ async function send(u: any, p: any) {
     ? `=?UTF-8?B?${btoa(unescape(encodeURIComponent(fromName)))}?= <${box}>`
     : `"${fromName}" <${box}>`;
   const files = (Array.isArray(p.files) ? p.files : []).slice(0, 20).map((f: any) => ({ name: String(f.name || "file"), type: String(f.type || ""), b64: String(f.b64 || "") }));
-  if (files.reduce((a: number, f: any) => a + f.b64.length * 0.75, 0) > 24 * 1024 * 1024) throw new E("Attachments are over 25 MB — share big files as a Drive link instead");
+  // 16 Nov 2026: a file arrives base64-encoded, so the upload is about a third bigger than the file.
+  // A 22 MB file made a 29.7 MB request and killed this function with 546 (out of resources), and Gmail
+  // itself only carries about 25 MB per message. The app stops at 15 MB of files; this is the backstop.
+  if (files.reduce((a: number, f: any) => a + f.b64.length * 0.75, 0) > 16 * 1024 * 1024) throw new E("Those files are too big to send — a mail carries about 15 MB. Remove one, or put it in Google Drive and send the link.");
   const raw = mime({ from: fromHdr, to, cc, bcc, subject, html: String(p.html || ""), inReplyTo, refs, important: !!p.important, receipt: p.receipt ? box : "", files });
   const tok = await gToken(box, SEND);
   const sent = await gmail(tok, "messages/send", { method: "POST", body: JSON.stringify({ raw: b64u(raw), ...(threadId ? { threadId } : {}) }) });
