@@ -1,0 +1,1301 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rugs Creation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>:root{--ink:#2b2b2b;--mut:#595959;--line:#dcdcdc;--soft:#f4f4f4;--bg:#fff;--or:#FF5001;--ort:#b93c00;--sel:#ffe9dd;--blk:#0a0a0a}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:14px/1.45 'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg);overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ort);outline-offset:2px}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sr{position:absolute;left:-9999px}
+#app{height:100%;display:flex;flex-direction:column}
+/* header */
+#top{height:52px;flex:none;background:var(--blk);border-bottom:3px solid var(--or);display:flex;align-items:center;gap:20px;padding:0 16px;color:#fff}
+#brand{font-weight:700;font-size:17px;letter-spacing:-.01em;white-space:nowrap}
+#burger{display:none;background:none;border:0;color:#fff;padding:6px}
+#sbox{flex:0 1 620px;position:relative}
+#sbox label{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;background:#fff;border-radius:6px;color:var(--mut)}
+#q{flex:1;border:0;outline:0;background:transparent;color:var(--ink);min-width:0}
+#sbox:focus-within label{box-shadow:0 0 0 2px var(--or)}
+#chips{position:absolute;top:38px;left:0;right:0;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px;display:none;gap:6px;flex-wrap:wrap;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+#sbox:focus-within #chips{display:flex}
+.chip{border:1px solid var(--line);background:#fff;border-radius:14px;padding:3px 10px;font-size:12.5px}
+.chip:hover{background:var(--sel)}
+#topr{margin-left:auto;display:flex;align-items:center;gap:6px}
+.tb{background:none;border:0;color:#fff;border-radius:6px;padding:7px;display:grid;place-items:center}
+.tb:hover{background:#2a2a2a}
+#acct{width:32px;height:32px;border-radius:50%;background:var(--or);color:#0a0a0a;font-weight:700;font-size:12.5px;border:0}
+/* tabs + ribbon */
+#tabs{flex:none;display:flex;background:var(--soft);padding:0 12px;border-bottom:1px solid var(--line)}
+.tab{background:none;border:0;padding:0 16px;height:36px;font-size:13.5px}
+.tab.on{font-weight:600;color:var(--ort);box-shadow:inset 0 -3px 0 var(--or)}
+#ribbon{flex:none;height:88px;border-bottom:1px solid var(--line);display:flex;overflow-x:auto;overflow-y:hidden;background:#fff;scrollbar-width:thin}
+.pane{display:none;height:100%}
+.pane.on{display:flex}
+.grp{display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:6px 10px 4px;border-right:1px solid var(--line);flex:none}
+.grp>div{display:flex;gap:2px}
+.gl{font-size:11.5px;color:var(--mut)}
+.rb{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 8px;border:0;background:none;border-radius:6px;font-size:12.5px;min-width:54px;white-space:nowrap}
+.rb:hover{background:var(--soft)}
+.rb.pri{background:var(--ort);color:#fff;min-width:68px}
+.rb.pri:hover{background:#9d3300}
+.rb.on{background:var(--sel)}
+.rb[disabled]{opacity:.45;cursor:default}
+/* main */
+#main{flex:1;min-height:0;display:flex}
+#nav{flex:none;width:var(--navw,236px);background:#fafafa;border-right:1px solid var(--line);overflow:auto;padding:10px 0}
+.nh{padding:8px 14px 4px;font-size:12px;font-weight:600;color:var(--mut);display:flex;align-items:center}
+.nh button{margin-left:auto;background:none;border:0;padding:2px;border-radius:4px;color:var(--mut)}
+.nf{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;text-align:left;height:32px;padding:0 14px;font-size:13.5px;position:relative}
+.nf:hover{background:#f0f0f0}
+.nf.on{background:var(--sel);font-weight:600;box-shadow:inset 3px 0 0 var(--or)}
+.nf.drop{background:#ffd9c2;outline:2px dashed var(--ort);outline-offset:-3px}
+.nf b{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--ort)}
+.cdot{width:10px;height:10px;border-radius:3px;flex:none}
+#content{flex:1;min-width:0;display:flex;position:relative}
+#content.rp-right{flex-direction:row}
+#content.rp-bottom,#content.rp-off{flex-direction:column}
+#list{display:flex;flex-direction:column;min-width:0;min-height:0}
+.rp-right #list{width:var(--listw,44%);border-right:1px solid var(--line)}
+.rp-bottom #list{height:var(--listh,44%);border-bottom:1px solid var(--line)}
+.rp-off #list{flex:1}
+#lh{flex:none;display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#lh h1{margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.seg{display:flex;background:#eee;border-radius:7px;padding:2px;gap:2px}
+.seg button{border:0;background:none;border-radius:5px;padding:3px 11px;font-size:13px}
+.seg button.on{background:#fff;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+#lh .sp{margin-left:auto;font-size:12.5px;color:var(--mut)}
+#cols{flex:none;display:grid;align-items:center;height:30px;padding:0 14px;background:var(--soft);border-bottom:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--mut);gap:8px}
+.rp-right #cols{display:none}
+.g{grid-template-columns:24px 20px var(--fromw,190px) minmax(0,1fr) auto 18px 104px 64px}
+#rows{flex:1;overflow:auto;min-height:0}
+.row{display:grid;align-items:center;min-height:38px;padding:0 14px;border-bottom:1px solid #ececec;gap:8px;cursor:default;position:relative}
+.row:hover{background:#f7f7f7}
+.row.sel{background:var(--sel)}
+.row.unread .from,.row.unread .subj b{font-weight:700}
+.row .from{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .subj{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.row .subj i{font-style:normal;color:var(--mut);font-weight:400}
+.row .when,.row .size{font-size:13px;color:var(--mut);white-space:nowrap}
+.row .cnt{font-size:11.5px;border:1px solid var(--line);border-radius:9px;padding:0 6px;margin-left:6px;color:var(--mut);font-weight:600}
+.row .cats{display:flex;gap:3px}
+.dot{width:9px;height:9px;border-radius:50%;background:transparent}
+.unread .dot{background:var(--or)}
+.chk{width:18px;height:18px;border:1.5px solid #8a8a8a;border-radius:4px;background:#fff;padding:0;display:grid;place-items:center;color:#fff}
+.row.checked .chk{background:var(--ort);border-color:var(--ort)}
+.fl{color:var(--ort)}
+.rp-right .row{grid-template-columns:20px 20px minmax(0,1fr) auto;grid-template-areas:"c d f w" "c d s a";padding:8px 14px;row-gap:1px}
+.rp-right .row .chk{grid-area:c}.rp-right .row .dot{grid-area:d}.rp-right .row .from{grid-area:f}.rp-right .row .when{grid-area:w}.rp-right .row .subj{grid-area:s}.rp-right .row .cats,.rp-right .row .size,.rp-right .row .att{display:none}.rp-right .row .rowfl{grid-area:a}
+.dense .row{min-height:30px}
+.sec{padding:6px 14px;font-size:12px;font-weight:600;color:var(--mut);background:#fafafa;border-bottom:1px solid #ececec}
+.empty{padding:48px 24px;text-align:center;color:var(--mut)}
+.more{display:block;margin:12px auto;padding:6px 16px;border:1px solid var(--line);background:#fff;border-radius:6px}
+/* reading */
+#reading{flex:1;min-width:0;min-height:0;overflow:auto;padding:18px 28px}
+.rp-off #reading{display:none}
+.rh h2{margin:0 0 8px;font-size:19px;letter-spacing:-.01em;line-height:1.3}
+.cc{display:inline-flex;align-items:center;gap:5px;font-size:12px;border-radius:10px;padding:1px 9px;background:#f1f1f1;margin-right:6px}
+.msg{border-top:1px solid var(--line);padding:14px 0}
+.msg.fold{cursor:pointer}
+.mh{display:flex;gap:12px;align-items:center}
+.av{width:40px;height:40px;border-radius:50%;background:var(--blk);color:#fff;font-weight:600;font-size:13px;display:grid;place-items:center;flex:none}
+.mh .who{line-height:1.35;min-width:0}
+.mh .who small{color:var(--mut);font-size:12.5px;display:block}
+.mh .dt{margin-left:auto;font-size:12.5px;color:var(--mut);white-space:nowrap}
+.body{margin:12px 0 0 52px;font-size:14.5px;line-height:1.65;max-width:760px;overflow-wrap:anywhere}
+.fold .body,.fold .atts{display:none}
+.atts{margin:12px 0 0 52px;display:flex;flex-wrap:wrap;gap:8px}
+.att-c{display:flex;align-items:center;gap:10px;border:1px solid #cfcfcf;border-radius:6px;padding:7px 12px;background:#fff;font-size:13px}
+.att-c:hover{background:var(--soft)}
+.ft{width:30px;height:30px;border-radius:5px;display:grid;place-items:center;font-size:10.5px;font-weight:700;background:#eee}
+.qr{margin:14px 0 0 52px;display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid #bdbdbd;background:#fff;border-radius:6px;padding:6px 14px;font-size:13.5px}
+.btn:hover{background:var(--soft)}
+.btn.p{background:var(--ort);border-color:var(--ort);color:#fff;font-weight:600}
+.btn.p:hover{background:#9d3300}
+.btn.d{color:#a12020}
+.bar{background:#fff8e6;border:1px solid #e6d29a;border-radius:6px;padding:8px 12px;margin:0 0 10px;font-size:13px}
+/* overlays */
+#menu{position:fixed;z-index:80;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.2);min-width:190px;padding:4px;display:none;max-height:70vh;overflow:auto}
+#menu button{display:flex;gap:8px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:7px 12px;border-radius:5px;font-size:13.5px}
+#menu button:hover{background:var(--soft)}
+#menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+#menu .ck{width:14px;color:var(--ort);font-weight:700}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--blk);color:#fff;border-radius:8px;padding:10px 16px;display:none;gap:16px;align-items:center;z-index:90;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+#toast button{background:none;border:0;color:#ffb48f;font-weight:600;padding:0}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;display:grid;place-items:center;padding:16px}
+.dlg{background:#fff;border-radius:10px;width:min(560px,100%);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.dlg.w{width:min(820px,100%)}
+.dlg>h3{margin:0;padding:16px 20px;font-size:16px;border-bottom:1px solid var(--line);display:flex;align-items:center}
+.dlg>h3 button{margin-left:auto;background:none;border:0;padding:2px}
+.dlg .bd{padding:16px 20px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.dlg .ft2{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600}
+.fld input,.fld select,.fld textarea{border:1px solid #bdbdbd;border-radius:6px;padding:7px 10px;font-weight:400;background:#fff}
+.fld textarea{min-height:80px;resize:vertical}
+.fld.h{flex-direction:row;align-items:center;gap:8px;font-weight:400}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lst{border:1px solid var(--line);border-radius:6px}
+.lst>div{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid #ececec}
+.lst>div:last-child{border-bottom:0}
+.lst>div>button{margin-left:auto}
+.tabs2{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs2 button{border:0;background:none;padding:8px 14px}
+.tabs2 button.on{font-weight:600;color:var(--ort);box-shadow:inset 0 -3px 0 var(--or)}
+.kbd{display:grid;grid-template-columns:90px 1fr;gap:6px 12px;font-size:13.5px}
+kbd{background:var(--soft);border:1px solid #cfcfcf;border-radius:4px;padding:1px 7px;font:600 12px monospace;justify-self:start}
+/* compose */
+#cw{position:fixed;left:0;top:0;transform:none;width:100vw;height:100vh;background:#fff;border:0;border-radius:0;box-shadow:none;z-index:70;display:none;flex-direction:column;overflow:hidden}
+#cw.on{display:flex}
+#cscrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:65;display:none}
+#cw.on+#cscrim,#cscrim.on{display:block}
+.chead{flex:none;height:40px;background:var(--blk);color:#fff;display:flex;align-items:center;gap:8px;padding:0 8px 0 16px;font-weight:600;font-size:13.5px;border-bottom:3px solid var(--or)}
+.cmain{flex:none;display:flex;align-items:stretch;border-bottom:1px solid var(--line);background:#fff;overflow-x:auto}
+.cmain .grp{padding:6px 10px 4px}
+.sendb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--ort);color:#fff;border:0;border-radius:6px;margin:10px 10px 8px 12px;padding:0 18px;height:60px;min-width:68px;align-self:start;font-weight:600;font-size:13px}
+.sendb:hover{background:#9d3300}
+.ctabs{flex:none;display:flex;background:var(--soft);padding:0 12px;border-bottom:1px solid var(--line)}
+.chead button{background:none;border:0;color:#fff;padding:6px;border-radius:5px}
+.chead button:hover{background:#2a2a2a}
+.cbody{flex:1;min-height:0;display:flex;flex-direction:column}
+.ctool{flex:none;display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line)}
+.ctool .btn{display:inline-flex;align-items:center;gap:6px;padding:5px 10px}
+.ctool .ic{border:0;background:none;padding:5px;border-radius:5px}
+.ctool .ic:hover{background:var(--soft)}
+.crow{flex:none;display:flex;align-items:center;gap:8px;border-bottom:1px solid #ececec;padding:4px 14px;min-height:36px;flex-wrap:wrap}
+.crow label{width:56px;color:var(--mut);font-size:13px}
+.crow input,.crow select{flex:1;min-width:120px;border:0;outline:0;padding:5px 0;background:transparent}
+.rc{display:inline-flex;gap:6px;align-items:center;background:#f1f1f1;border-radius:12px;padding:1px 4px 1px 10px;font-size:13px}
+.rc button{border:0;background:none;padding:0 4px;font-size:15px;line-height:1}
+.crow .lk{border:0;background:none;color:var(--ort);font-size:13px;padding:0 4px}
+#cbody{flex:1;overflow:auto;padding:14px 16px;outline:0;font-size:14.5px;line-height:1.6;min-height:120px}
+#cfiles{flex:none;display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 6px}
+.cfoot{flex:none;display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--line)}
+.cfoot .sp{margin-left:auto;font-size:12.5px;color:var(--mut)}
+/* splitters */
+.split{flex:none;position:relative;z-index:6;background:transparent;transition:background .1s}
+.split.v,.rp-right .split{width:6px;margin:0 -3px;cursor:col-resize}
+.rp-bottom #sp2{height:6px;margin:-3px 0;cursor:row-resize;width:auto}
+.rp-off #sp2{display:none}
+#sp1{margin:0 -3px 0 -3px}
+.split:hover,.split:focus-visible,.split.drag{background:rgba(255,80,1,.55)}
+.colgrip{position:absolute;right:-5px;top:-8px;bottom:-8px;width:10px;cursor:col-resize}
+.colgrip:hover{background:rgba(255,80,1,.45)}
+body.dragging{user-select:none}
+/* compose v2 */
+.crow[hidden]{display:none}
+.chd{flex:none;display:grid;grid-template-columns:auto 1fr;border-bottom:1px solid var(--line)}
+.cf{display:flex;flex-direction:column;min-width:0}
+.cf .crow{border-bottom:1px solid #ececec}.cf .crow:last-child{border-bottom:0}
+.pk{border:1px solid #cfcfcf;background:#f7f7f7;border-radius:4px;padding:3px 12px;font-size:13px;min-width:64px}
+.pk:hover{background:var(--sel)}
+.ctabs .tab{height:34px}
+.cmini{flex:none;display:flex;align-items:center;gap:2px;padding:4px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ib{width:30px;height:28px;border:0;background:none;border-radius:5px;display:grid;place-items:center;padding:0;flex:none}
+.ib:hover{background:var(--soft)}.ib.on{background:var(--sel)}
+.ib svg.i{width:17px;height:17px}
+.dd{height:26px;border:1px solid #cfcfcf;background:#fff;border-radius:4px;padding:0 8px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;min-width:60px;justify-content:space-between}
+.dd:hover{background:var(--soft)}
+.rows2{display:flex;flex-direction:column;gap:6px;justify-content:center}
+.rows2>div{display:flex;gap:1px;align-items:center}
+.sm{display:flex;align-items:center;gap:6px;border:0;background:none;padding:3px 8px;border-radius:5px;font-size:12.5px;white-space:nowrap}
+.sm:hover{background:var(--soft)}
+.stack{display:flex;gap:2px;align-items:stretch}.col{display:flex;flex-direction:column;justify-content:center}
+.sep{width:1px;height:20px;background:var(--line);margin:0 4px}
+#cw:not(.inline) .cmini,#cw:not(.inline) .inl,#cw:not(.inline) #cpop{display:none}
+#cw.inline{transform:none;border-radius:0;border:0;border-top:3px solid var(--or);box-shadow:0 -10px 28px rgba(0,0,0,.16);z-index:40}
+#cw.inline .ctabs,#cw.inline .cmain,#cw.inline #rsub,#cw.inline #rfrom{display:none}
+#cw.inline .chead{height:34px;background:#fff;color:var(--ink);border-bottom:1px solid var(--line)}
+#cw.inline .chead button{color:var(--ink)}#cw.inline .chead button:hover{background:var(--soft)}
+#cw.inline .sendb{padding:0 18px;margin:6px 8px}
+#cw.inline #cscrim{display:none}
+#cw.inline.on+#cscrim{display:none}
+#cw.inline #cbody{padding:10px 14px}
+#cbody blockquote{margin:0}
+#cbody table{border-collapse:collapse}#cbody td{border:1px solid #bbb;padding:4px 10px;min-width:60px}
+/* import */
+details summary{padding:4px 0}
+/* phone */
+@media (max-width:900px){
+ #burger{display:block}#brand{font-size:15px}
+ #nav{position:fixed;z-index:50;top:55px;bottom:0;left:0;width:260px;transform:translateX(-100%);transition:transform .2s;box-shadow:0 0 30px rgba(0,0,0,.3)}
+ body.navopen #nav{transform:none}
+ #content{flex-direction:column!important}
+ #list,.rp-right #list,.rp-bottom #list{width:100%;height:100%;flex:1;border:0}
+ #cols{display:none}
+ .row{grid-template-columns:20px 20px minmax(0,1fr) auto!important;grid-template-areas:"c d f w" "c d s a"!important;padding:8px 12px!important}
+ .row .chk{grid-area:c}.row .dot{grid-area:d}.row .from{grid-area:f}.row .when{grid-area:w}.row .subj{grid-area:s}.row .cats,.row .size,.row .att{display:none}
+ #reading{position:absolute;inset:0;background:#fff;z-index:20;display:none!important;padding:14px 16px}
+ body.reading #reading{display:block!important}
+ .body,.atts,.qr{margin-left:0}
+ #cw{left:0;top:0;transform:none;width:100vw;height:100vh;border-radius:0;border:0}
+ #sbox{flex:1}#topr .hide-s{display:none}
+ .two{grid-template-columns:1fr}
+ .split{display:none}
+ .chd{grid-template-columns:1fr}.sendb{flex-direction:row;padding:10px 20px;margin:8px 12px}
+}
+@media print{#top,#tabs,#ribbon,#nav,#list,#cw,#toast,.qr,.scrim{display:none!important}body{overflow:visible}#app,#main,#content{display:block;height:auto}#reading{padding:0;overflow:visible;position:static;display:block!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.atbl{border-collapse:collapse;width:100%;font-size:13px}.atbl th{text-align:left;font-weight:600;color:var(--mut);padding:6px 8px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff}.atbl td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:middle}.atbl input,.atbl select{width:100%;min-width:90px;border:1px solid #bdbdbd;border-radius:6px;padding:5px;font:inherit}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></symbol>
+<symbol id="i-archive" viewBox="0 0 24 24"><path d="M4 4h16v4H4zM5 8v12h14V8M10 12h4"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4h12l-2 4 2 4H5"/></symbol>
+<symbol id="i-reply" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 016 6v3"/></symbol>
+<symbol id="i-replyall" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M14 14l-5-5 5-5M9 9h5a6 6 0 016 6v3"/></symbol>
+<symbol id="i-fwd" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5M20 9H10a6 6 0 00-6 6v3"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></symbol>
+<symbol id="i-rules" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12l9-9h9v9l-9 9zM16 8h.01"/></symbol>
+<symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 12a8 8 0 11-3-6.2M20 4v5h-5"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+<symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7z"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v8"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><path d="M3 6h18v12H3zM3 7l9 7 9-7"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L18 10l-4-4L4 16zM14 6l4 4"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="M20 11l-8 8a5 5 0 01-7-7l8-8a3.5 3.5 0 015 5l-8 8a2 2 0 01-3-3l7-7"/></symbol>
+<symbol id="i-bold" viewBox="0 0 24 24"><path d="M7 4h6a3.5 3.5 0 010 7H7zM7 11h7a3.5 3.5 0 010 7H7z"/></symbol>
+<symbol id="i-italic" viewBox="0 0 24 24"><path d="M10 4h8M6 20h8M15 4L9 20"/></symbol>
+<symbol id="i-under" viewBox="0 0 24 24"><path d="M7 4v7a5 5 0 0010 0V4M5 21h14"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 115 .5c0 1.5-2.5 2-2.5 3.5M12 17h.01"/></symbol>
+<symbol id="i-kbd" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></symbol>
+<symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14A8 8 0 1110 4a7 7 0 0010 10z"/></symbol>
+<symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v12M6 12l6 6 6-6M5 21h14"/></symbol>
+<symbol id="i-cut" viewBox="0 0 24 24"><path d="M6 3l8 12M18 3l-8 12"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></symbol>
+<symbol id="i-paste" viewBox="0 0 24 24"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2"/></symbol>
+<symbol id="i-al" viewBox="0 0 24 24"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></symbol>
+<symbol id="i-ac" viewBox="0 0 24 24"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></symbol>
+<symbol id="i-ar" viewBox="0 0 24 24"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></symbol>
+<symbol id="i-indent" viewBox="0 0 24 24"><path d="M4 6h16M10 10h10M10 14h10M4 18h16M4 9l3 3-3 3"/></symbol>
+<symbol id="i-outdent" viewBox="0 0 24 24"><path d="M4 6h16M10 10h10M10 14h10M4 18h16M7 9l-3 3 3 3"/></symbol>
+<symbol id="i-ol" viewBox="0 0 24 24"><path d="M10 6h10M10 12h10M10 18h10M4 4v4M4 11h2M4 14h2M4 17h2M4 20h2"/></symbol>
+<symbol id="i-color" viewBox="0 0 24 24"><path d="M6 16l6-12 6 12M8 12h8M4 21h16"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4h12a2 2 0 012 2v14H7a2 2 0 01-2-2zM9 8h6M9 12h6"/></symbol>
+<symbol id="i-pop" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/></symbol>
+<symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14"/><path d="M3 12h18M12 5v14"/></symbol>
+<symbol id="i-hr" viewBox="0 0 24 24"><path d="M4 12h16"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="1"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="i-spell" viewBox="0 0 24 24"><path d="M4 17l4-10 4 10M5.5 13h5M14 15l3 3 5-6"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M6 10l6-6 6 6M5 21h14"/></symbol>
+</defs></svg>
+
+<div id="app">
+<header id="top">
+<button id="burger" data-act="nav" aria-label="Folders"><svg class="i"><use href="#i-menu"/></svg></button>
+<div id="brand">Rugs Creation</div>
+<div id="sbox">
+<label><svg class="i"><use href="#i-search"/></svg><span class="sr">Search mail</span><input id="q" placeholder="Search mail, try from:anita or has:attachment" autocomplete="off"></label>
+<div id="chips">
+<button class="chip" data-q="is:unread ">Unread</button><button class="chip" data-q="is:flagged ">Flagged</button><button class="chip" data-q="has:attachment ">Has attachment</button><button class="chip" data-q="from:">From</button><button class="chip" data-q="to:">To</button><button class="chip" data-q="subject:">Subject</button><button class="chip" data-q="in:sent ">In Sent</button><button class="chip" data-q="in:all ">All folders</button><button class="chip" data-q="cat:">Category</button>
+</div></div>
+<div id="topr">
+<button class="tb hide-s" data-act="sync" aria-label="Sync now" title="Sync now"><svg class="i"><use href="#i-sync"/></svg></button>
+<button class="tb hide-s" data-act="admin" aria-label="Admin" title="Admin"><svg class="i"><use href="#i-book"/></svg></button>
+<button class="tb hide-s" data-act="settings" aria-label="Settings" title="Settings"><svg class="i"><use href="#i-gear"/></svg></button>
+<button class="tb hide-s" data-act="help" aria-label="Keyboard shortcuts" title="Shortcuts (?)"><svg class="i"><use href="#i-kbd"/></svg></button>
+<button id="acct" data-act="acct" aria-label="Account menu">PT</button>
+</div>
+</header>
+
+<div id="tabs" role="tablist">
+<button class="tab on" data-tab="home" role="tab">Home</button>
+<button class="tab" data-tab="folder" role="tab">Folder</button>
+<button class="tab" data-tab="help" role="tab">Help</button>
+</div>
+
+<div id="ribbon">
+<div class="pane on" id="p-home">
+<div class="grp"><div><button class="rb pri" data-act="new"><svg class="i"><use href="#i-pen"/></svg><span>New mail</span></button><button class="rb" data-act="newMenu"><svg class="i"><use href="#i-doc"/></svg><span>Templates</span></button></div><span class="gl">New</span></div>
+<div class="grp"><div><button class="rb" data-act="del"><svg class="i"><use href="#i-trash"/></svg><span>Delete</span></button><button class="rb" data-act="archive"><svg class="i"><use href="#i-archive"/></svg><span>Archive</span></button><button class="rb" data-act="junk"><svg class="i"><use href="#i-ban"/></svg><span>Junk</span></button></div><span class="gl">Delete</span></div>
+<div class="grp"><div><button class="rb" data-act="reply"><svg class="i"><use href="#i-reply"/></svg><span>Reply</span></button><button class="rb" data-act="replyall"><svg class="i"><use href="#i-replyall"/></svg><span>Reply all</span></button><button class="rb" data-act="fwd"><svg class="i"><use href="#i-fwd"/></svg><span>Forward</span></button></div><span class="gl">Respond</span></div>
+<div class="grp"><div><button class="rb" data-act="moveMenu"><svg class="i"><use href="#i-folder"/></svg><span>Move to</span></button><button class="rb" data-act="rules"><svg class="i"><use href="#i-rules"/></svg><span>Rules</span></button></div><span class="gl">Move</span></div>
+<div class="grp"><div><button class="rb" data-act="toggleRead"><svg class="i"><use href="#i-mail"/></svg><span>Read / Unread</span></button><button class="rb" data-act="flag"><svg class="i"><use href="#i-flag"/></svg><span>Flag</span></button><button class="rb" data-act="catMenu"><svg class="i"><use href="#i-tag"/></svg><span>Categorise</span></button><button class="rb" data-act="snoozeMenu"><svg class="i"><use href="#i-clock"/></svg><span>Snooze</span></button><button class="rb" data-act="pin"><svg class="i"><use href="#i-pin"/></svg><span>Pin</span></button></div><span class="gl">Tags</span></div>
+<div class="grp"><div><button class="rb" data-act="filterMenu"><svg class="i"><use href="#i-filter"/></svg><span>Filter</span></button><button class="rb" data-act="sortMenu"><svg class="i"><use href="#i-list"/></svg><span>Sort</span></button></div><span class="gl">Find</span></div>
+<div class="grp"><div><button class="rb" data-act="importpst"><svg class="i"><use href="#i-upload"/></svg><span>Import mail</span></button></div><span class="gl">Import</span></div>
+<div class="grp"><div><button class="rb" data-act="print"><svg class="i"><use href="#i-print"/></svg><span>Print</span></button><button class="rb" data-act="download"><svg class="i"><use href="#i-down"/></svg><span>Save copy</span></button></div><span class="gl">Actions</span></div>
+</div>
+<div class="pane" id="p-folder">
+<div class="grp"><div><button class="rb" data-act="newFolder"><svg class="i"><use href="#i-plus"/></svg><span>New folder</span></button><button class="rb" data-act="renameFolder"><svg class="i"><use href="#i-edit"/></svg><span>Rename</span></button><button class="rb" data-act="delFolder"><svg class="i"><use href="#i-trash"/></svg><span>Delete folder</span></button></div><span class="gl">New</span></div>
+<div class="grp"><div><button class="rb" data-act="readAll"><svg class="i"><use href="#i-check"/></svg><span>Mark all read</span></button><button class="rb" data-act="empty"><svg class="i"><use href="#i-x"/></svg><span>Empty folder</span></button></div><span class="gl">Clean up</span></div>
+<div class="grp"><div><button class="rb" data-act="importpst"><svg class="i"><use href="#i-upload"/></svg><span>Import mail</span></button><button class="rb" data-act="sync"><svg class="i"><use href="#i-sync"/></svg><span>Sync now</span></button><button class="rb" data-act="rules"><svg class="i"><use href="#i-rules"/></svg><span>Rules</span></button></div><span class="gl">Manage</span></div>
+</div>
+<div class="pane" id="p-help">
+<div class="grp"><div><button class="rb" data-act="help"><svg class="i"><use href="#i-kbd"/></svg><span>Shortcuts</span></button><button class="rb" data-act="admin"><svg class="i"><use href="#i-book"/></svg><span>Admin</span></button><button class="rb" data-act="settings"><svg class="i"><use href="#i-gear"/></svg><span>Settings</span></button><button class="rb" data-act="about"><svg class="i"><use href="#i-help"/></svg><span>About</span></button></div><span class="gl">Help</span></div>
+</div>
+</div>
+
+<div id="main">
+<nav id="nav" aria-label="Folders"></nav>
+<div id="sp1" class="split v" role="separator" aria-orientation="vertical" aria-label="Resize folder pane" tabindex="0" title="Drag to resize, double-click to reset"></div>
+<div id="content" class="rp-bottom">
+<section id="list" aria-label="Message list">
+<div id="lh"></div>
+<div id="cols" class="g"><span></span><span></span><span style="position:relative">From<i id="sp3" class="colgrip" title="Drag to resize column"></i></span><span>Subject</span><span></span><span></span><span>Received</span><span>Size</span></div>
+<div id="rows" tabindex="0"></div>
+</section>
+<div id="sp2" class="split" role="separator" aria-label="Resize reading pane" tabindex="0" title="Drag to resize, double-click to reset"></div>
+<article id="reading" aria-label="Reading pane"></article>
+</div>
+</div>
+</div>
+
+<div id="cw" role="dialog" aria-label="Message">
+<div class="chead"><span id="ctitle">Untitled - Message (HTML)</span><span id="cstat"></span><button data-act="cpop" id="cpop" aria-label="Pop out" title="Pop out"><svg class="i"><use href="#i-pop"/></svg></button><button data-act="cclose" aria-label="Close and save draft" title="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+<div class="ctabs" id="ctabs"><button class="tab on" data-ctab="msg">Message</button><button class="tab" data-ctab="ins">Insert</button><button class="tab" data-ctab="opt">Options</button><button class="tab" data-ctab="fmt">Format Text</button></div>
+<div class="cmain" id="cmain"></div>
+<div class="cmini" id="cmini"></div>
+<div class="cbody">
+<div class="chd">
+<button class="sendb" data-act="csend"><svg class="i" aria-hidden="true" style="width:26px;height:26px"><use href="#i-send"/></svg><span>Send</span></button>
+<div class="cf">
+<div class="crow" id="rfrom"><label for="cfrom">From</label><select id="cfrom"></select></div>
+<div class="crow" id="rto"><button class="pk" data-act="pickto">To...</button><span id="cto-c"></span><input id="cto" aria-label="To" autocomplete="off"><span class="inl"><button class="lk" data-act="showcc">Cc</button><button class="lk" data-act="showbcc">Bcc</button></span></div>
+<div class="crow" id="rcc"><button class="pk" data-act="pickcc">Cc...</button><span id="ccc-c"></span><input id="ccc" aria-label="Cc" autocomplete="off"></div>
+<div class="crow" id="rbcc"><button class="pk" data-act="pickbcc">Bcc...</button><span id="cbcc-c"></span><input id="cbcc" aria-label="Bcc" autocomplete="off"></div>
+<div class="crow" id="rsub"><label for="csub">Subject</label><input id="csub" placeholder="Add a subject"></div>
+</div></div>
+<div id="cfiles"></div>
+<div id="cbody" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Message body" spellcheck="true"></div>
+</div>
+<input type="file" id="cfile" multiple hidden>
+</div>
+<div id="cscrim"></div>
+<div id="menu" role="menu"></div>
+<div id="toast" role="status"></div>
+<div id="modals"></div>
+<script>/* ===== Rugs Mail: data, state, helpers ===== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const H = 36e5, D = 24 * H;
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const ic = n => `<svg class="i" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const LS = 'rugsmail.v4';
+
+const SYS = [
+  { id: 'inbox', name: 'Inbox', icon: 'mail' }, { id: 'flagged', name: 'Flagged', icon: 'flag', virtual: true },
+  { id: 'drafts', name: 'Drafts', icon: 'pen' }, { id: 'sent', name: 'Sent items', icon: 'send' },
+  { id: 'scheduled', name: 'Scheduled', icon: 'clock' }, { id: 'snoozed', name: 'Snoozed', icon: 'moon', virtual: true },
+  { id: 'archive', name: 'Archive', icon: 'archive' }, { id: 'junk', name: 'Junk', icon: 'ban' },
+  { id: 'deleted', name: 'Deleted items', icon: 'trash' }
+];
+const CATS = [
+  { id: 'buyers', name: 'Buyers', c: '#0f6cbd' }, { id: 'urgent', name: 'Urgent', c: '#c4262e' },
+  { id: 'dispatch', name: 'Dispatch', c: '#107c41' }, { id: 'fair', name: 'Trade fair', c: '#8764b8' },
+  { id: 'accounts', name: 'Accounts', c: '#986f0b' }
+];
+const TEMPLATES0 = [
+  { id: 't1', name: 'Confirm order', subj: 'Order confirmation', body: 'Hello,\n\nWe confirm receipt of your order. Production will begin once the advance is received. We will share the delivery window within two working days.\n\nRegards' },
+  { id: 't2', name: 'Sample dispatch', subj: 'Samples dispatched', body: 'Hello,\n\nThe samples you requested were dispatched today. Tracking details are below.\n\nCourier:\nTracking no.:\n\nRegards' },
+  { id: 't3', name: 'Trade fair invite', subj: 'Visit us at the fair', body: 'Hello,\n\nWe would be glad to host you at our stall. Please let us know a suitable time and we will reserve it.\n\nRegards' }
+];
+const ACCTS0 = [
+  { id: 'pt', name: 'Priyanshu Tomar', email: 'marketing@rugscreation.com', sig: '', desig: 'Marketing Executive', phone: '9540576972, 9053400366', loc: 'Karnal, Haryana, India' },
+  { id: 'ex', name: 'Export Desk', email: 'export@rugscreation.com', sig: '', desig: 'Export Desk', loc: 'Karnal, Haryana, India' }
+];
+
+function seed() {
+  const n = Date.now(), m = [];
+  const add = (o) => m.push(Object.assign({ id: uid(), folder: 'inbox', read: false, flag: false, pin: false, cats: [], att: [], to: ['marketing@rugscreation.com'], cc: [], focused: true, snooze: 0, thread: null }, o));
+  const P = (n_, e) => ({ n: n_, e });
+  const anita = P('Anita Rao', 'anita@hartwell-imports.example');
+  add({ thread: 'po4471', from: anita, subj: 'PO 4471: hand-tufted wool runners', date: n - 3 * D, read: true, body: '<p>Hello Priyanshu,</p><p>Please find the first PO for hand-tufted wool runners, 2.5 x 8 ft. Quantity is 60 pieces in Dune.</p><p>Regards,<br>Anita</p>', cats: ['buyers'] });
+  add({ thread: 'po4471', from: P('Priyanshu Tomar', 'marketing@rugscreation.com'), to: ['anita@hartwell-imports.example'], subj: 'Re: PO 4471: hand-tufted wool runners', date: n - 2.9 * D, read: true, folder: 'sent', body: '<p>Hello Anita,</p><p>Received, thank you. We will confirm the delivery window shortly.</p>' });
+  add({ thread: 'po4471', from: anita, cc: ['dispatch@rugscreation.com'], subj: 'Revised PO 4471: hand-tufted wool runners', date: n - 40 * 60000, body: '<p>Hello Priyanshu,</p><p>We have revised the quantities on PO 4471 after the showroom review. The runner order goes from 60 to 80 pieces, and the colourway is now Slate Grey instead of Dune. Please confirm the new delivery window before Friday.</p><p>Could you also send updated swatches and a fresh proforma invoice? The revised sheet is attached.</p><p>Regards,<br>Anita</p>', att: [{ name: 'PO-4471-rev2.xlsx', size: 49152, type: 'application/vnd.ms-excel' }, { name: 'Colourway-slate-grey.pdf', size: 1258291, type: 'application/pdf' }], cats: ['buyers', 'urgent'], flag: true });
+  add({ from: P('Dispatch Desk', 'dispatch@rugscreation.com'), subj: 'Container MSKU-83 loaded, ETA Nhava Sheva Nov 19', date: n - 1.4 * H, body: '<p>Container MSKU-83 was loaded this morning. Seal number and packing list are attached for your records.</p>', att: [{ name: 'packing-list-MSKU83.pdf', size: 215040, type: 'application/pdf' }], cats: ['dispatch'] });
+  add({ from: P('Vikram Sethi', 'vikram@rugscreation.com'), subj: 'October invoice reconciliation', date: n - 2.2 * H, body: '<p>Three invoices show a mismatch against the bank statement. Can you check the buyer references before Wednesday?</p>', att: [{ name: 'oct-recon.xlsx', size: 38912, type: 'application/vnd.ms-excel' }], cats: ['accounts'] });
+  add({ from: P('EPCH Secretariat', 'fairs@epch.example'), subj: '62nd fair: stall layout confirmation', date: n - 1 * D - 2 * H, read: true, body: '<p>Please confirm stall B-214 and the electrical load by Tuesday so we can finalise the floor plan.</p>', att: [{ name: 'floor-plan.pdf', size: 1468006, type: 'application/pdf' }], cats: ['fair'] });
+  add({ from: P('Sample Room', 'samples@rugscreation.com'), subj: 'Swatches for Kasa Living approved', date: n - 1 * D - 5 * H, read: true, body: '<p>The buyer signed off on all six swatches. Ready to dispatch on your word.</p>', cats: ['buyers'] });
+  add({ from: P('Meera Joshi', 'meera@rugscreation.com'), subj: 'Diwali holiday roster', date: n - 2 * D, read: true, body: '<p>Please share team availability for the marketing desk by Monday.</p>' });
+  add({ from: P('Karan Malik', 'karan@rugscreation.com'), subj: 'Loom schedule, week 47', date: n - 2 * D - 3 * H, read: true, body: '<p>Two looms are free from Thursday. Can we pull the Hartwell order forward?</p>' });
+  add({ from: P('Kasa Living', 'orders@kasaliving.example'), subj: 'Re: Swatch approvals and next season colours', date: n - 3.5 * D, read: true, body: '<p>Thank you for the swatches. We would like to see two more earthy tones for the spring range.</p>', cats: ['buyers'], focused: false });
+  add({ from: P('Textile Weekly', 'news@textileweekly.example'), subj: 'This week: cotton prices, EU buyer trends', date: n - 4 * D, body: '<p>Your weekly roundup of the home textile trade.</p>', focused: false });
+  add({ from: P('Courier Tracker', 'no-reply@courier.example'), subj: 'Shipment AWB 88213 delivered', date: n - 5 * D, read: true, body: '<p>Your shipment to Hamburg was delivered and signed for.</p>', focused: false, cats: ['dispatch'] });
+  add({ from: P('Rahul Mehta', 'rahul@mehtaexports.example'), subj: 'Quote request: 200 jute rugs', date: n - 6 * D, read: true, folder: 'archive', body: '<p>Could you share your best FOB rate for 200 jute rugs, 5 x 8 ft?</p>' });
+  add({ from: P('Priyanshu Tomar', 'marketing@rugscreation.com'), to: [], subj: 'Press note for the fair (draft)', date: n - 5 * H, read: true, folder: 'drafts', body: '<p>Rugs Creation will exhibit at the 62nd EPCH fair...</p>' });
+  return m;
+}
+function stress(k) {
+  const names = ['Anita Rao', 'Vikram Sethi', 'Dispatch Desk', 'Karan Malik', 'Meera Joshi', 'Sample Room', 'Rahul Mehta'], out = [], n = Date.now();
+  for (let i = 0; i < k; i++) { const f = names[i % names.length]; out.push({ id: uid(), folder: 'inbox', read: i % 5 > 1, flag: i % 23 === 0, pin: false, cats: i % 7 === 0 ? ['buyers'] : [], att: i % 9 === 0 ? [{ name: 'doc' + i + '.pdf', size: 90000 + i, type: 'application/pdf' }] : [], to: ['marketing@rugscreation.com'], cc: [], focused: i % 4 !== 3, snooze: 0, thread: null, from: { n: f, e: f.split(' ')[0].toLowerCase() + '@example.com' }, subj: 'Stress test message ' + (i + 1) + ': order update', date: n - i * 17 * 60000, body: '<p>Generated message ' + (i + 1) + ' for list performance testing.</p>' }); }
+  return out;
+}
+const INCOMING = [
+  { f: ['Hartwell Imports', 'orders@hartwell-imports.example'], s: 'Payment advice for PO 4471', b: '<p>The advance payment has been released today. Reference attached.</p>', c: ['accounts'] },
+  { f: ['EPCH Secretariat', 'fairs@epch.example'], s: 'Badge collection for the fair', b: '<p>Exhibitor badges can be collected from Gate 2 from 8 am.</p>', c: ['fair'] },
+  { f: ['Dispatch Desk', 'dispatch@rugscreation.com'], s: 'Gate pass cleared for MSKU-83', b: '<p>The gate pass was cleared. Truck leaves at 6 pm.</p>', c: ['dispatch'] },
+  { f: ['Anita Rao', 'anita@hartwell-imports.example'], s: 'Thanks, delivery window works', b: '<p>The new delivery window works for us. Please go ahead.</p>', c: ['buyers'] }
+];
+
+/* state */
+const S = { folder: 'inbox', sel: null, checked: new Set(), q: '', filter: 'all', tab: 'focused', sort: 'date', limit: 150, compose: null, ctab: 'msg' };
+let DB = null;
+const BLOB = {}; /* in-memory attachment urls */
+const fresh = () => ({ msgs: seed(), folders: [], rules: [], templates: TEMPLATES0, accts: ACCTS0, acct: 'pt', set: { layout: 'bottom', conv: true, dense: false, ooo: { on: false, subj: 'Out of office', body: 'Thank you for your email. I am away and will reply when I return.' }, autosig: true, stress: false } });
+let idbp = null;
+const idbOpen = () => idbp || (idbp = new Promise((res, rej) => { try { if (!window.indexedDB) return rej(0); const r = indexedDB.open('rugsmail', 2); r.onupgradeneeded = () => { const d = r.result; if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv'); if (!d.objectStoreNames.contains('att')) d.createObjectStore('att'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }));
+const idbGet = k => idbOpen().then(db => new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }));
+const idbSet = (k, v) => idbOpen().then(db => new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }));
+async function load() {
+  let d = null;
+  try { d = await idbGet('db'); } catch (e) { }
+  if (!d) { try { const r = localStorage.getItem(LS); if (r) d = JSON.parse(r); } catch (e) { } }
+  DB = d && d.msgs ? d : fresh();
+  DB.accts.forEach(a => { if (!a.desig && !a.phone && !a.loc && a.sig) { const L = a.sig.split('\n').map(x => x.trim()).filter(Boolean); if (L.length > 1) a.desig = L[1].replace(/,\s*Rugs Creation$/i, ''); if (L.length > 2) a.loc = L[2]; if (a.id === 'pt') { a.phone = a.phone || '9540576972, 9053400366'; a.loc = 'Karnal, Haryana, India'; } a.sig = ''; } });
+}
+const attPut = (k, b) => idbOpen().then(db => new Promise((res, rej) => { const t = db.transaction('att', 'readwrite'); t.objectStore('att').put(b, k); t.oncomplete = res; t.onerror = () => rej(t.error); })).catch(() => { });
+const attGet = k => idbOpen().then(db => new Promise((res, rej) => { const q = db.transaction('att').objectStore('att').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); })).catch(() => null);
+async function attBlob(k) { const b = await attGet(k); if (b) return b; if (BLOB[k]) { try { return await (await fetch(BLOB[k])).blob(); } catch (e) { } } return null; }
+async function attUrl(k) { if (BLOB[k]) return BLOB[k]; const b = await attGet(k); if (b) { BLOB[k] = URL.createObjectURL(b); return BLOB[k]; } return null; }
+async function saveFile(name, data) {
+  let dl = null; try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { }
+  if (!dl) { try { const a = document.createElement('a'); a.download = name; a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data])); document.body.appendChild(a); a.click(); a.remove(); } catch (e) { } return false; }
+  try { await dl.save({ filename: name, data }); return true; } catch (e) { const c = e && e.code; toast(c === 'declined' ? 'Save cancelled' : c === 'rejected_extension' ? 'This file type cannot be saved from here: ' + name : 'Could not save the file (' + (c || 'error') + ')'); return false; }
+}
+let saveT = 0;
+function flush() { const snap = DB; if (!snap) return; idbSet('db', snap).catch(() => { try { localStorage.setItem(LS, JSON.stringify(snap)); } catch (e) { } }); }
+function save() { clearTimeout(saveT); saveT = setTimeout(flush, 400); }
+
+/* helpers */
+const acct = () => DB.accts.find(a => a.id === DB.acct) || DB.accts[0];
+const byId = id => DB.msgs.find(m => m.id === id);
+const fmtDate = t => { const d = new Date(t), n = new Date(); const same = d.toDateString() === n.toDateString(); if (same) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); const diff = (n - d) / D; if (diff < 6) return d.toLocaleDateString([], { weekday: 'short' }) + ' ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); return d.toLocaleDateString([], { day: 'numeric', month: 'short', year: d.getFullYear() === n.getFullYear() ? undefined : 'numeric' }); };
+const fmtFull = t => new Date(t).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? Math.round(b / 1024) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+const initials = n => (n || '?').split(/\s+/).map(s => s[0]).join('').slice(0, 2).toUpperCase();
+const stripHtml = h => { const d = document.createElement('div'); d.innerHTML = h; return (d.textContent || '').replace(/\s+/g, ' ').trim(); };
+const sizeOf = m => 4096 + (m.body || '').length * 2 + m.att.reduce((a, x) => a + x.size, 0);
+const allFolders = () => SYS.concat(DB.folders.filter(f => (f.own || 'pt') === DB.acct).map(f => ({ id: f.id, name: f.name, icon: 'folder', custom: true })));
+const folderName = id => (allFolders().find(f => f.id === id) || {}).name || id;
+const catOf = id => CATS.find(c => c.id === id);
+function toast(msg, undo, ms = 5000) { const t = $('#toast'); t.innerHTML = '<span>' + esc(msg) + '</span>' + (undo ? '<button id="tundo">Undo</button>' : ''); t.style.display = 'flex'; clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = 'none', ms); if (undo) $('#tundo').onclick = () => { t.style.display = 'none'; undo(); }; }
+const own = m => m.own || 'pt';
+function visibleIn(m, f) {
+  if (own(m) !== DB.acct) return false;
+  const now = Date.now();
+  if (f === 'flagged') return m.flag && m.folder !== 'deleted' && m.folder !== 'junk' && m.folder !== 'drafts';
+  if (f === 'snoozed') return m.snooze > now;
+  if (m.snooze > now) return false;
+  return m.folder === f;
+}
+function unreadCount(f) { return DB.msgs.reduce((a, m) => a + (!m.read && visibleIn(m, f) && f !== 'drafts' ? 1 : 0), 0); }
+function draftCount() { return DB.msgs.filter(m => m.folder === 'drafts' && own(m) === DB.acct).length; }
+/* ===== Rugs Mail: list, nav, reading ===== */
+function parseQ(q) {
+  const o = { text: [], from: [], to: [], subject: [], cat: [], is: [], has: [], in: null };
+  (q.match(/"[^"]+"|\S+/g) || []).forEach(t => {
+    const mm = /^(from|to|subject|cat|is|has|in):(.*)$/i.exec(t);
+    if (mm) { const v = mm[2].replace(/"/g, '').toLowerCase(); if (!v) return; if (mm[1].toLowerCase() === 'in') o.in = v; else o[mm[1].toLowerCase()].push(v); }
+    else o.text.push(t.replace(/"/g, '').toLowerCase());
+  });
+  return o;
+}
+function matchQ(m, o) {
+  const fr = (m.from.n + ' ' + m.from.e).toLowerCase(), to = (m.to || []).join(' ').toLowerCase(), su = m.subj.toLowerCase();
+  if (o.from.some(v => !fr.includes(v))) return false;
+  if (o.to.some(v => !to.includes(v))) return false;
+  if (o.subject.some(v => !su.includes(v))) return false;
+  if (o.cat.some(v => !m.cats.some(c => c === v || (catOf(c) || {}).name.toLowerCase() === v))) return false;
+  if (o.is.some(v => (v === 'unread' && m.read) || (v === 'read' && !m.read) || (v === 'flagged' && !m.flag) || (v === 'pinned' && !m.pin))) return false;
+  if (o.has.some(v => v === 'attachment' && !m.att.length)) return false;
+  if (o.text.length) { const hay = su + ' ' + fr + ' ' + stripHtml(m.body).toLowerCase(); if (o.text.some(v => !hay.includes(v))) return false; }
+  return true;
+}
+function getList() {
+  const searching = S.q.trim().length > 0; let o = null, arr;
+  if (searching) {
+    o = parseQ(S.q);
+    arr = DB.msgs.filter(m => {
+      if (own(m) !== DB.acct) return false;
+      if (m.snooze > Date.now() && o.in !== 'all') return false;
+      if (o.in && o.in !== 'all') { const f = allFolders().find(x => x.id === o.in || x.name.toLowerCase().startsWith(o.in)); if (!f || !visibleIn(m, f.id)) return false; }
+      else if (!o.in) { if (!visibleIn(m, S.folder)) return false; }
+      else if (m.folder === 'deleted' || m.folder === 'junk') return false;
+      return matchQ(m, o);
+    });
+  } else arr = DB.msgs.filter(m => visibleIn(m, S.folder));
+  if (S.filter === 'unread') arr = arr.filter(m => !m.read);
+  else if (S.filter === 'flagged') arr = arr.filter(m => m.flag);
+  else if (S.filter === 'att') arr = arr.filter(m => m.att.length);
+  if (S.folder === 'inbox' && !searching && DB.set.focus !== false) arr = arr.filter(m => (S.tab === 'focused') === (m.focused !== false || m.pin));
+  const cmp = { date: (a, b) => b.date - a.date, from: (a, b) => a.from.n.localeCompare(b.from.n), subject: (a, b) => a.subj.localeCompare(b.subj), size: (a, b) => sizeOf(b) - sizeOf(a), unread: (a, b) => (a.read - b.read) || (b.date - a.date) }[S.sort];
+  arr.sort((a, b) => (b.pin - a.pin) || cmp(a, b));
+  if (DB.set.conv && S.sort === 'date') {
+    const seen = {}, out = [];
+    arr.forEach(m => { if (m.thread) { if (seen[m.thread]) { seen[m.thread].cnt++; if (!m.read) seen[m.thread].unreadAny = true; return; } m.cnt = 1; m.unreadAny = !m.read; seen[m.thread] = m; } else { m.cnt = 1; m.unreadAny = !m.read; } out.push(m); });
+    return out;
+  }
+  arr.forEach(m => { m.cnt = 1; m.unreadAny = !m.read; });
+  return arr;
+}
+function secLabel(t) {
+  const n = new Date(), d = new Date(t), s = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = (s(n) - s(d)) / D;
+  return diff <= 0 ? 'Today' : diff === 1 ? 'Yesterday' : diff < 7 ? 'Earlier this week' : diff < 31 ? 'Earlier this month' : 'Older';
+}
+function renderNav() {
+  const nav = $('#nav'); const un = f => { const c = f === 'drafts' ? draftCount() : unreadCount(f); return c ? `<b>${c}</b>` : ''; };
+  const btn = (f, ind) => `<button class="nf${S.folder === f.id && !S.q ? ' on' : ''}" data-folder="${f.id}" style="${ind ? 'padding-left:' + ind + 'px' : ''}">${ic(f.icon)}<span>${esc(f.name)}</span>${un(f.id)}</button>`;
+  const fav = ['inbox', 'flagged', 'drafts', 'sent'].map(id => SYS.find(s => s.id === id));
+  const rest = SYS.filter(s => !['inbox', 'flagged', 'drafts', 'sent'].includes(s.id));
+  nav.innerHTML = `<div class="nh">Favourites</div>${fav.map(f => btn(f)).join('')}
+<div class="nh">${esc(acct().email)}</div>${rest.map(f => btn(f)).join('')}
+<div class="nh">My folders<button data-act="newFolder" aria-label="New folder">${ic('plus')}</button></div>
+${DB.folders.filter(f => (f.own || 'pt') === DB.acct).map(f => btn({ id: f.id, name: f.name, icon: 'folder' })).join('') || '<div class="nh" style="font-weight:400">No folders yet</div>'}
+<div class="nh">Categories</div>${CATS.map(c => `<button class="nf" data-cat="${c.id}"><span class="cdot" style="background:${c.c}"></span><span>${esc(c.name)}</span></button>`).join('')}`;
+}
+function renderList() {
+  const arr = getList(), searching = S.q.trim();
+  const title = searching ? 'Search results' : folderName(S.folder);
+  const lh = $('#lh');
+  lh.innerHTML = `<h1>${esc(title)}</h1>` +
+    (S.folder === 'inbox' && !searching ? `<div class="seg" role="tablist"><button class="${S.tab === 'focused' ? 'on' : ''}" data-ftab="focused">Focused</button><button class="${S.tab === 'other' ? 'on' : ''}" data-ftab="other">Other</button></div>` : '') +
+    `<div class="seg"><button class="${S.filter === 'all' ? 'on' : ''}" data-filter="all">All</button><button class="${S.filter === 'unread' ? 'on' : ''}" data-filter="unread">Unread</button></div><span class="sp">${arr.length} ${DB.set.conv ? 'conversations' : 'messages'}</span>` +
+    (S.checked.size ? `<span class="sp" style="margin-left:0">${S.checked.size} selected <button class="btn" data-act="clearsel">Clear</button></span>` : '');
+  const rows = $('#rows'); let html = '', last = '';
+  if (!arr.length) html = `<div class="empty">${searching ? 'No messages match your search. Try fewer words or remove a filter.' : 'Nothing in this folder yet.'}</div>`;
+  arr.slice(0, S.limit).forEach(m => {
+    if (S.sort === 'date') { const l = m.pin ? 'Pinned' : secLabel(m.date); if (l !== last) { html += `<div class="sec">${l}</div>`; last = l; } }
+    const unread = m.unreadAny, cats = m.cats.map(id => { const c = catOf(id); return c ? `<span class="cdot" style="background:${c.c}" title="${esc(c.name)}"></span>` : ''; }).join('');
+    const who = (S.folder === 'sent' || S.folder === 'drafts' || S.folder === 'scheduled') ? ('To: ' + (m.to.join(', ') || '(no recipient)')) : m.from.n;
+    html += `<div class="row g${unread ? ' unread' : ''}${S.sel === m.id ? ' sel' : ''}${S.checked.has(m.id) ? ' checked' : ''}" data-id="${m.id}" draggable="true">
+<button class="chk" data-chk="${m.id}" aria-label="Select message">${S.checked.has(m.id) ? ic('check').replace('class="i"', 'class="i" style="width:13px;height:13px;stroke-width:3"') : ''}</button><span class="dot"></span>
+<span class="from">${esc(who)}</span>
+<span class="subj"><b>${esc(m.subj)}</b>${m.cnt > 1 ? `<span class="cnt">${m.cnt}</span>` : ''}<i> ${esc(stripHtml(m.body).slice(0, 90))}</i>${m.flag ? ` <span class="fl">${ic('flag').replace('class="i"', 'class="i" style="width:13px;height:13px"')}</span>` : ''}${m.pin ? ` <span class="fl">${ic('pin').replace('class="i"', 'class="i" style="width:13px;height:13px"')}</span>` : ''}</span>
+<span class="cats">${cats}</span><span class="att">${m.att.length ? ic('clip').replace('class="i"', 'class="i" style="width:14px;height:14px;color:#595959"') : ''}</span>
+<span class="when">${fmtDate(m.date)}</span><span class="size">${fmtSize(sizeOf(m))}</span></div>`;
+  });
+  if (arr.length > S.limit) html += `<button class="more" data-act="more">Show more (${arr.length - S.limit} left)</button>`;
+  rows.innerHTML = html;
+}
+function threadOf(m) { return m.thread ? DB.msgs.filter(x => own(x) === own(m) && x.thread === m.thread && x.folder !== 'deleted' && x.folder !== 'junk').sort((a, b) => b.date - a.date) : [m]; }
+function attType(a) { const e = (a.name.split('.').pop() || '').toLowerCase(); return ['pdf'].includes(e) ? ['PDF', '#fbe4e4', '#a12020'] : ['xls', 'xlsx', 'csv'].includes(e) ? ['XLS', '#e7f1ea', '#1f6b3a'] : ['doc', 'docx'].includes(e) ? ['DOC', '#e3ecf8', '#1d4f91'] : ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(e) ? ['IMG', '#efe6f7', '#5b3b86'] : [e.slice(0, 3).toUpperCase() || 'FILE', '#eee', '#333']; }
+function renderReading() {
+  const r = $('#reading'), m = S.sel && byId(S.sel);
+  if (!m) { r.innerHTML = `<div class="empty">${S.checked.size > 1 ? S.checked.size + ' messages selected' : 'Select a message to read it'}</div>`; return; }
+  const th = threadOf(m), cats = m.cats.map(id => { const c = catOf(id); return c ? `<span class="cc"><span class="cdot" style="background:${c.c}"></span>${esc(c.name)}</span>` : ''; }).join('');
+  const snz = m.snooze > Date.now() ? `<div class="bar">Snoozed until ${fmtFull(m.snooze)}. <button class="btn" data-act="unsnooze">Bring back now</button></div>` : '';
+  const sch = m.folder === 'scheduled' ? `<div class="bar">Scheduled to send ${fmtFull(m.sendAt)}. <button class="btn" data-act="sendnow">Send now</button> <button class="btn" data-act="editdraft">Edit</button></div>` : '';
+  const dr = m.folder === 'drafts' ? `<div class="bar">This is a draft. <button class="btn p" data-act="editdraft">Continue editing</button></div>` : '';
+  r.innerHTML = `<button class="btn" id="rback" data-act="back" style="display:none;margin-bottom:10px">${ic('back')} Back</button>${snz}${sch}${dr}<div class="rh"><h2>${esc(m.subj)}</h2>${m.imp === 'high' ? '<span class="cc" style="background:#fde7e7">High importance</span>' : ''}${cats}</div>` +
+    th.map(x => {
+      const open = x.id === m.id || th.length === 1;
+      return `<div class="msg${open ? '' : ' fold'}" data-fold="${x.id}"><div class="mh"><span class="av">${initials(x.from.n)}</span><div class="who"><b>${esc(x.from.n)}</b><small>${esc(x.from.e)}${x.to.length ? ' · to ' + esc(x.to.join(', ')) : ''}${x.cc.length ? ' · cc ' + esc(x.cc.join(', ')) : ''}</small></div><span class="dt">${fmtFull(x.date)}</span></div>
+<div class="body">${x.body}</div>${x.att.length ? `<div class="atts">${x.att.map((a, i) => { const t = attType(a); return `<button class="att-c" data-att="${x.id}:${i}"><span class="ft" style="background:${t[1]};color:${t[2]}">${t[0]}</span><span style="text-align:left"><b style="font-weight:600;display:block">${esc(a.name)}</b><small style="color:#595959">${fmtSize(a.size)}</small></span></button>`; }).join('')}</div>` : ''}</div>`;
+    }).join('') +
+    `<div class="qr"><button class="btn" data-act="reply">${ic('reply')} Reply</button><button class="btn" data-act="replyall">${ic('replyall')} Reply all</button><button class="btn" data-act="fwd">${ic('fwd')} Forward</button><span style="width:12px"></span><button class="btn" data-quick="Thanks, noted.">Thanks, noted</button><button class="btn" data-quick="I will confirm by end of day.">Will confirm by end of day</button><button class="btn" data-quick="Can we speak on a call?">Can we speak?</button></div>`;
+}
+function renderAll() {
+  const c = $('#content'); c.className = 'rp-' + DB.set.layout; document.body.classList.toggle('dense', !!DB.set.dense); c.classList.toggle('dense', !!DB.set.dense);
+  renderNav(); renderList(); renderReading(); $('#acct').textContent = initials(acct().name); document.title = 'Rugs Creation';
+  document.body.classList.toggle('reading', !!S.sel && matchMedia('(max-width:900px)').matches);
+  const bk = $('#rback'); if (bk) bk.style.display = matchMedia('(max-width:900px)').matches ? 'inline-flex' : 'none';
+}
+/* ===== Rugs Mail: actions, menus, dialogs ===== */
+const targets = () => { const ids = S.checked.size ? [...S.checked] : (S.sel ? [S.sel] : []); return ids.map(byId).filter(Boolean); };
+const needSel = () => { const t = targets(); if (!t.length) toast('Select a message first'); return t; };
+function menu(el, items) {
+  const m = $('#menu'); m._items = items;
+  m.innerHTML = items.map((it, i) => it === '-' ? '<hr>' : `<button data-mi="${i}" role="menuitem"><span class="ck">${it.ck ? '✓' : ''}</span>${esc(it.t)}</button>`).join('');
+  m.style.display = 'block'; const r = el.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px'; m.style.top = Math.min(r.bottom + 4, Math.max(8, innerHeight - h - 8)) + 'px';
+}
+const closeMenu = () => { $('#menu').style.display = 'none'; };
+function modal(title, html, btns = [], wide) {
+  const d = document.createElement('div'); d.className = 'scrim';
+  d.innerHTML = `<div class="dlg${wide ? ' w' : ''}" role="dialog" aria-label="${esc(title)}"><h3>${esc(title)}<button data-act="mclose" aria-label="Close">${ic('x')}</button></h3><div class="bd">${html}</div>${btns.length ? '<div class="ft2"></div>' : ''}</div>`;
+  const ft = $('.ft2', d); btns.forEach(b => { const x = document.createElement('button'); x.className = 'btn ' + (b.cls || ''); x.textContent = b.t; x.onclick = () => { if (b.fn() !== false) d.remove(); }; ft.appendChild(x); });
+  $('#modals').appendChild(d); const f = $('input,select,textarea,button.btn', $('.bd', d)) || $('.ft2 button', d); if (f) f.focus(); return d;
+}
+const closeModals = () => { $$('#modals .scrim').forEach(x => x.remove()); };
+function ask(title, label, val, ok, cb) { const d = modal(title, `<label class="fld">${esc(label)}<input id="askv" value="${esc(val || '')}"></label>`, [{ t: 'Cancel', fn: () => true }, { t: ok, cls: 'p', fn: () => { const v = $('#askv').value.trim(); if (!v) return false; cb(v); } }]); $('#askv', d).onkeydown = e => { if (e.key === 'Enter') $('.btn.p', d).click(); }; }
+function confirmBox(title, text, ok, cb) { modal(title, `<p style="margin:0">${text}</p>`, [{ t: 'Cancel', fn: () => true }, { t: ok, cls: 'p', fn: () => { cb(); } }]); }
+
+/* selection */
+function select(id, keep) {
+  if (S.compose && S.compose.inline) { saveDraft(true); closeCompose(); }
+  S.sel = id; const m = byId(id);
+  if (m && !m.read && m.folder !== 'drafts') { m.read = true; save(); }
+  renderAll(); if (!keep) { const el = $(`.row[data-id="${id}"]`); if (el) el.scrollIntoView({ block: 'nearest' }); }
+}
+function openFolder(f) { if (S.compose && S.compose.inline) { saveDraft(true); closeCompose(); } S.folder = f; S.sel = null; S.checked.clear(); S.q = ''; $('#q').value = ''; S.limit = 150; document.body.classList.remove('navopen'); renderAll(); }
+function moveMsgs(list, folder, label) {
+  if (!list.length) return; const prev = list.map(m => [m, m.folder]); const nextId = nextAfter(list);
+  list.forEach(m => { m.folder = folder; if (folder !== 'inbox') m.snooze = 0; });
+  S.checked.clear(); S.sel = list.some(m => m.id === S.sel) ? nextId : S.sel; save(); renderAll();
+  toast((label || 'Moved') + (list.length > 1 ? ' ' + list.length + ' messages' : '') + ' to ' + folderName(folder), () => { prev.forEach(p => p[0].folder = p[1]); save(); renderAll(); });
+}
+function nextAfter(list) { const rows = $$('#rows .row').map(r => r.dataset.id), ids = list.map(m => m.id); const i = rows.findIndex(x => ids.includes(x)); const n = rows.slice(i + 1).find(x => !ids.includes(x)) || rows.slice(0, Math.max(i, 0)).reverse().find(x => !ids.includes(x)); return n || null; }
+function deleteMsgs(list) {
+  if (!list.length) return;
+  if (list.every(m => m.folder === 'deleted')) {
+    const gone = list.slice(), idx = gone.map(m => DB.msgs.indexOf(m)); DB.msgs = DB.msgs.filter(m => !gone.includes(m)); S.checked.clear(); S.sel = null; save(); renderAll();
+    toast('Deleted forever', () => { DB.msgs = DB.msgs.concat(gone); save(); renderAll(); }); return;
+  }
+  moveMsgs(list, 'deleted', 'Moved');
+}
+function applyRules(m) {
+  DB.rules.forEach(r => {
+    if (!r.on) return; const f = r.field === 'from' ? (m.from.n + ' ' + m.from.e) : r.field === 'to' ? m.to.join(' ') : m.subj;
+    if (!f.toLowerCase().includes(r.contains.toLowerCase())) return;
+    if (r.action === 'move') m.folder = r.target; else if (r.action === 'read') m.read = true; else if (r.action === 'flag') m.flag = true; else if (r.action === 'delete') m.folder = 'deleted'; else if (r.action === 'cat' && !m.cats.includes(r.target)) m.cats.push(r.target);
+  });
+}
+function sync() {
+  const k = 1 + Math.floor(Math.random() * 2), out = [];
+  for (let i = 0; i < k; i++) { const t = INCOMING[Math.floor(Math.random() * INCOMING.length)]; const m = { id: uid(), folder: 'inbox', read: false, flag: false, pin: false, cats: (t.c || []).slice(), att: [], to: [acct().email], cc: [], focused: true, snooze: 0, thread: null, own: DB.acct, from: { n: t.f[0], e: t.f[1] }, subj: t.s, date: Date.now(), body: t.b }; applyRules(m); DB.msgs.push(m); out.push(m);
+    if (DB.set.ooo.on && m.folder === 'inbox') DB.msgs.push({ id: uid(), own: DB.acct, folder: 'sent', read: true, flag: false, pin: false, cats: [], att: [], to: [t.f[1]], cc: [], focused: true, snooze: 0, thread: null, from: { n: acct().name, e: acct().email }, subj: 'Automatic reply: ' + m.subj, date: Date.now(), body: '<p>' + esc(DB.set.ooo.body).replace(/\n/g, '<br>') + '</p>' }); }
+  save(); renderAll(); toast(k + ' new message' + (k > 1 ? 's' : '') + (DB.set.ooo.on ? ' (automatic replies sent)' : ''));
+}
+function tick() {
+  const n = Date.now(); let ch = false;
+  DB.msgs.forEach(m => {
+    if (m.snooze && m.snooze <= n) { m.snooze = 0; m.read = false; m.date = n; ch = true; toast('Snoozed message is back: ' + m.subj); }
+    if (m.folder === 'scheduled' && m.sendAt <= n) { m.folder = 'sent'; m.date = n; ch = true; toast('Scheduled message sent: ' + m.subj); }
+  });
+  if (ch) { save(); renderAll(); }
+}
+
+/* menus */
+const dayAt = (add, h) => { const d = new Date(); d.setDate(d.getDate() + add); d.setHours(h, 0, 0, 0); return d.getTime(); };
+function snoozeMenu(el) {
+  const t = needSel(); if (!t.length) return; const set = ts => { t.forEach(m => m.snooze = ts); S.checked.clear(); S.sel = null; save(); renderAll(); toast('Snoozed until ' + fmtFull(ts)); };
+  const nxt = new Date(); const mon = dayAt((8 - nxt.getDay()) % 7 || 7, 8);
+  menu(el, [{ t: 'Later today (6 pm)', fn: () => set(Math.max(Date.now() + 36e5, dayAt(0, 18))) }, { t: 'Tomorrow (8 am)', fn: () => set(dayAt(1, 8)) }, { t: 'Next week (Monday 8 am)', fn: () => set(mon) }, { t: 'In 1 minute (test)', fn: () => set(Date.now() + 60000) }, '-', { t: 'Pick date and time...', fn: () => { const d = modal('Snooze until', '<label class="fld">Date and time<input type="datetime-local" id="snp"></label>', [{ t: 'Cancel', fn: () => true }, { t: 'Snooze', cls: 'p', fn: () => { const v = $('#snp').value; if (!v) return false; set(new Date(v).getTime()); } }]); } }]);
+}
+function catMenu(el) { const t = needSel(); if (!t.length) return; menu(el, CATS.map(c => ({ t: c.name, ck: t.every(m => m.cats.includes(c.id)), fn: () => { const on = !t.every(m => m.cats.includes(c.id)); t.forEach(m => { m.cats = m.cats.filter(x => x !== c.id); if (on) m.cats.push(c.id); }); save(); renderAll(); } })).concat(['-', { t: 'Clear categories', fn: () => { t.forEach(m => m.cats = []); save(); renderAll(); } }])); }
+function moveMenu(el) { const t = needSel(); if (!t.length) return; menu(el, allFolders().filter(f => !f.virtual && f.id !== 'drafts' && f.id !== 'scheduled').map(f => ({ t: f.name, fn: () => moveMsgs(t, f.id) }))); }
+function sortMenu(el) { const o = [['date', 'Date (newest first)'], ['from', 'From'], ['subject', 'Subject'], ['size', 'Size'], ['unread', 'Unread first']]; menu(el, o.map(x => ({ t: x[1], ck: S.sort === x[0], fn: () => { S.sort = x[0]; renderList(); } }))); }
+function filterMenu(el) { const o = [['all', 'All'], ['unread', 'Unread'], ['flagged', 'Flagged'], ['att', 'Has attachments']]; menu(el, o.map(x => ({ t: x[1], ck: S.filter === x[0], fn: () => { S.filter = x[0]; renderList(); } }))); }
+function tplMenu(el, cb) { menu(el, DB.templates.map(t => ({ t: t.name, fn: () => cb(t) })).concat(DB.templates.length ? [] : [{ t: 'No templates yet', fn: () => { } }])); }
+function acctMenu(el) { menu(el, DB.accts.map(a => ({ t: a.name + ' (' + a.email + ')', ck: a.id === DB.acct, fn: () => unlockAcct(a.id, () => { DB.acct = a.id; save(); renderAll(); toast('Now using ' + a.email); }) })).concat(['-', { t: 'Settings', fn: () => settingsDlg('general') }, { t: 'Out of office', fn: () => settingsDlg('ooo') }, '-', { t: 'Sign out', fn: () => toast('Sign in with Google arrives in the live version') }])); }
+
+/* attachments */
+async function preview(mid, i) {
+  const m = byId(mid), a = m.att[i], u = await attUrl(mid + ':' + i); let v;
+  if (u && /^image\//.test(a.type)) v = `<img src="${u}" alt="${esc(a.name)}" style="max-width:100%;border-radius:6px">`;
+  else if (u && (a.type === 'application/pdf' || /^text\//.test(a.type))) v = `<iframe src="${u}" title="${esc(a.name)}" style="width:100%;height:60vh;border:1px solid #ddd;border-radius:6px"></iframe>`;
+  else v = `<div class="empty">${u ? 'This file type cannot be previewed here. Use Download.' : 'This attachment was too large to keep (over 5 MB) or is a demo file. Download gives a placeholder.'}</div>`;
+  modal(a.name + ' (' + fmtSize(a.size) + ')', v, [{ t: 'Close', fn: () => true }, { t: 'Download', cls: 'p', fn: () => { dl(mid, i); return false; } }], true);
+}
+async function dl(mid, i) { const m = byId(mid), a = m.att[i], b = await attBlob(mid + ':' + i); saveFile(a.name, b || ('Demo attachment: ' + a.name + '\nFrom message: ' + m.subj)); }
+function saveCopy() { const t = needSel(); if (!t.length) return; const m = t[0]; const txt = `From: ${m.from.n} <${m.from.e}>\nTo: ${m.to.join(', ')}\nCc: ${m.cc.join(', ')}\nDate: ${new Date(m.date).toUTCString()}\nSubject: ${m.subj}\n\n${stripHtml(m.body)}\n`; saveFile((m.subj.replace(/[^\w ]+/g, '').slice(0, 40) || 'message') + '.txt', txt); }
+
+/* dialogs */
+function helpDlg() {
+  const k = [['c', 'New message'], ['r', 'Reply'], ['a', 'Reply all'], ['f', 'Forward'], ['e', 'Archive'], ['Del', 'Delete'], ['j / k', 'Next / previous message'], ['u', 'Mark read or unread'], ['s', 'Flag'], ['/', 'Search'], ['Ctrl+Enter', 'Send (in a message window)'], ['Esc', 'Close menu or window'], ['?', 'This list']];
+  modal('Keyboard shortcuts', `<div class="kbd">${k.map(x => `<kbd>${x[0]}</kbd><span>${x[1]}</span>`).join('')}</div>`, [{ t: 'Close', cls: 'p', fn: () => true }]);
+}
+function rulesDlg() {
+  const draw = () => { const b = $('#rl'); b.innerHTML = DB.rules.length ? DB.rules.map(r => `<div><label class="fld h"><input type="checkbox" data-rule="${r.id}" ${r.on ? 'checked' : ''}> <span>If ${r.field} contains <b>${esc(r.contains)}</b>, ${r.action === 'move' ? 'move to ' + esc(folderName(r.target)) : r.action === 'cat' ? 'add category ' + esc((catOf(r.target) || {}).name) : r.action}</span></label><button class="btn d" data-delrule="${r.id}">Delete</button></div>`).join('') : '<div class="empty" style="padding:16px">No rules yet. Create one below.</div>'; };
+  const fo = allFolders().filter(f => !f.virtual && !['drafts', 'scheduled'].includes(f.id));
+  const d = modal('Rules', `<div class="lst" id="rl"></div><h4 style="margin:6px 0 0">New rule</h4>
+<div class="two"><label class="fld">When<select id="rf"><option value="from">From contains</option><option value="subject">Subject contains</option><option value="to">To contains</option></select></label><label class="fld">Text<input id="rt" placeholder="e.g. hartwell"></label></div>
+<div class="two"><label class="fld">Then<select id="ra"><option value="move">Move to folder</option><option value="cat">Add category</option><option value="read">Mark as read</option><option value="flag">Flag</option><option value="delete">Delete</option></select></label><label class="fld">Target<select id="rg"></select></label></div>`,
+    [{ t: 'Run on Inbox now', fn: () => { DB.msgs.filter(m => m.folder === 'inbox').forEach(applyRules); save(); renderAll(); toast('Rules applied to Inbox'); return false; } }, { t: 'Add rule', cls: 'p', fn: () => { const t = $('#rt').value.trim(); if (!t) { toast('Enter the text to match'); return false; } DB.rules.push({ id: uid(), on: true, field: $('#rf').value, contains: t, action: $('#ra').value, target: $('#rg').value }); save(); $('#rt').value = ''; draw(); return false; } }, { t: 'Close', fn: () => true }], true);
+  const fillT = () => { const a = $('#ra').value; $('#rg').innerHTML = a === 'move' ? fo.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('') : a === 'cat' ? CATS.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('') : '<option value="">None</option>'; $('#rg').disabled = !(a === 'move' || a === 'cat'); };
+  $('#ra').onchange = fillT; fillT(); draw();
+}
+function settingsDlg(tab) {
+  tab = tab || 'general';
+  const d = modal('Settings', '', [{ t: 'Done', cls: 'p', fn: () => true }], true), bd = $('.bd', d);
+  const T = [['general', 'General'], ['sig', 'People and signatures'], ['ooo', 'Out of office'], ['tpl', 'Templates'], ['data', 'Data']];
+  const o = DB.set;
+  const body = {
+    general: () => `<label class="fld">Reading pane<select data-set="layout"><option value="bottom" ${o.layout === 'bottom' ? 'selected' : ''}>Bottom</option><option value="right" ${o.layout === 'right' ? 'selected' : ''}>Right</option><option value="off" ${o.layout === 'off' ? 'selected' : ''}>Off</option></select></label>
+<label class="fld h"><input type="checkbox" data-set="conv" ${o.conv ? 'checked' : ''}> Group messages into conversations</label>
+<label class="fld h"><input type="checkbox" data-set="focus" ${o.focus !== false ? 'checked' : ''}> Show Focused and Other tabs in Inbox</label>
+<label class="fld h"><input type="checkbox" data-set="dense" ${o.dense ? 'checked' : ''}> Compact list spacing</label>
+<label class="fld h"><input type="checkbox" data-set="autosig" ${o.autosig ? 'checked' : ''}> Add my signature to new messages</label>`,
+    sig: () => `<div class="lst" style="max-height:200px;overflow:auto">${DB.accts.map(a => `<div><label class="fld h" style="flex:1;min-width:0"><input type="radio" name="acs" data-acs="${a.id}" ${a.id === DB.acct ? 'checked' : ''}> <span style="min-width:0"><b style="font-weight:600">${esc(a.name)}</b> <span style="color:#595959">${esc(a.email)}</span></span></label><span style="color:#595959;font-size:12.5px;white-space:nowrap">${DB.msgs.filter(m => own(m) === a.id).length.toLocaleString()} messages</span><button class="btn" data-bkacct="${a.id}">Save backup</button><button class="btn d" data-delacct="${a.id}">Remove</button></div>`).join('')}</div>
+<div class="two"><label class="fld">Name of the open mailbox<input data-aname></label><label class="fld">Email<input data-aemail type="email"></label></div><div class="two"><label class="fld">Designation<input data-af="desig"></label><label class="fld">Phone<input data-af="phone"></label></div><div class="two"><label class="fld">Location<input data-af="loc"></label><label class="fld">Picture or logo<input type="file" id="apic" accept="image/*"></label></div><button class="btn" data-act="rmpic" style="align-self:flex-start">Remove picture</button><div class="bar" style="background:#fff"><b>Preview of the Classic signature</b><div id="sigprev" style="margin-top:8px"></div></div>
+<label class="fld">Add many people at once<textarea id="bulkacc" rows="3" placeholder="One per line: Name, email"></textarea></label><div style="display:flex;gap:8px"><button class="btn p" data-act="bulkacc">Add people</button><button class="btn" data-act="addacct">Add one person</button></div>`,
+    ooo: () => `<label class="fld h"><input type="checkbox" data-set="ooo.on" ${o.ooo.on ? 'checked' : ''}> Send automatic replies</label><label class="fld">Subject<input data-set="ooo.subj" value="${esc(o.ooo.subj)}"></label><label class="fld">Message<textarea data-set="ooo.body" rows="5">${esc(o.ooo.body)}</textarea></label><div class="bar">Automatic replies go out when new mail arrives while this is on.</div>`,
+    tpl: () => `<div class="lst">${DB.templates.map(t => `<div><b>${esc(t.name)}</b><button class="btn d" data-deltpl="${t.id}">Delete</button></div>`).join('') || '<div class="empty" style="padding:16px">No templates.</div>'}</div><h4 style="margin:6px 0 0">New template</h4><label class="fld">Name<input id="tn"></label><label class="fld">Subject<input id="ts"></label><label class="fld">Message<textarea id="tb" rows="4"></textarea></label><button class="btn p" data-act="addtpl" style="align-self:flex-start">Save template</button>`,
+    data: () => `<label class="fld h"><input type="checkbox" data-set="stress" ${o.stress ? 'checked' : ''}> Add 2,000 test messages (worst-case list check)</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn p" data-act="importpst">Import old mail (PST)</button><button class="btn" data-act="export">Save backup of this mailbox</button><button class="btn" data-act="importbk">Restore a backup</button><button class="btn d" data-act="reset">Reset demo data</button></div><input type="file" id="impf" accept=".json" hidden>`
+  };
+  const draw = t => { d._tab = t; bd.innerHTML = `<div class="tabs2">${T.map(x => `<button class="${x[0] === t ? 'on' : ''}" data-stab="${x[0]}">${x[1]}</button>`).join('')}</div>` + body[t](); if (t === 'sig') { const a = acct(); $('[data-aname]', bd).value = a.name; $('[data-aemail]', bd).value = a.email; $$('[data-af]', bd).forEach(i => i.value = a[i.dataset.af] || ''); $('#sigprev', bd).innerHTML = sigInner(a); } };
+  d._draw = draw; draw(tab);
+}
+function about() { modal('About Rugs Creation Mail', '<p style="margin:0">Internal mail for Rugs Creation staff. This is the design prototype: data stays in this browser. The live version adds Sign in with Google and real Gmail mailboxes.</p>', [{ t: 'Close', cls: 'p', fn: () => true }]); }
+/* ===== Rugs Mail: import old mail (PST, EML, MBOX) ===== */
+const IMP = { files: [], kind: '', pst: null, items: [], eml: [] };
+const SKIP_F = /^(calendar|contacts|tasks|notes|journal|rss|sync issues|conversation history|suggested contacts|quick step|reminders|search root|spooler queue|common views|finder|views|shortcuts|deferred action|ipm_subtree|todo search|yammer|social activity|people|imap|outbox|conflicts|local failures|server failures|files|recipient cache|freebusy|schedule|drawer)/i;
+function loadPstLib() {
+  return new Promise((res, rej) => {
+    if (window.PSTX) return res();
+    const s = document.createElement('script');
+    /* 16 Nov 2026: inside Rugs Zone this page runs from srcdoc, which has no address of its
+       own, so a relative 'pst.js' cannot be found. Use the copy on our own site. */
+    s.src = (location.protocol === 'http:' || location.protocol === 'https:')
+      ? new URL('pst.js', location.href).href
+      : 'https://rugs-zone.github.io/Workspace/pst.js'; s.onload = () => window.PSTX ? res() : rej(new Error('PST reader did not start')); s.onerror = () => rej(new Error('Could not load the PST reader')); document.head.appendChild(s);
+  });
+}
+function cleanHtml(h) {
+  try {
+    const d = new DOMParser().parseFromString(h, 'text/html');
+    d.querySelectorAll('script,iframe,object,embed,link,meta,base,form,style,title').forEach(x => x.remove());
+    d.querySelectorAll('*').forEach(el => {
+      [...el.attributes].forEach(a => { const n = a.name.toLowerCase(), v = a.value.trim().toLowerCase(); if (n.startsWith('on') || ((n === 'href' || n === 'src' || n === 'xlink:href' || n === 'action') && v.startsWith('javascript:'))) el.removeAttribute(a.name); });
+      if (el.tagName === 'IMG') { const s = el.getAttribute('src') || ''; if (/^(https?:)?\/\//i.test(s)) { el.setAttribute('alt', el.getAttribute('alt') || 'Image blocked'); el.removeAttribute('src'); } }
+    });
+    return d.body.innerHTML.slice(0, 200000);
+  } catch (e) { return '<p>' + esc(stripHtml(h)).slice(0, 20000) + '</p>'; }
+}
+const normSubj = s => (s || '').replace(/^\s*((re|fw|fwd|aw|sv)\s*:\s*)+/i, '').trim().toLowerCase().slice(0, 80);
+const stdFolder = n => { const x = n.trim().toLowerCase(); return x === 'inbox' ? 'inbox' : /^(sent items|sent|sent mail)$/.test(x) ? 'sent' : x === 'drafts' ? 'drafts' : /^(deleted items|trash|bin)$/.test(x) ? 'deleted' : /^(junk e-?mail|junk|spam)$/.test(x) ? 'junk' : x === 'archive' ? 'archive' : null; };
+
+/* ---- PST ---- */
+function pstTree(pst) {
+  const out = [];
+  const walk = (f, path, depth) => { const name = (f.displayName || '').trim() || '(unnamed)'; const p = path ? path + ' / ' + name : name; out.push({ f, path: p, name, count: f.contentCount || 0, depth }); if (f.hasSubfolders) f.getSubFolders().forEach(s => walk(s, p, depth + 1)); };
+  const root = pst.getRootFolder();
+  root.getSubFolders().forEach(s => { if (/^(top of|personal folders|outlook data file)/i.test(s.displayName || '')) s.getSubFolders().forEach(c => walk(c, '', 0)); else walk(s, '', 0); });
+  out.forEach(it => { const std = stdFolder(it.name); it.skip = SKIP_F.test(it.name); it.on = it.count > 0 && !it.skip; it.target = std || 'new:' + it.path; });
+  return out;
+}
+function mapPst(msg, fid, keepAtt, st, who) {
+  const cls = msg.messageClass || ''; if (cls && !/^IPM\.Note|^IPM\.Post|^REPORT/i.test(cls)) return null;
+  const to = [], cc = [], bcc = [];
+  try { for (let i = 0; i < msg.numberOfRecipients; i++) { const r = msg.getRecipient(i); if (!r) continue; const e = r.smtpAddress || r.emailAddress || r.displayName; if (!e) continue; (r.recipientType === 2 ? cc : r.recipientType === 3 ? bcc : to).push(e); } } catch (e) { }
+  if (!to.length && msg.displayTo) msg.displayTo.split(/[;,]/).forEach(x => x.trim() && to.push(x.trim()));
+  const id = uid(), att = [];
+  try {
+    for (let i = 0; i < msg.numberOfAttachments; i++) {
+      const a = msg.getAttachment(i), name = a.longFilename || a.filename || 'attachment', size = a.filesize || a.size || 0, type = a.mimeTag || '';
+      att.push({ name, size, type });
+      if (keepAtt && size <= 5 * 1048576 && a.fileInputStream) {
+        const s = a.fileInputStream, chunks = []; const buf = Buffer.alloc(8176); let n;
+        do { n = s.read(buf); if (n !== -1) chunks.push(Buffer.from(buf.slice(0, n))); } while (n === 8176);
+        st.pending.push([id + ':' + i, new Blob(chunks, { type })]);
+      }
+    }
+  } catch (e) { }
+  const html = msg.bodyHTML ? cleanHtml(msg.bodyHTML) : '<p>' + esc(msg.body || '').replace(/\r?\n/g, '<br>').slice(0, 100000) + '</p>';
+  const d = msg.messageDeliveryTime || msg.clientSubmitTime || new Date();
+  const fromE = msg.senderEmailAddress || '', fromN = msg.senderName || fromE || '(unknown)';
+  return { id, own: who, folder: fid, read: !!msg.isRead, flag: false, pin: false, cats: [], att, to, cc, bcc, focused: true, snooze: 0, thread: 'imp:' + normSubj(msg.subject), from: { n: fromN, e: fromE.includes('@') ? fromE : (fromE ? fromN : fromE) }, subj: msg.subject || '(no subject)', date: d.getTime(), body: html, key: (msg.internetMessageId || '') + '|' + d.getTime() + '|' + (msg.subject || '') };
+}
+async function pstRun(items, keepAtt, prog, who) {
+  who = who || DB.acct;
+  const st = { pending: [] }, res = { n: 0, dup: 0, skipped: 0, folders: 0 }, have = new Set(DB.msgs.filter(m => own(m) === who).map(m => m.key).filter(Boolean)), made = {};
+  const total = items.reduce((a, x) => a + x.count, 0); let done = 0;
+  const flushAtt = async () => { const p = st.pending.splice(0); for (const [k, b] of p) await attPut(k, b); };
+  for (const it of items) {
+    let fid = it.target; if (fid.startsWith('new:')) { const nm = fid.slice(4); let f = made[nm] || DB.folders.find(x => x.name === nm && (x.own || 'pt') === who); if (!f) { f = { id: 'f' + uid(), name: nm, own: who }; DB.folders.push(f); res.folders++; } made[nm] = f; fid = f.id; }
+    const f = it.f; if (f.moveChildCursorTo) f.moveChildCursorTo(0);
+    let msg = f.getNextChild();
+    while (msg) {
+      let m = null; try { m = mapPst(msg, fid, keepAtt, st, who); } catch (e) { m = null; }
+      if (!m) res.skipped++; else if (have.has(m.key)) res.dup++; else { have.add(m.key); DB.msgs.push(m); res.n++; }
+      done++; if (done % 100 === 0) { await flushAtt(); prog(done, total); await new Promise(r => setTimeout(r, 0)); }
+      msg = f.getNextChild();
+    }
+  }
+  await flushAtt(); prog(total, total); return res;
+}
+
+/* ---- EML / MBOX ---- */
+function mimeWord(s) { return (s || '').replace(/=\?([^?]+)\?([bBqQ])\?([^?]*)\?=/g, (m, cs, enc, t) => { try { let bytes; if (enc.toLowerCase() === 'b') bytes = Uint8Array.from(atob(t), c => c.charCodeAt(0)); else { t = t.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (x, h) => String.fromCharCode(parseInt(h, 16))); bytes = Uint8Array.from(t, c => c.charCodeAt(0)); } return new TextDecoder(cs).decode(bytes); } catch (e) { return t; } }); }
+function hdrs(head) { const o = {}; head.replace(/\r?\n[ \t]+/g, ' ').split(/\r?\n/).forEach(l => { const i = l.indexOf(':'); if (i > 0) { const k = l.slice(0, i).toLowerCase(); if (!(k in o)) o[k] = l.slice(i + 1).trim(); } }); return o; }
+function param(h, n) { const m = new RegExp(n + '\\*?=\\s*"?([^";]+)"?', 'i').exec(h || ''); return m ? m[1] : ''; }
+function decBody(body, enc, cs) {
+  enc = (enc || '').toLowerCase(); let bytes;
+  if (enc === 'base64') { try { bytes = Uint8Array.from(atob(body.replace(/\s+/g, '')), c => c.charCodeAt(0)); } catch (e) { bytes = new Uint8Array(); } }
+  else if (enc === 'quoted-printable') { const t = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/gi, (x, h) => String.fromCharCode(parseInt(h, 16))); bytes = Uint8Array.from(t, c => c.charCodeAt(0) & 255); }
+  else return { text: body, bytes: Uint8Array.from(body, c => c.charCodeAt(0) & 255) };
+  let text; try { text = new TextDecoder(cs || 'utf-8').decode(bytes); } catch (e) { text = new TextDecoder().decode(bytes); } return { text, bytes };
+}
+function walkMime(txt, out) {
+  const i = txt.search(/\r?\n\r?\n/), head = i < 0 ? txt : txt.slice(0, i), body = i < 0 ? '' : txt.slice(i).replace(/^\r?\n\r?\n/, ''), h = hdrs(head), ct = h['content-type'] || 'text/plain';
+  if (/^multipart\//i.test(ct)) { const b = param(ct, 'boundary'); if (!b) return h; body.split('--' + b).slice(1).forEach(p => { if (p.startsWith('--')) return; walkMime(p.replace(/^\r?\n/, ''), out); }); return h; }
+  const disp = h['content-disposition'] || '', name = mimeWord(param(disp, 'filename') || param(ct, 'name'));
+  const dec = decBody(body, h['content-transfer-encoding'], param(ct, 'charset'));
+  if (name || /attachment/i.test(disp)) out.att.push({ name: name || 'attachment', size: dec.bytes.length, type: ct.split(';')[0].trim(), bytes: dec.bytes });
+  else if (/^text\/html/i.test(ct)) out.html = dec.text; else if (/^text\/plain/i.test(ct) && out.text == null) out.text = dec.text;
+  return h;
+}
+function parseEml(txt, fid, who) {
+  const out = { att: [], html: null, text: null }, h = walkMime(txt, out);
+  const addr = s => (s || '').split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(x => { const m = /<([^>]+)>/.exec(x); return (m ? m[1] : x).trim(); }).filter(Boolean);
+  const fm = /^\s*"?([^"<]*?)"?\s*<([^>]+)>/.exec(mimeWord(h.from || '')) || [null, '', (h.from || '').trim()];
+  const d = Date.parse(h.date || '') || Date.now(), subj = mimeWord(h.subject || '(no subject)');
+  const html = out.html ? cleanHtml(out.html) : '<p>' + esc(out.text || '').replace(/\r?\n/g, '<br>') + '</p>', id = uid();
+  const att = out.att.map((a, i) => { try { attPut(id + ':' + i, new Blob([a.bytes], { type: a.type })); } catch (e) { } return { name: a.name, size: a.size, type: a.type }; });
+  return { id, own: who || DB.acct, folder: fid, read: true, flag: false, pin: false, cats: [], att, to: addr(mimeWord(h.to)), cc: addr(mimeWord(h.cc)), bcc: [], focused: true, snooze: 0, thread: 'imp:' + normSubj(subj), from: { n: (fm[1] || fm[2]).trim(), e: fm[2].trim() }, subj, date: d, body: html, key: (h['message-id'] || '') + '|' + d + '|' + subj };
+}
+const readTxt = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsText(f, 'latin1'); });
+
+/* ---- dialog ---- */
+function importDlg() {
+  IMP.files = []; IMP.kind = ''; IMP.pst = null; IMP.items = [];
+  const d = modal('Import old mail', `
+<div class="bar" style="background:#f4f4f4;border-color:#dcdcdc">
+<b>How it works.</b> Choose Outlook data files (<b>.pst</b>). Rugs Mail reads them inside this browser, so nothing is uploaded. Each file is copied into one person's mailbox. Afterwards save a backup file for each person and give it to them to restore.
+</div>
+<details><summary style="cursor:pointer;font-weight:600">Where do I find a .pst file?</summary><ol style="margin:8px 0 0;padding-left:20px;line-height:1.7"><li>In old Outlook open <b>File, Account Settings, Account Settings, Data Files</b>. The Name column shows the path of each file.</li><li>Files ending in <b>.ost</b> cannot be read. In Outlook choose <b>File, Open &amp; Export, Import/Export, Export to a file, Outlook Data File (.pst)</b> to make a .pst first.</li><li>Close Outlook, then choose the files below.</li></ol></details>
+<div class="tabs2"><button class="on" data-imode="many">Many PST files (one per person)</button><button data-imode="one">One file, choose folders</button></div>
+<div id="impmode"></div><div id="impbody"></div>`, [{ t: 'Close', fn: () => true }], true);
+  const mode = m => {
+    $$('[data-imode]', d).forEach(b => b.classList.toggle('on', b.dataset.imode === m)); $('#impbody', d).innerHTML = '';
+    $('#impmode', d).innerHTML = m === 'one' ? `<label class="fld">Choose file<input type="file" id="impfile" accept=".pst,.eml,.mbox" multiple></label>` : `<label class="fld">Choose all the .pst files<input type="file" id="impfiles" accept=".pst" multiple></label>`;
+    if (m === 'one') $('#impfile', d).onchange = e => impPick([...e.target.files]); else $('#impfiles', d).onchange = e => bulkPick([...e.target.files]);
+  };
+  $$('[data-imode]', d).forEach(b => b.onclick = () => mode(b.dataset.imode)); mode('many');
+}
+const norm = x => (x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function guessAcct(fname) {
+  const f = norm(fname.replace(/\.[^.]+$/, '')); if (!f) return '';
+  let best = '', score = 0;
+  DB.accts.forEach(a => { const l = norm(a.email.split('@')[0]), n = norm(a.name); let sc = 0; if (l && f.includes(l)) sc = l.length + 10; else if (n && f.includes(n)) sc = n.length + 5; else if (l && l.includes(f) && f.length > 3) sc = f.length; if (sc > score) { score = sc; best = a.id; } });
+  return best;
+}
+function bulkPick(files) {
+  const box = $('#impbody'); files = files.filter(f => /\.pst$/i.test(f.name)); IMP.bulk = files.map(f => ({ f, who: guessAcct(f.name), state: '' }));
+  if (!files.length) { box.innerHTML = '<div class="bar">Choose files ending in .pst. Files ending in .ost cannot be read.</div>'; return; }
+  const opts = sel => DB.accts.map(a => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${esc(a.name)} (${esc(a.email)})</option>`).join('') + `<option value="__new" ${sel ? '' : 'selected'}>Create a new person from the file name</option>`;
+  box.innerHTML = `<div style="font-weight:600">${files.length} file${files.length > 1 ? 's' : ''}. Check who each one belongs to.</div>
+<div class="lst" style="max-height:300px;overflow:auto">${IMP.bulk.map((x, i) => `<div><span style="min-width:0;flex:1"><b style="font-weight:600;overflow-wrap:anywhere">${esc(x.f.name)}</b><br><small style="color:#595959">${fmtSize(x.f.size)}</small></span><select data-bw="${i}" aria-label="Mailbox for ${esc(x.f.name)}" style="max-width:260px;border:1px solid #bdbdbd;border-radius:6px;padding:5px">${opts(x.who)}</select><span id="bs${i}" style="min-width:120px;font-size:12.5px;color:#595959"></span></div>`).join('')}</div>
+<div class="bar">Imports one file at a time. Folders with mail are copied; calendar, contacts and notes are skipped. Save each person's backup after the import finishes.</div>
+<div id="impprog" style="display:none"><div style="height:6px;background:#e5e5e5;border-radius:3px"><div id="impbar" style="height:6px;width:0;background:#FF5001;border-radius:3px"></div></div><div id="impmsg" style="font-size:13px;color:#595959;margin-top:6px"></div></div>
+<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn p" id="impgo">Import all files</button></div>`;
+  $$('[data-bw]', box).forEach(s => s.onchange = () => IMP.bulk[+s.dataset.bw].who = s.value === '__new' ? '' : s.value);
+  $('#impgo').onclick = bulkRun;
+}
+async function bulkRun() {
+  const box = $('#impbody'), list = IMP.bulk; $('#impgo').disabled = true; $$('[data-bw]', box).forEach(s => s.disabled = true); $('#impprog').style.display = 'block';
+  try { await loadPstLib(); } catch (e) { $('#impmsg').textContent = 'Could not load the PST reader: ' + (e.message || e); return; }
+  const done = []; let k = 0;
+  for (const x of list) {
+    k++; const st = $('#bs' + (k - 1));
+    if (!x.who) { const base = x.f.name.replace(/\.[^.]+$/, '').replace(/[_\-.]+/g, ' ').trim() || 'Person ' + k; x.who = uid(); DB.accts.push({ id: x.who, name: base, email: norm(base) + '@rugscreation.com', sig: base }); }
+    st.textContent = 'Reading...'; $('#impmsg').textContent = 'File ' + k + ' of ' + list.length + ': ' + x.f.name;
+    try {
+      if (x.f.size > 1.6 * 1024 * 1024 * 1024) throw new Error('over 1.6 GB');
+      const ab = await x.f.arrayBuffer(), pst = new PSTX.PSTFile(Buffer.from(ab)), items = pstTree(pst).filter(i => i.on && i.count > 0);
+      if (!items.length) { st.textContent = 'No mail found'; continue; }
+      const r = await pstRun(items, true, (a, b) => { st.textContent = a.toLocaleString() + ' / ' + b.toLocaleString(); $('#impbar').style.width = Math.round(((k - 1) + a / Math.max(1, b)) / list.length * 100) + '%'; }, x.who);
+      st.textContent = r.n.toLocaleString() + ' imported' + (r.dup ? ', ' + r.dup + ' skipped' : ''); st.style.color = '#1f6b3a'; done.push({ who: x.who, n: r.n });
+    } catch (e) { st.textContent = 'Failed: ' + (e.message || e); st.style.color = '#a12020'; }
+    await new Promise(r => setTimeout(r, 0));
+  }
+  save(); renderAll(); $('#impbar').style.width = '100%'; $('#impmsg').textContent = 'Finished. ' + done.reduce((a, x) => a + x.n, 0).toLocaleString() + ' messages imported for ' + done.length + ' of ' + list.length + ' files.';
+  const go = $('#impgo'); go.disabled = false; go.textContent = 'Save backup for each person'; go.onclick = async () => { for (const x of done) { const ok = await exportAcct(x.who); if (ok === false) break; } };
+}
+async function impPick(files) {
+  const box = $('#impbody'); IMP.files = files; if (!files.length) return;
+  const ext = n => (n.split('.').pop() || '').toLowerCase(), k = ext(files[0].name);
+  if (k === 'ost') { box.innerHTML = '<div class="bar">.ost files cannot be read. Export a .pst from Outlook first (see the steps above).</div>'; return; }
+  if (k === 'pst') {
+    const f = files[0];
+    if (f.size > 1.6 * 1024 * 1024 * 1024) { box.innerHTML = '<div class="bar">This file is over 1.6 GB, which is too big for the browser. Split it in Outlook or ask for the server import.</div>'; return; }
+    box.innerHTML = '<div class="empty" style="padding:20px">Reading ' + esc(f.name) + ' (' + fmtSize(f.size) + ')...</div>';
+    try {
+      await loadPstLib(); const ab = await f.arrayBuffer(); IMP.pst = new PSTX.PSTFile(Buffer.from(ab)); IMP.items = pstTree(IMP.pst); IMP.kind = 'pst';
+    } catch (e) { box.innerHTML = '<div class="bar">Could not read this file: ' + esc(e.message || e) + '. Check that it is a .pst and not password protected.</div>'; return; }
+    const fo = allFolders().filter(x => !x.virtual && x.id !== 'scheduled');
+    const opt = it => fo.map(x => `<option value="${x.id}" ${it.target === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('') + `<option value="new:${esc(it.path)}" ${it.target.startsWith('new:') ? 'selected' : ''}>New folder: ${esc(it.path)}</option>`;
+    box.innerHTML = `<div style="font-weight:600">Found ${IMP.items.reduce((a, x) => a + x.count, 0).toLocaleString()} items in ${IMP.items.length} folders. Tick what to import.</div>
+<div class="lst" style="max-height:260px;overflow:auto">${IMP.items.map((it, i) => `<div style="padding-left:${12 + it.depth * 18}px"><label class="fld h" style="flex:1;min-width:0"><input type="checkbox" data-pi="${i}" ${it.on ? 'checked' : ''}> <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it.name)}</span> <span style="color:#595959">(${it.count})</span></label><select data-pt="${i}" aria-label="Import ${esc(it.name)} into" style="max-width:220px;border:1px solid #bdbdbd;border-radius:6px;padding:4px">${opt(it)}</select></div>`).join('')}</div>
+<label class="fld">Import into mailbox<select id="impwho">${DB.accts.map(a => `<option value="${a.id}" ${a.id === DB.acct ? 'selected' : ''}>${esc(a.name)} (${esc(a.email)})</option>`).join('')}</select></label>
+<label class="fld h"><input type="checkbox" id="impatt" checked> Keep attachments up to 5 MB each so they can be opened</label>
+<div id="impprog" style="display:none"><div style="height:6px;background:#e5e5e5;border-radius:3px"><div id="impbar" style="height:6px;width:0;background:#FF5001;border-radius:3px"></div></div><div id="impmsg" style="font-size:13px;color:#595959;margin-top:6px"></div></div>
+<div style="display:flex;justify-content:flex-end"><button class="btn p" id="impgo">Import selected folders</button></div>`;
+    $$('[data-pi]', box).forEach(c => c.onchange = () => IMP.items[+c.dataset.pi].on = c.checked);
+    $$('[data-pt]', box).forEach(s => s.onchange = () => IMP.items[+s.dataset.pt].target = s.value);
+    $('#impgo').onclick = async () => {
+      const sel = IMP.items.filter(x => x.on && x.count > 0); if (!sel.length) { toast('Tick at least one folder'); return; }
+      $('#impgo').disabled = true; $('#impprog').style.display = 'block';
+      const r = await pstRun(sel, $('#impatt').checked, (a, b) => { $('#impbar').style.width = Math.round(a / Math.max(1, b) * 100) + '%'; $('#impmsg').textContent = a.toLocaleString() + ' of ' + b.toLocaleString() + ' items checked'; }, $('#impwho').value);
+      save(); renderAll(); impDone(box, r);
+    };
+    return;
+  }
+  /* eml / mbox */
+  box.innerHTML = '<div class="empty" style="padding:20px">Reading files...</div>';
+  const fo = allFolders().filter(x => !x.virtual && x.id !== 'scheduled'); const msgs = [];
+  for (const f of files) { const t = await readTxt(f), e = ext(f.name); if (e === 'mbox') t.split(/^From [^\n]*\n/m).filter(x => x.trim()).forEach(x => msgs.push(x)); else if (e === 'eml') msgs.push(t); }
+  if (!msgs.length) { box.innerHTML = '<div class="bar">No .eml or .mbox mail found in the files you chose.</div>'; return; }
+  IMP.kind = 'eml'; IMP.eml = msgs;
+  box.innerHTML = `<div style="font-weight:600">Found ${msgs.length} message${msgs.length > 1 ? 's' : ''}.</div><label class="fld">Import into<select id="impfld">${fo.map(x => `<option value="${x.id}" ${x.id === 'inbox' ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label><div style="display:flex;justify-content:flex-end"><button class="btn p" id="impgo">Import messages</button></div>`;
+  $('#impgo').onclick = () => {
+    const fid = $('#impfld').value, have = new Set(DB.msgs.filter(m => own(m) === DB.acct).map(m => m.key).filter(Boolean)); const r = { n: 0, dup: 0, skipped: 0, folders: 0 };
+    msgs.forEach(t => { try { const m = parseEml(t, fid, DB.acct); if (have.has(m.key)) r.dup++; else { have.add(m.key); DB.msgs.push(m); r.n++; } } catch (e) { r.skipped++; } });
+    save(); renderAll(); impDone(box, r);
+  };
+}
+function impDone(box, r) {
+  box.innerHTML = `<div class="bar" style="background:#e9f6ee;border-color:#b5dcc3"><b>Done.</b> Imported ${r.n.toLocaleString()} message${r.n === 1 ? '' : 's'}${r.folders ? ' and created ' + r.folders + ' folder' + (r.folders > 1 ? 's' : '') : ''}. ${r.dup ? r.dup.toLocaleString() + ' already here were skipped. ' : ''}${r.skipped ? r.skipped.toLocaleString() + ' non-mail items (calendar, contacts, notes) were skipped.' : ''}</div>`;
+  IMP.pst = null;
+}
+
+/* ---- per-person backup ---- */
+const toB64 = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = rej; r.readAsDataURL(b); });
+async function exportAcct(id) {
+  const a = DB.accts.find(x => x.id === id); if (!a) return false;
+  const msgs = DB.msgs.filter(m => own(m) === id), parts = ['{"v":1,"app":"rugsmail","acct":' + JSON.stringify({ name: a.name, email: a.email, sig: a.sig }) + ',"folders":' + JSON.stringify(DB.folders.filter(f => (f.own || 'pt') === id)) + ',"msgs":['];
+  toast('Preparing backup for ' + a.name + '...', null, 60000);
+  for (let i = 0; i < msgs.length; i++) {
+    const m = Object.assign({}, msgs[i]); delete m.cnt; delete m.unreadAny; m.att = await Promise.all(m.att.map(async (x, k) => { const b = await attBlob(m.id + ':' + k); return b ? Object.assign({}, x, { data: await toB64(b) }) : x; }));
+    parts.push((i ? ',' : '') + JSON.stringify(m)); if (i % 200 === 199) await new Promise(r => setTimeout(r, 0));
+  }
+  parts.push(']}');
+  const ok = await saveFile('rugsmail-' + (a.email.split('@')[0].replace(/[^a-z0-9._-]/gi, '') || 'mailbox') + '.json', new Blob(parts, { type: 'application/json' }));
+  if (ok) { a.lastBk = Date.now(); save(); toast('Backup saved for ' + a.name); } else if (!$('#toast').textContent.includes('cancel')) $('#toast').style.display = 'none';
+  return ok;
+}
+function restoreBackup(file) {
+  const fr = new FileReader();
+  fr.onload = async () => {
+    try {
+      const j = JSON.parse(fr.result);
+      if (j.v === 1 && j.acct && Array.isArray(j.msgs)) {
+        let a = DB.accts.find(x => x.email.toLowerCase() === (j.acct.email || '').toLowerCase());
+        if (!a) { a = { id: uid(), name: j.acct.name, email: j.acct.email, sig: j.acct.sig || j.acct.name }; DB.accts.push(a); }
+        const have = new Set(DB.msgs.filter(m => own(m) === a.id).map(m => m.id)); let n = 0;
+        (j.folders || []).forEach(f => { if (!DB.folders.some(x => x.id === f.id)) DB.folders.push(Object.assign({}, f, { own: a.id })); });
+        for (const m of j.msgs) { if (have.has(m.id)) continue; m.own = a.id; (m.att || []).forEach((x, k) => { if (x.data) { try { const bin = atob(x.data), u = new Uint8Array(bin.length); for (let q = 0; q < bin.length; q++) u[q] = bin.charCodeAt(q); attPut(m.id + ':' + k, new Blob([u], { type: x.type })); } catch (e) { } delete x.data; } }); DB.msgs.push(m); n++; }
+        DB.acct = a.id; S.folder = 'inbox'; S.sel = null; save(); renderAll(); closeModals(); toast('Restored ' + n.toLocaleString() + ' messages for ' + a.name);
+      } else if (Array.isArray(j.msgs)) { DB = j; save(); S.sel = null; renderAll(); closeModals(); toast('Old backup restored'); }
+      else throw 0;
+    } catch (x) { toast('That file is not a Rugs Mail backup'); }
+  };
+  fr.readAsText(file);
+}
+
+/* ---- admin center (PIN is a convenience lock only: the code is open in the browser) ---- */
+function adminDlg() {
+  if (S.adminOk) return adminPanel();
+  modal('Admin', `<label class="fld">Admin PIN<input id="apin" type="password" inputmode="numeric" autocomplete="off"></label><div class="bar">First use: the PIN is 1234. Change it in Admin, Access.</div>`, [{ t: 'Cancel', fn: () => true }, { t: 'Open admin', cls: 'p', fn: () => { if ($('#apin').value !== (DB.set.pin || '1234')) { toast('Wrong PIN'); return false; } S.adminOk = true; setTimeout(adminPanel, 0); } }]);
+  $('#apin').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('.ft2 .btn.p', $('#apin').closest('.scrim')).click(); } });
+}
+function adminPanel(tab) {
+  tab = tab || 'people';
+  const d = modal('Admin center', '', [{ t: 'Lock and close', fn: () => { S.adminOk = false; return true; } }, { t: 'Done', cls: 'p', fn: () => true }], true), bd = $('.bd', d);
+  const T = [['people', 'People'], ['company', 'Company settings'], ['records', 'Records'], ['access', 'Access']];
+  const cnt = id => DB.msgs.filter(m => own(m) === id).length, fd = t => t ? new Date(t).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }) : 'Never';
+  const body = {
+    people: () => `<div style="overflow:auto;max-height:340px"><table class="atbl"><thead><tr><th>Name</th><th>Email</th><th>Designation</th><th>Phone</th><th>Role</th><th>Messages</th><th>Last backup</th><th></th></tr></thead><tbody>${DB.accts.map(a => `<tr><td>${esc(a.name)}</td><td>${esc(a.email)}</td><td><input data-ad="${a.id}:desig" value="${esc(a.desig || '')}" aria-label="Designation of ${esc(a.name)}"></td><td><input data-ad="${a.id}:phone" value="${esc(a.phone || '')}" aria-label="Phone of ${esc(a.name)}"></td><td><select data-ad="${a.id}:role" aria-label="Role of ${esc(a.name)}"><option ${a.role !== 'Admin' ? 'selected' : ''}>Member</option><option ${a.role === 'Admin' ? 'selected' : ''}>Admin</option></select></td><td>${cnt(a.id).toLocaleString()}</td><td>${fd(a.lastBk)}</td><td style="white-space:nowrap"><button class="btn" data-adpw="${a.id}">${a.ph ? 'Change password' : 'Set password'}</button> <button class="btn" data-adopen="${a.id}">Open</button> <button class="btn" data-bkacct="${a.id}">Save backup</button></td></tr>`).join('')}</tbody></table></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn p" data-act="addacct">Add person</button><button class="btn" data-adall>Save all backups</button></div><div class="bar">Photo and location are set per person in Settings, People and signatures. The signature uses these details.</div>`,
+    company: () => `<label class="fld">Disclaimer added under every sent mail<textarea data-aset="disclaimer" rows="3" placeholder="Leave empty for none">${esc(DB.set.disclaimer || '')}</textarea></label><label class="fld h"><input type="checkbox" data-aset="autosig" ${DB.set.autosig ? 'checked' : ''}> Add the signature to every new message</label><div class="bar">These apply in this browser. When mail moves to the server they apply to all 36 people.</div>`,
+    records: () => { const tot = DB.msgs.length, att = DB.msgs.reduce((n, m) => n + (m.att || []).length, 0), top = DB.accts.map(a => [a.name, cnt(a.id)]).sort((x, y) => y[1] - x[1]).slice(0, 5); return `<div class="two"><div class="bar"><b style="font-size:22px">${DB.accts.length}</b><br>mailboxes</div><div class="bar"><b style="font-size:22px">${tot.toLocaleString()}</b><br>messages</div></div><div class="two"><div class="bar"><b style="font-size:22px">${att.toLocaleString()}</b><br>attachments</div><div class="bar"><b style="font-size:22px">${DB.accts.filter(a => !a.lastBk).length}</b><br>never backed up</div></div><div class="lst">${top.map(x => `<div><span style="flex:1">${esc(x[0])}</span><b>${x[1].toLocaleString()}</b></div>`).join('')}</div>`; },
+    access: () => `<label class="fld">New admin PIN<input id="npin" type="password" inputmode="numeric" autocomplete="off"></label><button class="btn p" data-adpin style="align-self:flex-start">Change PIN</button><div class="bar"><b>Honest note.</b> This PIN only stops casual use. Anyone who can open the app can read the code. Real control of who sees which mailbox needs a login on your mail server, which is the next step.</div>`
+  };
+  const draw = t => { d._tab = t; bd.innerHTML = `<div class="tabs2">${T.map(x => `<button class="${x[0] === t ? 'on' : ''}" data-atab="${x[0]}">${x[1]}</button>`).join('')}</div>` + body[t](); };
+  d.addEventListener('click', async e => {
+    const b = e.target.closest('[data-atab],[data-adopen],[data-adall],[data-adpin],[data-adpw]'); if (!b) return;
+    if (b.dataset.atab) draw(b.dataset.atab);
+    else if (b.dataset.adpw) setMboxPw(b.dataset.adpw);
+    else if (b.dataset.adopen) { DB.acct = b.dataset.adopen; S.folder = 'inbox'; S.sel = null; save(); renderAll(); d.remove(); toast('Opened ' + acct().name + "'s mailbox"); }
+    else if (b.dataset.adall) { for (const a of DB.accts) { if (!cnt(a.id)) continue; if (await exportAcct(a.id) === false) break; } draw('people'); }
+    else if (b.dataset.adpin) { const v = $('#npin').value.trim(); if (v.length < 4) { toast('Use at least 4 digits'); return; } DB.set.pin = v; save(); $('#npin').value = ''; toast('PIN changed'); }
+  });
+  d.addEventListener('change', e => { const t = e.target; if (t.dataset.ad) { const [id, k] = t.dataset.ad.split(':'), a = DB.accts.find(x => x.id === id); if (a) { a[k] = t.value.trim(); save(); } } if (t.dataset.aset) { DB.set[t.dataset.aset] = t.type === 'checkbox' ? t.checked : t.value.trim(); save(); } });
+  draw(tab);
+}
+
+/* ---- per-mailbox password (a lock in this browser, not server security) ---- */
+const sha = async t => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('rugsmail:' + t)))].map(x => x.toString(16).padStart(2, '0')).join('');
+S.unl = S.unl || {};
+function unlockAcct(id, then) {
+  const a = DB.accts.find(x => x.id === id); if (!a || !a.ph || S.unl[id] || S.adminOk) return then();
+  const d = modal('Open ' + a.name + "'s mailbox", `<label class="fld">Password<input id="mpw" type="password" autocomplete="off"></label>`, [{ t: 'Cancel', fn: () => true }, { t: 'Open', cls: 'p', fn: () => { sha($('#mpw').value).then(h => { if (h === a.ph) { S.unl[id] = 1; d.remove(); then(); } else toast('Wrong password'); }); return false; } }]);
+  $('#mpw').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('.ft2 .btn.p', d).click(); } });
+}
+function setMboxPw(id) {
+  const a = DB.accts.find(x => x.id === id); if (!a) return;
+  modal('Password for ' + a.name, `<label class="fld">New password<input id="npw" type="password" autocomplete="off"></label><div class="bar">Leave empty to remove the password. This locks the mailbox in this browser. Share it with the person yourself, not through this chat.</div>`, [{ t: 'Cancel', fn: () => true }, { t: 'Save', cls: 'p', fn: () => { const v = $('#npw').value; (v ? sha(v) : Promise.resolve('')).then(h => { if (h) a.ph = h; else delete a.ph; delete S.unl[id]; save(); toast(h ? 'Password set for ' + a.name : 'Password removed'); const dl = $('#modals .scrim:last-child'); }); return true; } }]);
+}
+/* ===== Rugs Mail: compose (Outlook-style window + inline reply) ===== */
+const EM = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/;
+const C = () => S.compose;
+const h2t = t => esc(t).replace(/\n/g, '<br>');
+const sigInner = a => {
+  const e = esc, line = [a.phone, a.email].filter(Boolean).map(e).join(' &nbsp;&middot;&nbsp; '), where = ['Rugs Creation', a.loc].filter(Boolean).map(e).join(' &middot; ');
+  const pic = a.photo ? `<td style="padding:0 14px 0 0;vertical-align:middle"><img src="${a.photo}" width="72" height="72" alt="" style="display:block;width:72px;height:72px;object-fit:contain;border:0"></td>` : '';
+  return `<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#2b2b2b"><tr>${pic}<td style="border-left:3px solid #FF5001;padding:2px 0 2px 14px;vertical-align:middle"><div style="font-size:15px;font-weight:bold">${e(a.name)}</div>${a.desig ? `<div style="font-size:13px;color:#595959;margin-top:2px">${e(a.desig)}</div>` : ''}<div style="font-size:12px;margin-top:6px">${line}</div><div style="font-size:12px;margin-top:2px"><b>${where.split(' &middot; ')[0]}</b>${where.includes('&middot;') ? ' &middot; ' + where.split(' &middot; ').slice(1).join(' &middot; ') : ''} &middot; <a href="https://www.rugscreation.com" style="color:#b93c00;text-decoration:none">www.rugscreation.com</a></div></td></tr></table>`;
+};
+const sigHtml = a => `<div class="sig" contenteditable="true"><br>${a.sig && !a.desig && !a.phone && !a.photo ? h2t(a.sig) : sigInner(a)}</div>`;
+const isPhone = () => matchMedia('(max-width:900px)').matches;
+const FONTS = ['Calibri', 'Arial', 'Times New Roman', 'Georgia', 'Verdana', 'Courier New', 'Trebuchet MS'];
+const SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 24, 36];
+const COLORS = [['Black', '#2b2b2b'], ['Rugs orange', '#b93c00'], ['Blue', '#0f6cbd'], ['Green', '#107c41'], ['Red', '#c4262e'], ['Grey', '#595959']];
+function contacts() { const m = {}; DB.msgs.forEach(x => { if (own(x) !== DB.acct) return; if (x.from && x.from.e) m[x.from.e] = m[x.from.e] || x.from.n; (x.to || []).concat(x.cc || []).forEach(e => { if (e && !(e in m)) m[e] = ''; }); }); return Object.keys(m).filter(e => EM.test(e)).map(e => ({ e, n: m[e] })).sort((a, b) => (a.n || a.e).localeCompare(b.n || b.e)); }
+function canInline() { if (isPhone() || DB.set.layout === 'off') return false; const r = $('#reading'); return !!r && !!$('#reading .rh') && r.getBoundingClientRect().height > 300; }
+function placeInline() {
+  const cw = $('#cw'), c = C(), rd = $('#reading');
+  if (!c || !c.inline) { ['left', 'top', 'width', 'height'].forEach(k => cw.style[k] = ''); rd.style.paddingBottom = ''; return; }
+  const r = rd.getBoundingClientRect(), H = Math.round(Math.max(300, Math.min(r.height - 80, 560)));
+  cw.style.left = r.left + 'px'; cw.style.top = (r.bottom - H) + 'px'; cw.style.width = r.width + 'px'; cw.style.height = H + 'px'; rd.style.paddingBottom = (H + 8) + 'px';
+}
+function openCompose(o) {
+  o = o || {}; const a = acct(); const inline = !!o.inline && canInline();
+  S.compose = { id: o.draftId || null, to: (o.to || []).slice(), cc: (o.cc || []).slice(), bcc: (o.bcc || []).slice(), files: (o.files || []).slice(), imp: o.imp || null, follow: !!o.follow, receipt: false, sendAt: 0, from: o.from || a.id, inline, title: o.title || 'New message', cats: [] };
+  $('#csub').value = o.subj || '';
+  $('#cfrom').innerHTML = DB.accts.map(x => `<option value="${x.id}" ${x.id === C().from ? 'selected' : ''}>${esc(x.name)} &lt;${esc(x.email)}&gt;</option>`).join('');
+  $('#cbody').innerHTML = o.html != null ? o.html : ((o.pre ? '<p>' + h2t(o.pre) + '</p>' : '<br>') + (DB.set.autosig ? sigHtml(a) : '') + (o.quote || ''));
+  $('#rcc').hidden = inline && !C().cc.length; $('#rbcc').hidden = !C().bcc.length; $('#cstat').textContent = '';
+  let dl = $('#contacts'); if (!dl) { dl = document.createElement('datalist'); dl.id = 'contacts'; document.body.appendChild(dl); }
+  dl.innerHTML = contacts().map(x => `<option value="${esc(x.e)}">${esc(x.n)}</option>`).join('');
+  ['cto', 'ccc', 'cbcc'].forEach(i => $('#' + i).setAttribute('list', 'contacts'));
+  const cw = $('#cw'); cw.classList.toggle('inline', inline); cw.classList.add('on'); S.ctab = 'msg';
+  $$('#ctabs .tab').forEach(t => t.classList.toggle('on', t.dataset.ctab === 'msg'));
+  setTitle(); drawCmain(); drawCmini(); drawChips(); placeInline();
+  C().init = $('#cbody').innerHTML; C().initKey = ckey();
+  setTimeout(() => { const b = $('#cbody'); (C() && C().to.length ? b : $('#cto')).focus(); if (C() && C().to.length) { const s = getSelection(), r = document.createRange(); r.setStart(b, 0); r.collapse(true); s.removeAllRanges(); s.addRange(r); } }, 30);
+}
+function setTitle() { const c = C(); if (!c) return; $('#ctitle').textContent = c.inline ? c.title : (($('#csub').value.trim() || 'Untitled') + ' - Message (HTML)'); }
+function popOut() { const c = C(); if (!c || !c.inline) return; c.inline = false; $('#cw').classList.remove('inline'); $('#rcc').hidden = false; placeInline(); setTitle(); drawCmain(); }
+function quoteBlock(m) { const older = m.thread ? DB.msgs.filter(x => own(x) === own(m) && x.thread === m.thread && x.date < m.date && x.folder !== 'deleted' && x.folder !== 'junk').sort((p, q) => q.date - p.date) : []; return quoteOne(m) + older.map(quoteOne).join(''); }
+function quoteOne(m) { return `<div><br></div><hr style="border:0;border-top:1px solid #bbb"><div style="font-size:13px;color:#444"><b>From:</b> ${esc(m.from.n)} &lt;${esc(m.from.e)}&gt;<br><b>Sent:</b> ${fmtFull(m.date)}<br><b>To:</b> ${esc(m.to.join(', '))}<br>${m.cc.length ? '<b>Cc:</b> ' + esc(m.cc.join(', ')) + '<br>' : ''}<b>Subject:</b> ${esc(m.subj)}</div><br><blockquote style="margin:0;padding-left:12px;border-left:3px solid #ccc">${m.body}</blockquote>`; }
+function respond(kind, pre) {
+  const m = targets()[0]; if (!m) { toast('Select a message first'); return; }
+  const me = acct().email, mine = m.from.e === me;
+  const re = m.subj.replace(/^\s*((re|fw|fwd)\s*:\s*)+/i, '');
+  if (kind === 'fwd') return openCompose({ inline: true, title: 'Forward', subj: 'Fw: ' + re, quote: quoteBlock(m), files: m.att.map(a => ({ name: a.name, size: a.size, type: a.type, ref: true })) });
+  const to = mine ? m.to.slice() : [m.from.e]; let cc = [];
+  if (kind === 'replyall') cc = m.to.concat(m.cc).filter(e => e !== me && !to.includes(e));
+  openCompose({ inline: true, title: (kind === 'reply' ? 'Reply to ' : 'Reply all to ') + m.from.n, subj: 'Re: ' + re, to, cc, pre: pre || '', quote: quoteBlock(m) });
+}
+function drawChips() {
+  [['to', 'cto-c'], ['cc', 'ccc-c'], ['bcc', 'cbcc-c']].forEach(([k, id]) => { $('#' + id).innerHTML = C()[k].map((e, i) => `<span class="rc" style="${EM.test(e) ? '' : 'background:#fde7e7'}">${esc(e)}<button data-rm="${k}:${i}" aria-label="Remove ${esc(e)}">×</button></span>`).join(''); });
+  $('#cfiles').innerHTML = C().files.length ? '<div style="padding:6px 14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #ececec"><span style="font-size:13px;color:#595959;width:56px">Attached</span>' + C().files.map((f, i) => `<span class="rc">${esc(f.name)} (${fmtSize(f.size)})<button data-rmf="${i}" aria-label="Remove ${esc(f.name)}">×</button></span>`).join('') + '</div>' : '';
+  if (C().inline) placeInline();
+}
+function addRecipients(field, v) { String(v).split(/[,;\s]+/).filter(Boolean).forEach(e => { if (!C()[field].includes(e)) C()[field].push(e); }); drawChips(); }
+function flushInputs() { if (!C()) return; [['cto', 'to'], ['ccc', 'cc'], ['cbcc', 'bcc']].forEach(([i, k]) => { const el = $('#' + i); if (el.value.trim()) { addRecipients(k, el.value); el.value = ''; } }); }
+function fmt(cmd, val) { $('#cbody').focus(); document.execCommand(cmd, false, val || null); }
+function setSize(pt) { fmt('fontSize', '7'); $$('#cbody font[size="7"]').forEach(f => { f.removeAttribute('size'); f.style.fontSize = pt + 'pt'; }); }
+function insertHtml(h) { fmt('insertHTML', h); }
+function drawCmain() {
+  const c = C(); if (!c || c.inline) return; const t = S.ctab;
+  const B = (act, icon, label, cls) => `<button class="rb ${cls || ''}" data-act="${act}">${ic(icon)}<span>${label}</span></button>`;
+  const IB = (attrs, icon, label, on) => `<button class="ib${on ? ' on' : ''}" ${attrs} aria-label="${label}" title="${label}">${ic(icon)}</button>`;
+  const F = (cmd, icon, label) => IB(`data-fmt="${cmd}"`, icon, label);
+  const G = (inner, label, last) => `<div class="grp"${last ? ' style="border:0"' : ''}>${inner}<span class="gl">${label}</span></div>`;
+  const basic = `<div class="rows2"><div><button class="dd" data-act="cfont">Calibri ${ic('chev').replace('class="i"', 'class="i" style="width:12px;height:12px"')}</button><button class="dd" data-act="csize" style="min-width:46px">11 ${ic('chev').replace('class="i"', 'class="i" style="width:12px;height:12px"')}</button>${F('bold', 'bold', 'Bold')}${F('italic', 'italic', 'Italic')}${F('underline', 'under', 'Underline')}${IB('data-act="ccolor"', 'color', 'Text colour')}</div><div>${F('insertUnorderedList', 'list', 'Bullets')}${F('insertOrderedList', 'ol', 'Numbering')}${F('outdent', 'outdent', 'Decrease indent')}${F('indent', 'indent', 'Increase indent')}<span class="sep"></span>${F('justifyLeft', 'al', 'Align left')}${F('justifyCenter', 'ac', 'Centre')}${F('justifyRight', 'ar', 'Align right')}<span class="sep"></span>${F('removeFormat', 'x', 'Clear formatting')}</div></div>`;
+  const clip = `<div class="stack"><button class="rb" data-act="cpaste">${ic('paste')}<span>Paste</span></button><div class="col"><button class="sm" data-fmt="cut">${ic('cut')}Cut</button><button class="sm" data-fmt="copy">${ic('copy')}Copy</button></div></div>`;
+  const H = {
+    msg: G(clip, 'Clipboard') + G(basic, 'Basic Text') + G(`<div>${B('pickto', 'book', 'Address Book')}${B('ccheck', 'check', 'Check Names')}</div>`, 'Names') + G(`<div>${B('cattach', 'clip', 'Attach File')}${B('csig', 'pen', 'Signature')}${B('ctpl', 'doc', 'Templates')}</div>`, 'Include') + G(`<div>${B('cfollow', 'flag', c.follow ? 'Follow Up: on' : 'Follow Up', c.follow ? 'on' : '')}${B('cimp', 'flag', 'High Importance', c.imp === 'high' ? 'on' : '')}</div>`, 'Tags') + G(`<div>${B('cspell', 'spell', 'Spelling', $('#cbody').spellcheck ? 'on' : '')}${B('cdiscard', 'trash', 'Discard')}${B('csavedraft', 'pen', 'Save Draft')}</div>`, 'Editor', true),
+    ins: G(`<div>${B('cattach', 'clip', 'Attach File')}${B('csig', 'pen', 'Signature')}</div>`, 'Include') + G(`<div>${B('ctable', 'table', 'Table')}${B('clink', 'link', 'Link')}${B('chr', 'hr', 'Horizontal Line')}${B('cdate', 'cal', 'Date &amp; Time')}</div>`, 'Insert') + G(`<div>${B('ctpl', 'doc', 'Templates')}</div>`, 'Quick text', true),
+    opt: G(`<div>${B('showbcc', 'plus', 'Show Bcc')}${B('showcc', 'plus', 'Show Cc')}</div>`, 'Show fields') + G(`<div>${B('csched', 'clock', c.sendAt ? 'Delay: ' + fmtDate(c.sendAt) : 'Delay Delivery', c.sendAt ? 'on' : '')}${B('creceipt', 'check', 'Read Receipt', c.receipt ? 'on' : '')}${B('cimp', 'flag', 'High Importance', c.imp === 'high' ? 'on' : '')}</div>`, 'More options', true),
+    fmt: G(`<div>${B('cstyle', 'edit', 'Styles')}</div>`, 'Styles') + G(basic, 'Font and paragraph') + G(`<div>${B('cclear', 'x', 'Clear All Formatting')}</div>`, 'Editing', true)
+  };
+  $('#cmain').innerHTML = H[t];
+}
+function drawCmini() {
+  const c = C(); if (!c) return; const IB = (a, i, l) => `<button class="ib" ${a} aria-label="${l}" title="${l}">${ic(i)}</button>`;
+  $('#cmini').innerHTML = IB('data-fmt="bold"', 'bold', 'Bold') + IB('data-fmt="italic"', 'italic', 'Italic') + IB('data-fmt="underline"', 'under', 'Underline') + IB('data-fmt="insertUnorderedList"', 'list', 'Bullets') + IB('data-act="ccolor"', 'color', 'Text colour') + '<span class="sep"></span>' + IB('data-act="cattach"', 'clip', 'Attach file') + IB('data-act="clink"', 'link', 'Link') + IB('data-act="ctpl"', 'doc', 'Templates') + '<span class="sep"></span>' + IB('data-act="pickto"', 'book', 'Address book') + IB('data-act="cdiscard"', 'trash', 'Discard') + `<span style="margin-left:auto;font-size:12.5px;color:#595959" id="cstat2"></span>`;
+}
+const ckey = () => JSON.stringify([C().to, C().cc, C().bcc, $('#csub').value, C().files.length]);
+function composeHasContent() { flushInputs(); return $('#cbody').innerHTML !== C().init || ckey() !== C().initKey; }
+function snapshotMsg(folder) {
+  flushInputs(); const c = C(), a = DB.accts.find(x => x.id === $('#cfrom').value) || acct();
+  return { id: c.id || uid(), folder, read: true, flag: !!c.follow, imp: c.imp, pin: false, cats: c.cats || [], att: c.files.map(f => ({ name: f.name, size: f.size, type: f.type || '' })), to: c.to.slice(), cc: c.cc.slice(), bcc: c.bcc.slice(), focused: true, snooze: 0, thread: null, own: DB.acct, from: { n: a.name, e: a.email }, subj: $('#csub').value.trim() || '(no subject)', date: Date.now(), body: $('#cbody').innerHTML + (folder !== 'drafts' && DB.set.disclaimer ? `<div style="font-size:11px;color:#777;margin-top:14px;border-top:1px solid #ddd;padding-top:6px">${esc(DB.set.disclaimer)}</div>` : '') };
+}
+function putMsg(m, files) { const i = DB.msgs.findIndex(x => x.id === m.id); if (i >= 0) DB.msgs[i] = m; else DB.msgs.push(m); (files || []).forEach((f, k) => { if (f.file) { BLOB[m.id + ':' + k] = URL.createObjectURL(f.file); attPut(m.id + ':' + k, f.file); } }); }
+function closeCompose() { $('#cw').classList.remove('on', 'inline'); S.compose = null; placeInline(); renderAll(); }
+function saveDraft(silent) {
+  if (!C()) return; if (!composeHasContent()) return;
+  const m = snapshotMsg('drafts'); C().id = m.id; putMsg(m, C().files); save(); $('#cstat').textContent = 'Draft saved ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); if (!silent) toast('Draft saved');
+}
+function send() {
+  flushInputs(); const c = C(); if (!c) return;
+  if (!c.to.length && !c.cc.length && !c.bcc.length) { toast('Add at least one recipient in To'); $('#cto').focus(); return; }
+  const bad = c.to.concat(c.cc, c.bcc).filter(e => !EM.test(e)); if (bad.length) { toast('Fix this address: ' + bad[0]); return; }
+  const go = () => {
+    const snap = { ...c, files: c.files.slice(), subj: $('#csub').value, html: $('#cbody').innerHTML, from: $('#cfrom').value, inline: c.inline };
+    const sched = c.sendAt && c.sendAt > Date.now(); const m = snapshotMsg(sched ? 'scheduled' : 'sent'); if (sched) m.sendAt = c.sendAt;
+    putMsg(m, c.files); closeCompose(); save();
+    toast(sched ? 'Scheduled for ' + fmtFull(c.sendAt) : 'Message sent', () => { DB.msgs = DB.msgs.filter(x => x.id !== m.id); save(); openCompose({ to: snap.to, cc: snap.cc, bcc: snap.bcc, subj: snap.subj, html: snap.html, files: snap.files, from: snap.from, inline: snap.inline, title: snap.title, imp: snap.imp, follow: snap.follow }); S.compose.sendAt = snap.sendAt; renderAll(); }, 7000);
+  };
+  if (!$('#csub').value.trim()) { confirmBox('Send without a subject?', 'This message has no subject line.', 'Send anyway', go); } else go();
+}
+function schedDlg() {
+  const set = ts => { C().sendAt = ts; drawCmain(); toast(ts ? 'Will send ' + fmtFull(ts) + ' after you press Send' : 'Delay cleared'); };
+  const d = modal('Delay delivery', `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-sq="0">Tomorrow 8 am</button><button class="btn" data-sq="1">Monday 8 am</button><button class="btn" data-sq="2">In 1 minute (test)</button><button class="btn" data-sq="3">Send immediately</button></div><label class="fld">Or pick a time<input type="datetime-local" id="scd"></label>`, [{ t: 'Cancel', fn: () => true }, { t: 'Set time', cls: 'p', fn: () => { const v = $('#scd').value; if (!v) return false; set(new Date(v).getTime()); } }]);
+  const mon = new Date(); const addm = (8 - mon.getDay()) % 7 || 7;
+  $$('[data-sq]', d).forEach(x => x.onclick = () => { const k = +x.dataset.sq; set(k === 0 ? dayAt(1, 8) : k === 1 ? dayAt(addm, 8) : k === 2 ? Date.now() + 60000 : 0); d.remove(); });
+}
+function insertSig(a) { const b = $('#cbody'); const s = $('.sig', b); if (s) s.outerHTML = sigHtml(a); else b.insertAdjacentHTML('beforeend', sigHtml(a)); }
+function pickDlg(field) {
+  const all = contacts(), chosen = new Set(); const lab = { to: 'To', cc: 'Cc', bcc: 'Bcc' }[field];
+  const d = modal('Select Names: Contacts', `<input id="pkq" placeholder="Search name or address" aria-label="Search contacts" style="border:1px solid #bdbdbd;border-radius:6px;padding:7px 10px"><div class="lst" id="pkl" style="max-height:300px;overflow:auto"></div>`, [{ t: 'Cancel', fn: () => true }, { t: 'Add to ' + lab, cls: 'p', fn: () => { chosen.forEach(e => { if (!C()[field].includes(e)) C()[field].push(e); }); if (field === 'cc') $('#rcc').hidden = false; if (field === 'bcc') $('#rbcc').hidden = false; drawChips(); } }]);
+  const draw = () => { const q = $('#pkq', d).value.toLowerCase(); $('#pkl', d).innerHTML = all.filter(x => (x.n + ' ' + x.e).toLowerCase().includes(q)).slice(0, 200).map(x => `<div><label class="fld h" style="flex:1"><input type="checkbox" data-pk="${esc(x.e)}" ${chosen.has(x.e) ? 'checked' : ''}> <span><b style="font-weight:600">${esc(x.n || x.e)}</b> <span style="color:#595959">${x.n ? esc(x.e) : ''}</span></span></label></div>`).join('') || '<div class="empty" style="padding:16px">No contacts match.</div>'; $$('[data-pk]', d).forEach(c => c.onchange = () => { c.checked ? chosen.add(c.dataset.pk) : chosen.delete(c.dataset.pk); }); };
+  $('#pkq', d).oninput = draw; draw();
+}
+
+/* actions table */
+const A = {
+  nav: () => document.body.classList.toggle('navopen'),
+  new: () => openCompose(), sync, settings: () => settingsDlg(), admin: adminDlg, help: helpDlg, about, rules: rulesDlg,
+  acct: (el) => acctMenu(el), snoozeMenu, catMenu, moveMenu, sortMenu, filterMenu, mclose: () => closeModals(),
+  newMenu: (el) => tplMenu(el, t => openCompose({ subj: t.subj, pre: t.body })),
+  reply: () => respond('reply'), replyall: () => respond('replyall'), fwd: () => respond('fwd'),
+  del: () => { const t = needSel(); if (t.length) deleteMsgs(t); }, archive: () => { const t = needSel(); if (t.length) moveMsgs(t, 'archive', 'Archived'); },
+  junk: () => { const t = needSel(); if (t.length) moveMsgs(t, 'junk', 'Marked as junk and moved'); },
+  toggleRead: () => { const t = needSel(); if (!t.length) return; const r = !t.every(m => m.read); t.forEach(m => m.read = r); save(); renderAll(); },
+  flag: () => { const t = needSel(); if (!t.length) return; const f = !t.every(m => m.flag); t.forEach(m => m.flag = f); save(); renderAll(); },
+  pin: () => { const t = needSel(); if (!t.length) return; const f = !t.every(m => m.pin); t.forEach(m => m.pin = f); save(); renderAll(); },
+  print: () => window.print(), download: saveCopy, clearsel: () => { S.checked.clear(); renderAll(); }, more: () => { S.limit += 300; renderList(); },
+  back: () => { S.sel = null; renderAll(); }, unsnooze: () => { const m = byId(S.sel); if (m) { m.snooze = 0; save(); renderAll(); } },
+  sendnow: () => { const m = byId(S.sel); if (m) { m.folder = 'sent'; m.date = Date.now(); save(); S.sel = null; renderAll(); toast('Sent'); } },
+  editdraft: () => { const m = byId(S.sel); if (!m) return; const a = DB.accts.find(x => x.email === m.from.e); openCompose({ draftId: m.id, to: m.to, cc: m.cc, bcc: m.bcc || [], subj: m.subj === '(no subject)' ? '' : m.subj, html: m.body, from: a && a.id, title: 'Draft', files: m.att.map(x => ({ ...x, ref: true })) }); },
+  newFolder: () => ask('New folder', 'Folder name', '', 'Create', v => { DB.folders.push({ id: 'f' + uid(), name: v, own: DB.acct }); save(); renderAll(); }),
+  renameFolder: () => { const f = DB.folders.find(x => x.id === S.folder); if (!f) return toast('Open one of your own folders to rename it'); ask('Rename folder', 'Folder name', f.name, 'Rename', v => { f.name = v; save(); renderAll(); }); },
+  delFolder: () => { const f = DB.folders.find(x => x.id === S.folder); if (!f) return toast('Open one of your own folders to delete it'); confirmBox('Delete folder', 'Messages in "' + esc(f.name) + '" move to Deleted items.', 'Delete folder', () => { DB.msgs.forEach(m => { if (m.folder === f.id) m.folder = 'deleted'; }); DB.folders = DB.folders.filter(x => x !== f); S.folder = 'inbox'; save(); renderAll(); }); },
+  readAll: () => { DB.msgs.forEach(m => { if (visibleIn(m, S.folder)) m.read = true; }); save(); renderAll(); toast('Marked all as read'); },
+  empty: () => { const ok = ['deleted', 'junk'].includes(S.folder) || DB.folders.some(f => f.id === S.folder); if (!ok) return toast('You can empty Deleted items, Junk or your own folders'); const n = DB.msgs.filter(m => m.folder === S.folder).length; if (!n) return toast('Already empty'); confirmBox('Empty ' + esc(folderName(S.folder)), 'Permanently delete ' + n + ' message(s)? This cannot be undone.', 'Delete all', () => { DB.msgs = DB.msgs.filter(m => m.folder !== S.folder); save(); renderAll(); }); },
+  addacct: () => { modal('Add person', '<label class="fld">Name<input id="an"></label><label class="fld">Email<input id="ae" type="email"></label>', [{ t: 'Cancel', fn: () => true }, { t: 'Add', cls: 'p', fn: () => { const n = $('#an').value.trim(), e = $('#ae').value.trim(); if (!n || !EM.test(e)) { toast('Enter a name and a valid email'); return false; } DB.accts.push({ id: uid(), name: n, email: e, sig: n }); save(); $$('#modals .scrim').forEach(x => x._draw && x._draw('sig')); } }]); },
+  bulkacc: () => { const t = $('#bulkacc').value; let n = 0; t.split(/\r?\n/).forEach(l => { l = l.trim(); if (!l) return; const p = l.split(/[,;\t]/).map(x => x.trim()); const e = p.find(x => EM.test(x)); if (!e || DB.accts.some(a => a.email.toLowerCase() === e.toLowerCase())) return; const nm = p.find(x => x && x !== e) || e.split('@')[0]; DB.accts.push({ id: uid(), name: nm, email: e, sig: nm }); n++; }); save(); toast(n + ' people added'); $$('#modals .scrim').forEach(x => x._draw && x._draw('sig')); },
+  addtpl: () => { const n = $('#tn').value.trim(); if (!n) return toast('Name the template'); DB.templates.push({ id: uid(), name: n, subj: $('#ts').value, body: $('#tb').value }); save(); $$('#modals .scrim').forEach(s => s._draw && s._draw('tpl')); },
+  export: () => exportAcct(DB.acct),
+  importbk: () => $('#impf').click(), importpst: () => importDlg(),
+  reset: () => confirmBox('Reset demo data', 'This replaces everything in this browser with the demo messages.', 'Reset', () => { DB = fresh(); save(); S.folder = 'inbox'; S.sel = null; applySizes(); renderAll(); closeModals(); }),
+  /* compose */
+  cclose: () => { const had = composeHasContent(); saveDraft(true); closeCompose(); if (had) toast('Saved to Drafts'); },
+  csend: send, cdiscard: () => { const id = C().id; confirmBox('Discard message', 'Delete this message?', 'Discard', () => { if (id) DB.msgs = DB.msgs.filter(m => m.id !== id); save(); closeCompose(); }); },
+  csavedraft: () => saveDraft(), cattach: () => $('#cfile').click(),
+  clink: () => { const sel = getSelection(); const saved = sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null; ask('Insert link', 'Web address', 'https://', 'Insert', v => { $('#cbody').focus(); if (saved) { sel.removeAllRanges(); sel.addRange(saved); } document.execCommand('createLink', false, v); }); },
+  ctpl: (el) => tplMenu(el, t => { if (!$('#csub').value) $('#csub').value = t.subj; const s = $('.sig', $('#cbody')); const ins = '<p>' + h2t(t.body) + '</p>'; if (s) s.insertAdjacentHTML('beforebegin', ins); else $('#cbody').insertAdjacentHTML('afterbegin', ins); }),
+  rmpic: () => { delete acct().photo; save(); const p = $('#sigprev'); if (p) p.innerHTML = sigInner(acct()); },
+  csig: (el) => menu(el, DB.accts.map(a => ({ t: a.name, fn: () => insertSig(a) }))),
+  cimp: () => { C().imp = C().imp === 'high' ? null : 'high'; drawCmain(); }, creceipt: () => { C().receipt = !C().receipt; drawCmain(); },
+  ccat: (el) => menu(el, CATS.map(c => ({ t: c.name, ck: (C().cats || []).includes(c.id), fn: () => { C().cats = C().cats || []; const i = C().cats.indexOf(c.id); if (i >= 0) C().cats.splice(i, 1); else C().cats.push(c.id); } }))),
+  csched: schedDlg, showcc: () => { $('#rcc').hidden = false; $('#ccc').focus(); }, showbcc: () => { $('#rbcc').hidden = false; $('#cbcc').focus(); },
+  cpop: popOut, pickto: () => pickDlg('to'), pickcc: () => pickDlg('cc'), pickbcc: () => pickDlg('bcc'),
+  ccheck: () => { flushInputs(); const bad = C().to.concat(C().cc, C().bcc).filter(e => !EM.test(e)); toast(bad.length ? bad.length + ' address(es) need attention: ' + bad[0] : 'All names look valid'); },
+  cpaste: () => { if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(t => { fmt('insertText', t); }).catch(() => toast('Press Ctrl+V to paste here')); else toast('Press Ctrl+V to paste here'); },
+  cfont: (el) => menu(el, FONTS.map(f => ({ t: f, fn: () => { fmt('fontName', f); el.firstChild.textContent = f + ' '; } }))),
+  csize: (el) => menu(el, SIZES.map(z => ({ t: z + ' pt', fn: () => { setSize(z); el.firstChild.textContent = z + ' '; } }))),
+  ccolor: (el) => menu(el, COLORS.map(c => ({ t: c[0], fn: () => fmt('foreColor', c[1]) }))),
+  cfollow: (el) => menu(el, [{ t: 'Today', fn: () => { C().follow = true; drawCmain(); } }, { t: 'Tomorrow', fn: () => { C().follow = true; drawCmain(); } }, { t: 'Next week', fn: () => { C().follow = true; drawCmain(); } }, '-', { t: 'Clear flag', fn: () => { C().follow = false; drawCmain(); } }]),
+  cspell: () => { const b = $('#cbody'); b.spellcheck = !b.spellcheck; b.blur(); b.focus(); drawCmain(); toast('Spell check ' + (b.spellcheck ? 'on' : 'off')); },
+  ctable: () => insertHtml('<table><tr><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>&nbsp;</td><td>&nbsp;</td></tr></table><br>'),
+  chr: () => insertHtml('<hr>'), cdate: () => fmt('insertText', new Date().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })),
+  cstyle: (el) => menu(el, [['Normal', 'P'], ['Heading 1', 'H1'], ['Heading 2', 'H2'], ['Quote', 'BLOCKQUOTE']].map(x => ({ t: x[0], fn: () => fmt('formatBlock', x[1]) }))),
+  cclear: () => { fmt('selectAll'); fmt('removeFormat'); }
+};
+
+document.addEventListener('click', e => {
+  const T = e.target.closest('[data-mi],[data-act],[data-folder],[data-cat],[data-ftab],[data-filter],[data-chk],[data-att],[data-quick],[data-tab],[data-ctab],[data-q],[data-fold],[data-rm],[data-rmf],[data-fmt],[data-stab],[data-acs],[data-delacct],[data-bkacct],[data-rule],[data-delrule],[data-deltpl],.row');
+  const inMenu = e.target.closest('#menu'); if (!inMenu) closeMenu();
+  if (e.target.closest('#cscrim')) return;
+  if (!T) { return; }
+  const d = T.dataset;
+  if (d.mi != null) { const it = $('#menu')._items[+d.mi]; closeMenu(); if (it && it.fn) it.fn(); return; }
+  if (d.fmt) { fmt(d.fmt); return; }
+  if (d.act) { e.preventDefault(); if (A[d.act]) A[d.act](T, e); return; }
+  if (d.folder) return openFolder(d.folder);
+  if (d.cat) { S.q = 'cat:' + d.cat; $('#q').value = S.q; S.sel = null; renderAll(); document.body.classList.remove('navopen'); return; }
+  if (d.ftab) { S.tab = d.ftab; renderList(); return; }
+  if (d.filter) { S.filter = d.filter; renderList(); return; }
+  if (d.chk) { S.checked.has(d.chk) ? S.checked.delete(d.chk) : S.checked.add(d.chk); renderAll(); return; }
+  if (d.att) { const [id, i] = d.att.split(':'); preview(id, +i); return; }
+  if (d.quick) { respond('reply', d.quick); return; }
+  if (d.tab) { $$('.tab[data-tab]').forEach(t => t.classList.toggle('on', t === T)); $$('#ribbon .pane').forEach(p => p.classList.toggle('on', p.id === 'p-' + d.tab)); return; }
+  if (d.ctab) { S.ctab = d.ctab; $$('.ctabs .tab').forEach(t => t.classList.toggle('on', t === T)); drawCmain(); return; }
+  if (d.q != null) { const q = $('#q'); q.value = (q.value + (q.value && !q.value.endsWith(' ') ? ' ' : '') + d.q); S.q = q.value; q.focus(); renderList(); return; }
+  if (d.fold) { T.classList.toggle('fold'); return; }
+  if (d.rm) { const [k, i] = d.rm.split(':'); C()[k].splice(+i, 1); drawChips(); return; }
+  if (d.rmf != null) { C().files.splice(+d.rmf, 1); drawChips(); return; }
+  if (d.acs) { const sc = T.closest('.scrim'), id = d.acs; unlockAcct(id, () => { DB.acct = id; S.folder = 'inbox'; S.sel = null; S.checked.clear(); save(); renderAll(); if (sc && sc._draw) sc._draw('sig'); }); return; }
+  if (d.bkacct) { exportAcct(d.bkacct); return; }
+  if (d.delacct) { const a = DB.accts.find(x => x.id === d.delacct); if (!a) return; if (DB.accts.length < 2) { toast('Keep at least one mailbox'); return; } const sc = T.closest('.scrim'); confirmBox('Remove ' + esc(a.name), 'This deletes the mailbox and all of its mail from this browser. Save a backup first if you still need it.', 'Remove', () => { DB.msgs = DB.msgs.filter(m => own(m) !== a.id); DB.folders = DB.folders.filter(f => (f.own || 'pt') !== a.id); DB.accts = DB.accts.filter(x => x !== a); if (DB.acct === a.id) DB.acct = DB.accts[0].id; S.folder = 'inbox'; S.sel = null; save(); renderAll(); if (sc && sc._draw) sc._draw('sig'); }); return; }
+  if (d.stab) { const sc = T.closest('.scrim'); sc._draw(d.stab); return; }
+  if (d.rule) { const r = DB.rules.find(x => x.id === d.rule); if (r) { r.on = T.checked; save(); } return; }
+  if (d.delrule) { DB.rules = DB.rules.filter(x => x.id !== d.delrule); save(); rulesDlg.redraw && 0; const sc = T.closest('.scrim'); sc.remove(); rulesDlg(); return; }
+  if (d.deltpl) { DB.templates = DB.templates.filter(x => x.id !== d.deltpl); save(); T.closest('.scrim')._draw('tpl'); return; }
+  if (T.classList.contains('row')) {
+    const id = T.dataset.id;
+    if (e.ctrlKey || e.metaKey || e.shiftKey) { S.checked.has(id) ? S.checked.delete(id) : S.checked.add(id); renderAll(); return; }
+    S.checked.clear(); select(id, true); document.body.classList.add('reading'); renderAll();
+  }
+});
+document.addEventListener('dblclick', e => { const r = e.target.closest('.row'); if (r) { const m = byId(r.dataset.id); if (m && m.folder === 'drafts') { S.sel = m.id; A.editdraft(); } } });
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'q') { S.q = t.value; S.sel = null; S.limit = 150; renderAll(); return; }
+  if (t.dataset.set) { setSet(t); }
+  if (t.dataset.aname != null) { acct().name = t.value; save(); renderAll(); }
+  if (t.dataset.aemail != null) { acct().email = t.value.trim(); save(); renderNav(); }
+  if (t.dataset.af) { acct()[t.dataset.af] = t.value.trim(); save(); const p = $('#sigprev'); if (p) p.innerHTML = sigInner(acct()); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'apic' && t.files[0]) { const im = new Image(), r = new FileReader(); r.onload = () => { im.onload = () => { const k = Math.min(1, 200 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); acct().photo = c.toDataURL('image/png'); save(); const p = $('#sigprev'); if (p) p.innerHTML = sigInner(acct()); toast('Picture added to the signature'); }; im.src = r.result; }; r.readAsDataURL(t.files[0]); return; }
+  if (t.dataset.set) setSet(t, true);
+  if (t.id === 'cfile') { [...t.files].forEach(f => C().files.push({ name: f.name, size: f.size, type: f.type, file: f })); t.value = ''; drawChips(); }
+  if (t.id === 'cfrom') { insertSig(DB.accts.find(a => a.id === t.value)); }
+  if (t.id === 'impf' && t.files[0]) restoreBackup(t.files[0]);
+});
+function setSet(t, final) {
+  const path = t.dataset.set.split('.'); let o = DB.set; for (let i = 0; i < path.length - 1; i++) o = o[path[i]];
+  const k = path[path.length - 1]; o[k] = t.type === 'checkbox' ? t.checked : t.value;
+  if (k === 'stress' && final) { DB.msgs = DB.msgs.filter(m => !m.st); if (o[k]) stress(2000).forEach(m => { m.st = true; m.own = DB.acct; DB.msgs.push(m); }); }
+  save(); if (final || t.type !== 'text') renderAll();
+}
+['cto', 'ccc', 'cbcc'].forEach(id => { const el = $('#' + id); const k = { cto: 'to', ccc: 'cc', cbcc: 'bcc' }[id]; el.addEventListener('keydown', e => { if (['Enter', ',', ';', 'Tab'].includes(e.key) && el.value.trim()) { e.preventDefault(); addRecipients(k, el.value); el.value = ''; } if (e.key === 'Backspace' && !el.value && C()[k].length) { C()[k].pop(); drawChips(); } }); el.addEventListener('blur', () => { if (el.value.trim()) { addRecipients(k, el.value); el.value = ''; } }); });
+/* drag and drop */
+document.addEventListener('dragstart', e => { const r = e.target.closest && e.target.closest('.row'); if (!r) return; const id = r.dataset.id; if (!S.checked.has(id)) { S.checked.clear(); S.sel = id; } e.dataTransfer.setData('text/plain', id); e.dataTransfer.effectAllowed = 'move'; });
+document.addEventListener('dragover', e => { const f = e.target.closest && e.target.closest('.nf[data-folder]'); $$('.nf.drop').forEach(x => x.classList.remove('drop')); if (f && !['flagged', 'snoozed'].includes(f.dataset.folder)) { e.preventDefault(); f.classList.add('drop'); } });
+document.addEventListener('drop', e => { const f = e.target.closest && e.target.closest('.nf[data-folder]'); $$('.nf.drop').forEach(x => x.classList.remove('drop')); if (!f) return; e.preventDefault(); const list = S.checked.size ? [...S.checked].map(byId) : [byId(S.sel || e.dataTransfer.getData('text/plain'))]; moveMsgs(list.filter(Boolean), f.dataset.folder); });
+document.addEventListener('dragend', () => $$('.nf.drop').forEach(x => x.classList.remove('drop')));
+/* keyboard */
+document.addEventListener('keydown', e => {
+  const typing = e.target.matches && e.target.matches('input,textarea,select,[contenteditable="true"]');
+  if (e.key === 'Escape') { if ($('#menu').style.display === 'block') return closeMenu(); if ($('#modals .scrim')) return closeModals(); if (C()) return A.cclose(); if (typing) e.target.blur(); return; }
+  if (C() && (e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); return send(); }
+  if (typing || e.ctrlKey || e.metaKey || e.altKey || C() || $('#modals .scrim')) return;
+  const k = e.key; const rows = $$('#rows .row'), i = rows.findIndex(r => r.dataset.id === S.sel);
+  const go = d => { const r = rows[Math.max(0, Math.min(rows.length - 1, i + d))]; if (r) { S.checked.clear(); select(r.dataset.id); } };
+  if (k === 'j' || k === 'ArrowDown') { e.preventDefault(); go(1); } else if (k === 'k' || k === 'ArrowUp') { e.preventDefault(); go(-1); }
+  else if (k === 'c') { e.preventDefault(); A.new(); } else if (k === 'r') A.reply(); else if (k === 'a') A.replyall(); else if (k === 'f') A.fwd();
+  else if (k === 'e') A.archive(); else if (k === 'Delete' || k === '#') A.del(); else if (k === 'u') A.toggleRead(); else if (k === 's') A.flag();
+  else if (k === '/') { e.preventDefault(); $('#q').focus(); } else if (k === '?') helpDlg();
+});
+/* resizable panes */
+function applySizes() { const m = $('#main'), s = DB.set; m.style.setProperty('--navw', (s.navW || 236) + 'px'); m.style.setProperty('--listw', (s.listW ? s.listW * 100 : 44) + '%'); m.style.setProperty('--listh', (s.listH ? s.listH * 100 : 44) + '%'); m.style.setProperty('--fromw', (s.fromW || 190) + 'px'); if (S.compose) placeInline(); }
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function grip(el, move, reset, step) {
+  el.addEventListener('pointerdown', e => { e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (x) { } el.classList.add('drag'); document.body.classList.add('dragging'); const mv = ev => { move(ev); applySizes(); }; const up = () => { el.classList.remove('drag'); document.body.classList.remove('dragging'); el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); save(); }; el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); });
+  el.addEventListener('dblclick', () => { reset(); applySizes(); save(); });
+  el.addEventListener('keydown', e => { const d = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 }[e.key]; if (d) { e.preventDefault(); step(d); applySizes(); save(); } });
+}
+function initSplit() {
+  const main = $('#main'), content = $('#content'), S_ = DB.set;
+  grip($('#sp1'), ev => { S_.navW = clamp(Math.round(ev.clientX - main.getBoundingClientRect().left), 170, 440); }, () => { delete S_.navW; }, d => { S_.navW = clamp((S_.navW || 236) + d * 16, 170, 440); });
+  grip($('#sp2'), ev => { const r = content.getBoundingClientRect(); if (DB.set.layout === 'right') S_.listW = clamp((ev.clientX - r.left) / r.width, .25, .75); else S_.listH = clamp((ev.clientY - r.top) / r.height, .15, .8); }, () => { delete S_.listW; delete S_.listH; }, d => { if (DB.set.layout === 'right') S_.listW = clamp((S_.listW || .44) + d * .02, .25, .75); else S_.listH = clamp((S_.listH || .44) + d * .02, .15, .8); });
+  grip($('#sp3'), ev => { const c = $('#cols > span:nth-child(3)').getBoundingClientRect(); S_.fromW = clamp(Math.round(ev.clientX - c.left), 90, 420); }, () => { delete S_.fromW; }, d => { S_.fromW = clamp((S_.fromW || 190) + d * 16, 90, 420); });
+  addEventListener('resize', () => { if (S.compose) placeInline(); });
+}
+document.addEventListener('mousedown', e => { if (e.target.closest('#cmain button,#cmini button,#menu button')) e.preventDefault(); });
+$('#csub').addEventListener('input', setTitle);
+/* init */
+load().then(() => {
+  renderAll(); applySizes(); initSplit(); tick(); setInterval(tick, 15000);
+  matchMedia('(max-width:900px)').addEventListener('change', renderAll);
+  addEventListener('beforeunload', flush); document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
+});
+
+</script></body></html>
