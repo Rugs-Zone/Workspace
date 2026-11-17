@@ -12,3 +12,4 @@ const out=Buffer.from(h,'utf8').toString('base64');
 const i=src.indexOf(m[1]);
 fs.writeFileSync(P,src.slice(0,i)+out+src.slice(i+m[1].length));
 console.log('ok');
+// Also applied once by hand the same day: the app's starting value before the server answers, let HIST_DAYS=180 -> 365.
