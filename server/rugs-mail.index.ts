@@ -936,7 +936,7 @@ async function handle(a: string, p: any, t0: number) {
       const m = await gmail(tok, `messages/${p.gmailId}?format=full`);
       const cid = String(p.cid || "").toLowerCase();
       const pt = inlineParts(m.payload).find((x: any) => x.cid.toLowerCase() === cid || (x.name && x.name.toLowerCase() === cid));
-      if (!pt) throw new E("Picture not found", 404);
+      if (!pt) { console.log("inlineImg miss", JSON.stringify({ mid: p.gmailId, cid, have: inlineParts(m.payload).map((x: any) => x.cid + "|" + x.name).slice(0, 10) })); throw new E("Picture not found", 404); }
       if ((pt.size || 0) > 8 * 1024 * 1024) throw new E("Picture too big to show here — download it instead");
       let data = pt.data || "";
       if (!data && pt.aid) data = (await gmail(tok, `messages/${p.gmailId}/attachments/${pt.aid}`)).data || "";
