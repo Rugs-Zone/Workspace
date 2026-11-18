@@ -334,11 +334,10 @@
           if (!Object.keys(zip.files).length) throw new Error('None of the files could be fetched');
           say('Making the ZIP...');
           return zip.generateAsync({ type: 'blob' }).then(blob => {
-            const nm = (cleanSub(t.sub) || 'attachments').replace(/[^\w \-]+/g, '').trim().slice(0, 50) || 'attachments';
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob); a.download = nm + '.zip';
-            document.body.appendChild(a); a.click();
-            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+            // 18 Nov 2026: the ZIP keeps the subject's own letters (Hindi, accents...) - only characters
+            // Windows forbids are replaced - and goes through the app's one saveFile().
+            const nm = fileName(String(cleanSub(t.sub) || 'attachments').slice(0, 60)) || 'attachments';
+            saveFile(blob, nm + '.zip', 'application/zip');
             toast(bad.length ? 'ZIP saved - these could not be fetched: ' + bad.join(', ') : 'ZIP saved');
           });
         }

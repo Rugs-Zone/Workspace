@@ -181,10 +181,16 @@
     });
   }
   function vwDownload(a) {
-    var go = function (blobUrl) { var l = document.createElement("a"); l.href = blobUrl; l.download = a.name; document.body.appendChild(l); l.click(); l.remove(); };
-    if (VW && VW.url && VW.cur === a) return go(VW.url);
+    // 18 Nov 2026: saved through the mail app's one saveFile() (original name + extension, type from the
+    // extension when Gmail sent none); the plain link below is only for a page without the app loaded.
+    var save = function (data, mime) {
+      if (typeof window.rzSaveFile === "function") return window.rzSaveFile(data, a.name, mime);
+      var u = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: mime })), l = document.createElement("a");
+      l.href = u; l.download = a.name; document.body.appendChild(l); l.click(); l.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000);
+    };
+    if (VW && VW.url && VW.cur === a) return fetch(VW.url).then(function (r) { return r.blob(); }).then(function (bl) { save(bl, bl.type); });
     if (typeof toast === "function") toast("Downloading " + a.name + "…");
-    bytes(a).then(function (b) { var u = URL.createObjectURL(new Blob([b.u8], { type: b.mime })); go(u); setTimeout(function () { URL.revokeObjectURL(u); }, 60000); })
+    bytes(a).then(function (b) { save(b.u8, b.mime); })
       .catch(function (e) { if (typeof toast === "function") toast("Could not download: " + e.message + (a.link ? " — use Open in Drive" : "")); });
   }
   function vwShow(items, i, opener) {
@@ -239,7 +245,8 @@
       return;
     }
     // other Office files (old .doc / .ppt) and PDF on phones: Google Drive's viewer, from the copy in the team's Drive
-    if (did && (k.v === "office" || (k.v === "pdf" && phone))) { drivePreview(); return; }
+    // 18 Nov 2026: PDFs are drawn by the app's PDF.js viewer on phones too; Google Drive only when it is missing
+    if (did && (k.v === "office" || (k.v === "pdf" && phone && typeof window.rzPdfMount !== "function"))) { drivePreview(); return; }
     if (k.v === "office") {
       body.innerHTML ='<div class="v2vmsg"><b>' + txt(a.name) + '</b><span>' + (a.saving ? "This file is being copied to Google Drive — the preview works within a minute or two. You can download it now." : "This file has no Google Drive copy, so it can't be previewed here. Download it to open it.") + '</span><div class="v2vacts"><button type="button" class="v2vb" data-vw="dl">⬇ Download</button>' + (a.saving ? '<button type="button" class="v2vb" data-vw="retry">Try again</button>' : '') + '</div></div>';
       return;
@@ -250,7 +257,12 @@
       if (VW !== me || VW.cur !== a) return;
       var url = URL.createObjectURL(new Blob([b.u8], { type: b.mime })); VW.url = url;
       if (k.v === "img" || /^image\//i.test(b.mime)) { VW.kind = "img"; body.innerHTML = '<div class="v2vimgwrap"><img class="v2vimg" src="' + url + '" alt="' + txt(a.name) + '"></div>'; }
-      else if (k.v === "pdf" || /pdf/i.test(b.mime)) body.innerHTML = '<iframe class="v2vframe" title="' + txt(a.name) + '" src="' + url + '"></iframe>';
+      // 18 Nov 2026: PDF.js (canvas per page) instead of the browser's own PDF viewer in an iframe, which
+      // showed blank here and in Edge offered a Save that lost the file name; ⬇ Download keeps the name
+      else if (k.v === "pdf" || /pdf/i.test(b.mime)) {
+        if (typeof window.rzPdfMount === "function") { VW.kind = "pdf"; window.rzPdfMount(body, b.u8, a.name); }
+        else body.innerHTML = '<iframe class="v2vframe" title="' + txt(a.name) + '" src="' + url + '"></iframe>';
+      }
       else body.innerHTML = '<pre class="v2vtext">' + txt(new TextDecoder().decode(b.u8).slice(0, 300000)) + '</pre>';
     }).catch(function (e) { fail(e && e.message ? e.message : "Could not load the file."); });
   }
