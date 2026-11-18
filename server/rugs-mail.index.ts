@@ -187,7 +187,12 @@ const safeUser =(u: any) => ({ id: u.id, name: u.name, login: u.login, dept_id: 
 async function boot(u: any) {
   const [{ data: users }, { data: st }] = await Promise.all([sb.from("rm_users").select("*").order("created_at"), sb.from("rm_settings").select("key,value").in("key", SHARED_KEYS)]);
   const settings: any = {}; (st || []).forEach((r: any) => settings[r.key] = r.value);
-  return { me: safeUser(u), depts: await depts(), users: (users || []).map(safeUser), settings, ai: !!Deno.env.get("GEMINI_API_KEY") && !(await aiHeld()) };
+  return { me: safeUser(u), depts: await depts(), users: (users || []).map(safeUser), settings, gone: await deletedUsers(), ai: !!Deno.env.get("GEMINI_API_KEY") && !(await aiHeld()) };
+}
+/* 18 Nov 2026: names of deleted users, { id: { name, login, at, by } } */
+async function deletedUsers(): Promise<Record<string, any>> {
+  const { data } = await sb.from("rm_settings").select("value").eq("key", "deleted_users").maybeSingle();
+  return data?.value && typeof data.value === "object" ? data.value : {};
 }
 const SHARED_KEYS = ["circulars", "folders", "alerts", "templates", "cats", "rules", "blocked", "contacts_extra"];
 const ADMIN_KEYS = ["rules", "blocked", "cats", "folders", "templates", "circulars"];   // only role Admin may change these
@@ -997,13 +1002,44 @@ async function handle(a: string, p: any, t0: number) {
         const [{ count: nu }, { count: nt }] = await Promise.all([sb.from("rm_users").select("id", { count: "exact", head: true }).eq("dept_id", d.id), sb.from("rm_threads").select("gmail_thread_id", { count: "exact", head: true }).eq("mailbox", d.mailbox)]);
         if (!nu && !nt) await sb.from("rm_departments").delete().eq("id", d.id);
       }
+      const goneIds = await deletedUsers();
       for (const x of us) {
+        // 18 Nov 2026: an admin whose page still lists a deleted user must not bring them back by saving
+        if (x.id && goneIds[x.id]) continue;
         if (!x.id || !x.name || !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(String(x.login || ""))) throw new E("Each user needs a name and a valid user ID");
         if (x.id === u.id && x.role !== "Admin") throw new E("You cannot remove your own admin role");
         await sb.from("rm_users").upsert({ id: x.id, name: x.name, login: String(x.login).toLowerCase(), dept_id: x.dept_id, role: x.role, active: x.active !== false, perm: x.perm || {}, access: x.access || {} });
         if (x.active === false) await sb.from("rm_sessions").delete().eq("user_id", x.id);
       }
       return boot(u);
+    }
+    /* 18 Nov 2026: Admin -> Users -> Delete. Only role Admin. Not yourself, never the last admin.
+       Their conversations go back to the team's To assign, mail they scheduled is cancelled,
+       sessions / presence / login lock go, and their name is kept in rm_settings `deleted_users`
+       so old history and sent mail still show who it was. Nothing is touched in Gmail. */
+    case "deleteUser": {
+      if (u.role !== "Admin") throw new E("Only an admin can delete a user", 403);
+      const id = String(p.id || "");
+      if (!id) throw new E("Which user?");
+      if (id === u.id) throw new E("You cannot delete your own user");
+      const { data: x } = await sb.from("rm_users").select("id,name,login,role").eq("id", id).maybeSingle();
+      if (!x) throw new E("That user does not exist any more");
+      if (x.role === "Admin") {
+        const { count } = await sb.from("rm_users").select("id", { count: "exact", head: true }).eq("role", "Admin").eq("active", true).neq("id", id);
+        if (!count) throw new E("This is the last admin — make someone else Admin first");
+      }
+      const now = new Date().toISOString();
+      const { data: un } = await sb.from("rm_threads").update({ owner_id: null, updated_at: now }).eq("owner_id", id).select("gmail_thread_id");
+      await sb.from("rm_scheduled").update({ status: "cancelled", error: "The user was deleted" }).eq("user_id", id).eq("status", "waiting");
+      await sb.from("rm_presence").delete().eq("user_id", id);
+      await sb.from("rm_sessions").delete().eq("user_id", id);
+      if (x.login) await sb.from("rm_login_attempts").delete().eq("login", String(x.login).toLowerCase());
+      const gone = await deletedUsers();
+      gone[id] = { name: x.name, login: x.login, at: now, by: u.name };
+      await sb.from("rm_settings").upsert({ key: "deleted_users", value: gone, updated_at: now });
+      const { error } = await sb.from("rm_users").delete().eq("id", id);
+      if (error) throw new E("Could not delete: " + error.message, 500);
+      return { ...(await boot(u)), unassigned: (un || []).length };
     }
   }
   throw new E("Unknown action");
