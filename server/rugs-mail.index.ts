@@ -697,9 +697,12 @@ async function cronRun(t0: number) {
     const { data: stt } = await sb.from("rm_mailboxes").select("mailbox,last_sync");
     const ls = new Map((stt || []).map((x: any) => [x.mailbox, x.last_sync ? Date.parse(x.last_sync) : 0]));
     const order = (await depts()).sort((x: any, y: any) => (ls.get(x.mailbox) || 0) - (ls.get(y.mailbox) || 0));
+    // 18 Nov 2026: scheduled mail goes FIRST. It used to run after syncing every mailbox, and with
+    // 9 mailboxes the sync always used the whole time budget, so sendScheduled() found its mail due
+    // but stopped at once on the deadline — "scheduled":0 on every run, nothing scheduled ever went out.
+    try { out.push({ scheduled: await sendScheduled(t0) }); } catch (e) { out.push({ scheduled: (e as Error).message }); }
     for (const d of order) { if (Date.now() - t0 > DEADLINE_MS) break; try { out.push(await syncBox(d.mailbox, t0)); } catch (e) { await sb.from("rm_mailboxes").upsert({ mailbox: d.mailbox, status: "error", note: String((e as Error).message).slice(0, 300) }, { onConflict: "mailbox" }); out.push({ mailbox: d.mailbox, error: (e as Error).message }); } }
     for (const d of order) { if (Date.now() - t0 > DEADLINE_MS) break; try { if (await gmailOn(d.mailbox)) out.push(await historySync(d.mailbox, t0)); } catch (e) { out.push({ mailbox: d.mailbox, history_error: String((e as Error).message).slice(0, 200) }); } }
-    try { out.push({ scheduled: await sendScheduled(t0) }); } catch (e) { out.push({ scheduled: (e as Error).message }); }
     try { out.push({ rules: await applyRules() }); } catch (e) { out.push({ rules: (e as Error).message }); }
     try { out.push({ ooo: await outOfOffice(t0) }); } catch (e) { out.push({ ooo: (e as Error).message }); }
     await sb.from("rm_presence").delete().lt("at", new Date(Date.now() - 600000).toISOString());
