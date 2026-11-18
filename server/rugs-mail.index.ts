@@ -153,6 +153,24 @@ async function withInlineImages(tok: string, msgId: string, payload: any, html: 
   }));
   return html;
 }
+// 18 Nov 2026: "Only the short preview is shown — 546". withInlineImages pasted every picture into EVERY
+// mail of the conversation as base64 text, so a long claim trail (15-20 replies quoting the same photos)
+// carried the same pictures 15-20 times and the function ran out of memory / CPU (546).
+// Now each cid: picture becomes a small link  rmcid:<gmail message id>/<cid>  and the app fetches the
+// pictures one by one with the "inlineImg" action below. The mail text arrives at once, never 546.
+function withCidLinks(msgId: string, payload: any, html: string, pool: any[] = []) {
+  if (!/cid:/i.test(html)) return html;
+  const own = inlineParts(payload).map((x) => ({ ...x, mid: msgId }));
+  const ownCids = new Set(own.map((x) => x.cid.toLowerCase()));
+  const parts = [...own, ...pool.filter((x) => !ownCids.has(String(x.cid).toLowerCase()))];
+  for (const pt of parts) {
+    const link = `rmcid:${pt.mid || msgId}/${encodeURIComponent(pt.cid)}`;
+    const q = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    html = html.replace(new RegExp("cid:" + q(pt.cid) + "(?![\\w.@-])", "gi"), link);
+    if (pt.name) html = html.replace(new RegExp("cid:" + q(pt.name) + "(?=[\"'])", "gi"), link);
+  }
+  return html;
+}
 const htmlToText = (h: string) => h.replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<br\s*\/?>|<\/p>|<\/div>|<\/tr>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\n{3,}/g, "\n\n");
 
 /* ---------------- auth + access ---------------- */
@@ -682,14 +700,13 @@ async function threadFull(box: string, tid: string) {
     const tok = await gToken(box, READ);
     const g = await gmail(tok, `threads/${tid}?format=full`);
     const byId = new Map<string, any>((g.messages || []).map((x: any) => [x.id, x]));
-    const budget = { left: 40 * 1024 * 1024 };   // up to 40 MB of pictures per conversation (each picture counted once)
-    const pool: any[] = []; for (const gm of g.messages || []) for (const x of inlineParts(gm.payload)) pool.push({ ...x, mid: gm.id });
-    const cache = new Map<string, Promise<string>>();
+    // 18 Nov 2026: pictures are NOT pasted in any more (that caused 546 on long trails) - see withCidLinks / inlineImg
+    const pool: any[] = []; for (const gm of g.messages || []) for (const x of inlineParts(gm.payload)) pool.push({ ...x, mid: gm.id, data: "" });
     const out = await Promise.all((m || []).map(async (x: any) => {
       const gm = byId.get(x.gmail_id);
       let html = gm ? partOf(gm.payload, "text/html") : "";
       const text = gm ? (partOf(gm.payload, "text/plain") || (html ? htmlToText(html.slice(0, 150000)) : "")) : x.body_text;
-      if (gm && html) html = await withInlineImages(tok, x.gmail_id, gm.payload, html, budget, pool, cache);
+      if (gm && html) html = withCidLinks(x.gmail_id, gm.payload, html, pool);
       return { ...x, body_html: html, body_text: (text || x.body_text || "").slice(0, 60000) };   // big mails keep their HTML; the app lets the mail scroll
     }));
     return { messages: out };
@@ -912,6 +929,19 @@ async function handle(a: string, p: any, t0: number) {
     case "scheduledCancel": {
       await sb.from("rm_scheduled").update({ status: "cancelled" }).eq("id", p.id).eq("user_id", u.id).eq("status", "waiting");
       return { ok: true };
+    }
+    case "inlineImg": {   // 18 Nov 2026: one pasted (cid:) picture of a mail, asked for by the app after the mail text has arrived
+      await needBox(u, p.mailbox, "view");
+      const tok = await gToken(p.mailbox, READ);
+      const m = await gmail(tok, `messages/${p.gmailId}?format=full`);
+      const cid = String(p.cid || "").toLowerCase();
+      const pt = inlineParts(m.payload).find((x: any) => x.cid.toLowerCase() === cid || (x.name && x.name.toLowerCase() === cid));
+      if (!pt) throw new E("Picture not found", 404);
+      if ((pt.size || 0) > 8 * 1024 * 1024) throw new E("Picture too big to show here — download it instead");
+      let data = pt.data || "";
+      if (!data && pt.aid) data = (await gmail(tok, `messages/${p.gmailId}/attachments/${pt.aid}`)).data || "";
+      if (!data) throw new E("Picture not found", 404);
+      return { data: `data:${pt.mime};base64,${toStdB64(data)}` };
     }
     case "attachment": {   // preview / download one attachment straight from Gmail
       await needBox(u, p.mailbox, "view");
