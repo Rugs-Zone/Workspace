@@ -719,7 +719,15 @@ async function threadFull(box: string, tid: string, ids?: any) {   // 19 Nov 202
     const rows = m || [];
     const want: Set<string> | null = Array.isArray(ids) && ids.length ? new Set(ids.slice(0, 20).map(String)) : null;
     const need = want ? rows.filter((x: any) => want.has(String(x.gmail_id))) : rows.slice(-FULL_N);
-    const got = (await Promise.all(need.map((x: any) => gmail(tok, `messages/${x.gmail_id}?format=full`).catch(() => null)))).filter(Boolean);
+    // one retry each: a single Gmail hiccup used to leave that mail folded and empty with no explanation
+    const getMsg = async (id: string) => {
+      for (let i = 0; i < 2; i++) {
+        try { return await gmail(tok, `messages/${id}?format=full`); }
+        catch (e) { if (i) { console.log("thread msg miss", id, (e as Error).message); return null; } await new Promise((r) => setTimeout(r, 300)); }
+      }
+      return null;
+    };
+    const got = (await Promise.all(need.map((x: any) => getMsg(String(x.gmail_id))))).filter(Boolean);
     const byId = new Map<string, any>(got.map((x: any) => [x.id, x]));
     // 18 Nov 2026: pictures are NOT pasted in any more (that caused 546 on long trails) - see withCidLinks / inlineImg
     const pool: any[] = []; for (const gm of got) for (const x of inlineParts(gm.payload)) pool.push({ ...x, mid: gm.id, data: "" });

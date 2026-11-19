@@ -878,7 +878,7 @@ function _renderRead(){const el=$('#read');if(!el)return;const t=S.threads.find(
  ${!priv&&t.label&&s!=='done'?(()=>{const L=LB(t.label),tgt=null;return `<div class="aihint"><span>✦</span><b>${esc(L.hint)}<small>${t.ai?`AI tagged this conversation as <span style="color:color-mix(in srgb,${L.c} 62%,var(--fg));font-weight:700">${L.name}</span> · ${t.conf}% sure — it only describes the topic, it doesn't move the mail`:`Topic set to ${L.name} by the team`}</small></b>${tgt?`<button class="btn vio" data-xferto="${t.id}" data-dto="${tgt.id}">↪ Send to ${esc(tgt.name)}</button>`:''}</div>`})():''}
  ${priv?'<p style="color:var(--muted);margin:0">This email holds a login code. Rugs Email keeps it hidden from the team and shows it only to the account owner.</p>':`
  ${t.promise&&s!=='done'?`<div class="promise ${s==='late'?'late':''}"><span>${s==='late'?ico('clock'):ico('promise')}</span><b>${esc(t.promise)}<br><span class="sub">${esc(who(t.owner)?.name||'')} · ${dueTxt(t)}</span></b><button class="btn" data-promise="${t.id}">Edit</button></div>`:s!=='done'?`<button class="btn" style="width:fit-content" data-promise="${t.id}">${ico('promise')} Add a promise + due date</button>`:''}
- ${t.msgs.map((m,mi)=>({m,mi})).reverse().map(({m,mi})=>`<article class="mail ${os.has(mi)?'':'collapsed'}" id="msg-${t.id}-${mi}" data-mtog="${mi}"><header>${av(m.from)}<div class="w"><b>${esc(m.from)}${m.by?`<span class="via">via ${esc(m.email.split('@')[0])}@</span>`:''}</b><span>${m.by?esc(m.email)+' → '+esc(t.email):esc(m.email)+' → '+esc(d.box)+'rugscreation.com'}</span></div><time>${tLong(m.at)}</time></header><div class="msnip">${esc((m.body||'').replace(/\s+/g,' ').slice(0,140))}</div><div class="mbody">${!os.has(mi)?'':m.light?`<p style="color:var(--muted)">\u23f3 Opening this mail\u2026</p>`:(!m.by&&!isInternal(m.email))||m.raw?`${inviteBar(m,mi,t)}${picBar(m,mi)}<div class="raw"><iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" title="Original email from ${esc(m.from)}" data-pics="${picsOk(m)?1:0}" srcdoc="${esc(picHTML(m,m.raw||originalHTML(m)))}"></iframe></div><span class="rawnote">${ico('mail')} Shown exactly as received — formatting, logo, signature and banners untouched</span>${attHTML(m,t)}`:`${m.html?`<div class="rich">${m.html}</div>`:`<p>${esc(m.body)}</p>`}${m.sig&&!/data-sig=/.test(m.html||'')?`<div class="sig ${m.by?'ours':''}"><small>${m.by?'Signature · '+esc(who(m.by).name.split(' ')[0]):'Signature'}</small>${sigView(m.sig)}</div>`:''}${trailHTML(m.trail)}${attHTML(m,t)}`}</div></article>`).join('')}
+ ${t.msgs.map((m,mi)=>({m,mi})).reverse().map(({m,mi})=>`<article class="mail ${os.has(mi)?'':'collapsed'}" id="msg-${t.id}-${mi}" data-mtog="${mi}"><header>${av(m.from)}<div class="w"><b>${esc(m.from)}${m.by?`<span class="via">via ${esc(m.email.split('@')[0])}@</span>`:''}</b><span>${m.by?esc(m.email)+' → '+esc(t.email):esc(m.email)+' → '+esc(d.box)+'rugscreation.com'}</span></div><time>${tLong(m.at)}</time></header><div class="msnip">${esc((m.body||'').replace(/\s+/g,' ').slice(0,140))}</div>${m.failed?`<div class="notsent"><b>\u26a0 Not sent</b> \u2014 this mail is still only on your screen.${m.failErr?` <span class="sub">${esc(m.failErr)}</span>`:''}${m.hadFiles?' Write it again and attach the files, they are not kept here.':''}<span class="sp"></span>${m.hadFiles?'':`<button class="btn" data-resend="${t.id}|${mi}">\u21bb Try again</button>`}<button class="btn" data-dropmsg="${t.id}|${mi}">Remove</button></div>`:m.sending?'<div class="notsent snd">\u23f3 Sending\u2026</div>':''}<div class="mbody">${!os.has(mi)?'':m.light?`<p style="color:var(--muted)">\u23f3 Opening this mail\u2026</p>`:(!m.by&&!isInternal(m.email))||m.raw?`${inviteBar(m,mi,t)}${picBar(m,mi)}<div class="raw"><iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" title="Original email from ${esc(m.from)}" data-pics="${picsOk(m)?1:0}" srcdoc="${esc(picHTML(m,m.raw||originalHTML(m)))}"></iframe></div><span class="rawnote">${ico('mail')} Shown exactly as received — formatting, logo, signature and banners untouched</span>${attHTML(m,t)}`:`${m.html?`<div class="rich">${m.html}</div>`:`<p>${esc(m.body)}</p>`}${m.sig&&!/data-sig=/.test(m.html||'')?`<div class="sig ${m.by?'ours':''}"><small>${m.by?'Signature · '+esc(who(m.by).name.split(' ')[0]):'Signature'}</small>${sigView(m.sig)}</div>`:''}${trailHTML(m.trail)}${attHTML(m,t)}`}</div></article>`).join('')}
  ${ro?'':`<div class="inline"><div class="to">Quick reply to ${esc(t.email)}</div><textarea id="qr" placeholder="Write a reply…" aria-label="Quick reply"></textarea><footer><input type="text" id="qrP" placeholder="Promise (optional)" aria-label="Promise"><input type="date" id="qrD" aria-label="Due date"><span class="grow"></span><button class="btn" data-full="${t.id}" title="Open the full editor with fonts, colours, pictures">⤢ Full editor</button><button class="btn pri" data-qsend="${t.id}">Send</button></footer></div>`}
  ${atrailHTML(t)}`}
  </div>`}
@@ -1731,7 +1731,9 @@ function liveOpen(t,o){
      x.light=false;x.raw=fixMailImgs(m.body_html||'');x.body=(m.body_text||x.body||'').trim();x.full=true;
      if(!x.ours)x.sig=sigFromText(m.body_text);
      RAWC[m.gmail_id]={raw:x.raw,body:x.body,full:true}});
-    const all=t.msgs.every(x=>x.full||x.light);
+    /* 19 Nov 2026: a reply or forward you have just sent is in the conversation before Gmail has it.
+       It has no Gmail id, so it can never come back in Gmail's answer - it is not a missing mail. */
+    const all=t.msgs.every(x=>x.full||x.light||!x.gid);
     t.full=all;
     L.err=all?'':'Gmail did not send back every mail in this conversation.';
     return all;
@@ -1835,7 +1837,7 @@ function liveSend(t,m,fwd,isNew){const box=isNew?mailOf(dept(t.dept)):t.box,loca
  .then(async r=>{m.sending=false;m.gid=r.messageId;toast('Delivered ✓');
   if(isNew){S.threads=S.threads.filter(x=>x!==t);await loadList(false);const nid=boxDept()[box.toLowerCase()]+':'+r.threadId;if(openId===localId)openId=nid}
   else await loadList(false);render()})
- .catch(e=>{m.sending=false;m.failed=true;toast('Not sent: '+e.message);if(isNew){t.hist.push({t:'n',txt:'Not sent: '+e.message,at:Date.now()})}render()})}
+ .catch(e=>{m.sending=false;m.failed=true;m.failErr=String(e.message||'');toast('Not sent: '+e.message);if(isNew){t.hist.push({t:'n',txt:'Not sent: '+e.message,at:Date.now()})}render()})}
 
 async function liveSync(){const r=await api('sync',{force:true});const err=r.find(x=>x.error);if(err)toast(err.mailbox+': '+err.error);
  const{newMail}=await loadList(false);ensureLabels();return newMail}
@@ -2197,7 +2199,7 @@ liveSend=function(t,m,fwd,isNew){const box=isNew?mailOf(dept(t.dept)):t.box,loca
   if(o.sendAt){sbar.remove();api('schedule',{sendAt:new Date(o.sendAt).toISOString(),payload}).then(()=>{toast('🕒 Scheduled for '+tLong(o.sendAt));dropLocal()}).catch(e=>{m.sending=false;m.failed=true;toast('Not scheduled: '+e.message);render()});return}
   api('send',payload).then(async r=>{sbar.remove();m.sending=false;m.gid=r.messageId;toast('Delivered ✓');
    if(isNew){S.threads=S.threads.filter(x=>x!==t);await loadList(false);const nid=boxDept()[box.toLowerCase()]+':'+r.threadId;if(openId===localId)openId=nid}else await loadList(false);render()})
-  .catch(e=>{sbar.remove();m.sending=false;m.failed=true;
+  .catch(e=>{sbar.remove();m.sending=false;m.failed=true;m.failErr=String(e.message||'');m.hadFiles=(o.fileList||[]).length>0;
    const _big=(o.fileList||[]).length&&/546|resource|too large|payload|busy for a moment|Failed to fetch/i.test(String(e.message||''));
    toast(_big?'Not sent — the attachments are too big for one mail. Keep them under 15 MB in total, or send a Google Drive link.':'Not sent: '+e.message);if(isNew)t.hist.push({t:'n',txt:'Not sent: '+e.message,at:Date.now()});render()})};
  const dropLocal=()=>{if(isNew){S.threads=S.threads.filter(x=>x!==t);if(openId===localId)openId=null}else{const i=t.msgs.indexOf(m);if(i>=0)t.msgs.splice(i,1)}render()};
@@ -2985,6 +2987,23 @@ const _rlM=renderList;renderList=function(){_rlM();if(!(view.type==='box'&&view.
   ?'<div class="inb60">✓ All mail from the last '+HIST_DAYS+' days is shown — older mail: use Search</div>'
   :'<div class="inb60 quiet">Older mail is still arriving in the background — everything new is already here, and Search finds anything older</div>');
  if(!S.loadingMail&&!(st&&st.busy)){if(!(st&&st.recent))setTimeout(()=>loadMoreBox(view.dept,'recent'),50);else if(!st.done)setTimeout(()=>loadMoreBox(view.dept,'all'),50)}};
+/* 19 Nov 2026: the two buttons on a mail that did not go out. Try again sends the same mail again;
+   Remove takes it off the conversation (it never reached anybody). */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-resend],[data-dropmsg]');if(!b)return;
+ e.preventDefault();e.stopPropagation();
+ const v=String(b.dataset.resend||b.dataset.dropmsg||'');const cut=v.lastIndexOf('|');
+ const t=T_(idv(v.slice(0,cut))),mi=+v.slice(cut+1);if(!t||!t.msgs[mi])return;
+ const m=t.msgs[mi];
+ if(b.dataset.resend){m.failed=false;m.failErr='';try{liveSend(t,m,m.fwd,false)}catch(x){m.failed=true}render();return}
+ t.msgs.splice(mi,1);if(!t.msgs.length){S.threads=S.threads.filter(x=>x!==t);openId=null}
+ try{save()}catch(x){}render();toast('Taken off this conversation');});
+(function(){const st=document.createElement('style');st.textContent=[
+ '.notsent{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 2px;padding:8px 10px;border-radius:10px;'
+  +'background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--fg);font-size:13px;border:1px solid color-mix(in srgb,var(--red) 35%,transparent)}',
+ '.notsent.snd{background:var(--hover);border-color:var(--line);color:var(--muted)}',
+ '.notsent .sub{color:var(--muted);font-size:12px}',
+ '.notsent .sp{flex:1}'
+].join('\n');document.head.appendChild(st)})();
 /* ================= 19 Nov 2026: Outlook-style status bar along the bottom =================
    Left: what this folder holds. Right: what the app is doing now, with a progress bar while
    mail is being downloaded, and "All folders are up to date" when there is nothing left.
@@ -3210,7 +3229,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-19-5';
+const APP_BUILD='2026-11-19-6';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
