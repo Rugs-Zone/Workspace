@@ -24,7 +24,7 @@
   --brand:#ff5a12; --brand2:#33190b; --brandfg:#ff8a52; --ink:#000;
   --red:#ff7b70; --redbg:#3a1714; --amber:#f2b442; --amberbg:#352712; --green:#5fd391; --greenbg:#13301f; --blue:#86aefc; --bluebg:#18243d; --violet:#c09bff; --violetbg:#271d3a;
   --shadow:0 12px 40px rgba(0,0,0,.6); color-scheme:dark}
-html,body{height:100%}
+html,body{height:100%;margin:0}   /* 19 Nov 2026: the 8px default margin pushed the bottom of the app (now the status bar) off the screen */
 body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--ui);display:flex;flex-direction:column;overflow:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none}
@@ -605,6 +605,7 @@ body.kb .scrim,body.kb .dlg,body.kb .pop{animation:none}
   <div class="split" data-split="F" role="separator" aria-label="Resize folder pane" title="Drag to resize · double-click to reset"></div>
   <main id="main" style="flex:1;min-width:0;display:flex"></main>
 </div>
+<div class="stbar" id="statusbar" role="status" aria-live="polite" hidden></div>
 <nav class="mobnav" id="mobnav" aria-label="Apps"></nav>
 <button class="fab" data-compose aria-label="New mail"><svg class="ico" style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
 <div id="layer"></div>
@@ -790,6 +791,7 @@ function mobilePicker(){const my=who(ME).dept;const opts=[['fav:mine','★ My wo
 function renderList(){const el=document.querySelector('.list');if(!el)return;
  const special=view.type==='box'&&view.folder==='drafts';const sentV=view.type==='box'&&view.folder==='sent';
  const rows=special?[]:listRows();const isInbox=view.type==='box'&&view.folder==='inbox';
+ try{window.LCNT={n:special?S.drafts.length:rows.length,u:0}}catch(e){}   /* 19 Nov 2026: for the bottom status bar */
  let h=`<div class="lhead">${mobilePicker()}<h2>${esc(title())} <small>${special?S.drafts.length:rows.length}</small></h2><div class="lsync"><button class="btn" data-sync title="Fetch new mail for Inbox and Sent">⟳ Sync</button><span>${syncing?'Syncing…':S.lastSync?'Synced '+new Date(S.lastSync).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):'Not synced yet'}</span>${special?'':`<button class="lbtog" data-lbtog style="margin-left:auto">Topics ${S.ui.hideTopics?'▸':'▾'}</button>`}</div>`;
  if(!special){h+=`<div class="seg">${isInbox?`<button class="chip" data-tab="focused" aria-pressed="${tab==='focused'}">Focused</button><button class="chip" data-tab="other" aria-pressed="${tab==='other'}">Other</button><span style="width:1px;background:var(--line)"></span>`:''}${[['all','All'],['unread','Unread'],['mine','Mine'],['open','Open'],['alias','Alias']].map(([k,l])=>`<button class="chip" data-filt="${k}" aria-pressed="${filt===k}">${l}</button>`).join('')}</div><div class="lbrow ${S.ui.hideTopics?'hide':''}" role="toolbar" aria-label="Topic"><button class="lchip" style="--lc:var(--fg)" data-lf="" aria-pressed="${!lfilt}">All topics</button>${LABELS.map(l=>`<button class="lchip" style="--lc:${l.c}" data-lf="${l.id}" aria-pressed="${lfilt===l.id}">${l.name}</button>`).join('')}</div>`}
  h+=`</div><div class="msgs">`;
@@ -2910,14 +2912,17 @@ const RECENT_DAYS=30;
 let MORE_PAGE=null,MORE_DL=0;   // progress hook and deadline - used by the sign-in screen only
 async function loadMoreBox(deptId,phase){const d=dept(deptId);if(!d||!window.__liveReady)return;const box=mailOf(d).toLowerCase(),st=MORE[box]||(MORE[box]={busy:false,done:false,recent:false});if(st.busy||st.done)return;
  const all=phase==='all',lim=Date.now()-(all?HIST_DAYS:Math.min(RECENT_DAYS,HIST_DAYS))*D;st.busy=true;
+ DLS.busy=true;DLS.phase=all?'all':'recent';try{stbarPaint()}catch(e){}
  try{for(let page=0;page<80;page++){const mine=S.threads.filter(t=>t.dept===deptId&&!t._cache&&t.msgs.some(m=>!m.ours&&!m.by));const oldest=mine.length?Math.min(...mine.map(t=>t.last)):Date.now();
+   DLS.oldest=oldest;DLS.n=mine.length;try{stbarPaint()}catch(e){}
    if(oldest<=lim){if(all)st.done=true;st.recent=true;break}
    if(!all&&MORE_DL&&Date.now()>MORE_DL)break;   // sign-in has waited long enough: the rest goes on quietly
    const r=await api('more',{box,before:oldest,limit:500});if(r.history_days)HIST_DAYS=r.history_days;const n=mergeList(r);
    if(app==='mail')renderListKeep();renderFolders();if(MORE_PAGE)try{MORE_PAGE(deptId)}catch(e){}
    if((r.threads||[]).length<500||!n){st.done=true;st.recent=true;break}
    if(all)await new Promise(go=>setTimeout(go,window.SLOW_PC?900:250))}}   // gentle on a small server and an old PC
- catch(e){if(!all)toast('Could not load older mail: '+e.message)}finally{st.busy=false;if(app==='mail')renderListKeep()}}
+ catch(e){if(!all)toast('Could not load older mail: '+e.message)}
+ finally{st.busy=false;DLS.busy=false;if(st.done)DLS.doneAt=Date.now();try{stbarPaint()}catch(e){}if(app==='mail')renderListKeep()}}
 const _llM=loadList;loadList=async function(full){const r=await _llM(full);if(full)for(const k in MORE)delete MORE[k];return r};
 const _rlM=renderList;renderList=function(){_rlM();if(!(view.type==='box'&&view.folder==='inbox'))return;const d=dept(view.dept),st=d&&MORE[mailOf(d).toLowerCase()];
  const m=document.querySelector('.list .msgs');
@@ -2925,6 +2930,58 @@ const _rlM=renderList;renderList=function(){_rlM();if(!(view.type==='box'&&view.
   ?'<div class="inb60">✓ All mail from the last '+HIST_DAYS+' days is shown — older mail: use Search</div>'
   :'<div class="inb60 quiet">Older mail is still arriving in the background — everything new is already here, and Search finds anything older</div>');
  if(!S.loadingMail&&!(st&&st.busy)){if(!(st&&st.recent))setTimeout(()=>loadMoreBox(view.dept,'recent'),50);else if(!st.done)setTimeout(()=>loadMoreBox(view.dept,'all'),50)}};
+/* ================= 19 Nov 2026: Outlook-style status bar along the bottom =================
+   Left: what this folder holds. Right: what the app is doing now, with a progress bar while
+   mail is being downloaded, and "All folders are up to date" when there is nothing left.
+   Click the text to check for new mail. Hidden on phones and while signed out. */
+const DLS={busy:false,phase:'',n:0,oldest:0,doneAt:0};
+function stbarMount(){const el=document.getElementById('statusbar');if(!el)return null;
+ if(!el.firstChild)el.innerHTML='<span class="stleft" id="stL"></span><span class="stgrow"></span>'
+  +'<span class="stprog" id="stP" role="progressbar" aria-valuemin="0" aria-valuemax="100" hidden><span></span></span>'
+  +'<button type="button" class="stmsg" id="stT" title="Check for new mail"></button>'
+  +'<span class="stdot ok" id="stD" aria-hidden="true"></span>';
+ return el}
+function stbarPaint(){const el=stbarMount();if(!el)return;
+ if(document.body.classList.contains('signedout')||!window.__liveReady){el.hidden=true;return}
+ el.hidden=false;
+ const L=el.querySelector('#stL'),P=el.querySelector('#stP'),T=el.querySelector('#stT'),Dt=el.querySelector('#stD'),c=window.LCNT||{};
+ L.innerHTML=(app==='mail'&&c.n!=null)?'Items: <b>'+(+c.n).toLocaleString('en-IN')+'</b>'+(c.u?' <i>·</i> Unread: <b>'+(+c.u).toLocaleString('en-IN')+'</b>':''):'';
+ let msg='',pct=-1,dot='ok';
+ const nC=DLS.n?DLS.n.toLocaleString('en-IN')+' conversation'+(DLS.n===1?'':'s'):'';
+ if(!navigator.onLine){msg='No internet \u2014 Rugs Email will catch up when it is back';dot='off'}
+ else if(S.loadingMail){msg='Getting your mail ready\u2026';dot='work';pct=2}
+ else if(DLS.busy){dot='work';const span=(DLS.phase==='all'?HIST_DAYS:RECENT_DAYS)*D;
+  pct=DLS.oldest?Math.max(2,Math.min(99,Math.round(100*(Date.now()-DLS.oldest)/span))):2;
+  msg=(DLS.phase==='all'?'Downloading older mail\u2026':'Downloading your mail\u2026')+(nC?' '+nC:'')
+   +(DLS.phase==='all'&&DLS.oldest?' \u00b7 back to '+new Date(DLS.oldest).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'')}
+ else if(syncing||polling){msg='Checking for new mail\u2026';dot='work'}
+ else if(DLS.doneAt&&Date.now()-DLS.doneAt<8000)msg='\u2713 All mail from the last '+HIST_DAYS+' days is downloaded';
+ else msg='All folders are up to date'+(S.lastSync?' \u00b7 checked '+new Date(S.lastSync).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):'');
+ T.textContent=msg;el.title=msg+(DLS.busy?' \u2014 you can work while the rest arrives':'');
+ if(pct<0)P.hidden=true;else{P.hidden=false;P.firstChild.style.width=pct+'%';P.setAttribute('aria-valuenow',pct)}
+ Dt.className='stdot '+dot}
+const _rdST=render;render=function(){_rdST();try{stbarPaint()}catch(e){}};
+document.addEventListener('click',e=>{if(!e.target.closest('#stT'))return;e.preventDefault();
+ if(typeof syncNow==='function')syncNow();try{stbarPaint()}catch(e){}});
+setInterval(()=>{try{if(DLS.busy||syncing||polling||S.loadingMail||(DLS.doneAt&&Date.now()-DLS.doneAt<9000))stbarPaint()}catch(e){}},1000);
+addEventListener('online',()=>{try{stbarPaint()}catch(e){}});addEventListener('offline',()=>{try{stbarPaint()}catch(e){}});
+(function(){const st=document.createElement('style');st.textContent=[
+ '.stbar{flex:none;display:flex;align-items:center;gap:10px;height:26px;padding:0 12px;background:var(--pane2);border-top:1px solid var(--line);color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden}',
+ '.stbar[hidden]{display:none}',
+ '.stbar .stgrow{flex:1}',
+ '.stbar .stleft{overflow:hidden;text-overflow:ellipsis}',
+ '.stbar b{font-weight:600;color:var(--fg)}',
+ '.stbar i{font-style:normal;opacity:.5;margin:0 2px}',
+ '.stbar .stprog{flex:none;width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}',
+ '.stbar .stprog[hidden]{display:none}',
+ '.stbar .stprog>span{display:block;height:100%;width:0;background:var(--brand);transition:width .4s ease}',
+ '.stbar .stmsg{color:var(--muted);font-size:12px;padding:2px 4px;border-radius:6px;max-width:52vw;overflow:hidden;text-overflow:ellipsis}',
+ '.stbar .stmsg:hover{background:var(--hover);color:var(--fg)}',
+ '.stbar .stdot{flex:none;width:8px;height:8px;border-radius:50%;background:#22c55e}',
+ '.stbar .stdot.work{background:#f59e0b}',
+ '.stbar .stdot.off{background:var(--red,#dc2626)}',
+ '@media (max-width:640px){.stbar{display:none}}'
+].join('\n');document.head.appendChild(st)})();
 /* ================= Nov 2026: choose the alert sound ================= */
 const TONES={ding:{n:'Ding',f:[880,1320],w:'sine',d:.3},chime:{n:'Chime',f:[660,880,1320],w:'triangle',d:.35},bell:{n:'Bell',f:[1046,1568],w:'sine',d:.9},pop:{n:'Pop',f:[520],w:'square',d:.12},soft:{n:'Soft',f:[523,659],w:'sine',d:.4,v:.12},alarm:{n:'Alert (loud)',f:[880,660,880,660],w:'sawtooth',d:.18,v:.3}};
 function playTone(k){const T=TONES[k];if(!T)return;try{_ac=_ac||new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume();const t0=_ac.currentTime,gap=Math.max(.14,T.d*.6);
@@ -3088,7 +3145,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-19-2';
+const APP_BUILD='2026-11-19-3';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3796,6 +3853,7 @@ function inboxUnreadN(deptId){return S.threads.filter(t=>t.unread&&(deptId?t.dep
 // Inbox list header: "Inbox · 1,547 unread" (hover shows how many conversations in total)
 const _rlU=renderList;renderList=function(){_rlU();try{if(!((view.type==='box'&&view.folder==='inbox')||view.type==='all'))return;
  const sm=document.querySelector('.list .lhead h2 small');if(!sm)return;const rows=listRows(),u=view.type==='all'?inboxUnreadN():inboxUnreadN(view.dept);
+ try{(window.LCNT=window.LCNT||{}).u=u;window.LCNT.n=rows.length}catch(e){}   /* 19 Nov 2026: bottom status bar */
  sm.textContent=u?u.toLocaleString('en-IN')+' unread':rows.length.toLocaleString('en-IN');sm.title=rows.length.toLocaleString('en-IN')+' conversations, '+u.toLocaleString('en-IN')+' unread'}catch(e){}};
 
 /* ================= Nov 2026: delete drafts ================= */
