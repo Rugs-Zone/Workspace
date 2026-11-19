@@ -794,7 +794,8 @@ function billParts(bs){let pre=0,gst=0,fuel=0,demand=0,freight=0,other=[],has=fa
     ch.forEach(c=>{const n=String(c.name),a=+c.amount;if(/gst|igst|cgst|sgst|\btax\b/i.test(n)){gst+=a;return}pre+=a;
       if(/fuel/i.test(n))fuel+=a;else if(/demand|peak/i.test(n))demand+=a;else if(/transport|freight|discount|base|basic|rate/i.test(n))freight+=a;else other.push([n,a])})});
   return {pre:r2(pre),gst:r2(gst),fuel:r2(fuel),demand:r2(demand),freight:r2(freight),other,has,fuelPct:freight>0&&fuel>0?r2(fuel/(freight+demand+other.reduce((s,o)=>s+(/handling|oversize|overweight|ahs/i.test(o[0])?o[1]:0),0))*100):null}}
-function estimate(inv,ck,dc,bp){const R=RR(),d=inv.d,L=[],note=[];let freight=null,zone='';const w=dc.rw;
+function estimate(inv,ck,dc,bp){try{return estimateRaw(inv,ck,dc,bp)}catch(e){return {err:'Rate list cannot price this (weight or place outside the list)'}}}
+function estimateRaw(inv,ck,dc,bp){const R=RR(),d=inv.d,L=[],note=[];let freight=null,zone='';const w=dc.rw;
   if(!w)return {err:'Weight not entered on the invoice'};
   if(ck==='fdx'||ck==='adl'||ck==='asl'){
     const cty=(d.buyer||{}).country||'';
