@@ -158,18 +158,30 @@ async function withInlineImages(tok: string, msgId: string, payload: any, html: 
 // carried the same pictures 15-20 times and the function ran out of memory / CPU (546).
 // Now each cid: picture becomes a small link  rmcid:<gmail message id>/<cid>  and the app fetches the
 // pictures one by one with the "inlineImg" action below. The mail text arrives at once, never 546.
-function withCidLinks(msgId: string, payload: any, html: string, pool: any[] = []) {
-  if (!/cid:/i.test(html)) return html;
-  const own = inlineParts(payload).map((x) => ({ ...x, mid: msgId }));
-  const ownCids = new Set(own.map((x) => x.cid.toLowerCase()));
-  const parts = [...own, ...pool.filter((x) => !ownCids.has(String(x.cid).toLowerCase()))];
-  for (const pt of parts) {
-    const link = `rmcid:${pt.mid || msgId}/${encodeURIComponent(pt.cid)}`;
-    const q = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    html = html.replace(new RegExp("cid:" + q(pt.cid) + "(?![\\w.@-])", "gi"), link);
-    if (pt.name) html = html.replace(new RegExp("cid:" + q(pt.name) + "(?=[\"'])", "gi"), link);
+// 19 Nov 2026: "a 72-mail trail takes far too long" - it did not open at all: a 49-mail conversation
+// answered 546 after 7 s and the log said "CPU Time exceeded". This function was the reason. It walked
+// EVERY picture of the WHOLE conversation and ran two regular expressions over the WHOLE mail for each
+// one, for every mail: 49 mails x ~300 pictures x 2 passes over 100 KB+ of HTML. Now the index is built
+// once and the mail is read ONCE, looking each cid: reference up as it goes - the work grows with the
+// size of the conversation instead of with its square. A cid nothing matches is left alone, so the app
+// never asks Gmail for a picture that does not exist.
+function cidIndex(parts: any[], mid?: string) {
+  const ix = new Map<string, any>();
+  for (const x of parts) {
+    const p = { ...x, mid: x.mid || mid };
+    const k = String(x.cid || "").toLowerCase(); if (k && !ix.has(k)) ix.set(k, p);
+    const n = String(x.name || "").toLowerCase(); if (n && !ix.has(n)) ix.set(n, p);
   }
-  return html;
+  return ix;
+}
+function withCidLinks(msgId: string, payload: any, html: string, all?: Map<string, any>) {
+  if (!html || !/cid:/i.test(html)) return html;
+  const own = cidIndex(inlineParts(payload), msgId);          // this mail's own pictures win
+  return html.replace(/cid:([^"'\s<>)\]]+)/gi, (m0: string, raw: string) => {
+    const k = String(raw).toLowerCase();
+    const pt = own.get(k) || (all && all.get(k));
+    return pt ? `rmcid:${pt.mid || msgId}/${encodeURIComponent(pt.cid)}` : m0;
+  });
 }
 const htmlToText = (h: string) => h.replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<br\s*\/?>|<\/p>|<\/div>|<\/tr>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\n{3,}/g, "\n\n");
 
@@ -702,11 +714,21 @@ async function threadFull(box: string, tid: string) {
     const byId = new Map<string, any>((g.messages || []).map((x: any) => [x.id, x]));
     // 18 Nov 2026: pictures are NOT pasted in any more (that caused 546 on long trails) - see withCidLinks / inlineImg
     const pool: any[] = []; for (const gm of g.messages || []) for (const x of inlineParts(gm.payload)) pool.push({ ...x, mid: gm.id, data: "" });
-    const out = await Promise.all((m || []).map(async (x: any) => {
+    const allIx = cidIndex(pool);          // 19 Nov 2026: built once for the whole conversation, not once per mail
+    // 19 Nov 2026: a long trail (49, 72 mails) is mostly the same text quoted again and again, and sending
+    // every mail's HTML at once is what made the function run out of CPU. The app only shows the newest
+    // mail open - the older ones are folded one-liners - so only the newest FULL_N come with their HTML.
+    // Opening an older one asks for it by id (p.ids), and then it is sent in full.
+    const FULL_N = 15;
+    const want: Set<string> | null = Array.isArray(ids) && ids.length ? new Set(ids.map(String)) : null;
+    const rows = m || [];
+    const full = (x: any, i: number) => want ? want.has(String(x.gmail_id)) : i >= rows.length - FULL_N;
+    const out = await Promise.all(rows.map(async (x: any, i: number) => {
       const gm = byId.get(x.gmail_id);
+      if (!full(x, i)) return { ...x, body_html: "", body_text: (x.body_text || "").slice(0, 4000), light: true };
       let html = gm ? partOf(gm.payload, "text/html") : "";
       const text = gm ? (partOf(gm.payload, "text/plain") || (html ? htmlToText(html.slice(0, 150000)) : "")) : x.body_text;
-      if (gm && html) html = withCidLinks(x.gmail_id, gm.payload, html, pool);
+      if (gm && html) html = withCidLinks(x.gmail_id, gm.payload, html, allIx);
       return { ...x, body_html: html, body_text: (text || x.body_text || "").slice(0, 60000) };   // big mails keep their HTML; the app lets the mail scroll
     }));
     return { messages: out };
@@ -849,7 +871,7 @@ async function handle(a: string, p: any, t0: number) {
     }
     case "thread": {
       await threadAccess(u, p.mailbox, p.threadId, "view");
-      return threadFull(p.mailbox, p.threadId);
+      return threadFull(p.mailbox, p.threadId, p.ids);   // 19 Nov 2026: p.ids = open one older mail of a long trail
     }
     case "sync": {
       const ds = (await depts()).filter((d: any) => access(u, d.id));
