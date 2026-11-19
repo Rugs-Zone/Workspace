@@ -706,7 +706,7 @@ async function outOfOffice(t0: number) {
 }
 
 // full conversation straight from Gmail (HTML as received, pasted cid pictures from the whole conversation inlined)
-async function threadFull(box: string, tid: string) {
+async function threadFull(box: string, tid: string, ids?: any) {   // 19 Nov 2026: ids = open these older mails of a long trail in full
     const { data: m } = await sb.from("rm_messages").select("gmail_id,direction,body_text,sent_at").eq("mailbox", box).eq("gmail_thread_id", tid).order("sent_at");
     // full original (HTML exactly as received) comes straight from Gmail — nothing heavy is stored in Supabase
     const tok = await gToken(box, READ);
