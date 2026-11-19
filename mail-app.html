@@ -871,9 +871,9 @@ function _renderRead(){const el=$('#read');if(!el)return;const t=S.threads.find(
  <div class="rbody">
  ${(()=>{const L=LD[t.id]||{};if(t._local||t.full)return '';
   if(L.saved)return `<div class="promise"><span>${ico('mail')}</span><b>Showing the saved copy of this conversation<br><span class="sub">${esc(L.err)} Every mail and its text are here. Pictures and the exact layout come straight from Google Mail \u2014 press Retry for those.</span></b><button class="btn" data-fullretry="${t.id}">\u21bb Retry</button></div>`;
-  return L.err
-   ?`<div class="promise late"><span>${ico('clock')}</span><b>Only the short preview is shown<br><span class="sub">${esc(L.err)}</span></b><button class="btn" data-fullretry="${t.id}">\u21bb Retry</button></div>`
-   :`<div class="promise"><span>${ico('clock')}</span><b>Loading the full mail\u2026<br><span class="sub">The short preview is shown until the original arrives from Gmail.</span></b></div>`})()}
+  if(L.err)return `<div class="promise late"><span>${ico('clock')}</span><b>Only the short preview is shown<br><span class="sub">${esc(L.err)}</span></b><button class="btn" data-fullretry="${t.id}">\u21bb Retry</button></div>`;
+  /* 19 Nov 2026: only when it is really taking a while (see liveOpen) */
+  return L.slow?`<div class="promise"><span>${ico('clock')}</span><b>Loading the full mail\u2026<br><span class="sub">The short preview is shown until the original arrives from Gmail.</span></b></div>`:''})()}
  ${t.folder==='deleted'?`<div class="promise late"><span>${ico('trash')}</span><b>Deleted in Rugs Email only<br><span class="sub">The original mail is still safe in ${esc(dept(t.dept).box)}rugscreation.com. Restore it any time.</span></b><button class="btn" data-restore="${t.id}">↺ Restore</button></div>`:''}
  ${!priv&&t.label&&s!=='done'?(()=>{const L=LB(t.label),tgt=null;return `<div class="aihint"><span>✦</span><b>${esc(L.hint)}<small>${t.ai?`AI tagged this conversation as <span style="color:color-mix(in srgb,${L.c} 62%,var(--fg));font-weight:700">${L.name}</span> · ${t.conf}% sure — it only describes the topic, it doesn't move the mail`:`Topic set to ${L.name} by the team`}</small></b>${tgt?`<button class="btn vio" data-xferto="${t.id}" data-dto="${tgt.id}">↪ Send to ${esc(tgt.name)}</button>`:''}</div>`})():''}
  ${priv?'<p style="color:var(--muted);margin:0">This email holds a login code. Rugs Email keeps it hidden from the team and shows it only to the account owner.</p>':`
@@ -1091,8 +1091,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-gtog],[dat
  if(b.id==='hamb'){S.ui.hideFolders=!S.ui.hideFolders;save();applyLayout();fitFrames();return}
  if(b.id==='fsBtn'){const el=document.documentElement;if(document.fullscreenElement){document.exitFullscreen?.()}else if(el.requestFullscreen){el.requestFullscreen().catch(()=>{document.body.classList.toggle('maxread');render()})}else{document.body.classList.toggle('maxread');render()}return}
  if('maxread'in d){document.body.classList.toggle('maxread');renderRead();fitFrames();return}
- if(d.mall){const t=T_(openId);if(t){openMsgs[t.id]=new Set(d.mall==='open'?t.msgs.map((_,i)=>i):[t.msgs.length-1]);renderRead()}return}
- if(d.mtog!==undefined){if(e.target.closest('a,button:not([data-mtog]),select,input,textarea,details,iframe,.mbody')&&!e.target.closest('header'))return;const t=T_(openId);if(!t)return;const set=openMsgs[t.id]||(openMsgs[t.id]=new Set());const i=+d.mtog;set.has(i)?set.delete(i):set.add(i);renderRead();return}
+ if(d.mall){const t=T_(openId);if(t){openMsgs[t.id]=new Set(d.mall==='open'?t.msgs.map((_,i)=>i):[t.msgs.length-1]);renderRead();try{loadCidPics(t)}catch(e){}}return}
+ if(d.mtog!==undefined){if(e.target.closest('a,button:not([data-mtog]),select,input,textarea,details,iframe,.mbody')&&!e.target.closest('header'))return;const t=T_(openId);if(!t)return;const set=openMsgs[t.id]||(openMsgs[t.id]=new Set());const i=+d.mtog;set.has(i)?set.delete(i):set.add(i);renderRead();try{loadCidPics(t)}catch(e){}return}
  if('profile'in d){profileDlg();return}
  if(d.atab){adminTab=d.atab;app='admin';render();return}
  if(d.dsave){const r=document.querySelector(`[data-drow="${d.dsave}"]`),x=DEPTS.find(z=>z.id===d.dsave);const n=r.querySelector('.dName').value.trim(),bx=r.querySelector('.dBox').value.trim().toLowerCase().replace(/@.*$/,'').replace(/[^a-z0-9._-]/g,'');
@@ -1705,7 +1705,10 @@ function liveOpen(t,o){
  const L=ld(t);
  if(L.p)return L.p;                      // one load per conversation at a time
  if(L.gave&&!o.force)return Promise.resolve(false);
- L.err='';L.saved=false;L.busy=true;
+ L.err='';L.saved=false;L.busy=true;L.slow=false;
+ /* 19 Nov 2026: opening a mail takes 2-4 seconds on the live server, so the bar used to flash up
+    on every single mail. Show it only if the mail is still coming after 1.2 seconds. */
+ clearTimeout(L.slowT);L.slowT=setTimeout(()=>{if(L.busy){L.slow=true;redrawRead(t)}},1200);
  redrawRead(t);
  const run=async()=>{
   let last='';
@@ -1733,32 +1736,61 @@ function liveOpen(t,o){
   }
   L.err=last;return false;
  };
- L.p=run().then(ok=>{L.busy=false;L.p=null;if(!ok)L.gave=true;redrawRead(t);loadCidPics(t);return ok})
-  .catch(e=>{L.busy=false;L.p=null;L.gave=true;L.err=e.message||'Could not load the mail';redrawRead(t);return false});
+ L.p=run().then(ok=>{L.busy=false;L.slow=false;clearTimeout(L.slowT);L.p=null;if(!ok)L.gave=true;redrawRead(t);if(!o.nopics)loadCidPics(t);return ok})
+  .catch(e=>{L.busy=false;L.slow=false;clearTimeout(L.slowT);L.p=null;L.gave=true;L.err=e.message||'Could not load the mail';redrawRead(t);return false});
  return L.p;
 }
 /* 18 Nov 2026: pasted (cid:) pictures arrive as rmcid:<gmail id>/<cid> links - the server no longer pastes
    them into every mail of the trail (that ran it out of memory: 546). Fetched here two at a time, once per
    picture for the whole session, then written into the mail as data: URLs exactly as before. */
-const CIDP={},CID_RX=/rmcid:[A-Za-z0-9]+\/[^"'\s)>]+/g;
-function loadCidPics(t){
- if(!t)return Promise.resolve();const L=ld(t);if(L.pics)return L.pics;
- const ms=t.msgs.filter(x=>/rmcid:/.test(x.raw||''));if(!ms.length)return Promise.resolve();
- const keys=[...new Set(ms.flatMap(x=>x.raw.match(CID_RX)||[]))];
- const get=k=>CIDP[k]||(CIDP[k]=(()=>{const m=k.match(/^rmcid:([^/]+)\/(.+)$/);let cid='';try{cid=decodeURIComponent(m[2])}catch(e){cid=m[2]}
-  return _tmo(api('inlineImg',{mailbox:t.box,gmailId:m[1],cid}),30000,'timeout').then(r=>r&&r.data||'')})().catch(()=>{delete CIDP[k];return ''}));
- let i=0;const work=async()=>{while(i<keys.length)await get(keys[i++])};
- L.pics=Promise.all([work(),work()]).then(async()=>{
-  const map={};let miss=0;for(const k of keys){map[k]=await get(k);if(!map[k])miss++}
-  ms.forEach(x=>{x.raw=x.raw.replace(CID_RX,k=>map[k]||k);if(x.gid&&RAWC[x.gid])RAWC[x.gid].raw=x.raw;try{QC.delete(x)}catch(e){}});
-  if(miss)setTimeout(()=>{L.pics=null},0);       // a picture that failed is tried again the next time the mail is opened
-  redrawRead(t)});
- return L.pics}
+/* 19 Nov 2026: the key must stop where a cid cannot go on. A plain-text mail writes its pictures
+   as [cid:image001.jpg@01DD75DD.F9469E80] and the old pattern ([^"'\s)>]+) kept the closing
+   bracket, so Gmail was asked for a picture called "...F9469E80]" and answered 404 - which is
+   why logos and signatures stayed empty (1,198 of 1,198 misses in today's log had a "]"). */
+const CIDK="rmcid:[A-Za-z0-9]+\\/[A-Za-z0-9._~%@+=:$&-]+";
+const CIDP={},CIDD={},CID_RX=new RegExp(CIDK,'g'),CID_Q=[];let CID_RUN=0;
+const cidPump=()=>{const par=window.SLOW_PC?2:3;
+ while(CID_RUN<par&&CID_Q.length){const job=CID_Q.shift();CID_RUN++;job().then(()=>{CID_RUN--;cidPump()},()=>{CID_RUN--;cidPump()})}};
+function cidGet(box,k){
+ if(CIDD[k])return Promise.resolve(CIDD[k]);
+ if(CIDP[k])return CIDP[k];
+ return CIDP[k]=new Promise(res=>{CID_Q.push(()=>{
+  const m=k.match(/^rmcid:([^/]+)\/(.+)$/);if(!m){res('');return Promise.resolve()}
+  let cid='';try{cid=decodeURIComponent(m[2])}catch(e){cid=m[2]}
+  return _tmo(api('inlineImg',{mailbox:box,gmailId:m[1],cid}),60000,'timeout')
+   .then(r=>{const d=(r&&r.data)||'';if(d)CIDD[k]=d;res(d)})
+   .catch(()=>{delete CIDP[k];res('')})});cidPump()})}
+/* write the pictures that have arrived into the mail. A picture used as src="..." simply becomes
+   the picture; one sitting in the text as [cid:...] becomes a real <img> (that is the signature
+   of a plain-text mail), instead of leaving "[rmcid:...]" on screen. */
+const CID_SRC=new RegExp('(src\\s*=\\s*["\'])('+CIDK+')(["\'])','g');
+/* never inside a CSS url(...): only a picture standing in the text becomes an <img> */
+const CID_TXT=new RegExp('([^="\'\\w(]|^)\\[?('+CIDK+')\\]?','g');
+function cidPaint(t){let any=false;
+ (t.msgs||[]).forEach(x=>{const h=x.raw||'';if(h.indexOf('rmcid:')<0)return;
+  let nh=h.replace(CID_SRC,(m0,a,k,b)=>CIDD[k]?a+CIDD[k]+b:m0);
+  nh=nh.replace(CID_TXT,(m0,pre,k)=>CIDD[k]?pre+'<img src="'+CIDD[k]+'" alt="" style="max-width:100%;height:auto">':m0);
+  if(nh!==h){x.raw=nh;any=true;if(x.gid&&RAWC[x.gid])RAWC[x.gid].raw=nh;try{QC.delete(x)}catch(e){}}});
+ return any}
+/* By default only the mails you can SEE are fetched (the open ones - a long trail keeps the older
+   mails folded, and their pictures are fetched when you expand them), newest first. Reply and
+   Forward pass {all:true} because they quote the whole trail. */
+function loadCidPics(t,o){
+ o=o||{};if(!t||!t.msgs)return Promise.resolve();
+ const open=openMsgs[t.id],last=t.msgs.length-1;
+ const pick=t.msgs.filter((x,i)=>String(x.raw||'').indexOf('rmcid:')>=0&&(o.all||!open||open.has(i)||i===last));
+ if(!pick.length)return Promise.resolve();
+ const keys=[...new Set([...pick].reverse().flatMap(x=>x.raw.match(CID_RX)||[]))];
+ const todo=keys.filter(k=>!CIDD[k]);
+ if(!todo.length){if(cidPaint(t))redrawRead(t);return Promise.resolve()}
+ let tm=0;const soon=()=>{if(tm)return;tm=setTimeout(()=>{tm=0;if(cidPaint(t))redrawRead(t)},250)};
+ return Promise.all(todo.map(k=>cidGet(t.box,k).then(d=>{if(d)soon()})))
+  .then(()=>{clearTimeout(tm);if(cidPaint(t))redrawRead(t)})}
 /* Reply, Reply all, Forward and Forward-as-attachment quote the mail itself, so
    they wait for the full original instead of quoting the short preview. */
 function withFull(t,fn){
  if(!t||t._local)return fn();
- if(t.full){if(!t.msgs.some(x=>/rmcid:/.test(x.raw||'')))return fn();loadCidPics(t).then(()=>fn());return}
+ if(t.full){if(!t.msgs.some(x=>/rmcid:/.test(x.raw||'')))return fn();loadCidPics(t,{all:true}).then(()=>fn());return}
  toast('Getting the full mail first\u2026');
  liveOpen(t,{force:true}).then(ok=>{if(ok)fn();
   else toast('The full mail has not arrived yet \u2014 press Retry at the top of the mail',true)})
@@ -1813,7 +1845,7 @@ function sessionEnd(msg){TOKEN='';try{localStorage.removeItem('rugs-token')}catc
    once and stops starting new fetches. Anything that fails -> "Couldn't load everything, opening
    anyway" and the app opens; a conversation whose full mail failed is left exactly as before, so
    opening it later fetches it normally. Fetched gently (PRELOAD_PAR at a time): the server is small. */
-const PRELOAD_MAX_MS=30000,PRELOAD_N=window.SLOW_PC?10:25,PRELOAD_PAR=window.SLOW_PC?2:3,PRELOAD_PICS=window.SLOW_PC?20:80;
+const PRELOAD_MAX_MS=30000,PRELOAD_N=window.SLOW_PC?6:10,PRELOAD_PAR=2,PRELOAD_PICS=window.SLOW_PC?20:60;
 const PRE={el:null,timer:0,stop:false,failed:false,n:0,m:0,pn:0,pm:0,pdone:false};
 function preShow(){
  if(PRE.el)return;
@@ -1870,7 +1902,7 @@ async function preRun(){
   preStage('Loading full messages and trails…');preBar();
   let i=0;
   const worker=async()=>{while(!PRE.stop&&i<list.length){const t=list[i++];
-   const ok=await liveOpen(t).catch(()=>false);
+   const ok=await liveOpen(t,{nopics:true}).catch(()=>false);   // 19 Nov 2026: pasted pictures are fetched when the mail is really opened
    if(!ok){PRE.failed=true;delete LD[t.id]}               // leave it as it was: a normal open fetches it again
    PRE.n++;preBar()}};
   await Promise.all(Array.from({length:PRELOAD_PAR},worker));
@@ -3048,6 +3080,16 @@ function picHTML(m,h){const BASE='<base target="_blank">';
  const hd=h.match(/<head\b[^>]*>/i);if(hd)return h.replace(hd[0],hd[0]+inj);
  const dt=h.match(/^\s*<!doctype[^>]*>/i);if(dt)return dt[0]+inj+h.slice(dt[0].length);
  return inj+h}
+/* 19 Nov 2026: a picture that has not arrived yet is an rmcid: link, which the browser draws as a
+   broken-image icon - that is what "the signature is not showing" looked like. Until it arrives it
+   is drawn as blank space (the mail keeps its own size and layout), and a picture written in the
+   text as [cid:...] shows a small "picture loading" line instead of raw [rmcid:...] text.
+   Display only: the links stay in the mail itself, so cidPaint still finds them. */
+const PIXEL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+const _phCid=picHTML;picHTML=function(m,h){h=String(h||"");
+ if(h.indexOf("rmcid:")>=0){h=h.replace(CID_SRC,(m0,a,k,b)=>a+PIXEL+b)
+  .replace(CID_TXT,(m0,pre)=>pre+'<span style="color:#9c948e;font-size:12px">⏳ picture loading…</span>')}
+ return _phCid(m,h)};
 /* Internally-rendered mail (m.html, the "rich" div - not the sandboxed raw
    iframe, which picHTML's <base target="_blank"> already covers above)
    lives in this same document, so a plain link click would navigate this
@@ -3145,7 +3187,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-19-3';
+const APP_BUILD='2026-11-19-4';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
