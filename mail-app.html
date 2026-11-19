@@ -1200,7 +1200,13 @@ function qBuild(m){
    const k=a.name.toLowerCase();
    if(k.indexOf('on')===0)n.removeAttribute(a.name);
    else if((k==='href'||k==='src'||k==='action')&&/^\s*javascript:/i.test(a.value||''))n.removeAttribute(a.name)})});
- doc.querySelectorAll('img[src^="cid:"],img[src^="rmcid:"]').forEach(n=>n.remove());   // pasted picture whose bytes never came: would only be a broken icon
+ doc.querySelectorAll('img[src^="cid:"]').forEach(n=>n.remove());   // pasted picture whose bytes never came: would only be a broken icon
+ /* 19 Nov 2026: one of ours that is still on its way keeps its place as a blank that knows its name,
+    so Reply can open at once and the real picture drops in when it lands (cidLive). One that never
+    lands is taken out of the mail as it is sent (outgoingHTML). */
+ doc.querySelectorAll('img[src^="rmcid:"]').forEach(n=>{const k=n.getAttribute('src');
+  if(CIDD[k]){n.setAttribute('src',CIDD[k]);return}
+  n.setAttribute('data-rmcid',k);n.setAttribute('src',PIXEL)});
  const cls='q'+String(m.gid||Math.random().toString(36).slice(2)).replace(/[^A-Za-z0-9]/g,'').slice(0,18);
  let css='';
  doc.querySelectorAll('style').forEach(s=>{css+=scopeCSS(s.textContent||'','.'+cls);s.remove()});
@@ -1239,6 +1245,11 @@ function trailHTML(tr,open){if(!tr||!tr.length)return'';return `<details class="
    deleted before sending, and what is left is exactly what goes out. */
 function trailBlock(q,i){
  return '<div data-qm="'+i+'">'+qHead(q)+(q.html||qFallback(q))+'<div><br></div></div>'}
+const _tbCid=trailBlock;trailBlock=function(){let h=_tbCid.apply(this,arguments);
+ if(h&&h.indexOf('rmcid:')>=0)h=h.replace(CID_SRC,(m0,a,k,b)=>CIDD[k]?a+CIDD[k]+b:a+PIXEL+b+' data-rmcid="'+k+'"')
+  .replace(CID_TXT,(m0,pre,k)=>CIDD[k]?pre+'<img src="'+CIDD[k]+'" alt="" style="max-width:100%;height:auto">'
+   :pre+'<span data-rmcid="'+k+'" style="color:#9c948e;font-size:12px">⏳ picture loading…</span>');
+ return h};
 function trailEditHTML(t){const tr=trailOf(t);return tr.map((q,i)=>trailBlock(q,i)).reverse().join('')}
 function sendReply(t,txt,p,dv,fwd,noTrail,html,withSig=true){
  const tr=noTrail?[]:trailOf(t);t.msgs.push({from:who(ME).name,by:ME,email:dept(t.dept).box+'rugscreation.com',at:Date.now(),body:txt,html:html||'',sig:withSig?pickSig():'',trail:tr,fwd:!!fwd});t.last=Date.now();
@@ -1814,15 +1825,26 @@ function openLight(t,list){
   b.forEach(g=>{const x=t.msgs.find(y=>y.gid===g);if(x){x.loading=false;if(x.light)delete LD1[t.id+'|'+g]}});
   redrawRead(t)}};
  return Promise.all([one(),one()]).then(()=>{try{loadCidPics(t)}catch(e){}})}
+/* 19 Nov 2026: the same treatment as the reading pane for a quoted mail - a picture that has not
+   arrived yet becomes a blank space carrying its name, so it is never a broken icon in the editor
+   and cidLive() can fill it in where it stands. */
+const _qbCid=qBody;qBody=function(m){let h=_qbCid.apply(this,arguments);
+ if(h&&h.indexOf('rmcid:')>=0){h=h.replace(CID_SRC,(m0,a,k,b)=>CIDD[k]?a+CIDD[k]+b:a+PIXEL+b+' data-rmcid="'+k+'"')
+  .replace(CID_TXT,(m0,pre,k)=>CIDD[k]?pre+'<img src="'+CIDD[k]+'" alt="" style="max-width:100%;height:auto">'
+   :pre+'<span data-rmcid="'+k+'" style="color:#9c948e;font-size:12px">\u23f3 picture loading\u2026</span>')}
+ return h};
 /* Reply, Reply all, Forward and Forward-as-attachment quote the mail itself, so
    they wait for the full original instead of quoting the short preview. */
 function withFull(t,fn){
  if(!t||t._local)return fn();
- if(t.full){if(!t.msgs.some(x=>/rmcid:/.test(x.raw||'')))return fn();
-  /* 19 Nov 2026: wait for the pictures of the trail, but at most 8 seconds - a long trail has dozens
-     of them and the compose window used to sit closed for a minute. The rest keep arriving. */
-  let went=false;const go=()=>{if(went)return;went=true;fn()};
-  loadCidPics(t,{all:true}).then(go);setTimeout(go,8000);return}
+ if(t.full){
+  /* 19 Nov 2026: do not hold the window back. It opens now; a picture that is still coming is quoted
+     as a blank space that knows its own name, and cidLive() drops the real one in when it lands.
+     One that never lands is taken out of the mail when it is sent (see outgoingHTML). */
+  fn();
+  if(t.msgs.some(x=>/rmcid:/.test(x.raw||''))){try{loadCidPics(t,{all:true})}catch(e){}}
+  setTimeout(()=>{try{cidLive()}catch(e){}},0);
+  return}
  toast('Getting the full mail first\u2026');
  liveOpen(t,{force:true}).then(ok=>{if(ok)fn();
   else toast('The full mail has not arrived yet \u2014 press Retry at the top of the mail',true)})
@@ -1839,6 +1861,12 @@ function outgoingHTML(m){const _inBody=/data-sig=/.test(m.html||'');const sig=m.
  return `<div style="font-family:Calibri,Arial,sans-serif;font-size:15px">${main}${sig}${quoted}${tr}</div>`}
 
 /* send / reply / forward from the department mailbox, with the person's name + signature */
+/* 19 Nov 2026: whatever is still waiting for a picture when the mail is sent is taken out, so a buyer
+   never receives a blank placeholder. Both ways of sending build their HTML with outgoingHTML. */
+const _ogCid=outgoingHTML;outgoingHTML=function(m){let h=_ogCid.apply(this,arguments);
+ if(h&&h.indexOf('data-rmcid')>=0)h=h.replace(/<img\b[^>]*\bdata-rmcid="[^"]*"[^>]*>/gi,'')
+  .replace(/<span\b[^>]*\bdata-rmcid="[^"]*"[^>]*>[\s\S]*?<\/span>/gi,'');
+ return h};
 function liveSend(t,m,fwd,isNew){const box=isNew?mailOf(dept(t.dept)):t.box,localId=t.id;m.sending=true;
  api('send',{mailbox:box,threadId:isNew?'':gidOf(t),to:fwd?(t._fwdTo||''):t.email,cc:t.cc||'',subject:t.sub,html:outgoingHTML(m),text:m.body,forward:!!fwd})
  .then(async r=>{m.sending=false;m.gid=r.messageId;toast('Delivered ✓');
@@ -3253,7 +3281,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-19-7';
+const APP_BUILD='2026-11-19-8';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
