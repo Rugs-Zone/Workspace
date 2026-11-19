@@ -820,9 +820,11 @@ function estimate(inv,ck,dc,bp){const R=RR(),d=inv.d,L=[],note=[];let freight=nu
   const fuel=r2(freight*nm(R.fuel[ck])/100);if(fuel)L.push(['Fuel surcharge '+R.fuel[ck]+'%',fuel]);
   const pre=r2(freight+fuel),gst=r2(pre*nm(R.gst[ck])/100);return {lines:L,pre,gst,total:r2(pre+gst),w,zone,note}}
 const isDuty=b=>b.kind==='duty';
-function compare(inv){const ck=courierKey(inv),R=RR(),dc=declared(inv.d,R.div[ck]||5000);const all=ACC.bills.filter(b=>inv.tracking_no&&b.awb_key===awbKey(inv.tracking_no));
+function compare(inv){const R=RR();let ck=courierKey(inv),dc=declared(inv.d,R.div[ck]||5000),guess=false;
+  /* local invoice with no courier chosen: price it on the cheaper of Apex / Anjani so the rate list still shows */
+  if(ck==='other'&&!((inv.d.courier||{}).name)&&inv.ship_type!=='International'){let best=null;['apex','anjani'].forEach(k=>{const d2=declared(inv.d,R.div[k]||5000),e=estimate(inv,k,d2,null);if(e&&!e.err&&(!best||e.total<best.e.total))best={k,d2,e}});if(best){ck=best.k;dc=best.d2;guess=true}}const all=ACC.bills.filter(b=>inv.tracking_no&&b.awb_key===awbKey(inv.tracking_no));
   const bs=all.filter(b=>!isDuty(b)),ds=all.filter(isDuty),duty=ds.reduce((s,b)=>s+nm(b.amount),0);
-  const base={ck,dc,bs,ds,duty,issues:[],est:null,bp:null,disp:null,diff:0};
+  const base={ck,dc,guess,bs,ds,duty,issues:[],est:null,bp:null,disp:null,diff:0};
   if(!inv.tracking_no)return Object.assign(base,{st:'notrack'});
   if(!bs.length)return Object.assign(base,{st:ds.length?'nobill':'nobill',est:estimate(inv,ck,dc,null)});
   const bw=r2(bs.reduce((s,b)=>s+nm(b.billed_weight),0)),amt=bs.reduce((s,b)=>s+nm(b.amount),0),bp=billParts(bs),est=estimate(inv,ck,dc,bp),issues=[];
@@ -859,8 +861,8 @@ function drawAcct(){const all=ACC.inv.map(i=>Object.assign({inv:i},compare(i)));
   <div class="panel"><div class="row" style="margin-bottom:10px">${chips.map(c=>`<button class="chip" data-ac="f" data-f="${c[0]}" aria-pressed="${ACC.f===c[0]}">${c[1]}</button>`).join('')}<input id="accQ" placeholder="Search invoice, buyer, tracking, courier" value="${esc(ACC.q)}" style="max-width:260px"><label class="note">From <input type="date" id="accFrom" value="${ACC.from}"></label><label class="note">To <input type="date" id="accTo" value="${ACC.to}"></label></div>
   ${rows.length?`<div class="tbl"><table><thead><tr><th>Invoice</th><th>Courier</th><th>Weight (rounded)</th><th class="num">Rate list</th><th class="num">Courier billed</th><th class="num">Difference</th><th>Result</th><th></th></tr></thead><tbody>${rows.map(x=>{const k=x.inv.id,e=x.est,ok=e&&!e.err;const red=x.st==='issue';
    return `<tr style="${red?'background:#FDECEC;box-shadow:inset 4px 0 #D92D20':x.st==='done'?'background:#EEF4FF':''}"><td><b>${esc(x.inv.inv_no)}</b><br><span class="note">${esc(buyerName(x.inv))} · ${esc(fdate(x.inv.appr_at))}</span><br><span class="note">${esc(x.inv.tracking_no||'no tracking')}</span></td>
-   <td>${esc(CK[x.ck]||((x.inv.d.courier||{}).name)||'-')}<br><span class="pill ${x.inv.ship_type==='International'?'Intl':''}">${x.inv.ship_type==='International'?'Intl':'Local'}</span>${e&&e.zone?' <span class="note">zone '+esc(e.zone)+'</span>':''}</td>
-   <td>actual ${x.dc.act} kg${x.dc.vol?'<br>size '+x.dc.vol+' kg':''}<br><b>${x.dc.rw} kg</b> charged${x.bs.length&&x.bw?'<br><span class="note">bill: '+x.bw+' kg</span>':''}</td>
+   <td>${esc(CK[x.ck]||((x.inv.d.courier||{}).name)||'-')}${x.guess?'<br><span class="note">courier not chosen on invoice, cheapest of Apex / Anjani used</span>':''}<br><span class="pill ${x.inv.ship_type==='International'?'Intl':''}">${x.inv.ship_type==='International'?'Intl':'Local'}</span>${e&&e.zone?' <span class="note">zone '+esc(e.zone)+'</span>':''}</td>
+   <td>actual ${x.dc.act} kg${x.dc.dims.length?'<br>size '+x.dc.pcs.filter(p=>p.t).map(p=>p.t.join('×')).join(', ')+' cm':''}<br><b>${x.dc.rw} kg</b> charged${x.bs.length&&x.bw?'<br><span class="note">bill: '+x.bw+' kg</span>':''}</td>
    <td class="num">${ok?'<b>'+inr2(e.total)+'</b><br><span class="note">'+inr2(e.pre)+' + GST</span>':'<span class="note">'+esc(e?e.err:'-')+'</span>'}</td>
    <td class="num">${x.bs.length?'<b>'+inr2(x.bp.pre+(x.bp.gst||(ok?x.bp.pre*nm(RR().gst[x.ck])/100:0)))+'</b><br><span class="note">'+inr2(x.bp.pre)+' + GST</span>':'<span class="note">-</span>'}${x.duty?'<br><span class="note">+ duty '+inr2(x.duty)+'</span>':''}</td>
    <td class="num">${x.bs.length&&ok?`<b style="color:${x.diff>0?'#B42318':'#0B6B3A'}">${x.diff>0?'+':''}${inr2(x.diff)}</b>`:'-'}</td>
