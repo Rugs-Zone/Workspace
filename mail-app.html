@@ -1787,10 +1787,13 @@ function loadCidPics(t,o){
  if(!pick.length)return Promise.resolve();
  const keys=[...new Set([...pick].reverse().flatMap(x=>x.raw.match(CID_RX)||[]))];
  const todo=keys.filter(k=>!CIDD[k]);
- if(!todo.length){if(cidPaint(t))redrawRead(t);return Promise.resolve()}
- let tm=0;const soon=()=>{if(tm)return;tm=setTimeout(()=>{tm=0;if(cidPaint(t))redrawRead(t)},250)};
+ /* 19 Nov 2026: cidPaint writes the picture into the mail, cidLive puts it into the copy already on
+    the screen. Rebuilding the reading pane for every picture made the mail flicker open and shut. */
+ const draw=()=>{cidPaint(t);cidLive()};
+ if(!todo.length){draw();return Promise.resolve()}
+ let tm=0;const soon=()=>{if(tm)return;tm=setTimeout(()=>{tm=0;draw()},250)};
  return Promise.all(todo.map(k=>cidGet(t.box,k).then(d=>{if(d)soon()})))
-  .then(()=>{clearTimeout(tm);if(cidPaint(t))redrawRead(t)})}
+  .then(()=>{clearTimeout(tm);draw()})}
 /* 19 Nov 2026: the older mails of a long trail arrive as one-line summaries. Opening one (or pressing
    Expand all) fetches them by id, five in a request and two requests at a time, and each one is drawn
    as soon as it arrives. A mail that fails can simply be opened again. */
@@ -1815,7 +1818,11 @@ function openLight(t,list){
    they wait for the full original instead of quoting the short preview. */
 function withFull(t,fn){
  if(!t||t._local)return fn();
- if(t.full){if(!t.msgs.some(x=>/rmcid:/.test(x.raw||'')))return fn();loadCidPics(t,{all:true}).then(()=>fn());return}
+ if(t.full){if(!t.msgs.some(x=>/rmcid:/.test(x.raw||'')))return fn();
+  /* 19 Nov 2026: wait for the pictures of the trail, but at most 8 seconds - a long trail has dozens
+     of them and the compose window used to sit closed for a minute. The rest keep arriving. */
+  let went=false;const go=()=>{if(went)return;went=true;fn()};
+  loadCidPics(t,{all:true}).then(go);setTimeout(go,8000);return}
  toast('Getting the full mail first\u2026');
  liveOpen(t,{force:true}).then(ok=>{if(ok)fn();
   else toast('The full mail has not arrived yet \u2014 press Retry at the top of the mail',true)})
@@ -3128,9 +3135,26 @@ function picHTML(m,h){const BASE='<base target="_blank">';
    text as [cid:...] shows a small "picture loading" line instead of raw [rmcid:...] text.
    Display only: the links stay in the mail itself, so cidPaint still finds them. */
 const PIXEL="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+/* 19 Nov 2026: a picture that has arrived is put into the mail ALREADY ON THE SCREEN - the tag that
+   was waiting for it is given its real src where it stands (inside the sandboxed frame too), and a
+   picture that was written in the text becomes a real <img>. Nothing is rebuilt, so the mail does not
+   flicker and does not jump back to the top; the frame is re-measured so the mail still grows to fit. */
+function cidLive(){
+ let any=false;
+ const fill=(doc)=>{let hit=false;
+  doc.querySelectorAll('img[data-rmcid],span[data-rmcid]').forEach(el=>{
+   const k=el.getAttribute('data-rmcid'),d=k&&CIDD[k];if(!d)return;
+   if(el.tagName==='IMG'){el.setAttribute('src',d);el.removeAttribute('data-rmcid');el.style.display='';hit=true}
+   else{const im=doc.createElement('img');im.setAttribute('src',d);im.alt='';im.style.maxWidth='100%';im.style.height='auto';
+    if(el.parentNode)el.parentNode.replaceChild(im,el);hit=true}});
+  return hit};
+ try{if(fill(document))any=true}catch(e){}
+ document.querySelectorAll('.raw iframe').forEach(f=>{try{const d=f.contentDocument;if(d&&fill(d))any=true}catch(e){}});
+ if(any)try{setTimeout(fitFrames,60)}catch(e){}
+ return any}
 const _phCid=picHTML;picHTML=function(m,h){h=String(h||"");
- if(h.indexOf("rmcid:")>=0){h=h.replace(CID_SRC,(m0,a,k,b)=>a+PIXEL+b)
-  .replace(CID_TXT,(m0,pre)=>pre+'<span style="color:#9c948e;font-size:12px">⏳ picture loading…</span>')}
+ if(h.indexOf("rmcid:")>=0){h=h.replace(CID_SRC,(m0,a,k,b)=>a+PIXEL+b+' data-rmcid="'+k+'"')
+  .replace(CID_TXT,(m0,pre,k)=>pre+'<span data-rmcid="'+k+'" style="color:#9c948e;font-size:12px">⏳ picture loading…</span>')}
  return _phCid(m,h)};
 /* Internally-rendered mail (m.html, the "rich" div - not the sandboxed raw
    iframe, which picHTML's <base target="_blank"> already covers above)
@@ -3229,7 +3253,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-19-6';
+const APP_BUILD='2026-11-19-7';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
