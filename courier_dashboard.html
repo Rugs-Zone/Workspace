@@ -779,7 +779,7 @@ const r2=v=>Math.round(v*100)/100;
 function courierKey(inv){const c=((inv.d.courier||{}).name||'')+' '+((inv.d.courier||{}).service||'');
   if(/anjani|ajnani|shivay/i.test(c))return 'anjani';if(/apex/i.test(c))return 'apex';if(/\badl\b/i.test(c))return 'adl';if(/\basl\b/i.test(c))return 'asl';
   if(/fedex/i.test(c))return RR().fedexAs==='adl'?'adl':'fdx';if(/dhl/i.test(c))return 'dhl';return inv.ship_type==='International'?'':'other'}
-function declared(d,div){const pk=(d&&d.packets)||[];let act=0,vol=0,chg=0;const dims=[],pcs=[];div=div||5000;
+function declared(d,div){const pk=(d&&Array.isArray(d.packets))?d.packets.filter(p=>p&&typeof p==='object'):[];let act=0,vol=0,chg=0;const dims=[],pcs=[];div=div||5000;
   pk.forEach(p=>{const w=nm(p.wt);act+=w;const m=String(p.dim||'').match(/[\d.]+/g)||[];let v=0,t=null;if(m.length>=3){t=m.slice(0,3).map(Number);dims.push(t);v=t[0]*t[1]*t[2]/div}vol+=v;const c=Math.max(w,v);chg+=c;pcs.push({w,v:r2(v),c:r2(c),t})});
   return {n:pk.length,act:r2(act),vol:r2(vol),chg:r2(chg),rw:up05(chg),dims,pcs}}
 const normC=s=>String(s||'').toUpperCase().replace(/[^A-Z]/g,'');
@@ -821,7 +821,9 @@ function estimateRaw(inv,ck,dc,bp){const R=RR(),d=inv.d,L=[],note=[];let freight
   const fuel=r2(freight*nm(R.fuel[ck])/100);if(fuel)L.push(['Fuel surcharge '+R.fuel[ck]+'%',fuel]);
   const pre=r2(freight+fuel),gst=r2(pre*nm(R.gst[ck])/100);return {lines:L,pre,gst,total:r2(pre+gst),w,zone,note}}
 const isDuty=b=>b.kind==='duty';
-function compare(inv){const R=RR();let ck=courierKey(inv),dc=declared(inv.d,R.div[ck]||5000),guess=false;
+/* one bad invoice must never stop the whole page (it used to stay on Loading...) */
+function compare(inv){try{return compareRaw(inv)}catch(e){console.error('Courier accounts: cannot check invoice',inv&&inv.inv_no,e);return {ck:'',dc:{n:0,act:0,vol:0,chg:0,rw:0,dims:[],pcs:[]},guess:false,bs:[],ds:[],duty:0,issues:['Could not check this invoice - some details are missing on it ('+((e&&e.message)||e)+')'],est:{err:'Could not check this invoice'},bp:null,disp:null,diff:0,st:'err'}}}
+function compareRaw(inv){const R=RR();if(!inv.d||typeof inv.d!=='object')inv=Object.assign({},inv,{d:{}});let ck=courierKey(inv),dc=declared(inv.d,R.div[ck]||5000),guess=false;
   /* local invoice with no courier chosen: price it on the cheaper of Apex / Anjani so the rate list still shows */
   if(ck==='other'&&!((inv.d.courier||{}).name)&&inv.ship_type!=='International'){let best=null;['apex','anjani'].forEach(k=>{const d2=declared(inv.d,R.div[k]||5000),e=estimate(inv,k,d2,null);if(e&&!e.err&&(!best||e.total<best.e.total))best={k,d2,e}});if(best){ck=best.k;dc=best.d2;guess=true}}const all=ACC.bills.filter(b=>inv.tracking_no&&b.awb_key===awbKey(inv.tracking_no));
   const bs=all.filter(b=>!isDuty(b)),ds=all.filter(isDuty),duty=ds.reduce((s,b)=>s+nm(b.amount),0);
@@ -841,7 +843,7 @@ function accRows(){let r=ACC.inv.map(i=>Object.assign({inv:i},compare(i)));
   if(ACC.from)r=r.filter(x=>(x.inv.appr_at||'')>=ACC.from);if(ACC.to)r=r.filter(x=>(x.inv.appr_at||'').slice(0,10)<=ACC.to);
   const q=ACC.q.toLowerCase();if(q)r=r.filter(x=>(x.inv.inv_no+' '+buyerName(x.inv)+' '+(x.inv.tracking_no||'')+' '+(CK[x.ck]||'')).toLowerCase().includes(q));
   if(ACC.f==='local')r=r.filter(x=>x.inv.ship_type!=='International');else if(ACC.f==='intl')r=r.filter(x=>x.inv.ship_type==='International');else if(ACC.f!=='all')r=r.filter(x=>x.st===ACC.f);return r}
-const STL={ok:['Matches','Approved'],issue:['Check this','Rejected'],done:['Settled','blue'],nobill:['Bill not uploaded','Draft'],notrack:['No tracking no.','Draft']};
+const STL={err:['Could not check','Rejected'],ok:['Matches','Approved'],issue:['Check this','Rejected'],done:['Settled','blue'],nobill:['Bill not uploaded','Draft'],notrack:['No tracking no.','Draft']};
 const DST={asked:['Asked courier for reason','warn'],reason:['Reason accepted','blue'],debit:['Extra debited','Approved'],ok:['Accepted as correct','Approved']};
 PAGES.acct=()=>PH('Team','accounts','Rate-list cost against the courier\'s actual bill. Weight is rounded up to the next 500 g and the higher of actual or size weight is used. Extra charges are shown in red until the courier gives a reason or the extra is debited.')+`
  <div class="panel"><div class="row"><button class="btn pri" data-ac="upload">Upload courier bill</button><button class="btn" data-ac="manual">Add bill line by hand</button><button class="btn" data-ac="calc">Check one shipment</button><button class="btn" data-ac="rules">Rate rules</button><button class="btn" data-ac="ai">AI summary of problems</button><button class="btn" data-ac="reload">Refresh</button><input type="file" id="billF" accept="application/pdf,image/png,image/jpeg,image/webp" hidden></div><div id="aiOut"></div></div>
@@ -862,7 +864,7 @@ function drawAcct(){const all=ACC.inv.map(i=>Object.assign({inv:i},compare(i)));
   <div class="panel"><div class="row" style="margin-bottom:10px">${chips.map(c=>`<button class="chip" data-ac="f" data-f="${c[0]}" aria-pressed="${ACC.f===c[0]}">${c[1]}</button>`).join('')}<input id="accQ" placeholder="Search invoice, buyer, tracking, courier" value="${esc(ACC.q)}" style="max-width:260px"><label class="note">From <input type="date" id="accFrom" value="${ACC.from}"></label><label class="note">To <input type="date" id="accTo" value="${ACC.to}"></label></div>
   ${rows.length?`<div class="tbl"><table><thead><tr><th>Invoice</th><th>Courier</th><th>Weight (rounded)</th><th class="num">Rate list</th><th class="num">Courier billed</th><th class="num">Difference</th><th>Result</th><th></th></tr></thead><tbody>${rows.map(x=>{const k=x.inv.id,e=x.est,ok=e&&!e.err;const red=x.st==='issue';
    return `<tr style="${red?'background:#FDECEC;box-shadow:inset 4px 0 #D92D20':x.st==='done'?'background:#EEF4FF':''}"><td><b>${esc(x.inv.inv_no)}</b><br><span class="note">${esc(buyerName(x.inv))} · ${esc(fdate(x.inv.appr_at))}</span><br><span class="note">${esc(x.inv.tracking_no||'no tracking')}</span></td>
-   <td>${esc(CK[x.ck]||((x.inv.d.courier||{}).name)||'-')}${x.guess?'<br><span class="note">courier not chosen on invoice, cheapest of Apex / Anjani used</span>':''}<br><span class="pill ${x.inv.ship_type==='International'?'Intl':''}">${x.inv.ship_type==='International'?'Intl':'Local'}</span>${e&&e.zone?' <span class="note">zone '+esc(e.zone)+'</span>':''}</td>
+   <td>${esc(CK[x.ck]||(((x.inv.d||{}).courier||{}).name)||'-')}${x.guess?'<br><span class="note">courier not chosen on invoice, cheapest of Apex / Anjani used</span>':''}<br><span class="pill ${x.inv.ship_type==='International'?'Intl':''}">${x.inv.ship_type==='International'?'Intl':'Local'}</span>${e&&e.zone?' <span class="note">zone '+esc(e.zone)+'</span>':''}</td>
    <td>actual ${x.dc.act} kg${x.dc.dims.length?'<br>size '+x.dc.pcs.filter(p=>p.t).map(p=>p.t.join('×')).join(', ')+' cm':''}<br><b>${x.dc.rw} kg</b> charged${x.bs.length&&x.bw?'<br><span class="note">bill: '+x.bw+' kg</span>':''}</td>
    <td class="num">${ok?'<b>'+inr2(e.total)+'</b><br><span class="note">'+inr2(e.pre)+' + GST</span>':'<span class="note">'+esc(e?e.err:'-')+'</span>'}</td>
    <td class="num">${x.bs.length?'<b>'+inr2(x.bp.pre+(x.bp.gst||(ok?x.bp.pre*nm(RR().gst[x.ck])/100:0)))+'</b><br><span class="note">'+inr2(x.bp.pre)+' + GST</span>':'<span class="note">-</span>'}${x.duty?'<br><span class="note">+ duty '+inr2(x.duty)+'</span>':''}</td>
@@ -900,7 +902,7 @@ async function accCalc(){const ok=await ask('Check one shipment',`<div class="gr
 const dutyGuess=s=>/duty|disburse|import/i.test(JSON.stringify(s.charges||[]))||/duty/i.test(s.destination||'');
 
 function dimTriples(s){return String(s||'').split(/[+;,\n]| and /i).map(x=>(x.match(/[\d.]+/g)||[]).slice(0,3).map(Number)).filter(t=>t.length===3)}
-AFTER.acct=async()=>{if(!(await accLoad(true))){$('accBody').innerHTML=fail(ACC.err);return}drawAcct()};
+AFTER.acct=async()=>{if(!(await accLoad(true))){$('accBody').innerHTML=fail(ACC.err);return}try{drawAcct()}catch(e){console.error(e);$('accBody').innerHTML=fail('Could not show this page: '+((e&&e.message)||e))}};
 async function aiCall(body){try{const x=await fetch(SB_URL+'/functions/v1/courier-ai',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(Object.assign({uid:ME.id},body))});return await x.json()}catch(e){return {ok:false,error:'Cannot reach the server.'}}}
 const aiErr=j=>j.error==='not_configured'?'The Gemini key is not saved on the server yet (Supabase → Edge Functions → Secrets → GEMINI_API_KEY).':(j.error||'AI could not answer.');
 const fileB64=f=>new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(f)});
@@ -939,7 +941,7 @@ $('main').addEventListener('change',e=>{if(e.target.id==='billF'&&e.target.files
 
 /* buyer-wise expense (admin) */
 PAGES.buyexp=()=>PH('Buyer-wise','expense','What each buyer cost you in courier charges, built from the uploaded courier bills.')+`<div id="buyBody"><p class="note">Loading...</p></div>`;
-AFTER.buyexp=async()=>{if(!(await accLoad(true))){$('buyBody').innerHTML=fail(ACC.err);return}drawBuy()};
+AFTER.buyexp=async()=>{if(!(await accLoad(true))){$('buyBody').innerHTML=fail(ACC.err);return}try{drawBuy()}catch(e){console.error(e);$('buyBody').innerHTML=fail('Could not show this page: '+((e&&e.message)||e))}};
 function buyGroups(){const g={};const inRange=i=>(!ACC.from||(i.appr_at||'')>=ACC.from)&&(!ACC.to||(i.appr_at||'').slice(0,10)<=ACC.to);
   ACC.inv.filter(inRange).forEach(i=>{const k=buyerName(i)||'(no buyer name)';const x=g[k]||(g[k]={name:k,inv:[],bills:[],exp:0,est:0,kg:0});const c=compare(i);x.inv.push(Object.assign({inv:i},c));x.exp+=c.amt||0;if(!c.bs.length&&c.est&&!c.est.err)x.est+=c.est.total;x.kg+=c.bw||0;x.bills.push(...c.bs)});
   return Object.values(g).sort((a,b)=>b.exp-a.exp)}
