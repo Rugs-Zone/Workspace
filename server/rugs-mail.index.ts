@@ -710,7 +710,12 @@ async function threadFull(box: string, tid: string, ids?: any) {   // 19 Nov 202
     const { data: m } = await sb.from("rm_messages").select("gmail_id,direction,body_text,sent_at").eq("mailbox", box).eq("gmail_thread_id", tid).order("sent_at");
     // full original (HTML exactly as received) comes straight from Gmail — nothing heavy is stored in Supabase
     const tok = await gToken(box, READ);
-    const g = await gmail(tok, `threads/${tid}?format=full`);
+    // 19 Nov 2026: when the app asks for named mails (someone opened an older one of a long trail)
+    // only those are fetched. Downloading the whole conversation again for one mail took 9 seconds.
+    const want: Set<string> | null = Array.isArray(ids) && ids.length ? new Set(ids.slice(0, 20).map(String)) : null;
+    const g = want
+      ? { messages: (await Promise.all([...want].map((id) => gmail(tok, `messages/${id}?format=full`).catch(() => null)))).filter(Boolean) }
+      : await gmail(tok, `threads/${tid}?format=full`);
     const byId = new Map<string, any>((g.messages || []).map((x: any) => [x.id, x]));
     // 18 Nov 2026: pictures are NOT pasted in any more (that caused 546 on long trails) - see withCidLinks / inlineImg
     const pool: any[] = []; for (const gm of g.messages || []) for (const x of inlineParts(gm.payload)) pool.push({ ...x, mid: gm.id, data: "" });
@@ -719,8 +724,9 @@ async function threadFull(box: string, tid: string, ids?: any) {   // 19 Nov 202
     // every mail's HTML at once is what made the function run out of CPU. The app only shows the newest
     // mail open - the older ones are folded one-liners - so only the newest FULL_N come with their HTML.
     // Opening an older one asks for it by id (p.ids), and then it is sent in full.
-    const FULL_N = 15;
-    const want: Set<string> | null = Array.isArray(ids) && ids.length ? new Set(ids.map(String)) : null;
+    // The reading pane opens the NEWEST mail and folds the rest, so five is already more than is shown.
+    // A 49-mail trail sent 10 MB with fifteen; with five it is about 3 MB and opens in a few seconds.
+    const FULL_N = 5;
     const rows = m || [];
     const full = (x: any, i: number) => want ? want.has(String(x.gmail_id)) : i >= rows.length - FULL_N;
     const out = await Promise.all(rows.map(async (x: any, i: number) => {
