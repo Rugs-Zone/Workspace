@@ -1811,7 +1811,7 @@ function sessionEnd(msg){TOKEN='';try{localStorage.removeItem('rugs-token')}catc
    once and stops starting new fetches. Anything that fails -> "Couldn't load everything, opening
    anyway" and the app opens; a conversation whose full mail failed is left exactly as before, so
    opening it later fetches it normally. Fetched gently (PRELOAD_PAR at a time): the server is small. */
-const PRELOAD_MAX_MS=15000,PRELOAD_N=window.SLOW_PC?10:25,PRELOAD_PAR=window.SLOW_PC?2:3,PRELOAD_PICS=window.SLOW_PC?20:80;
+const PRELOAD_MAX_MS=30000,PRELOAD_N=window.SLOW_PC?10:25,PRELOAD_PAR=window.SLOW_PC?2:3,PRELOAD_PICS=window.SLOW_PC?20:80;
 const PRE={el:null,timer:0,stop:false,failed:false,n:0,m:0,pn:0,pm:0,pdone:false};
 function preShow(){
  if(PRE.el)return;
@@ -1850,6 +1850,15 @@ function preFinish(){
 async function preRun(){
  if(!PRE.el)return;
  try{
+  // 19 Nov 2026: first finish the newest RECENT_DAYS days of the Inbox this person lands on, so the
+  // list is COMPLETE when the app opens and nobody sees "still loading" in it. The rest of the year
+  // keeps loading quietly afterwards (phase "all"), with no bar on the list.
+  try{const _pd=(view&&view.type==='box'&&view.dept)||(who(ME)||{}).dept;if(_pd){preStage('Loading your inbox…');
+    MORE_DL=Date.now()+(window.SLOW_PC?20000:18000);
+    MORE_PAGE=id=>{try{preStage('Loading your inbox… '+S.threads.filter(t=>t.dept===id).length.toLocaleString('en-IN')+' conversations')}catch(e){}};
+    await loadMoreBox(_pd,'recent')}}catch(e){}
+  MORE_PAGE=null;MORE_DL=0;
+  if(PRE.stop)return;
   // the newest conversations of the Inbox this person lands on
   let list=[];
   try{list=S.threads.filter(t=>!t._local&&!t.full&&isInboxMail(t)&&inView(t))}catch(e){list=[]}
@@ -2020,7 +2029,10 @@ function friendly(m){m=String(m||'');
  if(/set your own password/i.test(m))return 'Please set your own password first.';
  return m}
 /* inbox empty while Google mail is still arriving */
-function loadingNote(){if(S.loadingMail)return 'Loading your mail…';const b=(S.boxes||[]).filter(x=>x.status&&x.status!=='live');if(!b.length)return '';return 'Loading mail from Google…'}
+function loadingNote(){if(S.loadingMail)return 'Loading your mail…';
+ let bx='';try{if(view&&view.type==='box'&&view.dept)bx=mailOf(dept(view.dept)).toLowerCase()}catch(e){}
+ const b=(S.boxes||[]).filter(x=>x.status&&x.status!=='live'&&(!bx||String(x.mailbox||'').toLowerCase()===bx));
+ if(!b.length)return '';return 'Loading mail from Google…'}
 /* ---------- first sign-in: set your own password (mandatory) ---------- */
 function forcePw(b){window.__liveReady=false;clearInterval(pollT);document.body.classList.add('signedout');const L=$('#login');L.hidden=false;const known=window._lastPw||'';
  L.innerHTML=`<div class="lgwrap"><div class="lgcard" role="form" aria-label="Set your own password"><div class="lglogo"><img src="${LOGO}" alt="Rugs Creation"><span>Rugs <em>Email</em></span></div>
@@ -2892,19 +2904,27 @@ const MORE={};
 function mergeList(r){const by={},ac={};(r.messages||[]).forEach(m=>{const k=m.mailbox+'|'+m.gmail_thread_id;(by[k]=by[k]||[]).push(m)});(r.activity||[]).forEach(a=>{const k=a.mailbox+'|'+a.gmail_thread_id;(ac[k]=ac[k]||[]).push(a)});
  const bd=boxDept(),have=new Set(S.threads.map(t=>t.id));let n=0;
  (r.threads||[]).forEach(row=>{const home=bd[String(row.mailbox).toLowerCase()];if(!home)return;const id=home+':'+row.gmail_thread_id;if(have.has(id))return;const k=row.mailbox+'|'+row.gmail_thread_id,t=mapRow(row,by[k]||[],ac[k]||[],null,home);if(!t.msgs.length)return;S.threads.push(t);metaSaved[id]=JSON.stringify(metaOf(t));n++});return n}
-async function loadMoreBox(deptId){const d=dept(deptId);if(!d||!window.__liveReady)return;const box=mailOf(d).toLowerCase(),st=MORE[box]||(MORE[box]={busy:false,done:false});if(st.busy||st.done)return;
- const lim=Date.now()-HIST_DAYS*D;st.busy=true;
+/* 19 Nov 2026: phase "recent" = the newest RECENT_DAYS days (the sign-in screen waits for this, so
+   the Inbox is complete when it opens); phase "all" = the rest of HIST_DAYS, quietly afterwards. */
+const RECENT_DAYS=30;
+let MORE_PAGE=null,MORE_DL=0;   // progress hook and deadline - used by the sign-in screen only
+async function loadMoreBox(deptId,phase){const d=dept(deptId);if(!d||!window.__liveReady)return;const box=mailOf(d).toLowerCase(),st=MORE[box]||(MORE[box]={busy:false,done:false,recent:false});if(st.busy||st.done)return;
+ const all=phase==='all',lim=Date.now()-(all?HIST_DAYS:Math.min(RECENT_DAYS,HIST_DAYS))*D;st.busy=true;
  try{for(let page=0;page<80;page++){const mine=S.threads.filter(t=>t.dept===deptId&&!t._cache&&t.msgs.some(m=>!m.ours&&!m.by));const oldest=mine.length?Math.min(...mine.map(t=>t.last)):Date.now();
-   if(oldest<=lim){st.done=true;break}
+   if(oldest<=lim){if(all)st.done=true;st.recent=true;break}
+   if(!all&&MORE_DL&&Date.now()>MORE_DL)break;   // sign-in has waited long enough: the rest goes on quietly
    const r=await api('more',{box,before:oldest,limit:500});if(r.history_days)HIST_DAYS=r.history_days;const n=mergeList(r);
-   if(app==='mail')renderListKeep();renderFolders();
-   if((r.threads||[]).length<500||!n){st.done=true;break}}}
- catch(e){toast('Could not load older mail: '+e.message)}finally{st.busy=false;if(app==='mail')renderListKeep()}}
+   if(app==='mail')renderListKeep();renderFolders();if(MORE_PAGE)try{MORE_PAGE(deptId)}catch(e){}
+   if((r.threads||[]).length<500||!n){st.done=true;st.recent=true;break}
+   if(all)await new Promise(go=>setTimeout(go,window.SLOW_PC?900:250))}}   // gentle on a small server and an old PC
+ catch(e){if(!all)toast('Could not load older mail: '+e.message)}finally{st.busy=false;if(app==='mail')renderListKeep()}}
 const _llM=loadList;loadList=async function(full){const r=await _llM(full);if(full)for(const k in MORE)delete MORE[k];return r};
 const _rlM=renderList;renderList=function(){_rlM();if(!(view.type==='box'&&view.folder==='inbox'))return;const d=dept(view.dept),st=d&&MORE[mailOf(d).toLowerCase()];
- const m=document.querySelector('.list .msgs');const _lding=!(st&&st.done);
- if(m)m.insertAdjacentHTML(_lding?'afterbegin':'beforeend',`<div class="inb60${_lding?' lding':''}">${_lding?'⏳ Still loading the last '+HIST_DAYS+' days of this mailbox — older mail keeps arriving for about a minute…':'✓ All mail from the last '+HIST_DAYS+' days is shown — older mail: use Search'}</div>`);
- if(!S.loadingMail&&!(st&&(st.busy||st.done)))setTimeout(()=>loadMoreBox(view.dept),50)};
+ const m=document.querySelector('.list .msgs');
+ if(m)m.insertAdjacentHTML('beforeend',st&&st.done
+  ?'<div class="inb60">✓ All mail from the last '+HIST_DAYS+' days is shown — older mail: use Search</div>'
+  :'<div class="inb60 quiet">Older mail is still arriving in the background — everything new is already here, and Search finds anything older</div>');
+ if(!S.loadingMail&&!(st&&st.busy)){if(!(st&&st.recent))setTimeout(()=>loadMoreBox(view.dept,'recent'),50);else if(!st.done)setTimeout(()=>loadMoreBox(view.dept,'all'),50)}};
 /* ================= Nov 2026: choose the alert sound ================= */
 const TONES={ding:{n:'Ding',f:[880,1320],w:'sine',d:.3},chime:{n:'Chime',f:[660,880,1320],w:'triangle',d:.35},bell:{n:'Bell',f:[1046,1568],w:'sine',d:.9},pop:{n:'Pop',f:[520],w:'square',d:.12},soft:{n:'Soft',f:[523,659],w:'sine',d:.4,v:.12},alarm:{n:'Alert (loud)',f:[880,660,880,660],w:'sawtooth',d:.18,v:.3}};
 function playTone(k){const T=TONES[k];if(!T)return;try{_ac=_ac||new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume();const t0=_ac.currentTime,gap=Math.max(.14,T.d*.6);
@@ -3068,7 +3088,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-19-1';
+const APP_BUILD='2026-11-19-2';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3765,7 +3785,8 @@ document.addEventListener('click',e=>{if(e.target.closest('[data-listmore]')){e.
 const _rlS2=renderList;renderList=function(){_rlS2();document.body.classList.toggle('v-sent',view.type==='box'&&view.folder==='sent')};
 (function(){const st=document.createElement('style');st.textContent=[
  '.listmore{padding:14px;text-align:center;color:var(--muted);font-size:12.5px;cursor:pointer}',
- '.inb60.lding{background:#fff6ed;border-bottom:1px solid var(--line);color:#9a4a00;font-weight:600}',
+ '.inb60{padding:12px 14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.5}',
+ '.inb60.quiet{opacity:.8}',
  'body.v-sent .list .m .tags .tag.t-new,body.v-sent .list .m .tags .tag.t-asg:not([title]),body.v-sent .list .m .tags>span[style*="inline-flex"]{display:none}'
 ].join('\n');document.head.appendChild(st)})();
 
