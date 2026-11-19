@@ -3502,46 +3502,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   .dsp-pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;margin-top:6px}
   #view-dispatch .om-table td:first-child,.dsp-modal .om-table td:first-child{white-space:nowrap}
   .modal.dsp-modal{max-width:980px;width:calc(100vw - 24px);max-height:92vh;overflow:auto}
-  /* ---------- 🛠️ Developer ---------- */
-  #view-devhub{padding-bottom:40px}
-  .dh-brief{background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 12%,var(--card)),var(--card));border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
-  .dh-brief h3{margin:0 0 6px;font-size:15px}
-  .dh-brief pre,.dh-pre{white-space:pre-wrap;font:inherit;font-size:13px;margin:0;color:var(--ink)}
-  .dh-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}
-  .dh-kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;text-align:left;cursor:pointer;color:var(--ink);font:inherit}
-  .dh-kpi b{display:block;font-size:20px} .dh-kpi span{font-size:12px;color:var(--sub);font-weight:700}
-  .dh-kpi.on{outline:2px solid var(--brand)} .dh-kpi.bad b{color:#dc2626}
-  .dh-item{background:var(--card);border:1px solid var(--line);border-left:5px solid #f59e0b;border-radius:12px;padding:12px 14px;margin-bottom:10px}
-  .dh-item.high{border-left-color:#dc2626} .dh-item.low{border-left-color:#94a3b8} .dh-item.done{opacity:.75;border-left-color:#16a34a}
-  .dh-item-h{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
-  .dh-item-h b{flex:1;min-width:200px;font-size:14px}
-  .dh-meta{font-size:12px;color:var(--sub);margin-top:4px}
-  .dh-detail{margin-top:8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-height:180px;overflow:auto;font-size:12.5px;white-space:pre-wrap}
-  .dh-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-  .dh-acts .btn{padding:6px 12px;font-size:12.5px}
-  .dh-agents{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
-  .dh-agent{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-  .dh-agent h4{margin:0 0 4px;font-size:14px} .dh-agent .om-small{display:block;margin-top:2px}
-  .dh-agent.ceo{border:2px solid var(--brand)}
-  .dh-chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
-  .dh-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600}
-  .dh-chip button{background:none;border:0;color:#dc2626;cursor:pointer;font-weight:800;padding:0}
-  .dh-drop{border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;background:var(--card);cursor:pointer}
-  .dh-drop.over{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 6%,var(--card))}
-  .dh-checks{list-style:none;padding:0;margin:10px 0;font-size:13px}
-  .dh-checks li{padding:4px 0;border-top:1px solid var(--line)}
-  .dh-match{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-top:1px solid var(--line);font-size:12.5px}
-  .dh-match code{white-space:pre-wrap;word-break:break-all;font-size:12px}
-  .dh-match mark{background:#fde68a;color:#111}
-  .dh-steps{font-size:13.5px;line-height:1.6;padding-left:20px}
-  #view-devhub textarea,#view-devhub input[type=text],#view-devhub input[type=password],#view-devhub input[type=search],.dh-modal textarea,.dh-modal input,.dh-modal select{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);font:inherit;font-size:13.5px}
-  .modal.dh-modal{max-width:720px;width:calc(100vw - 24px);max-height:92vh;overflow:auto}
-  .dh-modal label{display:block;font-size:12px;font-weight:700;color:var(--sub);margin-top:10px}
-  .dh-brief .om-dh{flex-wrap:wrap}
-  .dh-fix{margin-top:8px;background:color-mix(in srgb,#16a34a 7%,var(--card));border:1px solid color-mix(in srgb,#16a34a 30%,var(--line));border-radius:8px;padding:6px 10px;font-size:12.5px}
-  .dh-fix summary{cursor:pointer;font-weight:700;color:#15803d}
-  .dh-fix ol{margin:6px 0 2px;padding-left:20px} .dh-fix li{margin:2px 0}
-  button.dh-kpi small{display:block;margin-top:2px}
   /* ---------- 🧑‍🔧 My Helper ---------- */
   #view-helper{padding-bottom:40px}
   .hp-hero{background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 16%,var(--card)),var(--card));border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
@@ -3800,34 +3760,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   .rc-buddy .bd-say{bottom:66px}
   @media (prefers-reduced-motion:reduce){.rc-buddy *{animation:none!important;transition:none!important}}
 
-  /* ---------- ⏸ agent pause + 📝 instructions ---------- */
-  .dh-ctl{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-left:4px solid #16a34a;border-radius:12px;padding:12px 14px;margin-bottom:12px}
-  .dh-ctl.paused{border-left-color:#d97706;background:color-mix(in srgb,#f59e0b 8%,var(--card))}
-  .dh-agent.paused{opacity:.72;border-style:dashed}
-  .dh-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-  .dh-acts .btn{padding:5px 10px;font-size:12px}
-  .dh-pbtn.on{border-color:#d97706;color:#b45309}
-  .dh-orders{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:10px}
-  .dh-order{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);min-width:0}
-  .dh-order.off{opacity:.6}
-  .dh-order-h{display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:700;font-size:13px;flex-wrap:wrap}
-  .dh-order-b{margin:6px 0;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
-  .dh-order-a{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
-  .dh-order-a .btn{padding:5px 10px;font-size:12px}
-  .dh-order-a .dh-del{color:#dc2626}
-  .dh-sw{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:5px;font-size:12.5px;font-weight:600;margin-right:4px}
-  .dh-sw input{width:auto!important}
-  .dh-oform{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;background:var(--card)}
-  .dh-oform label{display:block;font-size:12.5px;font-weight:700;color:var(--sub);margin:8px 0 4px}
-  .dh-oform label select,.dh-oform label input,.dh-oform label textarea{display:block;width:100%;margin-top:4px}
-  .dh-ogrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px}
-  .dh-days{display:flex;gap:10px;flex-wrap:wrap}
-  .dh-days label{display:inline-flex!important;align-items:center;gap:4px;margin:0!important;color:var(--ink)!important}
-  .dh-days input{width:auto!important}
-
-  .stat-card .stat-sub{font-size:11px;font-weight:600;color:var(--sub);margin-top:2px}
-</style>
-<style id="rcMobileNav">
   /* ---------- Phone / tablet: menu goes into a ☰ drawer, compact top bar ---------- */
   .rc-mtop,.rc-mback{display:none}
   @media (max-width:820px){
@@ -4714,28 +4646,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
         <button type="button" data-dsptab="settings" class="hidden">⚙ Targets &amp; reports</button>
       </div>
       <div id="dspBody"><div class="empty">Loading…</div></div>
-    </div>
-    <div id="view-devhub" class="hidden">
-      <div class="om-head">
-        <button class="embed-back-btn" data-goto="modules" style="margin:0">← Back to Workspace</button>
-        <div style="flex:1;min-width:200px">
-          <h2 style="margin:0">🛠️ Developer</h2>
-          <div class="om-sub" id="dhSub">CEO agent, 6 helper agents and the Follow-up agent — plus publishing the Workspace to GitHub.</div>
-        </div>
-        <button class="btn secondary" type="button" id="dhRefreshBtn">↻ Refresh</button>
-      </div>
-      <div class="om-tabs" id="dhTabs">
-        <button type="button" data-dhtab="dash" class="on">📊 Dashboard</button>
-        <button type="button" data-dhtab="inbox">👔 CEO inbox</button>
-        <button type="button" data-dhtab="followups">🤝 Follow-ups</button>
-        <button type="button" data-dhtab="autotasks">📋 Auto-tasks</button>
-        <button type="button" data-dhtab="agents">🤖 Agents</button>
-        <button type="button" data-dhtab="publish" class="hidden dh-devonly">🚀 Publish</button>
-        <button type="button" data-dhtab="edit" class="hidden dh-devonly">✏️ Quick edit</button>
-        <button type="button" data-dhtab="history" class="hidden dh-devonly">🕘 History</button>
-        <button type="button" data-dhtab="github" class="hidden dh-devonly">⚙ GitHub</button>
-      </div>
-      <div id="dhBody"><div class="empty">Loading…</div></div>
     </div>
     <div id="view-helper" class="hidden">
       <div class="om-head">
@@ -7038,7 +6948,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       if (typeof merchantAccessCheck === "function") merchantAccessCheck();
       if (typeof omAccessCheck === "function") omAccessCheck();
       if (typeof dspAccessCheck === "function") dspAccessCheck();
-      if (typeof dhAccessCheck === "function") dhAccessCheck();
       if (typeof hpAccessCheck === "function") hpAccessCheck();
       if (typeof fuToggleButtons === "function") fuToggleButtons();
       if (typeof engageAfterLoad === "function") engageAfterLoad();
@@ -7074,7 +6983,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       if (typeof merchantAccessCheck === "function") merchantAccessCheck();
       if (typeof omAccessCheck === "function") omAccessCheck();
       if (typeof dspAccessCheck === "function") dspAccessCheck();
-      if (typeof dhAccessCheck === "function") dhAccessCheck();
       if (typeof hpAccessCheck === "function") hpAccessCheck();
       if (typeof fuToggleButtons === "function") fuToggleButtons();
       if (typeof engageAfterLoad === "function") engageAfterLoad();
@@ -7429,7 +7337,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
           if (n._eaCopy) eaMarkSeen(id);
           else api("markNotificationSeen", { ids: [id] }).catch(function () {});
         }
-        var goNotif = n && (/^agent_(brief|urgent)$/.test(String(n.type || "")) ? "devhub" : { complaint: "complaints", idea: "ideabox", om: "ordermaster", device: "devices", checklist: "checklist", disp: "dispatch", agent: "helper", buyer: "buyervisit", reimb: "reimbursement" }[String(n.type || "").split("_")[0]]);
+        var goNotif = n && ({ complaint: "complaints", idea: "ideabox", om: "ordermaster", device: "devices", checklist: "checklist", disp: "dispatch", agent: "helper", buyer: "buyervisit", reimb: "reimbursement" }[String(n.type || "").split("_")[0]]);
         if (goNotif) goToView(goNotif);
       });
     });
@@ -7863,7 +7771,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     { key: "ordermaster", icon: "📦", name: "Order Master", status: "live", goto: "ordermaster", category: "production" },
     { key: "devices", icon: "📱", name: "Tablet requests", status: "live", goto: "devices", category: "work" },
     { key: "dispatch", icon: "🚚", name: "Dispatch tracker", status: "live", goto: "dispatch", category: "work" },
-    { key: "devhub", icon: "🛠️", name: "Developer", status: "live", goto: "devhub", category: "work" },
     { key: "helper", icon: "🤖", name: "Help-Bot", status: "live", goto: "helper", category: "work" },
     { key: "buyervisit", icon: "🚪", name: "Buyer Visit", status: "live", goto: "buyervisit", category: "production" },
     { key: "fairvisit", icon: "🎪", name: "Fair Visit", status: "live", goto: "fairvisit", category: "production" },
@@ -9649,716 +9556,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   })();
 
 
-  // ---------- 🛠️ Developer — CEO agent + 6 helper agents + publish to GitHub ----------
-  // agent-hub: the 6 agents collect issues → CEO inbox. Approvers (Anand, Ritesh, Priyanshu, IT dept +
-  // Developer rank) approve → the message goes to the right people as a notification.
-  // devhub-api (Developer rank only): publish index.html to GitHub, quick edit, history + restore.
-  var AGENT_FN_URL = SUPABASE_URL + "/functions/v1/agent-hub";
-  var DEVHUB_FN_URL = SUPABASE_URL + "/functions/v1/devhub-api";
-  var dh = { tab: "dash", boot: null, gh: null, f: { agent: "", sev: "" }, live: null, work: null, edits: [], pick: null, loading: false };
-  function dhCall(url, action, payload) {
-    if (state.demo) return Promise.reject(new Error("Not available in demo mode."));
-    return fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
-      body: JSON.stringify(Object.assign({ action: action, session_token: (state.doer || {}).session_token || "" }, payload || {}))
-    }).then(function (r) { return r.json().then(function (j) { if (!r.ok || !j.ok) throw new Error(j.error || ("HTTP " + r.status)); return j.data; }); });
-  }
-  function ahApi(a, p) { return dhCall(AGENT_FN_URL, a, p); }
-  function ghApi(a, p) { return dhCall(DEVHUB_FN_URL, a, p); }
-  function dhIsDev() { return typeof isDeveloperMode === "function" && isDeveloperMode(); }
-  function dhAccessCheck() {
-    if (state.demo || !state.doer) return;
-    if (dhIsDev()) { if (!state.dhAccess) { state.dhAccess = true; if (typeof renderHome === "function") renderHome(); } }
-    ahApi("ahBoot").then(function (b) {
-      dh.boot = b;
-      var had = !!state.dhAccess;
-      state.dhAccess = !!(b && b.access) || dhIsDev();
-      if (had !== state.dhAccess && typeof renderHome === "function") renderHome();
-    }).catch(function () {});
-  }
-  function dhAgo(t) {
-    if (!t) return "–";
-    var m = Math.round((Date.now() - new Date(t).getTime()) / 60000);
-    return m < 60 ? m + " min ago" : m < 2880 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " days ago";
-  }
-  function dhSev(s) { return '<span class="om-st ' + (s === "high" ? "bad" : s === "medium" ? "warn" : "mute") + '">' + (s === "high" ? "🔴 Urgent" : s === "medium" ? "🟠 Medium" : "⚪ Low") + "</span>"; }
-  function dhPeopleName(id) { var p = ((dh.boot && dh.boot.people) || []).find(function (x) { return x.doc_id === id; }); return p ? p.name : id; }
-
-  function dhLoad(force) {
-    var body = document.getElementById("dhBody"); if (!body) return;
-    document.querySelectorAll("#dhTabs .dh-devonly").forEach(function (b) { b.classList.toggle("hidden", !dhIsDev()); });
-    if (dh.tab === "autotasks" && (force || !dh.ad)) {
-      if (dh.loading) return; dh.loading = true;
-      body.innerHTML = '<div class="empty"><span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:var(--brand)"></span> Loading…</div>';
-      ahApi("ahDeleg").then(function (d) { dh.loading = false; dh.ad = d; dhRender(); }).catch(function (e) { dh.loading = false; body.innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; });
-      return;
-    }
-    if (dh.tab === "followups" && (force || !dh.fu)) {
-      if (dh.loading) return; dh.loading = true;
-      body.innerHTML = '<div class="empty"><span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:var(--brand)"></span> Loading…</div>';
-      ahApi("ahFollowups").then(function (d) { dh.loading = false; dh.fu = d; dhRender(); }).catch(function (e) { dh.loading = false; body.innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; });
-      return;
-    }
-    var needAgents = (dh.tab === "dash" || dh.tab === "inbox" || dh.tab === "agents") && (force || !dh.boot);
-    var needGh = ["publish", "edit", "history", "github"].indexOf(dh.tab) >= 0 && (force || !dh.gh);
-    if (!needAgents && !needGh) { dhRender(); return; }
-    if (dh.loading) return;
-    dh.loading = true;
-    body.innerHTML = '<div class="empty"><span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:var(--brand)"></span> Loading…</div>';
-    (needAgents ? ahApi("ahBoot") : ghApi("dhBoot")).then(function (d) {
-      dh.loading = false;
-      if (needAgents) dh.boot = d; else dh.gh = d;
-      dhRender();
-    }).catch(function (e) { dh.loading = false; body.innerHTML = '<div class="empty">Could not load: ' + esc(e.message) + ' <button class="btn secondary" type="button" id="dhRetry">Try again</button></div>'; var r = document.getElementById("dhRetry"); if (r) r.onclick = function () { dhLoad(true); }; });
-  }
-  function dhRender() {
-    var body = document.getElementById("dhBody"); if (!body) return;
-    document.querySelectorAll("#dhTabs button").forEach(function (b) { b.classList.toggle("on", b.dataset.dhtab === dh.tab); });
-    var h = "";
-    if (dh.tab === "dash") h = dhDash();
-    else if (dh.tab === "inbox") h = dhInbox();
-    else if (dh.tab === "agents") h = dhAgents();
-    else if (dh.tab === "followups") h = dhFollowTab();
-    else if (dh.tab === "autotasks") h = dhAutoTab();
-    else if (dh.tab === "publish") h = dhPublishTab();
-    else if (dh.tab === "edit") h = dhEditTab();
-    else if (dh.tab === "history") h = '<div id="dhHist"><div class="empty">Loading history…</div></div>';
-    else if (dh.tab === "github") h = dhGithubTab();
-    body.innerHTML = h;
-    dhWire(body);
-    if (dh.tab === "history") dhLoadHistory();
-  }
-
-
-  // ---- 💡 How to solve: plain steps for each kind of issue
-  var DH_FIX = [
-    [/^orders:overdue:/, ["Open 📦 Order Master → filter this merchant → tap the ⚠ Overdue tile.", "For each IO fill the Revised ship date and the Recovery plan (Risk owner, issue, plan).", "Press ✅ Approve & send so the merchant gets the list and does it today.", "The issue closes by itself when no SKU of this merchant is overdue."]],
-    [/^orders:writeback/, ["Open 🧑‍💼 Merchant Dashboard → ⚙ Connect editor and check the Sheet Bridge says Connected.", "If it is offline, open the WorkspaceBridge Apps Script → Deploy → Manage deployments → make sure it is active.", "Then open the SKU in 📦 Order Master and save the change again."]],
-    [/^orders:dispatch/, ["Open 🚚 Dispatch tracker → 👥 Merchants and see who is behind pace.", "With Sahil (shipping) and Gulati Ji (production) pick the IOs that can ship this month.", "Approve & send to the dispatch owners with the IO list."]],
-    [/^sampling:complaint/, ["Open 📣 Client Complaints → this complaint.", "Fill the root cause and corrective action, inform the buyer, or move the due date with a reason.", "Approve & send to the owner if nobody is working on it."]],
-    [/^sampling:stuck/, ["Open 🧵 Sampling FMS → this handler's IOs.", "Complete the costing / shade-card step or mark why it is waiting.", "Approve & send so the handler clears them today."]],
-    [/^sampling:leads/, ["Open 🤝 Fair Leads → filter by this person.", "Send the follow-up mail / call and set the follow-up status.", "Approve & send as a reminder."]],
-    [/^quality:sla/, ["Open 🧪 Quality Portal → today's gate / DQA list.", "Pass or reject each lot (gate 2 h, DQA 2 h, 4-point 48 h).", "If these are old ERP gate entries that will never be checked, close them in the Quality Portal so they stop counting.", "Approve & send to Lalit / the DQA person."]],
-    [/^quality:nolot/, ["Open 🧪 Quality Portal → lots without lot number.", "Copy the vendor lot number from the challan into each lot."]],
-    [/^purchase:late-po/, ["Open the Purchase FMS → Pending, sort by delivery date.", "Call the top vendors in the list; write the new promised date in 'Latest update'.", "Approve & send the vendor list to the purchase person."]],
-    [/^purchase:porm/, ["Open the PO_RM sheet → filter this accountable person, status Pending.", "Chase the vendors / job workers and update the delivery date or received qty.", "Approve & send so the person gets the list."]],
-    [/^purchase:spares-low/, ["Open 🔩 Spare Parts → items at or below minimum.", "Raise a purchase order for each, starting with the ones at zero stock."]],
-    [/^people:tasks/, ["Open ✅ Delegation → this person's pending tasks.", "Ask them to finish or request a revised date; reassign if they are on leave.", "Approve & send as a reminder."]],
-    [/^people:checklist/, ["Open 📋 Checklist FMS → Report (today / yesterday).", "Check the flagged points by department with the department head; fix the problem or note why it could not be done.", "Talk to the people with many missed checkpoints, or reassign their checkpoints.", "Approve & send to the department heads if needed."]],
-    [/^people:leave/, ["Open 🏖️ Leave Request → pending.", "The team leader approves or rejects; if the TL is away, an admin can decide."]],
-    [/^people:reimb/, ["Open 🧳 Reimbursement → pending at this stage.", "The approver at that stage approves or rejects with a note."]],
-    [/^people:tablet/, ["Ask the person to return the tablet to IT.", "IT presses 'Received' in 📱 Tablet requests."]],
-    [/^it:sync-old/, ["These tabs are no longer used (e.g. old Raw Data / by Colour).", "Either remove them from SOURCES in SupabaseSync or press ✖ Not an issue."]],
-    [/^it:sync$/, ["Open the SupabaseSync Apps Script → Executions (left menu).", "Read the red error: usually 'Exceeded maximum execution time' or a renamed tab / lost access.", "Fix the tab name or sharing, then run refreshAll once."]],
-    [/^it:dispatch-sync/, ["Open the SupabaseSync Apps Script → find const SOURCES.", "Find the line with 1BQDz7kGRO3ug0bbmOH4PcMmBtc83oHGyaJhB_ZgGzXA (jet66erp Data).", "Add ['vPoExport', 0] to its list of tabs (after ['vPoInternal2', 0]).", "Save → run refreshAll once. The Dispatch tracker switches to the ERP data by itself."]],
-    [/^it:http/, ["A few server calls failed or timed out — usually a slow Google Apps Script.", "If the count keeps growing every day, tell the developer; otherwise press ✖ Not an issue."]],
-    [/^it:cron/, ["A scheduled job failed. Tell the developer with the error text shown above."]],
-    [/^it:bridge/, ["Open the WorkspaceBridge Apps Script → Deploy → Manage deployments.", "Check the web app is active and 'Who has access' is Anyone; redeploy if needed."]],
-    [/^it:tech/, ["Open 🛠️ Tech Support → this issue.", "Assign it to IT and reply to the reporter; close it when fixed."]],
-    [/^it:outbox/, ["Emails are not leaving. Check the mail sender / Gmail quota with the developer."]]
-  ];
-  function dhFixSteps(fkey) { for (var i = 0; i < DH_FIX.length; i++) if (DH_FIX[i][0].test(fkey)) return DH_FIX[i][1]; return []; }
-  function dhFixBox(f) {
-    var st = dhFixSteps(f.fkey); if (!st.length) return "";
-    return '<details class="dh-fix"><summary>💡 How to solve</summary><ol>' + st.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></details>";
-  }
-
-  // ---- 📊 Dashboard: everything the agents report, in one place (no bell notifications)
-  function dhDash() {
-    var b = dh.boot;
-    if (!b || !b.access) return '<div class="empty">The Developer dashboard is for the approvers (directors, Anand, Ritesh, Priyanshu, IT) and the Developer rank.</div>';
-    var now = Date.now(), day = 86400000, today = new Date().toDateString();
-    var open = b.findings.filter(function (f) { return f.status === "open"; });
-    var high = open.filter(function (f) { return f.severity === "high"; });
-    var newToday = open.filter(function (f) { return new Date(f.first_seen).toDateString() === today; });
-    var solved = b.findings.filter(function (f) { return f.status === "resolved" && now - new Date(f.last_seen).getTime() < day; });
-    var sent = b.findings.filter(function (f) { return f.status === "approved" && f.decided_at && now - new Date(f.decided_at).getTime() < day; });
-    var ag = {}; b.agents.forEach(function (a) { ag[a.id] = a; });
-    var lastRun = (b.runs || [])[0];
-    var h = (b.paused && b.paused.all ? '<div class="dh-ctl paused" style="margin-bottom:12px"><div><b>⏸ All agents are paused</b><div class="om-small">Open 🤖 Agents to resume them.</div></div><button type="button" class="btn" data-dhgo="agents">Open Agents</button></div>' : "") + '<div class="dh-brief"><div class="om-dh"><div><h3>📊 Developer dashboard</h3><div class="om-small">Agents check every hour, 9 am – 8 pm (Mon–Sat). Last check: <b>' + esc(lastRun ? dhAgo(lastRun.started_at) : "–") + "</b>. " +
-      (b.bell ? "Approvers also get bell notifications." : "<b>No bell notifications</b> — everything stays here.") + '</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">' +
-      '<label class="om-small" style="display:flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" id="dhBell"' + (b.bell ? " checked" : "") + "> Bell notifications to approvers</label>" +
-      '<button class="btn secondary" type="button" id="dhRunNow">▶ Check now</button></div></div></div>';
-    h += '<div class="dh-kpis">' +
-      '<button type="button" class="dh-kpi" data-dhgo="inbox"><span>Open issues</span><b>' + open.length + "</b></button>" +
-      '<button type="button" class="dh-kpi bad" data-dhgosev="high"><span>🔴 Urgent</span><b>' + high.length + "</b></button>" +
-      '<div class="dh-kpi"><span>🆕 New today</span><b>' + newToday.length + "</b></div>" +
-      '<div class="dh-kpi"><span>✅ Solved by itself (24 h)</span><b style="color:#16a34a">' + solved.length + "</b></div>" +
-      '<div class="dh-kpi"><span>📨 Sent to staff (24 h)</span><b>' + sent.length + "</b></div>" +
-      '<button type="button" class="dh-kpi" data-dhgo="followups"><span>🤝 Follow-ups pending</span><b>' + b.fu.open + '</b><small class="om-small">' + b.fu.linked + " chased · " + b.fu.closed7 + " answered 7d</small></button>" +
-      '<button type="button" class="dh-kpi" data-dhgo="autotasks"><span>📋 Auto-tasks</span><b>9 am → 4 pm</b><small class="om-small">delegated from Vinay / Gaurav</small></button></div>';
-    // brief
-    var br = b.briefs || [];
-    var sel = dh.briefIx || 0, cur = br[sel];
-    h += '<div class="dsp-grid2"><div class="dsp-card"><div class="om-dh"><h3 style="margin:0;font-size:15px">👔 CEO report</h3>' + (br.length > 1 ? '<select id="dhBriefSel" style="max-width:220px">' + br.map(function (x, i) { return '<option value="' + i + '"' + (i === sel ? " selected" : "") + ">" + esc(new Date(x.made_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })) + " · " + esc(x.kind) + "</option>"; }).join("") + "</select>" : "") + "</div>" +
-      (cur ? '<pre class="dh-pre" style="margin-top:8px">' + esc(cur.text) + "</pre>" : '<p class="om-small">No report yet — it is made every morning after 10 am, or press 📨 below.</p>') +
-      '<div class="om-actions"><button class="btn secondary" type="button" id="dhBriefNow">📨 Make a fresh report now</button></div></div>';
-    // agents
-    h += '<div class="dsp-card"><h3 style="margin:0 0 8px;font-size:15px">🤖 Agents</h3>' + b.agents.map(function (a) {
-      var n = open.filter(function (f) { return f.agent === a.id; }), hi = n.filter(function (f) { return f.severity === "high"; }).length, l = a.last;
-      return '<div class="om-alert-row" style="align-items:center"><span>' + a.icon + " <b>" + esc(a.name) + '</b> <span class="om-small">· ' + esc(l ? dhAgo(l.started_at) : "never") + (l && l.error ? ' · <b style="color:#dc2626">error</b>' : "") + '</span></span><span><button class="btn secondary" type="button" data-dhgoagent="' + a.id + '" style="padding:3px 10px;font-size:12px">' + n.length + " open" + (hi ? " · " + hi + " 🔴" : "") + "</button></span></div>";
-    }).join("") + "</div></div>";
-    // top urgent with how-to
-    if (high.length) h += '<div class="dsp-card"><h3 style="margin:0 0 8px;font-size:15px">🔴 Needs a decision first</h3>' + high.sort(function (a, c) { return c.cnt - a.cnt; }).slice(0, 6).map(function (f) {
-      var a = ag[f.agent] || { icon: "🤖" };
-      return '<div class="dh-item high" style="margin-bottom:8px"><div class="dh-item-h"><b>' + esc(a.icon + " " + f.title) + '</b><button class="btn" type="button" data-dhact="approve" data-k="' + esc(f.fkey) + '" style="padding:5px 10px;font-size:12px">✅ Approve &amp; send</button></div>' + dhFixBox(f) + "</div>";
-    }).join("") + '<button class="btn secondary" type="button" data-dhgo="inbox">Open the full CEO inbox →</button></div>';
-    // activity feed
-    var ev = [];
-    b.findings.forEach(function (f) {
-      var a = ag[f.agent] || { icon: "🤖" };
-      if (f.first_seen && now - new Date(f.first_seen).getTime() < 2 * day) ev.push({ t: f.first_seen, ic: "🆕", tx: a.icon + " " + f.title, sub: "found" });
-      if (f.status === "resolved" && now - new Date(f.last_seen).getTime() < 2 * day) ev.push({ t: f.last_seen, ic: "✅", tx: f.title, sub: "solved — the data is fixed" });
-      if (f.decided_at && now - new Date(f.decided_at).getTime() < 2 * day) ev.push({ t: f.decided_at, ic: f.status === "approved" ? "📨" : f.status === "snoozed" ? "💤" : "✖", tx: f.title, sub: (f.status === "approved" ? "sent to " + (f.sent_to || []).map(dhPeopleName).join(", ") : f.status) + " by " + (f.decided_name || "–") });
-    });
-    ev.sort(function (a, c) { return new Date(c.t) - new Date(a.t); });
-    h += '<div class="dsp-card"><h3 style="margin:0 0 8px;font-size:15px">🕒 What happened (last 48 h)</h3>' + (ev.slice(0, 40).map(function (e) {
-      return '<div class="om-alert-row"><span>' + e.ic + " " + esc(e.tx) + ' <span class="om-small">· ' + esc(e.sub) + '</span></span><span class="om-small">' + esc(dhAgo(e.t)) + "</span></div>";
-    }).join("") || '<p class="om-small">Nothing yet.</p>') + "</div>";
-    return h;
-  }
-
-  // ---- 👔 CEO inbox
-  function dhInbox() {
-    var b = dh.boot;
-    if (!b || !b.access) return '<div class="empty">The CEO inbox is for the approvers (Anand, Ritesh, Priyanshu, IT department) and the Developer rank.' + (dhIsDev() ? " Open 🚀 Publish to use GitHub publishing." : "") + "</div>";
-    var open = b.findings.filter(function (f) { return f.status === "open"; });
-    var byA = {};
-    open.forEach(function (f) { var x = byA[f.agent] || (byA[f.agent] = { n: 0, high: 0 }); x.n++; if (f.severity === "high") x.high++; });
-    var list = open.filter(function (f) { return (!dh.f.agent || f.agent === dh.f.agent) && (!dh.f.sev || f.severity === dh.f.sev); })
-      .sort(function (a, c) { var r = { high: 0, medium: 1, low: 2 }; return r[a.severity] - r[c.severity] || c.cnt - a.cnt; });
-    var high = open.filter(function (f) { return f.severity === "high"; }).length;
-    var h = '<div class="dh-brief"><div class="om-dh"><h3>👔 CEO brief' + (b.brief ? ' <span class="om-small">· ' + esc(dhAgo(b.brief.made_at)) + "</span>" : "") + '</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn secondary" type="button" id="dhRunNow">▶ Run agents now</button><button class="btn" type="button" id="dhBriefNow">📨 Send brief to approvers</button></div></div>' +
-      (b.brief ? "<pre>" + esc(b.brief.text) + "</pre>" : '<p class="om-small" style="margin:0">No brief yet. The CEO sends one every morning at 10 am. Press ▶ Run agents now to start.</p>') +
-      '<p class="om-small" style="margin:8px 0 0">Approvers: ' + esc(b.approvers.map(function (a) { return a.name; }).join(", ")) + "</p></div>";
-    h += '<div class="dh-kpis"><button type="button" class="dh-kpi' + (!dh.f.agent && !dh.f.sev ? " on" : "") + '" data-dhf=""><span>All open</span><b>' + open.length + '</b></button><button type="button" class="dh-kpi bad' + (dh.f.sev === "high" ? " on" : "") + '" data-dhsev="high"><span>🔴 Urgent</span><b>' + high + "</b></button>" +
-      b.agents.map(function (a) { var x = byA[a.id] || { n: 0, high: 0 }; return '<button type="button" class="dh-kpi' + (dh.f.agent === a.id ? " on" : "") + '" data-dhf="' + a.id + '"><span>' + a.icon + " " + esc(a.name) + "</span><b>" + x.n + (x.high ? ' <small style="font-size:12px;color:#dc2626">' + x.high + " urgent</small>" : "") + "</b></button>"; }).join("") + "</div>";
-    var ag = {}; b.agents.forEach(function (a) { ag[a.id] = a; });
-    h += list.map(function (f) {
-      var a = ag[f.agent] || { icon: "🤖", name: f.agent };
-      return '<div class="dh-item ' + f.severity + '"><div class="dh-item-h">' + dhSev(f.severity) + "<b>" + esc(f.title) + '</b><span class="om-small">' + esc(a.icon + " " + a.name) + "</span></div>" +
-        '<div class="dh-meta">First seen ' + esc(dhAgo(f.first_seen)) + " · checked " + esc(dhAgo(f.last_seen)) + (f.owner_docs && f.owner_docs.length ? " · goes to: <b>" + esc(f.owner_docs.map(dhPeopleName).join(", ")) + "</b>" : " · <b>pick who should get it</b>") + "</div>" +
-        (f.detail ? '<div class="dh-detail">' + esc(f.detail) + "</div>" : "") + dhFixBox(f) +
-        '<div class="dh-acts"><button class="btn" type="button" data-dhact="approve" data-k="' + esc(f.fkey) + '">✅ Approve &amp; send</button><button class="btn secondary" type="button" data-dhact="snooze" data-k="' + esc(f.fkey) + '">💤 Later (3 days)</button><button class="btn secondary" type="button" data-dhact="done" data-k="' + esc(f.fkey) + '">✔ Already handled</button><button class="btn secondary" type="button" data-dhact="reject" data-k="' + esc(f.fkey) + '">✖ Not an issue</button></div></div>';
-    }).join("") || '<div class="empty">Nothing waiting 🎉</div>';
-    var done = b.findings.filter(function (f) { return f.status !== "open"; }).slice(0, 25);
-    if (done.length) h += '<div class="dsp-card" style="margin-top:14px"><h3 style="margin:0 0 6px;font-size:15px">Last 7 days</h3>' + done.map(function (f) {
-      var st = { approved: ["ok", "✅ Sent"], rejected: ["mute", "✖ Not an issue"], done: ["ok", "✔ Handled"], resolved: ["ok", "Solved"], snoozed: ["warn", "💤 Later"] }[f.status] || ["mute", f.status];
-      return '<div class="om-alert-row"><span>' + dhSev(f.severity) + " " + esc(f.title) + '</span><span class="om-small">' + '<span class="om-st ' + st[0] + '">' + esc(st[1]) + "</span> " + esc(f.decided_name ? "by " + f.decided_name + " · " : "") + esc(dhAgo(f.decided_at || f.last_seen)) + (f.status === "snoozed" || f.status === "rejected" ? ' <button class="btn secondary" type="button" data-dhact="reopen" data-k="' + esc(f.fkey) + '" style="padding:2px 8px;font-size:11.5px">Reopen</button>' : "") + "</span></div>";
-    }).join("") + "</div>";
-    return h;
-  }
-  function dhApprove(f) {
-    var to = (f.owner_docs || []).slice();
-    function chips() { return to.map(function (id) { return '<span class="dh-chip">' + esc(dhPeopleName(id)) + ' <button type="button" data-rm="' + esc(id) + '" aria-label="Remove">✕</button></span>'; }).join("") || '<span class="om-small">Nobody yet — add people below.</span>'; }
-    openModal('<div class="dh-modal-in"><h3 style="margin:0">✅ Approve &amp; send</h3><div class="om-sub">' + esc(f.title) + '</div>' +
-      '<label>Send to</label><div class="dh-chips" id="dhTo">' + chips() + '</div><input type="search" id="dhToSearch" placeholder="Type a name to add…"><div id="dhToList" class="dh-chips"></div>' +
-      '<label>Message title</label><input type="text" id="dhMsgT" maxlength="200" value="' + esc(f.notify_title || f.title) + '">' +
-      '<label>Message</label><textarea id="dhMsgB" rows="7" maxlength="2000">' + esc(f.notify_body || f.detail) + "</textarea>" +
-      '<label>Note for the log (optional)</label><input type="text" id="dhNote" maxlength="500">' +
-      '<div class="om-actions"><button class="btn secondary" type="button" id="dhCancel">Cancel</button><button class="btn" type="button" id="dhSend">Send now</button></div></div>', "dh-modal");
-    function redraw() { document.getElementById("dhTo").innerHTML = chips(); document.querySelectorAll("#dhTo [data-rm]").forEach(function (x) { x.onclick = function () { to = to.filter(function (i) { return i !== x.dataset.rm; }); redraw(); }; }); }
-    redraw();
-    document.getElementById("dhToSearch").oninput = function () {
-      var q = this.value.trim().toUpperCase(), box = document.getElementById("dhToList");
-      if (q.length < 2) { box.innerHTML = ""; return; }
-      box.innerHTML = dh.boot.people.filter(function (p) { return p.name.toUpperCase().indexOf(q) >= 0 && to.indexOf(p.doc_id) < 0; }).slice(0, 8).map(function (p) { return '<button type="button" class="dh-chip" data-add="' + esc(p.doc_id) + '">+ ' + esc(p.name) + (p.dept ? ' <span class="om-small">' + esc(p.dept) + "</span>" : "") + "</button>"; }).join("");
-      box.querySelectorAll("[data-add]").forEach(function (x) { x.onclick = function () { to.push(x.dataset.add); document.getElementById("dhToSearch").value = ""; box.innerHTML = ""; redraw(); }; });
-    };
-    document.getElementById("dhCancel").onclick = closeModal;
-    document.getElementById("dhSend").onclick = function () {
-      var btn = this; if (!to.length) { toast("Add at least one person", true); return; }
-      btn.disabled = true; btn.textContent = "Sending…";
-      ahApi("ahDecide", { fkey: f.fkey, decision: "approve", recipients: to, title: document.getElementById("dhMsgT").value, body: document.getElementById("dhMsgB").value, note: document.getElementById("dhNote").value })
-        .then(function (r) { closeModal(); toast("Sent to " + r.sent + " people"); f.status = "approved"; f.decided_at = new Date().toISOString(); f.decided_name = dh.boot.me; dhRender(); })
-        .catch(function (e) { btn.disabled = false; btn.textContent = "Send now"; toast(e.message, true); });
-    };
-  }
-
-  // ---- 🤖 Agents
-  // ---- ⏸ pause / ▶ resume + 📝 instructions (agent-hub ahPause / ahOrderSave / ahOrderDelete / ahOrderRun)
-  var DH_KIND = { task: "📋 Give a task", ignore: "🙈 Ignore issues about…", urgent: "🔴 Treat as urgent…", note: "📝 Add a note to its tasks" };
-  var DH_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  function dhPaused(id) { var P = (dh.boot && dh.boot.paused) || {}; return !!(P.all || (P.agents || {})[id]); }
-  function dhPauseBtn(id) {
-    var P = (dh.boot && dh.boot.paused) || {}, own = !!((P.agents || {})[id]);
-    return '<button type="button" class="btn secondary dh-pbtn' + (own ? " on" : "") + '" data-dhpause="' + id + '" data-p="' + (own ? "0" : "1") + '">' + (own ? "▶ Resume" : "⏸ Pause") + "</button>";
-  }
-  function dhOrdersHtml(b) {
-    var os = b.orders || [], ag = {}; b.agents.forEach(function (a) { ag[a.id] = a; });
-    var pn = function (id) { return dhPeopleName(id); };
-    var rows = os.length ? os.map(function (o) {
-      var a = ag[o.agent] || { icon: "🤖", name: o.agent };
-      var what = o.kind === "task" ? esc(o.text) + '<div class="om-small">To: <b>' + esc((o.to || []).map(pn).join(", ")) + "</b> · from " + esc(pn(o.from)) + " · " + esc((o.days || []).map(function (d) { return DH_DAYS[d]; }).join(", ")) + " · finish by " + esc(o.due || "16:00") + "</div>"
-        : o.kind === "note" ? esc(o.text) : 'Words: <b>' + esc(o.words) + "</b>";
-      return '<div class="dh-order' + (o.on ? "" : " off") + '"><div class="dh-order-h"><span>' + a.icon + " " + esc(a.name) + '</span><span class="om-st ' + (o.kind === "urgent" ? "bad" : o.kind === "ignore" ? "mute" : "warn") + '">' + DH_KIND[o.kind] + '</span></div><div class="dh-order-b">' + what + '</div><div class="om-small">Set by ' + esc(o.by || "") + " · " + esc(dhAgo(o.at)) + '</div><div class="dh-order-a">' +
-        '<label class="dh-sw"><input type="checkbox" data-dhoon="' + esc(o.id) + '"' + (o.on ? " checked" : "") + "> " + (o.on ? "On" : "Off") + "</label>" +
-        (o.kind === "task" ? '<button type="button" class="btn secondary" data-dhorun="' + esc(o.id) + '">▶ Give it now</button>' : "") +
-        '<button type="button" class="btn secondary" data-dhoedit="' + esc(o.id) + '">Edit</button><button type="button" class="btn secondary dh-del" data-dhodel="' + esc(o.id) + '">Delete</button></div></div>';
-    }).join("") : '<div class="empty" style="padding:14px">No instructions yet. The agents work on their own rules until you add one.</div>';
-    return '<div class="dsp-card" style="margin-top:14px" id="dhOrders"><div class="om-dh"><div><h3 style="margin:0 0 4px;font-size:15px">📝 Tell the agents what to do</h3><div class="om-sub">Give a regular task to people, make an agent ignore or raise certain issues, or add your instruction to every task it gives.</div></div><button type="button" class="btn" id="dhOrderNew">+ New instruction</button></div><div id="dhOrderForm"></div><div class="dh-orders">' + rows + "</div></div>";
-  }
-  function dhOrderForm(o) {
-    var b = dh.boot; o = o || { kind: "task", agent: (b.agents[0] || {}).id, days: [1, 2, 3, 4, 5, 6], due: "16:00", from: "vinay", to: [], on: true };
-    var people = b.people || [];
-    var opt = function (list, sel) { return list.map(function (x) { return '<option value="' + esc(x[0]) + '"' + (x[0] === sel ? " selected" : "") + ">" + esc(x[1]) + "</option>"; }).join(""); };
-    var h = '<div class="dh-oform"><h4 style="margin:0 0 8px">' + (o.id ? "Edit instruction" : "New instruction") + '</h4><div class="dh-ogrid">' +
-      '<label>Which agent<select id="dhoAgent">' + opt(b.agents.map(function (a) { return [a.id, a.icon + " " + a.name]; }), o.agent) + "</select></label>" +
-      '<label>What should it do<select id="dhoKind">' + opt(Object.keys(DH_KIND).map(function (k) { return [k, DH_KIND[k]]; }), o.kind) + "</select></label></div>" +
-      '<div data-k="task note"><label>Instruction (what the person must do)<textarea id="dhoText" rows="3" maxlength="1800" placeholder="e.g. Update the stitching actual dates of all your IOs in Order Master">' + esc(o.text || "") + "</textarea></label></div>" +
-      '<div data-k="ignore urgent"><label>Words to look for (comma separated)<input id="dhoWords" maxlength="400" value="' + esc(o.words || "") + '" placeholder="e.g. Raw Data, by Colour, IKEA"></label><div class="om-small">Issues whose title or details mention any of these words will be ' + '<b id="dhoWhat">' + (o.kind === "urgent" ? "marked urgent" : "ignored") + "</b>.</div></div>" +
-      '<div data-k="task"><label>Give the task to</label><input type="search" id="dhoToSearch" placeholder="Type a name to add…"><div class="dh-chips" id="dhoToChips"></div><div class="dh-chips" id="dhoToList"></div>' +
-      '<div class="dh-ogrid"><label>Given from<select id="dhoFrom">' + opt(people.map(function (p) { return [p.doc_id, p.name]; }), o.from || "vinay") + '</select></label><label>Finish by<input type="time" id="dhoDue" value="' + esc(o.due || "16:00") + '"></label></div>' +
-      '<div class="om-small" style="margin:6px 0 4px">On these days (given each morning after 9 am)</div><div class="dh-days">' + DH_DAYS.map(function (d, i) { return '<label><input type="checkbox" class="dhoDay" value="' + i + '"' + ((o.days || []).indexOf(i) >= 0 ? " checked" : "") + "> " + d + "</label>"; }).join("") + "</div></div>" +
-      '<div class="modal-err" id="dhoErr"></div><div class="dh-order-a"><button type="button" class="btn" id="dhoSave">Save</button><button type="button" class="btn secondary" id="dhoCancel">Cancel</button></div></div>';
-    var box = document.getElementById("dhOrderForm"); box.innerHTML = h;
-    var to = (o.to || []).slice();
-    function kindShow() { var k = document.getElementById("dhoKind").value; box.querySelectorAll("[data-k]").forEach(function (el) { el.style.display = el.dataset.k.split(" ").indexOf(k) >= 0 ? "" : "none"; }); var w = document.getElementById("dhoWhat"); if (w) w.textContent = k === "urgent" ? "marked urgent" : "ignored"; }
-    function chips() { document.getElementById("dhoToChips").innerHTML = to.map(function (id) { return '<span class="dh-chip">' + esc(dhPeopleName(id)) + ' <button type="button" data-rmto="' + esc(id) + '" aria-label="Remove">✕</button></span>'; }).join("") || '<span class="om-small">Nobody picked yet</span>'; box.querySelectorAll("[data-rmto]").forEach(function (x) { x.onclick = function () { to = to.filter(function (i) { return i !== x.dataset.rmto; }); chips(); }; }); }
-    document.getElementById("dhoKind").onchange = kindShow; kindShow(); chips();
-    document.getElementById("dhoToSearch").oninput = function () {
-      var q = this.value.trim().toLowerCase(), list = document.getElementById("dhoToList");
-      list.innerHTML = q ? people.filter(function (p) { return to.indexOf(p.doc_id) < 0 && (p.name.toLowerCase().indexOf(q) >= 0 || (p.dept || "").toLowerCase().indexOf(q) >= 0); }).slice(0, 8).map(function (p) { return '<button type="button" class="dh-chip" data-addto="' + esc(p.doc_id) + '">+ ' + esc(p.name) + (p.dept ? " · " + esc(p.dept) : "") + "</button>"; }).join("") : "";
-      list.querySelectorAll("[data-addto]").forEach(function (x) { x.onclick = function () { to.push(x.dataset.addto); document.getElementById("dhoToSearch").value = ""; list.innerHTML = ""; chips(); }; });
-    };
-    document.getElementById("dhoCancel").onclick = function () { box.innerHTML = ""; };
-    document.getElementById("dhoSave").onclick = function () {
-      var btn = this, k = document.getElementById("dhoKind").value;
-      var order = { id: o.id || "", agent: document.getElementById("dhoAgent").value, kind: k, text: document.getElementById("dhoText").value.trim(), words: document.getElementById("dhoWords").value.trim(),
-        to: to, from: document.getElementById("dhoFrom").value, due: document.getElementById("dhoDue").value || "16:00", on: o.on !== false,
-        days: [].slice.call(box.querySelectorAll(".dhoDay:checked")).map(function (x) { return +x.value; }) };
-      btn.disabled = true; btn.textContent = "Saving…";
-      ahApi("ahOrderSave", { order: order }).then(function (r) { dh.boot.orders = r.orders; toast("Instruction saved — the agent follows it from its next run"); dhRender(); })
-        .catch(function (e) { document.getElementById("dhoErr").textContent = e.message; btn.disabled = false; btn.textContent = "Save"; });
-    };
-    box.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
-  function dhWireOrders(root) {
-    var el;
-    if ((el = document.getElementById("dhOrderNew"))) el.onclick = function () { dhOrderForm(null); };
-    root.querySelectorAll("[data-dhoedit]").forEach(function (x) { x.onclick = function () { dhOrderForm((dh.boot.orders || []).find(function (o) { return o.id === x.dataset.dhoedit; })); }; });
-    root.querySelectorAll("[data-dhodel]").forEach(function (x) { x.onclick = async function () {
-      if (!await rcConfirm("Delete this instruction? The agent goes back to its own rules for it.", { ok: "Delete", danger: true })) return;
-      ahApi("ahOrderDelete", { id: x.dataset.dhodel }).then(function (r) { dh.boot.orders = r.orders; toast("Deleted"); dhRender(); }).catch(function (e) { toast(e.message, true); }); }; });
-    root.querySelectorAll("[data-dhoon]").forEach(function (x) { x.onchange = function () {
-      var o = (dh.boot.orders || []).find(function (y) { return y.id === x.dataset.dhoon; }); if (!o) return;
-      var n = Object.assign({}, o, { on: x.checked }); x.disabled = true;
-      ahApi("ahOrderSave", { order: n }).then(function (r) { dh.boot.orders = r.orders; toast(n.on ? "Instruction on" : "Instruction off"); dhRender(); }).catch(function (e) { x.disabled = false; x.checked = !x.checked; toast(e.message, true); }); }; });
-    root.querySelectorAll("[data-dhorun]").forEach(function (x) { x.onclick = async function () {
-      if (!await rcConfirm("Give this task to the chosen people now?", { ok: "Give it now" })) return;
-      x.disabled = true; ahApi("ahOrderRun", { id: x.dataset.dhorun }).then(function (r) { x.disabled = false; toast(r.made ? r.made + " task" + (r.made > 1 ? "s" : "") + " given" : "Nothing new — they still have the last one pending"); }).catch(function (e) { x.disabled = false; toast(e.message, true); }); }; });
-    root.querySelectorAll("[data-dhpause]").forEach(function (x) { x.onclick = async function () {
-      var t = x.dataset.dhpause, on = x.dataset.p === "1";
-      if (t === "all" && on && !await rcConfirm("Pause ALL agents? They stop checking, chasing and giving tasks until you press Resume.", { ok: "Pause all", danger: true })) return;
-      x.disabled = true;
-      ahApi("ahPause", { target: t, paused: on }).then(function (r) { dh.boot.paused = r.paused; toast(on ? "Paused" : "Resumed — it runs again from the next hourly check"); dhRender(); }).catch(function (e) { x.disabled = false; toast(e.message, true); }); }; });
-  }
-  function dhAgents() {
-    var b = dh.boot;
-    if (!b || !b.access) return '<div class="empty">Only approvers and the Developer rank can see the agents.</div>';
-    var open = b.findings.filter(function (f) { return f.status === "open"; });
-    var PA = (b.paused || {}), allP = !!PA.all;
-    var JOB = { orders: "Overdue SKUs per merchant, Order Master changes that did not reach the sheets, dispatch pace vs the +5% target.", sampling: "Client complaints past due, sampling costing / shade-card steps stuck over 3 days, fair leads not followed up.", quality: "Lots past the time limit (gate 2 h, DQA 2 h, 4-point 48 h), lots without a lot number.", purchase: "Purchase lines past delivery date by vendor, late job-work / RM, spare parts below minimum.", people: "Overdue delegation tasks, leave and reimbursements waiting, tablets not returned.", it: "Sheet sync stopped, failed scheduled jobs / server calls, Sheet Bridge offline, open tech issues, stuck emails." };
-    var h = '<div class="dh-ctl' + (allP ? " paused" : "") + '"><div><b>' + (allP ? "⏸ All agents are paused" : "▶ Agents are running") + '</b><div class="om-small">' + (allP ? "Nothing is checked, chased or delegated until you resume." : "Pause one agent below, or all of them here.") + '</div></div><button type="button" class="btn' + (allP ? "" : " secondary") + '" data-dhpause="all" data-p="' + (allP ? "0" : "1") + '">' + (allP ? "▶ Resume all" : "⏸ Pause all") + "</button></div>" +
-      '<div class="dh-agents"><div class="dh-agent ceo"><h4>👔 CEO agent</h4><div class="om-small">Collects every finding, sends urgent alerts and a 10 am daily brief to the approvers, and sends nothing to staff until an approver says yes.</div><span class="om-small">Open issues: <b>' + open.length + "</b> · last brief " + esc(b.brief ? dhAgo(b.brief.made_at) : "–") + "</span></div>" +
-      '<div class="dh-agent ceo"><h4>🤝 Follow-up agent</h4><div class="om-small">Works for the merchants: every day at 10 am it chases the production person for each late PPC / Order Master stage, and tells the merchant what was chased. Closes by itself when the actual date is filled.</div><div class="dh-acts">' + dhPauseBtn("followup") + '<button class="btn secondary" type="button" data-dhgo="followups" style="padding:5px 10px;font-size:12px">Open dashboard</button></div></div>' +
-      b.agents.map(function (a) {
-        var n = open.filter(function (f) { return f.agent === a.id; }), hi = n.filter(function (f) { return f.severity === "high"; }).length, l = a.last;
-        var nOrd = (b.orders || []).filter(function (o) { return o.agent === a.id && o.on; }).length;
-        return '<div class="dh-agent' + (dhPaused(a.id) ? " paused" : "") + '"><h4>' + a.icon + " " + esc(a.name) + (dhPaused(a.id) ? ' <span class="om-st mute">⏸ Paused</span>' : "") + (nOrd ? ' <span class="om-st warn">📝 ' + nOrd + "</span>" : "") + '</h4><div class="om-small">' + esc(JOB[a.id] || "") + '</div><span class="om-small">Open: <b>' + n.length + "</b>" + (hi ? ' · <b style="color:#dc2626">' + hi + " urgent</b>" : "") + " · last run " + esc(l ? dhAgo(l.started_at) : "never") + (l && l.error ? ' · <b style="color:#dc2626">error: ' + esc(l.error) + "</b>" : "") + '</span><div class="dh-acts">' + dhPauseBtn(a.id) + '<button class="btn secondary" type="button" data-dhrun="' + a.id + '" style="margin-top:8px;padding:5px 10px;font-size:12px">▶ Run now</button></div></div>';
-      }).join("") + "</div>";
-    h += dhOrdersHtml(b);
-    h += '<div class="dsp-card" style="margin-top:14px"><h3 style="margin:0 0 4px;font-size:15px">✅ Approvers</h3><div class="om-sub">They get the CEO alerts and approve what goes to staff.</div>';
-    if (b.isDev) {
-      h += '<div class="dh-chips" id="dhApprChips">' + b.approvers.map(function (a) { return '<span class="dh-chip">' + esc(a.name) + ' <button type="button" data-rmappr="' + esc(a.doc_id) + '">✕</button></span>'; }).join("") + '</div><input type="search" id="dhApprSearch" placeholder="Add an approver…"><div id="dhApprList" class="dh-chips"></div>';
-    } else h += '<div class="dh-chips">' + b.approvers.map(function (a) { return '<span class="dh-chip">' + esc(a.name) + "</span>"; }).join("") + "</div>";
-    h += '</div><p class="om-small">Agents run every hour, 9 am – 8 pm, Monday to Saturday. They only read data; they never change orders or sheets.</p>';
-    return h;
-  }
-
-  // ---- 🚀 Publish / ✏️ Quick edit / 🕘 History / ⚙ GitHub (Developer rank)
-  function dhNeedGh() {
-    if (!dhIsDev()) return '<div class="empty">Only the Developer rank can publish.</div>';
-    if (!dh.gh || !dh.gh.cfg.connected) return '<div class="empty">Connect GitHub first. <button class="btn" type="button" data-dhgo="github">⚙ Connect GitHub</button></div>';
-    return "";
-  }
-  function dhRepoLine() { var c = dh.gh.cfg; return '<div class="om-note">📦 <b>' + esc(c.owner + "/" + c.repo) + "</b> · branch <b>" + esc(c.branch) + "</b> · file <b>" + esc(c.path) + "</b> · as <b>" + esc(c.login || "?") + "</b>" + (dh.gh.head ? " · live version <code>" + esc(dh.gh.head.slice(0, 7)) + "</code>" : "") + (dh.gh.pages ? " · site build: <b>" + esc(dh.gh.pages.status) + "</b> " + esc(dhAgo(dh.gh.pages.at)) : "") + (dh.gh.ghErr ? ' · <b style="color:#dc2626">' + esc(dh.gh.ghErr) + "</b>" : "") + "</div>"; }
-  function dhPublishTab() {
-    var need = dhNeedGh(); if (need) return need;
-    var p = dh.pick;
-    var h = dhRepoLine() + '<div class="dh-drop" id="dhDrop"><div style="font-size:30px">📄</div><b>Drop the new index.html here</b><div class="om-small">or tap to choose the file</div><input type="file" id="dhFile" accept=".html,text/html" hidden></div>';
-    if (p) {
-      h += '<div class="dsp-card" style="margin-top:12px"><h3 style="margin:0;font-size:15px">' + esc(p.name) + ' <span class="om-small">' + (p.size / 1048576).toFixed(2) + ' MB</span></h3><ul class="dh-checks">' + p.checks.map(function (c) { return "<li>" + (c[0] ? "✅ " : "❌ ") + esc(c[1]) + "</li>"; }).join("") + "</ul>" +
-        (p.diff ? '<div class="om-small" style="margin-bottom:8px">' + esc(p.diff) + "</div>" : '<button class="btn secondary" type="button" id="dhCompare" style="margin-bottom:8px">🔍 Compare with live</button>') +
-        '<label class="om-small" style="font-weight:700">What changed? (saved in the history)</label><input type="text" id="dhMsg" maxlength="300" placeholder="e.g. Added Dispatch tracker">' +
-        '<div class="om-actions">' + (p.bad ? '<label class="om-small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="dhForce"> Publish anyway</label>' : "") + '<button class="btn" type="button" id="dhGo">🚀 Publish to GitHub</button></div><div id="dhPubOut"></div></div>';
-    }
-    h += '<p class="om-small" style="margin-top:10px">After publishing, the site updates by itself in about 1 minute. If something breaks, open 🕘 History and press ↩ Restore on the version before.</p>';
-    return h;
-  }
-  function dhCheckText(text) {
-    var checks = [], bad = false, n = 0, errs = 0, firstErr = "";
-    var re = /<script(?![^>]*\bsrc=)([^>]*)>([\s\S]*?)<\/script>/gi, m;
-    while ((m = re.exec(text))) {
-      if (/type=["']?(application\/json|text\/template|module|application\/ld\+json)/i.test(m[1])) continue;
-      n++; try { new Function(m[2]); } catch (e) { errs++; if (!firstErr) firstErr = e.message; }
-    }
-    checks.push([!errs, n + " script blocks — " + (errs ? errs + " with a code error: " + firstErr : "no code errors")]);
-    var o = (text.match(new RegExp("<" + "div[\\s>]", "gi")) || []).length, c = (text.match(/<\/div>/gi) || []).length;
-    checks.push([o === c, "Page boxes balanced: " + o + " open / " + c + " close"]);
-    var hasApp = /id=["']app["']/.test(text) && /ALL_VIEWS/.test(text);
-    checks.push([hasApp, hasApp ? "Looks like the Workspace page" : "This does not look like the Workspace index.html"]);
-    var svc = /eyJ[A-Za-z0-9_-]{8,}\.(eyJ[A-Za-z0-9_-]{8,})\.[A-Za-z0-9_-]{8,}/g, k, leak = false;
-    while ((k = svc.exec(text))) { try { if (JSON.parse(atob(k[1].replace(/-/g, "+").replace(/_/g, "/") + "===".slice((k[1].length + 3) % 4))).role === "service_role") leak = true; } catch (e) {} }
-    checks.push([!leak, leak ? "Contains the SERVICE ROLE key — remove it!" : "No secret keys inside"]);
-    bad = errs > 0 || o !== c || !hasApp || leak;
-    return { checks: checks, bad: bad, hard: !hasApp || leak };
-  }
-  function dhModKeys(t) { var s = {}, re = /\{ key: "([a-z0-9_]+)", icon:/g, m; while ((m = re.exec(t))) s[m[1]] = 1; return Object.keys(s); }
-  function dhDiff(a, b) {
-    var ka = dhModKeys(a), kb = dhModKeys(b);
-    var add = kb.filter(function (k) { return ka.indexOf(k) < 0; }), rem = ka.filter(function (k) { return kb.indexOf(k) < 0; });
-    var la = a.split("\n").length, lb = b.split("\n").length;
-    return "Compared with live: " + (b.length - a.length >= 0 ? "+" : "") + Math.round((b.length - a.length) / 1024) + " KB, " + (lb - la >= 0 ? "+" : "") + (lb - la) + " lines" + (add.length ? " · new modules: " + add.join(", ") : "") + (rem.length ? " · REMOVED modules: " + rem.join(", ") : "") + (a === b ? " · identical to live" : "");
-  }
-  function dhGetLive(force) {
-    if (dh.live && !force && dh.live.head === (dh.gh && dh.gh.head)) return Promise.resolve(dh.live);
-    return ghApi("dhLive").then(function (d) { dh.live = d; if (dh.gh) dh.gh.head = d.head; return d; });
-  }
-  function dhPublishText(text, message, kind, out) {
-    out = out || function () {};
-    out("Uploading…");
-    return ghApi("dhUploadUrl").then(function (u) {
-      return fetch(u.url, { method: "PUT", headers: { "Content-Type": "text/html" }, body: new Blob([text], { type: "text/html" }) }).then(function (r) {
-        if (!r.ok) return r.text().then(function (t) { throw new Error("Upload failed: " + t.slice(0, 150)); });
-        out("Saving to GitHub…");
-        return ghApi("dhPublish", { upPath: u.path, message: message, kind: kind, expectHead: (dh.gh && dh.gh.head) || "" });
-      });
-    }).then(function (r) {
-      if (!r.unchanged) { dh.gh.head = r.sha; dh.live = null; }
-      return r;
-    });
-  }
-  function dhPickFile(file) {
-    if (!file) return;
-    if (file.size > 30 * 1048576) { toast("File is bigger than 30 MB", true); return; }
-    var rd = new FileReader();
-    rd.onload = function () { var t = String(rd.result); var c = dhCheckText(t); dh.pick = { name: file.name, size: file.size, text: t, checks: c.checks, bad: c.bad, hard: c.hard, diff: "" }; dhRender(); };
-    rd.readAsText(file);
-  }
-  function dhEditTab() {
-    var need = dhNeedGh(); if (need) return need;
-    if (!dh.work) return dhRepoLine() + '<div class="empty">Quick edit changes small things (a word, a name, a colour, a number) in the live page without uploading a file.<br><br><button class="btn" type="button" id="dhLoadLive">⬇ Open the live page for editing</button></div>';
-    var h = dhRepoLine() + '<div class="dsp-card"><h3 style="margin:0 0 6px;font-size:15px">1 · Find</h3><input type="search" id="dhFind" placeholder="Type the exact text to change (min 3 letters)…" value="' + esc(dh.find || "") + '"><div id="dhMatches"></div></div>' +
-      '<div class="dsp-card"><h3 style="margin:0 0 6px;font-size:15px">2 · Changes waiting (' + dh.edits.length + ")</h3>" +
-      (dh.edits.map(function (e, i) { return '<div class="dh-match"><span>' + (i + 1) + '.</span><code>' + esc(e.from.slice(0, 160)) + "</code><span>→</span><code>" + esc(e.to.slice(0, 160)) + "</code></div>"; }).join("") || '<div class="om-small">No changes yet.</div>') +
-      (dh.edits.length ? '<label class="om-small" style="font-weight:700;display:block;margin-top:10px">What changed?</label><input type="text" id="dhEditMsg" maxlength="300" placeholder="e.g. Fixed spelling on Home"><div class="om-actions"><button class="btn secondary" type="button" id="dhEditUndo">↺ Undo all</button><button class="btn" type="button" id="dhEditPub">🚀 Publish ' + dh.edits.length + " change" + (dh.edits.length > 1 ? "s" : "") + '</button></div><div id="dhEditOut"></div>' : "") + "</div>";
-    return h;
-  }
-  function dhShowMatches() {
-    var box = document.getElementById("dhMatches"); if (!box) return;
-    var q = dh.find || ""; if (q.length < 3) { box.innerHTML = ""; return; }
-    var t = dh.work, out = [], i = -1;
-    while ((i = t.indexOf(q, i + 1)) >= 0 && out.length < 30) out.push(i);
-    var total = out.length; if (total === 30) { var j = out[29]; while ((j = t.indexOf(q, j + 1)) >= 0) total++; }
-    box.innerHTML = '<p class="om-small">' + total + " match" + (total === 1 ? "" : "es") + (total > 30 ? " (showing 30 — type more to narrow down)" : "") + "</p>" +
-      out.map(function (pos, n) { var a = Math.max(0, pos - 70), b2 = Math.min(t.length, pos + q.length + 70); return '<div class="dh-match"><input type="radio" name="dhM" value="' + pos + '"' + (n === 0 ? " checked" : "") + '><code>' + esc(t.slice(a, pos)) + "<mark>" + esc(q) + "</mark>" + esc(t.slice(pos + q.length, b2)) + "</code></div>"; }).join("") +
-      (out.length ? '<label class="om-small" style="font-weight:700;display:block;margin-top:8px">Replace the ticked one with</label><textarea id="dhRepl" rows="2">' + esc(q) + '</textarea><div class="om-actions"><button class="btn secondary" type="button" id="dhReplAll">Replace all ' + total + '</button><button class="btn" type="button" id="dhReplOne">Replace ticked one</button></div>' : "");
-    var one = document.getElementById("dhReplOne");
-    if (one) one.onclick = function () {
-      var r = document.querySelector('input[name="dhM"]:checked'); if (!r) return;
-      var pos = +r.value, to = document.getElementById("dhRepl").value;
-      if (to === q) { toast("Type the new text first", true); return; }
-      dh.work = dh.work.slice(0, pos) + to + dh.work.slice(pos + q.length); dh.edits.push({ from: q, to: to }); dh.find = ""; dhRender();
-    };
-    var all = document.getElementById("dhReplAll");
-    if (all) all.onclick = function () {
-      var to = document.getElementById("dhRepl").value; if (to === q) { toast("Type the new text first", true); return; }
-      if (all.dataset.sure !== "1") { all.dataset.sure = "1"; all.textContent = "Tap again: replace all " + total; return; }
-      dh.work = dh.work.split(q).join(to); dh.edits.push({ from: q + " (×" + total + ")", to: to }); dh.find = ""; dhRender();
-    };
-  }
-  function dhLoadHistory() {
-    var box = document.getElementById("dhHist"); if (!box) return;
-    var need = dhNeedGh(); if (need) { box.innerHTML = need; dhWire(box); return; }
-    ghApi("dhHistory").then(function (list) {
-      var logs = (dh.gh.deploys || []);
-      box.innerHTML = dhRepoLine() + '<div class="om-table"><table><thead><tr><th>When</th><th>What changed</th><th>By</th><th>Version</th><th></th></tr></thead><tbody>' + list.map(function (c, i) {
-        var lg = logs.find(function (x) { return x.sha === c.sha; });
-        return "<tr" + (i === 0 ? ' class="st-today"' : "") + "><td>" + esc(new Date(c.date).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })) + (i === 0 ? ' <span class="om-tag">LIVE</span>' : "") + "</td><td>" + esc(c.message) + "</td><td>" + esc(lg ? lg.by_name : c.author) + '</td><td><a href="' + esc(c.url) + '" target="_blank" rel="noopener"><code>' + esc(c.sha.slice(0, 7)) + '</code></a></td><td style="white-space:nowrap"><button class="btn secondary" type="button" data-dhdl="' + esc(c.sha) + '" style="padding:4px 9px;font-size:12px">⬇</button>' + (i ? ' <button class="btn secondary" type="button" data-dhrestore="' + esc(c.sha) + '" style="padding:4px 9px;font-size:12px">↩ Restore</button>' : "") + "</td></tr>";
-      }).join("") + "</tbody></table></div>";
-      dhWire(box);
-    }).catch(function (e) { box.innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; });
-  }
-  function dhGithubTab() {
-    if (!dhIsDev()) return '<div class="empty">Only the Developer rank can connect GitHub.</div>';
-    var c = (dh.gh && dh.gh.cfg) || { owner: "rugs-zone", repo: "Workspace", branch: "main", path: "index.html" };
-    return '<div class="dsp-grid2"><div class="dsp-card"><h3 style="margin:0 0 6px;font-size:15px">⚙ GitHub connection ' + (c.connected ? '<span class="om-st ok">Connected as ' + esc(c.login) + " · …" + esc(c.tokenEnd) + "</span>" : '<span class="om-st bad">Not connected</span>') + '</h3>' +
-      '<div class="om-grid2"><label class="om-l om-small" style="font-weight:700">Owner<input type="text" id="dhOwner" value="' + esc(c.owner) + '"></label><label class="om-l om-small" style="font-weight:700">Repository<input type="text" id="dhRepo" value="' + esc(c.repo) + '"></label>' +
-      '<label class="om-l om-small" style="font-weight:700">Branch<input type="text" id="dhBranch" value="' + esc(c.branch) + '"></label><label class="om-l om-small" style="font-weight:700">File<input type="text" id="dhPath" value="' + esc(c.path) + '"></label></div>' +
-      '<label class="om-small" style="font-weight:700;display:block;margin-top:8px">GitHub token ' + (c.connected ? "(leave empty to keep the saved one)" : "") + '<input type="password" id="dhTok" autocomplete="off" placeholder="github_pat_…"></label>' +
-      '<div class="om-actions">' + (c.connected ? '<button class="btn secondary" type="button" id="dhDisc">Disconnect</button>' : "") + '<button class="btn" type="button" id="dhSaveGh">Save &amp; test</button></div>' +
-      '<p class="om-small">The token is kept on the server only. It is never shown again or put in the page.</p></div>' +
-      '<div class="dsp-card"><h3 style="margin:0 0 6px;font-size:15px">How to make the token (5 min, once)</h3><ol class="dh-steps">' +
-      '<li>Open <b>github.com</b> and sign in with the account that owns <b>rugs-zone/Workspace</b>.</li>' +
-      '<li>Top-right photo → <b>Settings</b> → bottom of the left menu → <b>Developer settings</b>.</li>' +
-      '<li><b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>' +
-      '<li>Name: <i>Rugs Zone Workspace</i>. Expiration: <b>1 year</b>. Resource owner: <b>rugs-zone</b>.</li>' +
-      '<li>Repository access: <b>Only select repositories</b> → pick <b>Workspace</b>.</li>' +
-      '<li>Permissions → Repository → <b>Contents: Read and write</b> (and <b>Pages: Read</b> if you see it).</li>' +
-      '<li>Press <b>Generate token</b>, copy it (starts with <code>github_pat_</code>), paste it here, press <b>Save &amp; test</b>.</li>' +
-      '<li>If GitHub says the organisation must approve it, the rugs-zone owner approves it under Organisation → Settings → Personal access tokens.</li></ol></div></div>';
-  }
-
-
-  // ---- 🤝 Follow-up agent dashboard (admins see what the agent chased for the merchants)
-  function dhFollowTab() {
-    var d = dh.fu; if (!d) return '<div class="empty">Loading…</div>';
-    var f = dh.fuf || (dh.fuf = { mer: "", pp: "", q: "" });
-    var open = d.open, closed = d.closed;
-    var linked = open.filter(function (x) { return x.prod_doc; }), notLinked = open.filter(function (x) { return !x.prod_doc; });
-    var mers = {}, pps = {};
-    open.forEach(function (x) {
-      var m = mers[x.merchant || "–"] || (mers[x.merchant || "–"] = { n: 0, linked: 0, max: 0, done: 0 }); m.n++; if (x.prod_doc) m.linked++; m.max = Math.max(m.max, x.days_late || 0);
-      var k = x.prod_person || "(blank)", p = pps[k] || (pps[k] = { n: 0, max: 0, doc: x.prod_doc, done: 0 }); p.n++; p.max = Math.max(p.max, x.days_late || 0);
-    });
-    closed.forEach(function (x) { if (mers[x.merchant || "–"]) mers[x.merchant || "–"].done++; else mers[x.merchant || "–"] = { n: 0, linked: 0, max: 0, done: 1 }; var k = x.prod_person || "(blank)"; if (pps[k]) pps[k].done++; else pps[k] = { n: 0, max: 0, doc: null, done: 1 }; });
-    var pname = function (id) { var p = (d.people || []).find(function (x) { return x.doc_id === id; }); return p ? p.name : id; };
-    var avg = open.length ? Math.round(open.reduce(function (s, x) { return s + (x.days_late || 0); }, 0) / open.length) : 0;
-    var h = '<div class="dh-brief"><div class="om-dh"><div><h3>🤝 Follow-up agent</h3><div class="om-small">Every working day at 10 am it reads PPC / Order Master stage dates and chases the production person for each late stage — <b>so the merchants don\'t have to</b>. When the actual date is filled, the follow-up closes by itself.</div></div>' +
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><label class="om-small" style="display:flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" id="dhFuAuto"' + (d.auto ? " checked" : "") + '> Send automatically every day</label><button class="btn" type="button" id="dhFuSend">📨 Send today\'s follow-ups now</button></div></div>' +
-      '<p class="om-small" style="margin:6px 0 0">' + (d.auto ? "Automatic send: every working day at about 10 am" + (d.lastDay ? " · last daily run <b>" + esc(d.lastDay) + "</b>" : "") : "<b>Automatic send is paused</b> — use the button to send") + "</p></div>";
-    h += '<div class="dh-kpis">' +
-      '<div class="dh-kpi"><span>Pending stage updates</span><b>' + open.length + "</b></div>" +
-      '<div class="dh-kpi"><span>Chased by the agent</span><b style="color:#16a34a">' + linked.length + "</b></div>" +
-      '<div class="dh-kpi bad"><span>Name not linked</span><b>' + notLinked.length + "</b></div>" +
-      '<div class="dh-kpi"><span>Answered (last 7 days)</span><b style="color:#16a34a">' + closed.length + "</b></div>" +
-      '<div class="dh-kpi"><span>Average days late</span><b>' + avg + "</b></div>" +
-      '<div class="dh-kpi"><span>Merchants helped</span><b>' + Object.keys(mers).filter(function (k) { return mers[k].linked; }).length + "</b></div></div>";
-    var un = Object.keys(pps).filter(function (k) { return !pps[k].doc && pps[k].n; });
-    if (un.length) h += '<div class="dsp-card"><h3 style="margin:0 0 4px;font-size:15px">🔗 Link production names to people</h3><div class="om-sub">The sheet column "Concern Production Merchant" has these names. Pick who should get their follow-ups (once). Until then the merchant is told to check them.</div>' +
-      un.map(function (k) {
-        return '<div class="om-alert-row" style="align-items:center"><span><b>' + esc(k) + '</b> <span class="om-small">· ' + pps[k].n + " pending · up to " + pps[k].max + ' days late</span></span><span style="display:flex;gap:6px;align-items:center"><select data-fumapname="' + esc(k) + '" style="max-width:260px"><option value="">— pick a person —</option>' +
-          (d.people || []).map(function (p) { return '<option value="' + esc(p.doc_id) + '">' + esc(p.name) + (p.dept ? " · " + esc(p.dept) : "") + "</option>"; }).join("") + '<option value="-">Nobody (keep with merchant)</option></select></span></div>';
-      }).join("") + "</div>";
-    var merRows = Object.keys(mers).sort(function (a, b) { return mers[b].n - mers[a].n; }).map(function (k) { var m = mers[k]; return '<tr class="om-row" data-fumer="' + esc(k) + '"><td>' + esc(k) + '</td><td class="num"><b>' + m.n + '</b></td><td class="num" style="color:#16a34a">' + m.linked + '</td><td class="num">' + (m.n - m.linked) + '</td><td class="num">' + m.max + 'd</td><td class="num" style="color:#16a34a">' + m.done + "</td></tr>"; }).join("");
-    var ppRows = Object.keys(pps).sort(function (a, b) { return pps[b].n - pps[a].n; }).map(function (k) { var p = pps[k]; return '<tr class="om-row" data-fupp="' + esc(k) + '"><td>' + esc(k) + "</td><td>" + (p.doc ? '<span class="om-st ok">' + esc(pname(p.doc)) + "</span>" : '<span class="om-st bad">not linked</span>') + '</td><td class="num"><b>' + p.n + '</b></td><td class="num">' + p.max + 'd</td><td class="num" style="color:#16a34a">' + p.done + "</td></tr>"; }).join("");
-    h += '<div class="dsp-grid2"><div class="dsp-card"><h3 style="margin:0 0 6px;font-size:15px">🧑‍💼 By merchant (work taken off them)</h3><div class="om-table"><table><thead><tr><th>Merchant</th><th class="num">Pending</th><th class="num">Agent chases</th><th class="num">Merchant checks</th><th class="num">Oldest</th><th class="num">Answered 7d</th></tr></thead><tbody>' + (merRows || '<tr><td colspan="6" class="om-small">Nothing pending</td></tr>') + "</tbody></table></div></div>" +
-      '<div class="dsp-card"><h3 style="margin:0 0 6px;font-size:15px">🏭 By production person</h3><div class="om-table"><table><thead><tr><th>Name in sheet</th><th>Goes to</th><th class="num">Pending</th><th class="num">Oldest</th><th class="num">Answered 7d</th></tr></thead><tbody>' + (ppRows || '<tr><td colspan="5" class="om-small">Nothing pending</td></tr>') + "</tbody></table></div></div></div>";
-    var q = f.q.trim().toUpperCase();
-    var list = open.filter(function (x) { return (!f.mer || x.merchant === f.mer) && (!f.pp || (x.prod_person || "(blank)") === f.pp) && (!q || (x.io + " " + x.sku + " " + x.buyer + " " + x.stage).toUpperCase().indexOf(q) >= 0); }).sort(function (a, b) { return (b.days_late || 0) - (a.days_late || 0); });
-    h += '<div class="dsp-card"><div class="om-bar" style="margin:0 0 8px"><b style="font-size:15px">📋 Pending stage updates</b>' + (f.mer ? '<span class="dh-chip">Merchant: ' + esc(f.mer) + ' <button type="button" data-fuclr="mer">✕</button></span>' : "") + (f.pp ? '<span class="dh-chip">Production: ' + esc(f.pp) + ' <button type="button" data-fuclr="pp">✕</button></span>' : "") +
-      '<input type="search" id="dhFuQ" placeholder="Search IO, SKU, buyer, stage…" value="' + esc(f.q) + '" style="flex:1;min-width:180px"></div>' +
-      '<div class="om-table"><table><thead><tr><th>IO / SKU</th><th>Buyer</th><th>Merchant</th><th>Stage</th><th>Planned</th><th class="num">Late</th><th>Ship</th><th>Chased</th></tr></thead><tbody>' +
-      (list.slice(0, 300).map(function (x) { return "<tr" + ((x.days_late || 0) > 7 ? ' class="st-late"' : "") + "><td>" + esc(x.sku) + '<span class="om-io">' + esc(x.io) + "</span></td><td>" + esc(x.buyer) + "</td><td>" + esc(x.merchant) + "</td><td>" + esc(x.stage) + ' <span class="om-small">' + esc(x.kind) + "</span></td><td>" + esc(x.planned ? omD(x.planned) : "–") + '</td><td class="num"><b>' + (x.days_late || 0) + "d</b></td><td>" + esc(x.ship ? omD(x.ship) : "–") + "</td><td>" + (x.prod_doc ? '<span class="om-st ok">' + esc(x.prod_person) + (x.sent_count ? " · " + x.sent_count + "×" : " · not yet") + "</span>" : '<span class="om-st warn">merchant</span>') + "</td></tr>"; }).join("") || '<tr><td colspan="8" class="om-small">Nothing here 🎉</td></tr>') +
-      "</tbody></table></div>" + (list.length > 300 ? '<p class="om-small">Showing 300 of ' + list.length + "</p>" : "") + "</div>";
-    return h;
-  }
-  function dhWireFollow(root) {
-    var d = dh.fu; if (!d) return;
-    var el;
-    if ((el = document.getElementById("dhFuAuto"))) el.onchange = function () { var on = this.checked; ahApi("ahFollowupAuto", { on: on }).then(function () { d.auto = on; toast(on ? "Follow-ups will go out every day at 10 am" : "Automatic follow-ups paused"); }).catch(function (e) { toast(e.message, true); }); };
-    if ((el = document.getElementById("dhFuSend"))) el.onclick = function () {
-      var b = this; if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Tap again — sends to production people + merchants"; return; }
-      b.disabled = true; b.textContent = "Sending…";
-      ahApi("ahFollowupRun").then(function (r) { toast("Sent to " + r.people + " production people and " + r.merchants + " merchants"); dh.fu = null; dhLoad(true); }).catch(function (e) { b.disabled = false; b.textContent = "📨 Send today's follow-ups now"; toast(e.message, true); });
-    };
-    root.querySelectorAll("[data-fumapname]").forEach(function (sel) {
-      sel.onchange = function () {
-        if (!sel.value) return; sel.disabled = true;
-        ahApi("ahFollowupMap", { name: sel.dataset.fumapname, doc_id: sel.value }).then(function (r) { dh.fu = r; toast("Linked"); dhRender(); }).catch(function (e) { sel.disabled = false; toast(e.message, true); });
-      };
-    });
-    root.querySelectorAll("[data-fumer]").forEach(function (x) { x.onclick = function () { dh.fuf.mer = x.dataset.fumer; dhRender(); }; });
-    root.querySelectorAll("[data-fupp]").forEach(function (x) { x.onclick = function () { dh.fuf.pp = x.dataset.fupp; dhRender(); }; });
-    root.querySelectorAll("[data-fuclr]").forEach(function (x) { x.onclick = function () { dh.fuf[x.dataset.fuclr] = ""; dhRender(); }; });
-    if ((el = document.getElementById("dhFuQ"))) el.oninput = function () { var v = this.value; clearTimeout(dh.fqt); dh.fqt = setTimeout(function () { dh.fuf.q = v; dhRender(); var i = document.getElementById("dhFuQ"); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } }, 300); };
-  }
-
-  // ---- 📋 Auto-tasks: agent issues become delegation tasks every morning (from Vinay / Gaurav, due 4 PM)
-  var DH_AGN = { orders: "📦 Orders & Production", sampling: "🧵 Sampling & Buyers", quality: "🧪 Quality", purchase: "🛒 Purchase & Store", people: "👥 People & HR", it: "🛠️ IT / System health" };
-  var DH_FROM = [["vinay", "Vinay - Director"], ["gaurav", "Gaurav - Director"]];
-  function dhAutoTab() {
-    var d = dh.ad; if (!d) return '<div class="empty">Loading…</div>';
-    var now = Date.now(), rows = d.rows || [];
-    var days = []; rows.forEach(function (r) { if (days.indexOf(r.day) < 0) days.push(r.day); });
-    var day = dh.adDay && days.indexOf(dh.adDay) >= 0 ? dh.adDay : days[0];
-    var cur = rows.filter(function (r) { return r.day === day; });
-    var stOf = function (r) {
-      if (r.status === "Completed") return /fixed/.test(r.closed_how) ? "fixed" : (r.completed_at && new Date(r.completed_at).getTime() > new Date(r.deadline).getTime() + 20 * 60000 ? "late" : "done");
-      if (r.status === "Pending") return new Date(r.deadline).getTime() < now ? "overdue" : "pending";
-      return "other";
-    };
-    var c = { done: 0, late: 0, fixed: 0, pending: 0, overdue: 0, other: 0 }; cur.forEach(function (r) { c[stOf(r)]++; });
-    var chip = { done: '<span class="om-st ok">✅ Done on time</span>', late: '<span class="om-st warn">✅ Done late</span>', fixed: '<span class="om-st ok">🤖 Fixed — closed by agent</span>', pending: '<span class="om-st mute">⏳ Pending</span>', overdue: '<span class="om-st bad">⏰ Overdue</span>', other: '<span class="om-st mute">–</span>' };
-    var h = '<div class="dh-brief"><div class="om-dh"><div><h3>📋 Auto-tasks</h3><div class="om-small">Every working morning at about <b>9 am</b> each open issue the agents found for a person becomes a <b>delegation task</b> for that person, given from <b>Vinay\'s or Gaurav\'s ID</b>, to be finished by <b>4 pm</b> the same day. The person sees it in ✅ Delegation and in 🤖 Help-Bot (with Go fix). When the agent sees the problem fixed, the task closes by itself. No new task while the old one for the same issue is still pending.</div></div>' +
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><label class="om-small" style="display:flex;gap:6px;align-items:center;font-weight:700"><input type="checkbox" id="dhAdOn"' + (d.on ? " checked" : "") + '> Make tasks automatically every morning</label><button class="btn" type="button" id="dhAdRun">📋 Make today\'s tasks now</button></div></div>' +
-      '<p class="om-small" style="margin:6px 0 0">' + (d.on ? "Automatic: every working day at about 9 am" + (d.lastDay ? " · last morning run <b>" + esc(d.lastDay) + "</b>" : "") : "<b>Automatic tasks are paused</b> — use the button") + "</p></div>";
-    h += '<div class="dsp-card"><h3 style="margin:0 0 6px;font-size:15px">👔 Who gives the task</h3><div class="om-sub">Pick whose ID each agent\'s tasks come from.</div><div class="dh-agents" style="margin-top:8px">' +
-      Object.keys(DH_AGN).map(function (k) {
-        var v = (d.from || {})[k] || "vinay", opts = DH_FROM.slice(); if (!opts.some(function (o) { return o[0] === v; })) opts.push([v, v]);
-        return '<label class="dh-agent" style="display:block"><b style="font-size:13px">' + esc(DH_AGN[k]) + '</b><select data-adfrom="' + k + '" style="width:100%;margin-top:6px">' + opts.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === v ? " selected" : "") + ">" + esc(o[1]) + "</option>"; }).join("") + "</select></label>";
-      }).join("") + "</div></div>";
-    if (!rows.length) return h + '<div class="dsp-card"><p class="om-small">No auto-tasks yet. The first ones are made tomorrow morning at about 9 am — or press 📋 Make today\'s tasks now.</p></div>';
-    h += '<div class="om-bar" style="margin:4px 0 8px"><b>Day:</b> ' + days.map(function (x) { return '<button type="button" class="dh-chip" data-adday="' + esc(x) + '"' + (x === day ? ' style="outline:2px solid var(--brand)"' : "") + ">" + esc(omD ? omD(x) : x) + "</button>"; }).join(" ") + "</div>";
-    h += '<div class="dh-kpis">' +
-      '<div class="dh-kpi"><span>Tasks made</span><b>' + cur.length + "</b></div>" +
-      '<div class="dh-kpi"><span>✅ Done on time</span><b style="color:#16a34a">' + c.done + "</b></div>" +
-      '<div class="dh-kpi"><span>🤖 Fixed (closed by agent)</span><b style="color:#16a34a">' + c.fixed + "</b></div>" +
-      '<div class="dh-kpi"><span>✅ Done late</span><b>' + c.late + "</b></div>" +
-      '<div class="dh-kpi"><span>⏳ Pending</span><b>' + c.pending + "</b></div>" +
-      '<div class="dh-kpi bad"><span>⏰ Overdue (past 4 pm)</span><b>' + c.overdue + "</b></div></div>";
-    var ord = { overdue: 0, pending: 1, late: 2, done: 3, fixed: 4, other: 5 };
-    cur.sort(function (a, b) { return ord[stOf(a)] - ord[stOf(b)] || a.to.localeCompare(b.to); });
-    h += '<div class="dsp-card"><div class="om-table"><table><thead><tr><th>Person</th><th>Issue</th><th>From</th><th>Due</th><th>Status</th><th>Task</th></tr></thead><tbody>' +
-      cur.map(function (r) { var s = stOf(r); return "<tr" + (s === "overdue" ? ' class="st-late"' : "") + "><td><b>" + esc(r.to) + "</b></td><td>" + esc((DH_AGN[r.agent] || "").split(" ")[0] + " " + r.title) + "</td><td>" + esc(r.from) + "</td><td>" + esc(new Date(r.deadline).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })) + "</td><td>" + chip[s] + '</td><td><code>' + esc(r.task_id) + "</code></td></tr>"; }).join("") +
-      "</tbody></table></div></div>";
-    return h;
-  }
-  function dhWireAuto(root) {
-    var d = dh.ad; if (!d) return;
-    var el;
-    if ((el = document.getElementById("dhAdOn"))) el.onchange = function () { var on = this.checked; ahApi("ahDelegSet", { on: on }).then(function (r) { dh.ad = r; toast(on ? "Tasks will be made every morning at 9 am" : "Automatic tasks paused"); dhRender(); }).catch(function (e) { toast(e.message, true); }); };
-    if ((el = document.getElementById("dhAdRun"))) el.onclick = function () {
-      var b = this; if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Tap again — creates delegation tasks for today"; return; }
-      b.disabled = true; b.textContent = "Making tasks…";
-      ahApi("ahDelegRun").then(function (r) { toast(r.made ? r.made + " tasks made for " + r.people + " people" : "No new tasks — everyone already has theirs"); dh.ad = r.board; dh.adDay = null; dhRender(); }).catch(function (e) { b.disabled = false; b.textContent = "📋 Make today's tasks now"; toast(e.message, true); });
-    };
-    root.querySelectorAll("[data-adfrom]").forEach(function (sel) {
-      sel.onchange = function () { var f = {}; f[sel.dataset.adfrom] = sel.value; sel.disabled = true; ahApi("ahDelegSet", { from: f }).then(function (r) { dh.ad = r; toast("Saved"); dhRender(); }).catch(function (e) { sel.disabled = false; toast(e.message, true); }); };
-    });
-    root.querySelectorAll("[data-adday]").forEach(function (x) { x.onclick = function () { dh.adDay = x.dataset.adday; dhRender(); }; });
-  }
-
-  function dhWire(root) {
-    if (dh.tab === "followups") dhWireFollow(root);
-    if (dh.tab === "autotasks") dhWireAuto(root);
-    if (dh.tab === "agents") dhWireOrders(root);
-    root.querySelectorAll("[data-dhgosev]").forEach(function (x) { x.onclick = function () { dh.f = { agent: "", sev: x.dataset.dhgosev }; dh.tab = "inbox"; dhLoad(); }; });
-    root.querySelectorAll("[data-dhgoagent]").forEach(function (x) { x.onclick = function () { dh.f = { agent: x.dataset.dhgoagent, sev: "" }; dh.tab = "inbox"; dhLoad(); }; });
-    var bs = document.getElementById("dhBriefSel"); if (bs) bs.onchange = function () { dh.briefIx = +this.value; dhRender(); };
-    var bl = document.getElementById("dhBell"); if (bl) bl.onchange = function () { var on = this.checked; ahApi("ahBell", { on: on }).then(function () { dh.boot.bell = on; toast(on ? "Approvers will also get bell notifications" : "No bell notifications — everything stays in the Developer module"); dhRender(); }).catch(function (e) { toast(e.message, true); }); };
-    root.querySelectorAll("[data-dhgo]").forEach(function (x) { x.onclick = function () { dh.tab = x.dataset.dhgo; dhLoad(); }; });
-    root.querySelectorAll("[data-dhf]").forEach(function (x) { x.onclick = function () { dh.f = { agent: x.dataset.dhf, sev: "" }; dhRender(); }; });
-    root.querySelectorAll("[data-dhsev]").forEach(function (x) { x.onclick = function () { dh.f = { agent: "", sev: x.dataset.dhsev }; dhRender(); }; });
-    root.querySelectorAll("[data-dhact]").forEach(function (x) {
-      x.onclick = function () {
-        var f = dh.boot.findings.find(function (y) { return y.fkey === x.dataset.k; }); if (!f) return;
-        var act = x.dataset.dhact;
-        if (act === "approve") { dhApprove(f); return; }
-        x.disabled = true;
-        ahApi("ahDecide", { fkey: f.fkey, decision: act, days: 3 }).then(function () {
-          f.status = act === "snooze" ? "snoozed" : act === "reject" ? "rejected" : act === "reopen" ? "open" : "done";
-          f.decided_name = dh.boot.me; f.decided_at = new Date().toISOString(); toast("Saved"); dhRender();
-        }).catch(function (e) { x.disabled = false; toast(e.message, true); });
-      };
-    });
-    var el;
-    function runAgents(ids, brief, btn) {
-      btn.disabled = true; var t = btn.textContent; btn.textContent = "Running… (up to 1 min)";
-      ahApi("ahRunNow", { agents: ids, brief: brief }).then(function (r) {
-        var errs = r.runs.filter(function (x) { return x.error; });
-        toast(errs.length ? errs.length + " agent(s) had an error" : "Done — " + r.runs.reduce(function (s, x) { return s + (x.new || 0); }, 0) + " new issues" + (brief ? ", brief sent" : ""), !!errs.length);
-        dh.boot = null; dhLoad(true);
-      }).catch(function (e) { btn.disabled = false; btn.textContent = t; toast(e.message, true); });
-    }
-    if ((el = document.getElementById("dhRunNow"))) el.onclick = function () { runAgents([], false, this); };
-    if ((el = document.getElementById("dhBriefNow"))) el.onclick = function () { runAgents([], true, this); };
-    root.querySelectorAll("[data-dhrun]").forEach(function (x) { x.onclick = function () { runAgents([x.dataset.dhrun], false, x); }; });
-    function saveAppr(ids) { ahApi("ahApprovers", { ids: ids }).then(function (r) { dh.boot.approvers = r.approvers; toast("Approvers saved"); dhRender(); }).catch(function (e) { toast(e.message, true); }); }
-    root.querySelectorAll("[data-rmappr]").forEach(function (x) { x.onclick = function () { saveAppr(dh.boot.approvers.map(function (a) { return a.doc_id; }).filter(function (i) { return i !== x.dataset.rmappr; })); }; });
-    if ((el = document.getElementById("dhApprSearch"))) el.oninput = function () {
-      var q = this.value.trim().toUpperCase(), box = document.getElementById("dhApprList"), cur = dh.boot.approvers.map(function (a) { return a.doc_id; });
-      if (q.length < 2) { box.innerHTML = ""; return; }
-      box.innerHTML = dh.boot.people.filter(function (p) { return p.name.toUpperCase().indexOf(q) >= 0 && cur.indexOf(p.doc_id) < 0; }).slice(0, 8).map(function (p) { return '<button type="button" class="dh-chip" data-addappr="' + esc(p.doc_id) + '">+ ' + esc(p.name) + "</button>"; }).join("");
-      box.querySelectorAll("[data-addappr]").forEach(function (x) { x.onclick = function () { saveAppr(cur.concat([x.dataset.addappr])); }; });
-    };
-    // publish
-    var drop = document.getElementById("dhDrop"), file = document.getElementById("dhFile");
-    if (drop && file) {
-      drop.onclick = function () { file.click(); };
-      file.onchange = function () { dhPickFile(file.files[0]); };
-      drop.ondragover = function (e) { e.preventDefault(); drop.classList.add("over"); };
-      drop.ondragleave = function () { drop.classList.remove("over"); };
-      drop.ondrop = function (e) { e.preventDefault(); drop.classList.remove("over"); dhPickFile(e.dataTransfer.files[0]); };
-    }
-    if ((el = document.getElementById("dhCompare"))) el.onclick = function () {
-      var b = this; b.disabled = true; b.textContent = "Downloading live…";
-      dhGetLive().then(function (l) { dh.pick.diff = dhDiff(l.text, dh.pick.text); dhRender(); }).catch(function (e) { b.disabled = false; b.textContent = "🔍 Compare with live"; toast(e.message, true); });
-    };
-    if ((el = document.getElementById("dhGo"))) el.onclick = function () {
-      var p = dh.pick, btn = this, out = document.getElementById("dhPubOut");
-      if (p.hard) { toast("This file cannot be published (see the red lines).", true); return; }
-      if (p.bad && !(document.getElementById("dhForce") || {}).checked) { toast("Fix the red lines or tick “Publish anyway”.", true); return; }
-      var msg = document.getElementById("dhMsg").value.trim(); if (!msg) { toast("Write what changed", true); return; }
-      btn.disabled = true;
-      dhPublishText(p.text, msg, "publish", function (s) { out.innerHTML = '<p class="om-small">' + esc(s) + "</p>"; }).then(function (r) {
-        out.innerHTML = r.unchanged ? '<p class="om-small">This file is the same as the live one — nothing to publish.</p>' : '<p>✅ Published! Version <a href="' + esc(r.url) + '" target="_blank" rel="noopener"><code>' + esc(r.sha.slice(0, 7)) + "</code></a>. The site updates in about 1 minute.</p>";
-        toast(r.unchanged ? "No changes" : "Published"); dh.pick = null; btn.disabled = false;
-      }).catch(function (e) { btn.disabled = false; out.innerHTML = '<p style="color:#dc2626">' + esc(e.message) + "</p>"; });
-    };
-    // quick edit
-    if ((el = document.getElementById("dhLoadLive"))) el.onclick = function () {
-      var b = this; b.disabled = true; b.textContent = "Downloading the live page…";
-      dhGetLive(true).then(function (l) { dh.work = l.text; dh.base = l.text; dh.edits = []; dhRender(); }).catch(function (e) { b.disabled = false; b.textContent = "⬇ Open the live page for editing"; toast(e.message, true); });
-    };
-    if ((el = document.getElementById("dhFind"))) {
-      el.oninput = function () { var v = this.value; clearTimeout(dh.ft); dh.ft = setTimeout(function () { dh.find = v; dhShowMatches(); }, 250); };
-      if (dh.find) dhShowMatches();
-    }
-    if ((el = document.getElementById("dhEditUndo"))) el.onclick = function () { dh.work = dh.base; dh.edits = []; dhRender(); };
-    if ((el = document.getElementById("dhEditPub"))) el.onclick = function () {
-      var btn = this, out = document.getElementById("dhEditOut"), msg = document.getElementById("dhEditMsg").value.trim();
-      if (!msg) { toast("Write what changed", true); return; }
-      var c = dhCheckText(dh.work); if (c.hard || c.bad) { out.innerHTML = '<ul class="dh-checks">' + c.checks.map(function (x) { return "<li>" + (x[0] ? "✅ " : "❌ ") + esc(x[1]) + "</li>"; }).join("") + "</ul><p style=\"color:#dc2626\">Not published — the change breaks the page. Undo and try again.</p>"; return; }
-      btn.disabled = true;
-      dhPublishText(dh.work, msg, "edit", function (s) { out.innerHTML = '<p class="om-small">' + esc(s) + "</p>"; }).then(function (r) {
-        dh.work = null; dh.edits = []; dh.base = null; toast("Published"); dhRender();
-        var o2 = document.getElementById("dhBody"); if (o2 && !r.unchanged) o2.insertAdjacentHTML("afterbegin", '<div class="om-note">✅ Published version <a href="' + esc(r.url) + '" target="_blank" rel="noopener"><code>' + esc(r.sha.slice(0, 7)) + "</code></a>. The site updates in about 1 minute.</div>");
-      }).catch(function (e) { btn.disabled = false; out.innerHTML = '<p style="color:#dc2626">' + esc(e.message) + "</p>"; });
-    };
-    // history
-    root.querySelectorAll("[data-dhdl]").forEach(function (x) {
-      x.onclick = function () {
-        x.disabled = true;
-        ghApi("dhLive", { ref: x.dataset.dhdl }).then(function (d) {
-          var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([d.text], { type: "text/html" }));
-          a.download = "index-" + x.dataset.dhdl.slice(0, 7) + ".html"; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800); x.disabled = false;
-        }).catch(function (e) { x.disabled = false; toast(e.message, true); });
-      };
-    });
-    root.querySelectorAll("[data-dhrestore]").forEach(function (x) {
-      x.onclick = function () {
-        if (x.dataset.sure !== "1") { x.dataset.sure = "1"; x.textContent = "Tap again to make this live"; return; }
-        x.disabled = true;
-        ghApi("dhRestore", { sha: x.dataset.dhrestore }).then(function (r) { toast(r.unchanged ? "That version is already live" : "Restored — site updates in ~1 minute"); dh.gh.head = r.sha; dh.live = null; dhLoadHistory(); })
-          .catch(function (e) { x.disabled = false; toast(e.message, true); });
-      };
-    });
-    // github settings
-    if ((el = document.getElementById("dhSaveGh"))) el.onclick = function () {
-      var btn = this; btn.disabled = true; btn.textContent = "Testing…";
-      ghApi("dhSaveConfig", { owner: document.getElementById("dhOwner").value, repo: document.getElementById("dhRepo").value, branch: document.getElementById("dhBranch").value, path: document.getElementById("dhPath").value, token: document.getElementById("dhTok").value })
-        .then(function (r) { toast("GitHub connected as " + r.cfg.login); dh.gh = null; dh.tab = "publish"; dhLoad(true); })
-        .catch(function (e) { btn.disabled = false; btn.textContent = "Save & test"; toast(e.message, true); });
-    };
-    if ((el = document.getElementById("dhDisc"))) el.onclick = function () {
-      if (this.dataset.sure !== "1") { this.dataset.sure = "1"; this.textContent = "Tap again to disconnect"; return; }
-      ghApi("dhDisconnect").then(function () { dh.gh = null; dhLoad(true); });
-    };
-  }
-  (function dhInitOnce() {
-    function wire() {
-      var tabs = document.getElementById("dhTabs"); if (!tabs || tabs.dataset.wired) return;
-      tabs.dataset.wired = "1";
-      tabs.addEventListener("click", function (e) { var b = e.target.closest("button[data-dhtab]"); if (!b) return; dh.tab = b.dataset.dhtab; dhLoad(); });
-      document.getElementById("dhRefreshBtn").addEventListener("click", function () { if (dh.tab === "followups") dh.fu = null; else if (dh.tab === "autotasks") dh.ad = null; else if (["dash", "inbox", "agents"].indexOf(dh.tab) >= 0) dh.boot = null; else dh.gh = null; dhLoad(true); });
-    }
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire); else wire();
-  })();
-
-
   // ---------- 🧑‍🔧 My Helper — a personal agent for every employee ----------
   // Server: helper-api. Lists what is waiting for the signed-in person (issues the agents found for
   // them, stage updates being chased, overdue tasks, today's checklist, approvals, tablet to return)
@@ -12073,7 +11270,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       return;
     }
     if (d.view === "attcalendar") { goToView("leave"); leaveMode("cal"); return; }
-    var alias = { agents: "devhub" };
+    var alias = {};
     var v = alias[d.view] || d.view;
     if (ALL_VIEWS.indexOf(v) !== -1) goToView(v);
   });
@@ -12291,7 +11488,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       }, 2000);
     })();
   }
-  var ALL_VIEWS = ["myday", "management", "messaging", "emailtracker", "home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "courier", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "intmail", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "complaints", "spareparts", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup", "mktportal", "ordermaster", "devices", "dispatch", "devhub", "helper"];
+  var ALL_VIEWS = ["myday", "management", "messaging", "emailtracker", "home", "modules", "tasks", "score", "audit", "faq", "attendance", "salary", "tickets", "helpslip", "buyervisit", "fairvisit", "fairleads", "inspection", "ordertracking", "teamworkspace", "notices", "chat", "checklist", "costing", "cbm", "courier", "buyerorder", "samplingfms", "rugsconnect", "counterroom", "quality", "intmail", "leave", "reimbursement", "admin", "staffControls", "customModule", "kudos", "polls", "press", "buyersampling", "ideabox", "complaints", "spareparts", "teamcalendar", "notes", "todo", "techsupport", "ppc", "passing", "directory", "drive", "scoring", "merchant", "followup", "mktportal", "ordermaster", "devices", "dispatch", "helper"];
   // Per-module choice of whether an external-URL-backed module opens in a
   // real new browser tab ("redirect") or is framed inside Workspace
   // ("embed") — Settings → Modules → Module Open Behavior for the 3
@@ -12331,7 +11528,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     if (view === "customModule" && state.activeCustomModuleKey === MERCHANT_MODULE_KEY) view = "merchant";
     if (view === "merchant" && !(state.doer && (state.doer.is_admin || state.merchantAccess))) { toast("You don't have a Merchant Dashboard. Ask your admin."); return; }
     if (view === "fairleads" && !canSeeFairLeads()) { toast("Fair Leads isn't turned on for you. Ask your admin."); return; }
-    if (view === "devhub" && !state.dhAccess) { toast("The Developer module is for the approvers and the Developer rank."); return; }
     if (view === "dispatch" && !state.dspAccess) { toast("The Dispatch tracker is for merchants, team leaders, dispatch owners and admins."); return; }
     if (view === "ordermaster" && !state.omAccess) { toast("Order Master is for merchants, team leaders and admins. Ask your admin."); return; }
     if (view === "followup" && !canManageModule("followup")) { toast("You don't have access to the Follow-up report. Ask your admin."); return; }
@@ -12381,7 +11577,6 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     if (view === "ordermaster") omLoad();
     if (view === "devices") tbltLoad();
     if (view === "dispatch") dspLoad();
-    if (view === "devhub") dhLoad();
     if (view === "helper") hpLoad();
     if (view === "samplingfms" || view === "ppc") fuToggleButtons();
     if (view === "samplingfms") loadSamplingFmsFrame();
@@ -13021,9 +12216,8 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       if (state.doer && (state.doer.is_admin || state.merchantAccess)) { var mdDef = allModuleDefs.find(function (m) { return m.key === "merchant"; }); if (mdDef) modules.push(mdDef); }
       // Follow-up report: admins + people given it in Module access (Ruchika).
       // Order Master: merchants, team leaders and admins (decided by planning-api).
-      modules = modules.filter(function (m) { return m.key !== "ordermaster" && m.key !== "devices" && m.key !== "dispatch" && m.key !== "devhub" && m.key !== "helper"; });
+      modules = modules.filter(function (m) { return m.key !== "ordermaster" && m.key !== "devices" && m.key !== "dispatch" && m.key !== "helper"; });
       if (state.doer && !state.demo) { var hpDef = allModuleDefs.find(function (m) { return m.key === "helper"; }); if (hpDef) modules.push(hpDef); }
-      if (state.dhAccess) { var dhDef = allModuleDefs.find(function (m) { return m.key === "devhub"; }); if (dhDef) modules.push(dhDef); }
       if (state.dspAccess) { var dspDef = allModuleDefs.find(function (m) { return m.key === "dispatch"; }); if (dspDef) modules.push(dspDef); }
       if (state.doer && !state.demo) { var tbltDef = allModuleDefs.find(function (m) { return m.key === "devices"; }); if (tbltDef) modules.push(tbltDef); }
       if (state.omAccess) { var omDef = allModuleDefs.find(function (m) { return m.key === "ordermaster"; }); if (omDef) modules.push(omDef); }
