@@ -717,7 +717,7 @@ const decTxt=d=>{const a=deciders(d);return a.length?a.map(p=>p.name+(onLeave(p.
 const isAssigner=()=>['CRM','Manager','Lead'].includes(who(ME)?.role)||!!crmDepts();
 const assignCount=()=>S.threads.filter(t=>inScope(t)&&(!crmDepts()||crmDepts().includes(t.dept))&&!t.owner&&t.folder==='inbox'&&t.status!=='done'&&!t.other&&isWork(t)).length;
 let dashAs='',app='dash', view={type:'box',dept:'alpha',folder:'inbox'}, tab='focused', openId=null, filt='all';
-function inView(t){if(view.type==='crit')return t.folder!=='deleted'&&critOf(t).includes(view.id)&&(view.all||t.status!=='done');if(t.folder==='deleted'&&!(view.type==='box'&&view.folder==='deleted'))return false;
+function inView(t){if(view.type==='crit')return t.folder!=='deleted'&&inScope(t)&&(view.id==='*'?!!critOf(t).length:critOf(t).includes(view.id))&&(view.all||t.status!=='done');   /* 20 Nov 2026: '*' = every critical issue; inScope so a page never shows a mailbox you may not see */if(t.folder==='deleted'&&!(view.type==='box'&&view.folder==='deleted'))return false;
  if(view.type==='fav'){
   if(view.id==='mine')return t.owner===ME&&st(t)!=='done'&&hasRecv(t);   /* 17 Nov: what you only sent is not work */
   if(view.id==='handled')return t.owner===ME;
@@ -771,7 +771,8 @@ function deleteFolder(f){const own=Array.isArray(S.prefs?.folders)?S.prefs.folde
 function renderFolders(){
  if(app!=='mail'){$('#folders').innerHTML=`<button class="newmail" data-compose>${svg('mail')}<span>New mail</span></button><div class="fgroup"><div class="h4">Mailboxes</div>${DEPTS.filter(d=>canSee(d.id)).map(d=>{const n=inboxUnreadN(d.id);return`<button class="fi" data-box="${d.id}" data-f="inbox"><span class="ddot" style="background:${d.color}"></span><span class="lbl">${esc(d.name)}</span><span class="c">${n}</span></button>`}).join('')}</div>`;return}
  const cur=(t,v)=>view.type===t&&Object.entries(v).every(([k,x])=>view[k]===x);
- const fav=[['mine','My work',ico('user'),cnt(t=>t.owner===ME&&st(t)!=='done'&&hasRecv(t))],['needs','Needs owner',ico('users'),cnt(t=>inScope(t)&&!t.owner&&t.folder==='inbox'&&t.status!=='done'&&isWork(t))],['late','Late',ico('clock'),cnt(t=>inScope(t)&&st(t)==='late')],['flag','Flagged',ico('flag'),cnt(t=>inScope(t)&&t.flag)]];
+ const fav=[...(canAssignOut()?[['crit','\u26a0 Critical issues',ico('alert'),cnt(t=>inScope(t)&&t.folder!=='deleted'&&t.status!=='done'&&!!critOf(t).length)]]:[]),
+ ['mine','My work',ico('user'),cnt(t=>t.owner===ME&&st(t)!=='done'&&hasRecv(t))],['needs','Needs owner',ico('users'),cnt(t=>inScope(t)&&!t.owner&&t.folder==='inbox'&&t.status!=='done'&&isWork(t))],['late','Late',ico('clock'),cnt(t=>inScope(t)&&st(t)==='late')],['flag','Flagged',ico('flag'),cnt(t=>inScope(t)&&t.flag)]];
  const my=dept(who(ME).dept);
  const box=d=>[['inbox','Inbox',ico('inbox')],['sent','Sent',ico('send')],['drafts','Drafts',ico('draft')],['archive','Archive',ico('archive')],['junk','Junk',ico('junk')],['deleted','Deleted',ico('trash')]];
  const G=(key,title,inner,extra='')=>`<div class="fgroup ${S.ui.col?.[key]?'closed':''}"><div class="h4"><button data-gtog="${key}" aria-expanded="${!S.ui.col?.[key]}">${title}</button>${extra}</div><div class="gbody">${inner}</div></div>`;
@@ -784,7 +785,7 @@ function renderFolders(){
  +(shared.length?G('shared',who(ME).role==='Admin'?'All department mailboxes':'Shared with me',shared.map(d=>{const n=cnt(t=>t.dept===d.id&&t.folder==='inbox'&&t.unread);return`<button class="fi" data-box="${d.id}" data-f="inbox" aria-current="${cur('box',{dept:d.id,folder:'inbox'})}"><span class="ddot" style="background:${d.color}"></span><span class="lbl">${esc(d.name)}${canSee(d.id)==='view'?' · view':''}</span>${n?`<span class="c">${n}</span>`:''}</button>`}).join('')):'');
  $('#folders').innerHTML=h}
 const inScope=t=>!!canSee(t.dept);
-function title(){const q=$('#q').value.trim();if(q)return`Results for “${q}”`;if(view.type==='crit')return '⚠ '+(alertGroups().find(g=>g.id===view.id)?.name||'Critical');if(view.type==='fav')return{mine:'My work',handled:'Handled by me',mylate:'My late promises',mytoday:'Due today — mine',needs:'Needs owner',assign:'To assign — pending since you started',late:'Late promises',today:'Due today',flag:'Flagged'}[view.id];if(view.type==='person')return who(view.id).name+(view.id===ME?' (you)':'');if(view.type==='folder')return view.folder;const f={inbox:'Inbox',sent:'Sent',drafts:'Drafts',archive:'Archive',junk:'Junk',deleted:'Deleted'}[view.folder];return view.dept===who(ME).dept?f:dept(view.dept).name+' · '+f}
+function title(){const q=$('#q').value.trim();if(q)return`Results for “${q}”`;if(view.type==='crit')return view.id==='*'?'⚠ Critical issues — every team':'⚠ '+(alertGroups().find(g=>g.id===view.id)?.name||'Critical');if(view.type==='fav')return{mine:'My work',handled:'Handled by me',mylate:'My late promises',mytoday:'Due today — mine',needs:'Needs owner',assign:'To assign — pending since you started',late:'Late promises',today:'Due today',flag:'Flagged'}[view.id];if(view.type==='person')return who(view.id).name+(view.id===ME?' (you)':'');if(view.type==='folder')return view.folder;const f={inbox:'Inbox',sent:'Sent',drafts:'Drafts',archive:'Archive',junk:'Junk',deleted:'Deleted'}[view.folder];return view.dept===who(ME).dept?f:dept(view.dept).name+' · '+f}
 function mobilePicker(){const my=who(ME).dept;const opts=[['fav:mine','★ My work'],['fav:needs','★ Needs owner'],['fav:late','★ Late'],['fav:flag','★ Flagged'],...['inbox','sent','drafts','archive','junk','deleted'].map(f=>[`box:${my}:${f}`,dept(my).name+' · '+f[0].toUpperCase()+f.slice(1)]),...DEPTS.filter(d=>d.id!==my&&canSee(d.id)).map(d=>[`box:${d.id}:inbox`,d.name+' · Inbox'])];
  const cur=view.type==='fav'?'fav:'+view.id:view.type==='box'?`box:${view.dept}:${view.folder}`:'';
  return `<select class="mpick" id="mpick" aria-label="Folder">${opts.map(([v,l])=>`<option value="${v}" ${v===cur?'selected':''}>${esc(l)}</option>`).join('')}</select>`}
@@ -855,6 +856,25 @@ let lfilt='';
 const isGeneric=t=>/enquir|inquir|catalog|price list|label|newsletter|invitation|general|thank you|acknowledg|registration|visit|trade fair|exhibition/i.test(t.sub+' '+t.pre);
 function ownerSelect(t){const d=t.dept;const ppl=PEOPLE.filter(p=>p.dept===d&&p.role!=='Admin');
  return `<select data-own="${t.id}" aria-label="Owner">${t.owner?'':'<option value="">Assign to…</option>'}${ppl.map(p=>`<option value="${p.id}" ${t.owner===p.id?'selected':''}>${esc(p.name)}${p.role==='CRM'?' (CRM)':''}${onLeave(p.id)?' · on leave':''}</option>`).join('')}</select>`}
+/* 20 Nov 2026: who may hand work out of their own team - Priya (CRM for the whole company), a
+   manager, a lead, an admin. */
+function canAssignOut(){const p=who(ME);return !!p&&(p.role==='Admin'||['CRM','Manager','Lead'].includes(p.role)||!!(p.perm&&(p.perm.crm_depts||[]).length))}
+/* The Owner box lists this team first, then everybody else, team by team. Picking somebody from
+   another team moves the conversation to that team and gives it to him in one step - the same thing
+   Transfer does - so it reaches his Inbox and his My work. */
+const _ownBase=ownerSelect;ownerSelect=function(t){
+ const base=_ownBase(t);
+ if(!canAssignOut())return base;
+ const by={};PEOPLE.filter(p=>p.dept!==t.dept&&isWorker(p)&&p.active!==false&&p.role!=='Admin').forEach(p=>{(by[p.dept]=by[p.dept]||[]).push(p)});
+ const groups=Object.keys(by).filter(d=>dept(d)).map(d=>'<optgroup label="'+esc(dept(d).name)+'">'
+  +by[d].map(p=>'<option value="x:'+p.id+'">'+esc(p.name)+(onLeave(p.id)?' \u00b7 on leave':'')+'</option>').join('')+'</optgroup>').join('');
+ return groups?base.replace('</select>',groups+'</select>'):base};
+/* giving a mail to somebody in another team = move it there and make it his */
+function assignAway(t,pid){const p=who(pid);if(!p)return;const from=dept(t.dept),to=dept(p.dept);
+ t.dept=p.dept;t.owner=pid;t.status='open';t.folder='inbox';t.unread=true;
+ hist(t,'x','Moved from '+from.name+' to '+to.name+' by '+who(ME).name);
+ hist(t,'a','Assigned to '+p.name+' by '+who(ME).name);
+ save();toast('Given to '+p.name.split(' ')[0]+' in '+to.name+' \u21aa')}
 function renderRead(){_renderRead();fitFrames()}
 /* activity trail: every mail in/out + every assign, transfer, promise, done — oldest first, click a mail to jump to it */
 function atrailHTML(t){const box=dept(t.dept).box+'rugscreation.com';
@@ -938,7 +958,7 @@ function adminDashPick(me0){
   ${other.length?`<optgroup label="Other">${other.map(opt).join('')}</optgroup>`:''}</select>`}
 document.addEventListener('change',e=>{const s=e.target.closest&&e.target.closest('[data-dashsel]');if(!s)return;dashAs=s.value;app='dash';render()});
 function pageDash(){const ME0=ME,boss=can('dashboards',ME0);if(!boss||(dashAs&&!who(dashAs)))dashAs='';const UID=dashAs||ME0;const me=who(UID),admin=me.role==='Admin',crm=me.role==='CRM',lead=['Manager','Lead'].includes(me.role),merch=!admin&&!crm&&!lead;
- const scope=admin?DEPTS.map(d=>d.id):[me.dept],inS=t=>scope.includes(t.dept)&&seeMine(t),D0=dept(me.dept);
+ const scope=admin?DEPTS.map(d=>d.id):[me.dept],inS=t=>scope.includes(t.dept)&&seeMine(t)&&!critOnly(t),D0=dept(me.dept);   /* 20 Nov 2026: a critical-only mailbox counts only its critical mail */
  const open=S.threads.filter(t=>inS(t)&&st(t)!=='done'&&t.folder==='inbox'&&hasRecv(t)&&(!!t.owner||isWork(t))),needs=open.filter(t=>!t.owner&&(UID!==ME0||isWork(t))),late=open.filter(t=>st(t)==='late'),today=open.filter(t=>st(t)==='today');
  const mine=open.filter(t=>t.owner===UID),myLate=mine.filter(t=>st(t)==='late'),myToday=mine.filter(t=>st(t)==='today');
  const xfers=S.threads.reduce((n,t)=>n+(inS(t)?t.hist.filter(h=>h.t==='x'&&NOW-h.at<7*D).length:0),0);
@@ -1077,6 +1097,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-gtog],[dat
  if(d.app==='assign'){app='mail';view={type:'fav',id:'assign'};openId=null;filt='all';lfilt='';$('#q').value='';$('#layer').innerHTML='';render();return}
  if(d.app==='mail'&&view.type==='fav'&&view.id==='assign'){app='mail';view={type:'box',dept:who(ME).dept,folder:'inbox'};openId=null;filt='all';lfilt='';$('#q').value='';tab='focused';$('#layer').innerHTML='';render();return}   // leave To assign → back to the Inbox (folders return)
  if(d.app){app=d.app;$('#layer').innerHTML='';render();return}
+ if(d.fav==='crit'){app='mail';view={type:'crit',id:'*'};openId=null;filt='all';lfilt='';render();return}   /* 20 Nov 2026 */
  if(d.fav){app='mail';view={type:'fav',id:d.fav};openId=null;filt='all';lfilt='';$('#q').value='';render();return}
  if(d.box){app='mail';view={type:'box',dept:d.box,folder:d.f};openId=null;filt='all';lfilt='';$('#q').value='';tab='focused';render();return}
  if(d.userf){view={type:'folder',folder:d.userf};openId=null;lfilt='';$('#q').value='';render();return}
@@ -1159,7 +1180,8 @@ document.addEventListener('change',e=>{if(e.target.dataset.acc){const p=PEOPLE.f
  if(e.target.dataset.lab){const t=T_(e.target.dataset.lab),v=e.target.value;t.label=v;t.ai=false;hist(t,'a',`Topic set to ${v?LB(v).name:'none'} by ${who(ME).name}`);save();toast(v?`Topic: ${LB(v).name}`:'Topic removed');render();return}
  if(e.target.id==='ctc'){ctC=e.target.value;$('#ctl').innerHTML=contactRows();return}
  if(e.target.id==='mpick'){const v=e.target.value.split(':');view=v[0]==='fav'?{type:'fav',id:v[1]}:{type:'box',dept:v[1],folder:v[2]};openId=null;filt='all';render();return}
- if(e.target.dataset.own){const t=T_(e.target.dataset.own);assign(t,e.target.value);render()}});
+ if(e.target.dataset.own){const t=T_(e.target.dataset.own),v=String(e.target.value||'');
+  if(v.slice(0,2)==='x:')assignAway(t,v.slice(2));else assign(t,v);render()}});
 let qt;$('#q').addEventListener('input',()=>{clearTimeout(qt);qt=setTimeout(()=>{if(app!=='mail'){app='mail'}render()},150)});
 
 /* the mail trail: every earlier mail in the conversation, newest first, as Outlook quotes it */
@@ -2820,7 +2842,7 @@ let _cT;function writeCacheSoon(){clearTimeout(_cT);_cT=setTimeout(()=>{try{cons
  localStorage.setItem(cacheKey(),JSON.stringify({at:Date.now(),t:keep}))}catch(e){try{localStorage.removeItem(cacheKey())}catch(x){}}},1500)}
 const _llN=loadList;loadList=async function(full){const r=await _llN(full);writeCacheSoon();return r};
 /* (4) daily report on Home */
-function dayReport(uid){const p=who(uid);if(!p)return'';const s0=sod(Date.now()),admin=p.role==='Admin',scope=admin?DEPTS.map(d=>d.id):[p.dept],inS=t=>scope.includes(t.dept);
+function dayReport(uid){const p=who(uid);if(!p)return'';const s0=sod(Date.now()),admin=p.role==='Admin',scope=admin?DEPTS.map(d=>d.id):[p.dept],inS=t=>scope.includes(t.dept)&&!critOnly(t);
  const recv=S.threads.filter(t=>inS(t)&&t.msgs.some(m=>!m.ours&&!m.by&&m.at>=s0)).length;
  const replied=S.threads.reduce((n,t)=>n+t.msgs.filter(m=>m.by===uid&&m.at>=s0).length,0);
  const doneT=S.threads.filter(t=>t.owner===uid&&t.doneAt&&t.doneAt>=s0).length;
@@ -3392,7 +3414,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-20-3';
+const APP_BUILD='2026-11-20-4';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3998,7 +4020,7 @@ const _rlD=renderList;renderList=function(){_rlD();if(view.type!=='set')return;c
  if(!document.querySelector('.list .m')){const m=document.querySelector('.list .msgs');if(m&&!m.querySelector('.drillempty'))m.insertAdjacentHTML('afterbegin','<div class="drillempty">No mails behind this number right now.</div>')}};
 const dayRange=()=>{const s0=sod(Date.now());return [s0,s0+D]};
 // Today so far / End-of-day report — same numbers as before, each a button
-dayReport=function(uid){const p=who(uid);if(!p)return'';const s0=sod(Date.now()),admin=p.role==='Admin',scope=admin?DEPTS.map(d=>d.id):[p.dept],inS=t=>scope.includes(t.dept);
+dayReport=function(uid){const p=who(uid);if(!p)return'';const s0=sod(Date.now()),admin=p.role==='Admin',scope=admin?DEPTS.map(d=>d.id):[p.dept],inS=t=>scope.includes(t.dept)&&!critOnly(t);
  const fN=p.name.split(' ')[0];
  const recv=S.threads.filter(t=>inS(t)&&t.msgs.some(m=>!m.ours&&!m.by&&m.at>=s0));
  const repT=S.threads.filter(t=>t.msgs.some(m=>m.by===uid&&m.at>=s0)),replied=repT.reduce((n,t)=>n+t.msgs.filter(m=>m.by===uid&&m.at>=s0).length,0);
@@ -4030,7 +4052,7 @@ weekSummary=function(uid){const p=who(uid);if(!p||!['Manager','Admin'].includes(
  return '<section class="box weeksum"><h3>📅 Last week — '+esc(lbl)+' <span><button class="btn" data-weekcopy style="padding:3px 9px">📋 Copy for WhatsApp</button></span></h3>'+(rows.length?'<div class="atable"><table><thead><tr><th>Team</th><th>Mails in</th><th>Done</th><th>Avg first reply</th><th>Late promises</th><th>Claims</th><th>Not assigned</th></tr></thead><tbody>'
   +rows.map(r=>{const n=r.d.name;return '<tr><td><span class="ddot" style="background:'+r.d.color+'"></span> '+esc(n)+'</td>'+cell(r.recv,r.recvT,n+' · mails in · last week')+cell(r.doneT.length,r.doneT,n+' · done · last week')+cell(fmtH(r.avg),r.frT,n+' · first replies · last week')+cell(r.lateT.length,r.lateT,n+' · late promises',r.lateT.length)+cell(r.claimT.length,r.claimT,n+' · claims · last week')+cell(r.unT.length,r.unT,n+' · not assigned')+'</tr>'}).join('')+'</tbody></table></div>':'<div class="empty">No mail last week</div>')+'</section>'};
 // main tiles that had nothing to open
-const _pdD=pageDash;pageDash=function(){for(const k in DRILL)if(!(view.type==='set'&&view.key===k))delete DRILL[k];let h=_pdD();try{const UID=dashAs||ME,me=who(UID);if(!me)return h;const admin=me.role==='Admin',scope=admin?DEPTS.map(d=>d.id):[me.dept],inS=t=>scope.includes(t.dept),[s0]=dayRange(),wk=Date.now()-7*D;
+const _pdD=pageDash;pageDash=function(){for(const k in DRILL)if(!(view.type==='set'&&view.key===k))delete DRILL[k];let h=_pdD();try{const UID=dashAs||ME,me=who(UID);if(!me)return h;const admin=me.role==='Admin',scope=admin?DEPTS.map(d=>d.id):[me.dept],inS=t=>scope.includes(t.dept)&&!critOnly(t),[s0]=dayRange(),wk=Date.now()-7*D;
  const sets={
   'Delegated today':()=>S.threads.filter(t=>inS(t)&&t.hist.some(x=>x.t==='a'&&x.at>=s0)),
   'Open in team':()=>S.threads.filter(t=>inS(t)&&st(t)!=='done'&&t.folder==='inbox'&&hasRecv(t)&&(!!t.owner||isWork(t))),
@@ -4173,9 +4195,15 @@ function seeMine(t){const p=who(ME);
  if(!t.owner)return !mgrFirst(t.dept);                                         /* nobody has taken it yet: anyone may pick it up, except in a manager-first team */
  if(t.owner===ME)return true;                                                  /* mine */
  return (t.msgs||[]).some(m=>msgMine(m,t))}                                        /* I replied in it — keep it */
-const _ivMine=inView;inView=function(t){return seeMine(t)&&_ivMine(t)};
-const _imMine=isInboxMail;isInboxMail=function(t){return seeMine(t)&&_imMine(t)};
-const _lrMine=listRows;listRows=function(){return _lrMine().filter(seeMine)};
+/* 20 Nov 2026: a mailbox somebody sees ONLY the critical mail of. Priya is CRM for the whole company
+   but Vinay's ordinary mail is not hers to read - the critical ones are, because there is nobody
+   else in that mailbox to catch them. person id -> the departments this applies to. */
+const CRIT_ONLY={pr:['dmvkxxow5']};
+function critOnly(t){const l=t&&CRIT_ONLY[ME];return !!l&&l.indexOf(t.dept)>=0&&!critOf(t).length}
+const _seeM=t=>seeMine(t)&&!critOnly(t);
+const _ivMine=inView;inView=function(t){return _seeM(t)&&_ivMine(t)};
+const _imMine=isInboxMail;isInboxMail=function(t){return _seeM(t)&&_imMine(t)};
+const _lrMine=listRows;listRows=function(){return _lrMine().filter(_seeM)};
 /* 16 Nov 2026: deleted = handled. A mail in the Deleted folder is marked Done, so it is out of the
    Inbox AND out of everyone's open work, Needs owner, Late and the reports. Works for mail deleted
    here and for mail deleted in Gmail (the sync moves it to Deleted and this marks it Done).
