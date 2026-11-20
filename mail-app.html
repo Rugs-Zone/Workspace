@@ -729,7 +729,7 @@ function inView(t){if(view.type==='crit')return t.folder!=='deleted'&&critOf(t).
   if(view.id==='late')return st(t)==='late';
   if(view.id==='today')return st(t)==='today';
   if(view.id==='flag')return t.flag}
- if(view.type==='box'){if(t.dept!==view.dept)return false;if(view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||m.ours);if(view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));return t.folder===view.folder}
+ if(view.type==='box'){if(t.dept!==view.dept)return false;if(view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||m.ours)&&!hasRecv(t);   /* 20 Nov 2026: not once a reply has come in */if(view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));return t.folder===view.folder}
  if(view.type==='person')return t.owner===view.id&&t.folder==='inbox';
  if(view.type==='folder')return t.folder===view.folder;
  return false}
@@ -3281,7 +3281,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-19-8';
+const APP_BUILD='2026-11-20-1';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3650,7 +3650,9 @@ const toThisBox=(m,t)=>{const b=String((t&&t.box)||'').toLowerCase();return !!b&
 const recvMsg=(m,t)=>!(m.by||m.ours)||colleagueIn(m,t)||toThisBox(m,t);
 const _ivC=inView;inView=function(t){
  if(view.type==='box'&&t.dept===view.dept&&view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));
- if(view.type==='box'&&t.dept===view.dept&&view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||(m.ours&&!colleagueIn(m,t)));
+ /* 20 Nov 2026: Sent = what we sent and nobody has answered yet. The moment a mail comes in, the
+    conversation belongs to the Inbox (it is the same conversation, with our mail inside it). */
+ if(view.type==='box'&&t.dept===view.dept&&view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||(m.ours&&!colleagueIn(m,t)))&&!hasRecv(t);
  if(view.type==='all')return inScope(t)&&t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));
  return _ivC(t)};
 // a conversation with only colleague mail is shown under the colleague's name (not "(unknown)")
