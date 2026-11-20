@@ -1,0 +1,13 @@
+# PROGRESS.md is an append-only diary, and two laptops add lines to the end of it on the same day.
+# Every time that happened (18, 19, 20 and 21 Nov 2026) git stopped with a conflict, the auto-push
+# failed, and updates silently stayed off GitHub until somebody noticed - on 18 Nov for a whole day.
+# "merge=union" is git's own built-in driver: it simply keeps BOTH sides' lines, which is exactly
+# what this file wants. Nothing to install or configure.
+PROGRESS.md merge=union
+
+# Never union-merge these: they hold one enormous base64 line each (the modules), so keeping both
+# sides would produce two copies of a module and a broken page. They must be resolved properly -
+# take one side and re-run the other side's patch script in server/.
+index.html      -merge
+mail-app.html   -merge
+courier_dashboard.html -merge

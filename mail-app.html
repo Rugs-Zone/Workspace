@@ -735,7 +735,7 @@ function inView(t){if(view.type==='crit')return t.folder!=='deleted'&&inScope(t)
  return false}
 function listRows(){const q=$('#q').value.trim().toLowerCase();
  let r=S.threads.filter(inView);
- if(view.type==='box'&&view.folder==='inbox')r=r.filter(t=>tab==='other'?t.other:!t.other);
+ if(view.type==='box'&&view.folder==='inbox')r=r.filter(t=>tab==='other'?othTab(t):!othTab(t));
  if(lfilt)r=r.filter(t=>t.label===lfilt);
  if(filt!=='all')r=r.filter(t=>filt==='unread'?t.unread:filt==='mine'?t.owner===ME:filt==='open'?st(t)!=='done':filt==='alias'?!!viaOf(t):true);
  if(q)r=S.threads.filter(t=>[t.from,t.email,t.sub,t.pre,t.promise,who(t.owner)?.name].join(' ').toLowerCase().includes(q));
@@ -2302,13 +2302,48 @@ compose=function(o){_compose(o);const L=$('#layer'),q=x=>L.querySelector(x),ed=q
     "slot" stopped existing on 14 Nov (drafts moved to a fixed id: draftId / o.did / DRAFT_GONE),
     so reading it threw ReferenceError and killed every Send / Reply / Forward click before
     origSend() could run - the mail never left and nothing was shown on screen. */
+ /* 21 Nov 2026: measure the WHOLE mail, not only the attachments.
+    A pasted picture and every picture in a quoted mail live inside the body as data: URLs, so a
+    reply with no attachment at all was uploading 36, 80, even 117 MB this morning. Nothing that
+    big can be sent: the server is killed while it is still reading the request, the mail never
+    goes out, and the other requests being served at that moment die with it - which is what
+    everybody sees as "the mail server was busy for a moment". Checked here, before the window
+    closes, so the written mail is never lost. */
+ const WIRE_MAX=20*1024*1024;   /* one request; 15 MB of files is about 20 MB on the wire */
+ const _bytes=x=>{try{return new Blob([String(x||'')]).size}catch(e){return String(x||'').length}};
+ const _weigh=()=>{const fl=[...(q('#cat')&&q('#cat')._olk||[])];
+  const body=_bytes(ed&&ed.innerHTML),files=Math.ceil(fl.reduce((a,x)=>a+x.size,0)*4/3);
+  const box=ed&&ed.querySelector('[data-trail]'),quote=box?_bytes(box.outerHTML):0;
+  return {body:body,files:files,quote:quote,total:body+files}};
+ const _tooBig=w=>{const old=L.querySelector('.olwarn.bigmail');if(old)old.remove();
+  const left=w.total-w.quote,canDrop=w.quote>0&&left<=WIRE_MAX;
+  const d=document.createElement('div');d.className='olwarn bigmail';
+  d.innerHTML='<b>Not sent — this mail is too big</b><ul>'
+   +'<li>The whole mail is '+fsize(w.total)+'. One mail can carry about '+fsize(WIRE_MAX)+'.</li>'
+   +(w.quote?'<li>'+fsize(w.quote)+' of it is the quoted mails under your reply — mostly their pictures, which the other side already has.</li>':'')
+   +(w.files?'<li>'+fsize(w.files)+' of it is the files you attached.</li>':'')
+   +(!w.quote&&!w.files?'<li>It is the pictures pasted into your text. Put a big picture in Google Drive and send the link instead.</li>':'')
+   +'</ul><div class="act">'
+   +(canDrop?'<button type="button" class="btn pri" data-bigq>Leave the quoted mails out ('+fsize(left)+')</button>':'')
+   +'<button type="button" class="btn" data-bigfix>Let me fix it</button></div>'
+   +'<span class="olnote">Nothing was sent and nothing you wrote is lost. Sending it as it is would fail and would slow Rugs Email down for everybody.</span>';
+  foot.parentNode.insertBefore(d,foot);
+  d.querySelector('[data-bigfix]').onclick=()=>d.remove();
+  const qb=d.querySelector('[data-bigq]');
+  if(qb)qb.onclick=()=>{const c=q('#ctr');
+   if(c&&c.checked){c.checked=false;if(c.onchange)c.onchange()}
+   else{const b=ed&&ed.querySelector('[data-trail]');if(b)b.remove()}
+   d.remove();toast('The quoted mails were left out — press Send again (tick "Include trail" to put them back)')}};
  send.onclick=()=>{const _fl=[...(q('#cat')&&q('#cat')._olk||[])],_tot=_fl.reduce((a,x)=>a+x.size,0);
   if(_tot>MAIL_MAX){toast('Not sent — '+fsize(_tot)+' of files is too much. A mail carries about '+fsize(MAIL_MAX)+'; remove one or send a Google Drive link.');return}
+  const _w=_weigh();if(_w.total>WIRE_MAX){_tooBig(_w);return}
   opts({});origSend();if(L.innerHTML)NEXT_OPTS=null};
  q('#cLater').onclick=()=>{const host=document.createElement('div');host.className='scrim';host.style.zIndex=70;const tm=new Date();tm.setDate(tm.getDate()+1);tm.setHours(9,0,0,0);
   const pre=[['In 1 hour',Date.now()+36e5],['Tomorrow 9:00 AM',+tm],['Monday 9:00 AM',(()=>{const d=new Date();d.setDate(d.getDate()+((8-d.getDay())%7||7));d.setHours(9,0,0,0);return+d})()]];
   host.innerHTML=`<div class="dlg" role="dialog" aria-modal="true" aria-label="Send later" style="width:min(400px,100%)"><header><h3>🕒 Send later</h3></header><div class="body">${pre.map(([l,v])=>`<button class="btn" data-at="${v}" style="justify-content:space-between;width:100%"><span>${l}</span><small>${tLong(v)}</small></button>`).join('')}<div class="fld"><label for="slAt">Or pick date and time</label><input type="datetime-local" id="slAt" value="${toLocalInput(+tm)}"></div><p style="margin:0;font-size:12px;color:var(--muted)">It goes out from the server even if your computer is off. Change your mind any time in ☰ → 🕒 Scheduled mail.</p></div><footer><button class="btn" data-c>Cancel</button><button class="btn pri" data-ok>Schedule</button></footer></div>`;
-  document.body.appendChild(host);const done=at=>{host.remove();if(!at||at<Date.now()+60000){toast('Pick a time at least one minute from now');return}opts({sendAt:at});origSend();if(L.innerHTML)NEXT_OPTS=null};
+  document.body.appendChild(host);const done=at=>{host.remove();if(!at||at<Date.now()+60000){toast('Pick a time at least one minute from now');return}
+   const _w=_weigh();if(_w.total>WIRE_MAX){_tooBig(_w);return}
+   opts({sendAt:at});origSend();if(L.innerHTML)NEXT_OPTS=null};
   host.querySelectorAll('[data-at]').forEach(b=>b.onclick=()=>done(+b.dataset.at));host.querySelector('[data-c]').onclick=()=>host.remove();host.querySelector('[data-ok]').onclick=()=>done(Date.parse(host.querySelector('#slAt').value))};
 };
 /* scheduled mail list */
@@ -2356,7 +2391,7 @@ listRows=function(){const raw=$('#q').value.trim();let r;
  if(raw){const o=parseQ(raw);r=S.threads.filter(t=>qMatch(t,o));if(SEARCH_HITS&&SEARCH_Q===raw){const have=new Set(r.map(t=>t.id));S.threads.forEach(t=>{if(!have.has(t.id)&&SEARCH_HITS.has(t.box+'|'+gidOf(t)))r.push(t)})}}
  else{r=S.threads.filter(inView);
   const special=view.type==='fav'&&['snoozed','remind'].includes(view.id);if(!special)r=r.filter(t=>!snoozed(t));
-  if(view.type==='box'&&view.folder==='inbox')r=r.filter(t=>tab==='other'?t.other:!t.other);
+  if(view.type==='box'&&view.folder==='inbox')r=r.filter(t=>tab==='other'?othTab(t):!othTab(t));
   if(lfilt)r=r.filter(t=>t.label===lfilt);if(catFilt)r=r.filter(t=>(t.cats||[]).includes(catFilt));
   if(filt!=='all')r=r.filter(t=>filt==='unread'?t.unread:filt==='mine'?t.owner===ME:filt==='open'?st(t)!=='done':filt==='alias'?!!viaOf(t):true)}
  const isSent=view.type==='box'&&view.folder==='sent',k=t=>isSent?lastOut(t):t.last;
@@ -3473,7 +3508,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-20-7';
+const APP_BUILD='2026-11-21-1';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3839,7 +3874,7 @@ const colleagueIn=(m,t)=>!!m&&m.ours&&!m.by&&!!m.email&&String(m.email).toLowerC
    mail you send to your own address, or any mail with this mailbox in To/Cc. Gmail shows such a mail
    in both Inbox and Sent, and now Rugs Email does too. Mail sent to a buyer is untouched. */
 const toThisBox=(m,t)=>{const b=String((t&&t.box)||'').toLowerCase();return !!b&&!!m&&((String(m.to||'')+' '+String(m.cc||'')).toLowerCase().includes(b))};
-const recvMsg=(m,t)=>!(m.by||m.ours)||colleagueIn(m,t)||toThisBox(m,t);
+const recvMsg=(m,t)=>!(m.by||m.ours)||colleagueIn(m,t)||toThisBox(m,t)||(!!m&&!m.by&&isOtp(t));   /* 20 Nov 2026: a login code is always received mail - our Wizone codes are sent from marketing@ */
 const _ivC=inView;inView=function(t){
  if(view.type==='box'&&t.dept===view.dept&&view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t))&&recvLast(t);   /* 20 Nov 2026: only while the last word is theirs */
  /* 20 Nov 2026: Sent = what we sent and nobody has answered yet. The moment a mail comes in, the
@@ -4162,7 +4197,7 @@ const _rfW=renderFolders;renderFolders=function(){_rfW();if(app!=='mail')return;
 /* ================= Nov 2026: speed — draw the mail list in pages of 150 rows ================= */
 const LIST_PAGE=window.SLOW_PC?60:150;let _capKey='',_cap=LIST_PAGE;
 function listCap(n){const k=JSON.stringify([app,view,tab,filt,typeof lfilt==='undefined'?'':lfilt,($('#q')||{}).value||'']);if(k!==_capKey){_capKey=k;_cap=LIST_PAGE}return Math.min(n,_cap)}
-function hasRecv(t){return t.msgs.some(m=>!(m.by||m.ours)||(m.ours&&!m.by&&m.email&&String(m.email).toLowerCase()!==String(t.box||'').toLowerCase())||toThisBox(m,t))}
+function hasRecv(t){return t.msgs.some(m=>recvMsg(m,t))}   /* 20 Nov 2026: one rule, so the Inbox list and every Inbox count agree (and a login code counts as received) */
 let _moreBusy=false;
 function listMore(){if(_moreBusy)return;_moreBusy=true;_cap+=300;requestAnimationFrame(()=>{try{renderListKeep()}finally{_moreBusy=false}})}
 // load more when the end marker comes into view (or the list is scrolled near the bottom)
@@ -4266,6 +4301,22 @@ const _seeM=t=>seeMine(t)&&!critOnly(t);
 const _ivMine=inView;inView=function(t){return _seeM(t)&&_ivMine(t)};
 const _imMine=isInboxMail;isInboxMail=function(t){return _seeM(t)&&_imMine(t)};
 const _lrMine=listRows;listRows=function(){return _lrMine().filter(_seeM)};
+/* ================= 20 Nov 2026: LOGIN CODES / OTP MAILS ALWAYS SHOW =================
+   A one-time code is only any use to the person signing in at that moment, so it can never wait
+   for an owner, hide in a second tab, or sit in Sent. A mail carrying a code is therefore received
+   mail (see recvMsg), is kept in the Focused tab, and is shown to EVERYBODY in the team - including
+   a manager-first team like Designing, and including a conversation a colleague already owns.
+   It is still not work: the server closes automatic mail as Auto, so a code adds nothing to
+   anyone's open list, To assign, My work or the Home numbers.
+   The patterns use no backslashes on purpose (see server/patch-otp-visible.js). */
+const OTP_SUB=/((^|[^a-z])otps?([^a-z]|$)|one[- ]?time (password|pass word|passcode|pass code|code|pin)|(log|sign)[- ]?in code|login code|verification (code|pin)|security code|single[- ]?use code|passcode|access code|confirmation code|authentication code|2[- ]?step verification|two[- ]?factor|code *[:-] *[0-9]{3,8}|reset code|code is *[0-9]{3,8}|[0-9]{4,8} is your)/i;
+const OTP_PRE=/((^|[^a-z])otps?([^a-z]|$)|one[- ]?time (password|passcode|code)|verification code|login code|security code|single[- ]?use code|reset code|code is *[0-9]{3,8}|[0-9]{4,8} is your)/i;
+function isOtp(t){try{if(!t)return false;return OTP_SUB.test(String(t.sub||''))||OTP_PRE.test(String(t.pre||t.snippet||''))}catch(e){return false}}
+function othTab(t){return !!(t&&t.other)&&!isOtp(t)}                               /* a code is never "Other" */
+const _smOtp=seeMine;seeMine=function(t){return (t&&isOtp(t))?true:_smOtp(t)};     /* the whole team sees a code */
+const _rowOtp=rowHTML;rowHTML=function(t){let h=_rowOtp(t);
+ try{if(isOtp(t))h=h.replace('<div class="tags">','<div class="tags"><span class="tag" title="A login code - kept in Focused and shown to everyone in the team">🔑 Login code</span>')}catch(e){}
+ return h};
 /* 16 Nov 2026: deleted = handled. A mail in the Deleted folder is marked Done, so it is out of the
    Inbox AND out of everyone's open work, Needs owner, Late and the reports. Works for mail deleted
    here and for mail deleted in Gmail (the sync moves it to Deleted and this marks it Done).
@@ -4557,7 +4608,9 @@ const _ivSent=inView;inView=function(t){
     '.olimmbar button{all:unset;cursor:pointer;font:inherit;font-size:12.5px;padding:5px 10px;border:1px solid rgba(128,128,128,.4);border-radius:6px}',
     '.olwarn{margin:0 14px 10px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--red,#d33) 45%,transparent);background:color-mix(in srgb,var(--red,#d33) 10%,transparent);border-radius:8px;font-size:12.5px}',
     '.olwarn ul{margin:4px 0 6px;padding-left:18px}',
-    '.olwarn .act{display:flex;gap:8px;flex-wrap:wrap}'
+    '.olwarn .act{display:flex;gap:8px;flex-wrap:wrap}',
+    '.olwarn.bigmail{border-width:2px}',
+    '.olwarn .olnote{display:block;margin-top:6px;opacity:.75}'
   ].join('');
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
