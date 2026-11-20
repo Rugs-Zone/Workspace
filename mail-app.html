@@ -729,7 +729,7 @@ function inView(t){if(view.type==='crit')return t.folder!=='deleted'&&inScope(t)
   if(view.id==='late')return st(t)==='late';
   if(view.id==='today')return st(t)==='today';
   if(view.id==='flag')return t.flag}
- if(view.type==='box'){if(t.dept!==view.dept)return false;if(view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||m.ours)&&!hasRecv(t);   /* 20 Nov 2026: not once a reply has come in */if(view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));return t.folder===view.folder}
+ if(view.type==='box'){if(t.dept!==view.dept)return false;if(view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||m.ours)&&!recvLast(t);   /* 20 Nov 2026: ours is the last word */if(view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t))&&recvLast(t);return t.folder===view.folder}
  if(view.type==='person')return t.owner===view.id&&t.folder==='inbox';
  if(view.type==='folder')return t.folder===view.folder;
  return false}
@@ -3092,7 +3092,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-resend],[d
    happens in the browser; nothing is uploaded, and the mail keeps the cut-out in place of the old
    picture. A big cut-out is saved as a JPEG so the mail does not grow out of hand. */
 let CROPBAR=null,CROPFOR=null;
-function cropBarHide(){if(CROPBAR){CROPBAR.remove();CROPBAR=null}CROPFOR=null}
+function cropBarHide(){if(CROPBAR){CROPBAR.remove();CROPBAR=null}try{szHide()}catch(e){}CROPFOR=null}
 function cropBarFor(img){
  cropBarHide();CROPFOR=img;
  const b=document.createElement('div');b.className='cropbar';
@@ -3108,6 +3108,38 @@ function cropBarFor(img){
   const w=Math.round((i.getBoundingClientRect().width||i.naturalWidth||400)*0.75);
   i.setAttribute('width',w);i.style.width=w+'px';i.style.height='auto';place()};
  b.querySelector('[data-crop]').onclick=()=>{const i=CROPFOR;cropBarHide();if(i)cropOpen(i)};
+ szFor(img);                                   // 20 Nov 2026: and the drag handles round it
+}
+/* 20 Nov 2026: eight handles round the picture you clicked - drag any of them to set its size.
+   The shape is kept; only the width shown in the mail changes, so Crop still has the full quality. */
+let SZBOX=null;
+function szHide(){if(SZBOX){SZBOX.remove();SZBOX=null}}
+function szPlace(){if(!SZBOX||!CROPFOR)return;const r=CROPFOR.getBoundingClientRect();
+ SZBOX.style.left=r.left+'px';SZBOX.style.top=r.top+'px';SZBOX.style.width=r.width+'px';SZBOX.style.height=r.height+'px'}
+function szFor(img){
+ szHide();if(!img)return;
+ const b=document.createElement('div');b.className='imgsz';
+ b.innerHTML=['nw','n','ne','e','se','s','sw','w'].map(c=>'<i data-sz="'+c+'" class="'+c+'"></i>').join('')
+  +'<span class="szlbl"></span>';
+ document.body.appendChild(b);SZBOX=b;szPlace();
+ const lbl=b.querySelector('.szlbl');
+ const show=()=>{const r=img.getBoundingClientRect();lbl.textContent=Math.round(r.width)+' \u00d7 '+Math.round(r.height)};
+ show();
+ b.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-sz]');if(!h)return;
+  e.preventDefault();e.stopPropagation();
+  const c=h.getAttribute('data-sz'),r0=img.getBoundingClientRect(),x0=e.clientX,y0=e.clientY;
+  const w0=r0.width,ratio=r0.height/(r0.width||1);
+  const grow=(dx,dy)=>{
+   let d=0;
+   if(c==='e'||c==='ne'||c==='se')d=dx; else if(c==='w'||c==='nw'||c==='sw')d=-dx;
+   else if(c==='s')d=dy/(ratio||1); else d=-dy/(ratio||1);
+   return Math.max(40,Math.min(2000,Math.round(w0+d)))};
+  const move=ev=>{const w=grow(ev.clientX-x0,ev.clientY-y0);
+   img.style.width=w+'px';img.style.height='auto';img.setAttribute('width',w);img.removeAttribute('height');
+   szPlace();if(CROPBAR&&CROPBAR._place)CROPBAR._place();show()};
+  const up=()=>{document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);
+   try{if(typeof cfDirty==='function')cfDirty()}catch(x){}};
+  document.addEventListener('pointermove',move);document.addEventListener('pointerup',up)});
 }
 function cropOpen(img){
  const L=dlg('\u2702 Crop the picture',
@@ -3152,7 +3184,7 @@ function cropOpen(img){
    if(out.length>1500000)out=cv.toDataURL('image/jpeg',0.85);   // a big cut-out should not bloat the mail
    img.setAttribute('src',out);img.removeAttribute('height');
    const shown=Math.min(cw,640);img.setAttribute('width',shown);img.style.width=shown+'px';img.style.height='auto';
-   L.innerHTML='';toast('Picture cropped');
+   L.innerHTML='';toast('Picture cropped');setTimeout(()=>{try{cropBarFor(img)}catch(e){}},50);
   }catch(e){toast('Could not crop this picture: '+(e.message||e))}};
 }
 document.addEventListener('click',e=>{
@@ -3160,9 +3192,16 @@ document.addEventListener('click',e=>{
  if(img&&img.closest('[contenteditable]')){cropBarFor(img);return}
  if(!e.target.closest('.cropbar'))cropBarHide();
 },true);
-addEventListener('scroll',()=>{if(CROPBAR&&CROPBAR._place)CROPBAR._place()},true);
-addEventListener('resize',()=>{if(CROPBAR&&CROPBAR._place)CROPBAR._place()});
+addEventListener('scroll',()=>{if(CROPBAR&&CROPBAR._place)CROPBAR._place();try{szPlace()}catch(e){}},true);
+addEventListener('resize',()=>{if(CROPBAR&&CROPBAR._place)CROPBAR._place();try{szPlace()}catch(e){}});
 (function(){const st=document.createElement('style');st.textContent=[
+ '.imgsz{position:fixed;z-index:10075;pointer-events:none;outline:1px dashed color-mix(in srgb,var(--brand) 70%,transparent)}',
+ '.imgsz i{position:absolute;width:12px;height:12px;background:#fff;border:1.5px solid var(--brand);border-radius:3px;pointer-events:auto;touch-action:none}',
+ '.imgsz .nw{left:-7px;top:-7px;cursor:nwse-resize}.imgsz .ne{right:-7px;top:-7px;cursor:nesw-resize}',
+ '.imgsz .sw{left:-7px;bottom:-7px;cursor:nesw-resize}.imgsz .se{right:-7px;bottom:-7px;cursor:nwse-resize}',
+ '.imgsz .n{left:50%;top:-7px;margin-left:-6px;cursor:ns-resize}.imgsz .s{left:50%;bottom:-7px;margin-left:-6px;cursor:ns-resize}',
+ '.imgsz .w{left:-7px;top:50%;margin-top:-6px;cursor:ew-resize}.imgsz .e{right:-7px;top:50%;margin-top:-6px;cursor:ew-resize}',
+ '.imgsz .szlbl{position:absolute;right:0;bottom:-22px;background:var(--ink);color:#fff;font-size:11px;padding:1px 6px;border-radius:6px;white-space:nowrap}',
  '.cropbar{position:fixed;z-index:10080;display:flex;gap:6px;background:var(--pane);border:1px solid var(--line);border-radius:10px;padding:5px 6px;box-shadow:var(--shadow)}',
  '.cropbar .btn{padding:4px 9px;font-size:12.5px}',
  '.cropwrap{position:relative;display:inline-block;max-width:100%;touch-action:none;user-select:none;line-height:0}',
@@ -3414,7 +3453,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-20-4';
+const APP_BUILD='2026-11-20-6';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3782,11 +3821,11 @@ const colleagueIn=(m,t)=>!!m&&m.ours&&!m.by&&!!m.email&&String(m.email).toLowerC
 const toThisBox=(m,t)=>{const b=String((t&&t.box)||'').toLowerCase();return !!b&&!!m&&((String(m.to||'')+' '+String(m.cc||'')).toLowerCase().includes(b))};
 const recvMsg=(m,t)=>!(m.by||m.ours)||colleagueIn(m,t)||toThisBox(m,t);
 const _ivC=inView;inView=function(t){
- if(view.type==='box'&&t.dept===view.dept&&view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));
+ if(view.type==='box'&&t.dept===view.dept&&view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t))&&recvLast(t);   /* 20 Nov 2026: only while the last word is theirs */
  /* 20 Nov 2026: Sent = what we sent and nobody has answered yet. The moment a mail comes in, the
     conversation belongs to the Inbox (it is the same conversation, with our mail inside it). */
- if(view.type==='box'&&t.dept===view.dept&&view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||(m.ours&&!colleagueIn(m,t)))&&!hasRecv(t);
- if(view.type==='all')return inScope(t)&&t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));
+ if(view.type==='box'&&t.dept===view.dept&&view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||(m.ours&&!colleagueIn(m,t)))&&!recvLast(t);   /* 20 Nov 2026: ours is the last word */
+ if(view.type==='all')return inScope(t)&&t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t))&&recvLast(t);
  return _ivC(t)};
 // a conversation with only colleague mail is shown under the colleague's name (not "(unknown)")
 const _mrC=mapRow;mapRow=function(){const t=_mrC.apply(this,arguments);try{if(t&&(!t.email||t.from==='(unknown)')){const m=[...t.msgs].reverse().find(x=>colleagueIn(x,t));if(m){t.from=m.from||m.email;t.email=m.email}}}catch(e){}return t};
@@ -4119,7 +4158,10 @@ const _rlS2=renderList;renderList=function(){_rlS2();document.body.classList.tog
 ].join('\n');document.head.appendChild(st)})();
 
 /* ================= Nov 2026: one meaning for every mail count = unread mail in the Inbox ================= */
-function isInboxMail(t){return t.folder==='inbox'&&in60(t)&&hasRecv(t)&&!isWsNotif(t)}
+/* 20 Nov 2026: a conversation sits where its NEWEST mail points - in the Inbox while the last word
+   is theirs, in Sent once we have answered. recvLast() is that question, asked in one place. */
+function recvLast(t){const m=(t&&t.msgs||[])[(t&&t.msgs||[]).length-1];return !!m&&recvMsg(m,t)}
+function isInboxMail(t){return t.folder==='inbox'&&in60(t)&&hasRecv(t)&&recvLast(t)&&!isWsNotif(t)}
 function inboxUnreadN(deptId){return S.threads.filter(t=>t.unread&&(deptId?t.dept===deptId:inScope(t))&&isInboxMail(t)).length}
 // Inbox list header: "Inbox · 1,547 unread" (hover shows how many conversations in total)
 const _rlU=renderList;renderList=function(){_rlU();try{if(!((view.type==='box'&&view.folder==='inbox')||view.type==='all'))return;
