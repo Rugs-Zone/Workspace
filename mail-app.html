@@ -3392,7 +3392,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-20-2';
+const APP_BUILD='2026-11-20-3';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -4162,10 +4162,15 @@ const _imO=isInboxMail;isInboxMail=function(t){return !beforeLive(t)&&_imO(t)};
    it with every earlier mail and the whole trail, and it lands in their "My work".
    NOTE this hides mail from a colleague's screen; it is not a lock. The server still sends the
    team's mail to the team's own people, and Search follows the same rule. */
+/* 20 Nov 2026: a "manager first" team - mail nobody has taken is the manager's to hand out, and a
+   member sees it only once it is his. Listed by mailbox so renaming the team changes nothing; put
+   another address in here to do the same for another team. */
+const MGR_FIRST=['designer@rugscreation.com'];
+function mgrFirst(d){try{const x=dept(d);return !!x&&MGR_FIRST.indexOf(String(mailOf(x)||'').toLowerCase())>=0}catch(e){return false}}
 function seeMine(t){const p=who(ME);
  if(!p||!t)return true;
  if(p.role==='Admin'||['Manager','Lead','CRM'].includes(p.role))return true;   /* manager / CRM / admin: the whole team */
- if(!t.owner)return true;                                                      /* nobody has taken it yet */
+ if(!t.owner)return !mgrFirst(t.dept);                                         /* nobody has taken it yet: anyone may pick it up, except in a manager-first team */
  if(t.owner===ME)return true;                                                  /* mine */
  return (t.msgs||[]).some(m=>msgMine(m,t))}                                        /* I replied in it — keep it */
 const _ivMine=inView;inView=function(t){return seeMine(t)&&_ivMine(t)};
