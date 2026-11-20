@@ -13576,7 +13576,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       // grid and per-employee Visibility modal already use — so a module
       // only needs to be added once, ever, in one place.
       function visibleCountFor(key) {
-        if (key === "scoring" || key === "followup" || key === "spareparts" || key === "courier") return state.doers.filter(function (d) { return d.is_admin || ((d.managed_modules || []).indexOf(key) !== -1); }).length;
+        if (key === "scoring" || key === "followup" || key === "spareparts" || key === "courier") return state.doers.filter(function (d) { return d.is_admin || ((d.managed_modules || []).indexOf(key) !== -1) || (key === "courier" && (/merchan/i.test(d.department || "") || /merchan/i.test(d.delegation_name || ""))); }).length;
         return state.doers.filter(function (d) {
           return !Array.isArray(d.visible_modules) || d.visible_modules.indexOf(key) !== -1;
         }).length;
@@ -13589,11 +13589,11 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       modWrap.innerHTML = MODULE_DEFS.concat(customModuleDefs()).map(function (m) {
         var visCount = m.status === "live" ? visibleCountFor(m.key) : 0;
         var gated = VIS_ROLE_GATED[m.key];
-        var clickable = m.status === "live" && !gated;
+        var clickable = m.status === "live" && (!gated || MV_ACCESS_TILES.indexOf(m.key) !== -1);
         return '<div class="module-card tilt"' + (clickable ? ' data-vis-key="' + esc(m.key) + '" style="cursor:pointer"' : ' style="cursor:default"') + '>' +
           '<div class="top"><div class="icon lavender" style="margin-bottom:0">' + m.icon + '</div><span class="module-badge ' + (m.status === "live" ? "live" : "soon") + '">' + (m.status === "live" ? "Live" : "Coming Soon") + '</span></div>' +
           '<div class="mt">' + esc(m.name) + '</div>' +
-          (gated ? '<div class="mv">' + ((m.key === "scoring" || m.key === "followup") ? "Visible to <b style=\"color:var(--ink)\">" + visCount + "</b> / " + total + " · " : "") + esc(gated) + '</div>'
+          (gated && !clickable ? '<div class="mv">' + ((m.key === "scoring" || m.key === "followup") ? "Visible to <b style=\"color:var(--ink)\">" + visCount + "</b> / " + total + " · " : "") + esc(gated) + '</div>'
             : '<div class="mv">Visible to <b style="color:var(--ink)">' + visCount + '</b> / ' + total + ' staff' + (clickable ? ' · <span style="color:var(--brand);font-weight:700">Manage →</span>' : '') + '</div>') +
           '</div>';
       }).join("");
@@ -13759,14 +13759,23 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   // actually changed, not the whole staff list every time.
   function openModuleVisibilityModal(m) {
     var allModuleKeys = MODULE_DEFS.concat(customModuleDefs()).map(function (x) { return x.key; });
+    // 20 Nov 2026: Spare Parts and Courier tiles are shown by "Module access"
+    // (managed_modules), not by the tile list — ticking someone here used to
+    // change only visible_modules, so they still could not see the tile. For
+    // these two the tick now grants / removes Module access itself.
+    var ACC = MV_ACCESS_TILES.indexOf(m.key) !== -1;
+    var accAuto = function (d) { return !!d.is_admin || (m.key === "courier" && (/merchan/i.test(d.department || "") || /merchan/i.test(d.delegation_name || ""))); };
+    var accOn = function (d) { return accAuto(d) || (d.managed_modules || []).indexOf(m.key) !== -1; };
     var rows = state.doers.slice().sort(function (a, b) {
       return (a.delegation_name || a.name || "").localeCompare(b.delegation_name || b.name || "");
     }).map(function (d) {
       var arr = Array.isArray(d.visible_modules) ? d.visible_modules : null;
-      var visible = arr === null || arr.indexOf(m.key) !== -1;
+      var visible = ACC ? accOn(d) : (arr === null || arr.indexOf(m.key) !== -1);
+      var locked = ACC && accAuto(d);
       return '<label class="mv-row" data-search="' + esc((d.delegation_name || d.name || "").toLowerCase() + " " + (d.department || "").toLowerCase()) + '" style="display:flex;align-items:center;gap:8px;padding:5px 0">' +
-        '<input type="checkbox" class="mv-doer" data-doc="' + esc(d.doc_id) + '"' + (visible ? " checked" : "") + ' style="width:auto" /> ' + esc(d.delegation_name || d.name) +
+        '<input type="checkbox" class="mv-doer" data-doc="' + esc(d.doc_id) + '"' + (visible ? " checked" : "") + (locked ? " disabled" : "") + ' style="width:auto" /> ' + esc(d.delegation_name || d.name) +
         (d.department ? ' <span class="sub" style="font-size:11px">' + esc(d.department) + "</span>" : "") +
+        (locked ? ' <span class="sub" style="font-size:11px">— always (' + (d.is_admin ? "Admin" : "merchant") + ")</span>" : "") +
         "</label>";
     }).join("");
     openModal(
@@ -13797,6 +13806,17 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       Array.prototype.slice.call(document.querySelectorAll("#mvList .mv-doer")).forEach(function (c) {
         var d = state.doers.find(function (x) { return x.doc_id === c.dataset.doc; });
         if (!d) return;
+        if (ACC) {
+          if (c.disabled || accOn(d) === c.checked) return;
+          var mm = (d.managed_modules || []).filter(function (k) { return k !== m.key; });
+          if (c.checked) mm.push(m.key);
+          var vm = Array.isArray(d.visible_modules) ? d.visible_modules.slice() : null;
+          if (c.checked && vm && vm.indexOf(m.key) === -1) vm.push(m.key);
+          var w = { d: d, managed_modules: mm };
+          if (vm) w.visible_modules = vm;
+          writes.push(w);
+          return;
+        }
         var arr = Array.isArray(d.visible_modules) ? d.visible_modules : null;
         var wasVisible = arr === null || arr.indexOf(m.key) !== -1;
         var nowVisible = c.checked;
@@ -13809,9 +13829,12 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       });
       if (!writes.length) { closeModal(); return; }
       Promise.all(writes.map(function (w) {
-        return api("updateDoerAccess", { doc_id: w.d.doc_id, visible_modules: w.visible_modules }).then(function () {
-          w.d.visible_modules = w.visible_modules;
-          if (w.d.doc_id === state.doer.doc_id) state.doer = Object.assign({}, state.doer, { visible_modules: w.visible_modules });
+        var p = { doc_id: w.d.doc_id };
+        if (w.visible_modules) p.visible_modules = w.visible_modules;
+        if (w.managed_modules) p.managed_modules = w.managed_modules;
+        return api("updateDoerAccess", p).then(function () {
+          Object.keys(p).forEach(function (k) { if (k !== "doc_id") w.d[k] = p[k]; });
+          if (w.d.doc_id === state.doer.doc_id) state.doer = Object.assign({}, state.doer, p, { doc_id: state.doer.doc_id });
         });
       })).then(function () {
         toast("Updated visibility for " + writes.length + " " + (writes.length === 1 ? "person" : "people"));
@@ -15350,14 +15373,18 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     followup: "Set by “Delegated module access → Follow-up report” (or Admin)",
     merchant: "Automatic: merchandisers (name match) and Admins",
     "cm_cm_merchant-dashboard_4dtmo": "Automatic: merchandisers (name match) and Admins",
-    quality: "Set by the Quality Portal role"
+    quality: "Set by the Quality Portal role",
+    spareparts: "Set by “Delegated module access → Spare Parts” (or Admin)",
+    courier: "Set by “Delegated module access → Courier Dashboard” (merchants and Admins always)"
   };
+  // Tiles shown by Module access whose admin-grid "Manage Visibility" window grants that access directly.
+  var MV_ACCESS_TILES = ["spareparts", "courier"];
   function visChecklist(defs, current, groupClass, who) {
     var isDefault = current === null;
     return defs.map(function (m) {
       if (VIS_ROLE_GATED[m.key]) {
         var on = null;
-        if (who && (m.key === "scoring" || m.key === "followup" || m.key === "courier")) on = !!who.is_admin || ((who.managed_modules || []).indexOf(m.key) !== -1);
+        if (who && (m.key === "scoring" || m.key === "followup" || m.key === "courier" || m.key === "spareparts")) on = !!who.is_admin || ((who.managed_modules || []).indexOf(m.key) !== -1) || (m.key === "courier" && (/merchan/i.test(who.department || "") || /merchan/i.test(who.delegation_name || "")));
         return '<label style="display:flex;align-items:center;gap:8px;padding:6px 0;opacity:.75" title="' + esc(VIS_ROLE_GATED[m.key]) + '">' +
           '<input type="checkbox" disabled' + (on ? " checked" : "") + ' style="width:auto" /> ' + esc(m.name) +
           ' <span class="sub" style="font-size:11px">— ' + esc(VIS_ROLE_GATED[m.key]) + (on === null ? "" : (on ? " · has access" : " · no access")) + "</span></label>";
