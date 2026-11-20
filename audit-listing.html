@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rugs Email — In-Depth Audit Listing (20 Nov 2026)</title>
+<style>
+  :root {
+    --bg:#fafafa; --fg:#242424; --muted:#616161; --brand:#0f6cbd; --line:#e0e0e0;
+    --card:#ffffff; --border:#d0d0d0; --radius:8px;
+  }
+  @media (prefers-color-scheme:dark) {
+    :root { --bg:#1f1f1f; --fg:#ffffff; --muted:#adadad; --brand:#479ef5; --line:#3d3d3d; }
+  }
+  html,body {height:100%;margin:0;font:14px/1.4 "Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--fg)}
+  .gutter {padding:12px;overflow:auto;}
+  h1,h2,h3 {margin:1.5em 0 1em 0;color:var(--fg);}
+  h1 {font-size:1.8rem;border-bottom:1px solid var(--line);padding-bottom:0.3em;}
+  h2 {font-size:1.4rem;color:var(--brand);margin-top:2em;}
+  h3 {font-size:1.2rem;}
+  pre {background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1em;overflow:auto;max-height:none;}
+  code {font-family:monospace;background:var(--card);padding:2px 4px;border-radius:3px;}
+  table {width:100%;border-collapse:collapse;margin:1em 0;}
+  th,td {border:1px solid var(--border);padding:6px 8px;text-align:left;font-size:0.9rem;}
+  th {background:var(--card);position:sticky;top:0;}
+  .tag {display:inline-block;padding:2px 6px;font-size:0.75rem;background:var(--brand);color:#fff;border-radius:3px;margin-left:4px;}
+  .section {page-break-inside:avoid;margin-bottom:2em;}
+  @media print {
+    .gutter {padding:0;}
+    body {background:white;color:black;}
+    pre {background:white;border:1px solid #ddd;page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="gutter">
+<h1>Rugs Email — In-Depth Audit Listing</h1>
+<p><em>Generated 20 Nov 2026 | Working directory: C:\Users\team3pr1\Desktop\Workspace</em></p>
+
+<h2>1. Project Structure</h2>
+<table>
+<thead><tr><th>Category</th><th>Files / Paths</th></tr></thead>
+<tbody>
+<tr><td>Workspace root</td><td>index.html (9 MB, embedded EMAIL_HTML_B64), manifest.json, schema.md, CLAUDE.md, PROGRESS.md</td></tr>
+<tr><td>Mail standalone</td><td>mail.html, mail-manifest.json, mail2.html (redirects to mail.html)</td></tr>
+<tr><td>Mail app (decoded)</td><td>.tmp/email.html (590,675 chars, 789,792 base64 chars from index.html)</td></tr>
+<tr><td>Mail app patches</td><td>server/patch-*.js (33 files), server/patch-*.py (16 files)</td></tr>
+<tr><td>Mail app source</td><td>server/mailapp-b64.js (decode/encode base64 embedded app)</td></tr>
+<tr><td>Outlook pack</td><td>server/rugs-email-outlook-pack.js, server/patch-outlook-pack.py</td></tr>
+<tr><td>Service workers</td><td>sw.js</td></tr>
+</tbody>
+</table>
+
+<h2>2. Supabase Edge Function</h2>
+<table>
+<thead><tr><th>Aspect</th><th>Details</th></tr></thead>
+<tbody>
+<tr><td>Function URL</td><td>https://asbgfjngxsabnnzgxugu.supabase.co/functions/v1/rugs-mail</td></tr>
+<tr><td>Live version</td><br>
+</tr>
+<tr><td>Repo source</td><td>server/rugs-mail.index.ts (1,120 lines, v51 in live, v49 in repo commit 53526c9)</td></tr>
+<tr><td>Supabase URL</td><td>https://asbgfjngxsabnnzgxugu.supabase.co</td></tr>
+<tr><td>Secret keys</td><td>RUGS_SA_JSON / GOOGLE_SA_JSON (service account for Gmail/Drive), GEMINI_API_KEY, Cron key</td></tr>
+</tbody>
+</table>
+
+<h2>3. Supabase Tables (RLS on, no client policies)</h2>
+<table>
+<thead><tr><th>Table</th><th>Key Columns</th></tr></thead>
+<tbody>
+<tr><td>rm_users</td><td>id, name, login, pass_hash, dept_id, role, active, perm (jsonb), access (jsonb), profile, signature, on_leave, created_at, must_change, prefs</td></tr>
+<tr><td>rm_threads</td><td>mailbox, gmail_thread_id, subject, snippet, counterpart_email, counterpart_name, msg_count, last_msg_at, has_in, has_out, unread, owner_id, status, promise, due_at, topic, topic_ai, topic_conf, topic_checked, flagged, folder, prev_folder, updated_at, dept_id, done_at, first_reply_at, pinned, snooze_until, remind_at, cats, ooo_sent, rules_checked, to_addrs text[], for_owner text</td></tr>
+<tr><td>rm_messages</td><td>mailbox, gmail_id, gmail_thread_id, direction, from_email, from_name, to_text, cc_text, subject, snippet, body_text, body_html, sent_at, sent_by, has_attachments, attachments, labels, rfc_message_id, drive_status, drive_files, list_unsub, drive_tries, delivered_to text</td></tr>
+<tr><td>rm_mailboxes</td><td>mailbox, cursor_s, back_s, status, last_sync, note, history_id</td></tr>
+<tr><td>rm_settings</td><td>key, value, updated_at</td></tr>
+<tr><td>rm_sessions</td><td>user_id, token_hash, created_at, expires_at, switched_by</td></tr>
+<tr><td>rm_login_attempts</td><td>login, fails, last_fail_at, locked_until</td></tr>
+<tr><td>rm_scheduled</td><td>id, user_id, mailbox, payload, send_at, status, error, created_at, sent_at</td></tr>
+<tr><td>rm_presence</td><td>mailbox, gmail_thread_id, user_id, at</td></tr>
+<tr><td>rm_drive_folders</td><td>mailbox, key, folder_id, created_at</td></tr>
+</tbody>
+</table>
+
+<h2>4. Edge Function Actions (key ones)</h2>
+<table>
+<thead><tr><th>Action</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td>login</td><td>Auth via password, creates rm_sessions token_hash</td></tr>
+<tr><td>boot</td><td>Loads users, depts, settings, AI status</td></tr>
+<tr><td>list</td><td>Paginated thread + message listing (1500 per page)</td></tr>
+<tr><td>thread</td><td>threadFull() — opens mail, FULL_N=5, withCidLinks/inlineImg</td></tr>
+<tr><td>sync</td><td>Full mailbox sync under sync_lock (one at a time)</td></tr>
+<tr><td>meta</td><td>Thread metadata updates (owner, folder, status, topic, dept)</td></tr>
+<tr><td>send</td><td>MIME construction + Gmail send, 15 MB attachment backstop</td></tr>
+<tr><td>inlineImg</td><td>Fetch single cid: picture (8 MB cap), returns data: URI</td></tr>
+<tr><td>attachment</td><td>Fetch attachment by name from Gmail</td></tr>
+<tr><td>search</td><td>Gmail search inside attachments (PDF, Word, Excel)</td></tr>
+<tr><td>cron</td><td>takeLock/freeLock + cronRun (30 s, one sync at a time)</td></tr>
+<tr><td>gmailRefresh</td><td>One-time read/unread refresh (read wins, dry-run supported)</td></tr>
+<tr><td>saveSetting / getSetting</td><td>Shared lists (circulars, folders, alerts, templates, cats, rules, blocked)</td></tr>
+<tr><td>saveOrg / setPassword / status / dirUsers / setPasswords</td><td>Admin-only operations</td></tr>
+<tr><td>deleteUser</td><td>Admin deletes user, threads → owner_id=null</td></tr>
+<tr><td>changePassword</td><td>Sets new password, clears other sessions</td></tr>
+<tr><td>schedule / scheduledList / scheduledCancel</td><td>Scheduled mail sending</td></tr>
+<tr<td>inlineMail</td><td>Fetch one cid: picture from mail</td></tr>
+<tr><td>aiWrite</td><td>Gemini-powered draft writing (paused if gemini_hold)</td></tr>
+</tbody>
+</table>
+
+<h2>5. Patch Pipeline</h2>
+<table>
+<thead><tr><th>Type</th><th>Count</th><th>Representative Files</th></tr></thead>
+<tbody>
+<tr><td>server/patch-*.js</td><td>33 files</td><td>patch-546-fullmail.js, patch-long-trail.js, patch-pictures-fast.js, patch-reply-instant.js, patch-crop-fix.js, patch-img-resize.js, patch-crop-and-att.js, patch-slow-pc.js, patch-login-load.js, patch-status-bar.js, patch-mail-id-notice.js, patch-no-sig-preview.js, patch-tothisbox.js, patch-admin-dashpick.js, patch-546-fullmail.js</td></tr>
+<tr><td>server/patch-*.py</td><td>16 files</td><td>patch-rugs-mail.py, patch2-rugs-mail.py, patch-assigner.py, patch-assigner2.py, patch-handover-notice.py, patch-home-counts.py, patch-personal-inbox.py, patch-fix-send-click.py, patch-selfmail.py, patch-fromname.py, patch-sharedtoast.py, patch-loadbar.py, patch-sentmine.py, patch-outlook-pack.py, patch-paste-drop-attach.py, patch-editable-trail.py</td></tr>
+<tr><td>Total patches</td><td>49 files</td><td></td></tr>
+</tbody>
+</table>
+
+<h2>6. Patch Verification Method</h2>
+<p>Each patch: <code>node server/mailapp-b64.js decode</code> → <code>.tmp/email.html</code> → edit → <code>node server/mailapp-b64.js encode</code>. Result verified: <code>index.html</code> matches <code>.tmp/email.html</code> byte-for-byte, all 41 inline scripts parse successfully.</p>
+
+<h2>7. Key Bug Areas (from PROGRESS.md)</h2>
+<table>
+<thead><tr><th>Area</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>546 / out-of-resources errors</td><td>Fixed in rugs-mail v48+/v51 (withCidLinks → rmcid: links, inlineImg one-at-a-time)</td></tr>
+<tr><td>Long trail opening (72 mails)</td><td>Fixed: only newest 5 mails fetched from Gmail, others as summary (light:true)</td></tr>
+<tr><td>Pasted pictures 546 crashes</td><td>Fixed: pictures fetched one at a time, written as data: URLs, no longer pasted into every mail</td></tr>
+<tr><td>Cid: picture in text [cid:…]</td><td>Fixed: bracket handling, cidLive fills in-place, no rebuild flicker</td></tr>
+<tr><td>Send failure silent (slot is not defined)</td><td>Fixed: drafts tracked by o.did, dead line removed</td></tr>
+<tr><td>Mail not going / not coming</td><td>Fixed: Switch ID session block, Gmail 204 empty body handling</td></tr>
+<tr><td>Sent folder double-counting</td><td>Fixed: !hasRecv(t) gate, conversation moves to Inbox when reply arrives</td></tr>
+<tr><td>Crop tool destroying compose</td><td>Fixed: crop window is separate dialog layer</td></tr>
+<tr><td>Resize handles bug</td><td>Fixed: eight handles, live size label, touch friendly</td></tr>
+</tbody>
+</table>
+
+<h2>8. Cron Jobs</h2>
+<table>
+<thead><tr><th>Job</th><th>Interval</th></tr></thead>
+<tbody>
+<tr><td>rugs-mail</td><td>30 seconds (sync timer, one at a time via sync_lock)</td></tr>
+<tr><td>rm-alias-assign</td><td>60 seconds (alias → domain → name → trail → buddy)</td></tr>
+<tr><td>rm-push-watch</td><td>Daily 03:00 IST (renews Gmail push watch)</td></tr>
+<tr><td>rm-sync-recheck</td><td>Every 10 minutes (re-reads windows Gmail could not list)</td></tr>
+<tr><td>rm-keyword-topics</td><td>Every 5 minutes (Gemini topic tagging, paused if gemini_hold)</td></tr>
+<tr><td>buyer-weekly-update</td><td>Every 5 minutes (Mon 2 PM IST, order-status off, samples on)</td></tr>
+<tr><td>buyer-weekly-orders-back-on</td><td>Once-only (turns orders back on at 6 PM IST)</td></tr>
+<tr><td>order-master-late-alert</td><td>Hourly (PPC late orders)</td></tr>
+<tr><td>agents-hourly</td><td>Hourly (follow-up agent brief)</td></tr>
+<tr><td>rz-task-overdue-digest</td><td>Hourly (overdue task digest)</td></tr>
+<tr><td>rm-push-watch</td><td>Daily (Gmail push topic renewal)</td></tr>
+</tbody>
+</table>
+
+<h2>9. Shared Settings Keys</h2>
+<table>
+<thead><tr><th>Key</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td>circulars</td><td>Shared circular messages</td></tr>
+<tr><td>folders</td><td>Per-user folder lists</td></tr>
+<tr><td>alerts</td><td>Shared notices/alerts</td></tr>
+<tr><td>templates</td><td>Email templates</td></tr>
+<tr><td>cats</td><td>Categories</td></tr>
+<tr><td>rules</td><td>Thread auto-assign rules</td></tr>
+<tr><td>blocked</td><td>Blocked senders</td></tr>
+<tr><td>contacts_extra</td><td>Extra contact emails</td></tr>
+<tr<td>history_days</td><td>180 → 365 (1 year, changed 17 Nov 2026)</td></tr>
+<tr><td>gmail_write_boxes</td><td>Which mailboxes can send from app ("all" or list)</td></tr>
+<tr><td>live_at</td><td>Go live timestamp</td></tr>
+<tr><td>deleted_users</td><td>{id: {name, login, at, by}} — admin deletion tracking</td></tr>
+</tbody>
+</table>
+
+<h2>10. Admin Keys (only Admin may change)</h2>
+<table>
+<thead><tr><th>Key</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td>rules, blocked, cats, folders, templates, circulars</td><td>Full admin control</td></tr>
+</tbody>
+</table>
+
+<h2>11. SQL Functions (key ones)</h2>
+<table>
+<thead><tr><th>Function</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>rm_check_password</td><td>Verify login password (5 fails = 15 min lock)</td></tr>
+<tr><td>rm_set_password</td><td>Set user password (format: Rugs@NNNN)</td></tr>
+<tr><td>rm_login_fail</td><td>Record failed login attempt</td></tr>
+<tr><td>rm_go_live</td><td>Activate all teams, mark 6726 threads read, set live_at</td></tr>
+<tr><td>rm_sync_tick</td><td>Sync start lock (fallback)</td></tr>
+<tr><td>rm_sync_recheck</td><td>Re-read windows Gmail could not list</td></tr>
+<tr><td>rm_unread_refresh</td><td>Gmail read/unread refresh (dry-run supported)</td></tr>
+<tr><td>rm_deleted_is_done_trg</td><td>Sets status='done' when folder='deleted'</td></tr>
+<tr><td>rm_old_history_done_trg</td><td>Pre-17-Nov conversations → Done+read+no owner</td></tr>
+<tr><td>rm_ignore_trg</td><td>Auto-close threads from no-reply/notification mail</td></tr>
+<tr><td>rm_is_ws_notif</td><td>Guard: notification mail not auto-assigned</td></tr>
+</tbody>
+</table>
+
+<h2>12. Patch File Reference (all 49)</h2>
+<table>
+<thead><tr><th>File</th><th>Brief</th></tr></thead>
+<tbody>
+<!-- JS patches -->
+<tr><td>patch-546-fullmail.js</td><td>Server-side 546 fix (partial branch)</td></tr>
+<tr><td>patch-long-trail.js</td><td>72-mail trail fix (index once, once per mail)</td></tr>
+<tr><td>patch-pictures-fast.js</td><td>Pictures fetched 3 at a time, written immediately</td></tr>
+<tr><td>patch-reply-instant.js</td><td>Reply opens instantly, pictures fill in later</td></tr>
+<tr><td>patch-crop-fix.js</td><td>Crop window separate from dialog layer</td></tr>
+<tr><td>patch-img-resize.js</td><td>Eight handles, live size label</td></tr>
+<tr><td>patch-crop-and-att.js</td><td>Crop + attachments faster</td></tr>
+<tr><td>patch-slow-pc.js</td><td>Slow-PC mode (hardwareConcurrency<=4)</td></tr>
+<tr><td>patch-login-load.js</td><td>Sign-in: 30-phase preload, two stages</td></tr>
+<tr><td>patch-status-bar.js</td><td>Bottom status bar (Items/Unread, progress dot)</td></tr>
+<tr><td>patch-mail-id-notice.js</td><td>Mail ID notice in trail</td></tr>
+<tr><td>patch-no-sig-preview.js</td><td>Signature preview fix</td></tr>
+<tr><td>patch-tothisbox.js</td><td>toThisBox rule (self-mail behavior)</td></tr>
+<tr><td>patch-admin-dashpick.js</td><td>Admin dashboard picker</td></tr>
+<tr><td>patch-paste-drop-attach.js</td><td>Paste/drop attaches files instead of vanishing</td></tr>
+<tr><td>patch-editable-trail.py</td><td>Trail from original HTML, not retyped</td></tr>
+<tr><td>patch-forward-keeps-files.py</td><td>Forward as attachment keeps files</td></tr>
+<tr><td>patch-forward-as-attachment.py</td><td>Forward creates .eml attachment</td></tr>
+<tr><td>patch-handover-notice.py</td><td>👉 gave you "notice on handover"</td></tr>
+<tr><td>patch-sent-is-not-work.py</td><td>Sent-only mail not counted as work</td></tr>
+<tr><td>patch-sent-no-reply.py</td><td>Sent mail stays Sent only</td></tr>
+<tr><td>patch-sentmine.py</td><td>Sent per-role (exec sees own, manager sees all)</td></tr>
+<tr><td>patch-sharedtoast.py</td><td>Shared lists toast reset</td></tr>
+<tr><td>patch-loadbar.py</td><td>Loading bar position fix</td></tr>
+<tr><td>patch-personal-inbox.py</td><td>Personal mailbox rule (owner-only)</td></tr>
+<tr><td>patch-read-pane.py</td><td>Reading pane names + banner + thumbnail tiles</td></tr>
+<tr><td>patch-conv-no-boxes.py</td><td>No cards in conversation view</td></tr>
+<tr><td>patch-empty-folder.py</td><td>Empty Junk/Deleted folder buttons</td></tr>
+<tr><td>patch-outlook-pack.py</td><td>Outlook pack (10 features)</td></tr>
+<tr><td>patch-remove-devhub.js</td><td>Delete Developer module</td></tr>
+<tr><td>patch-designing-manager-first.js</td><td>Team Designing: manager hands work out</td></tr>
+<tr><td>patch-priya-critical.js</td><td>Priya: critical-only in Vinay's box</td></tr>
+<tr><td>patch-slow-pc.js</td><td>Slow PC mode (already listed)</td></tr>
+<tr><td>patch-crop-and-att.js</td><td>Crop + attachments (already listed)</td></tr>
+
+<!-- Python patches -->
+<tr><td>patch-rugs-mail.py</td><td>Rugs-mail edge function patches</td></tr>
+<tr><td>patch2-rugs-mail.py</td><td>Second rugs-mail patch version</td></tr>
+<tr><td>patch-assigner.py</td><dd>Assign-away rule patch</td></tr>
+<tr><td>patch-assigner2.py</td><dd>Second assigner patch</td></tr>
+<tr><td>patch-handover-notice.py</td><td>Handover notice patch</td></tr>
+<tr><td>patch-home-counts.py</td><td>Home count patches</td></tr>
+<tr><td>patch-personal-inbox.py</td><td>Personal inbox rule patch</td></tr>
+<tr><td>patch-fix-send-click.py</td><td>Send button fix (slot not defined)</td></tr>
+<tr><td>patch-selfmail.py</td><td>Self-mail (my-address) rule</td></tr>
+<tr><td>patch-fromname.py</td><td>From name RFC-2047 encoding</td></tr>
+<tr><td>patch-sharedtoast.py</td><td>Shared lists toast fix</td></tr>
+<tr><td>patch-loadbar.py</td><td>Load bar position</td></tr>
+<tr><td>patch-sentmine.py</td><td>Sent per-role viewing</td></tr>
+<tr><td>patch-outlook-pack.py</td><td>Outlook pack embedment</td></tr>
+<tr><td>patch-paste-drop-attach.py</td><td>Paste/drop file attach</td></tr>
+<tr><td>patch-editable-trail.py</td><td>Editable trail (Python version)</td></tr>
+</tbody>
+</table>
+
+<h2>13. Files in .tmp/ (decoded / test rig)</h2>
+<table>
+<thead><tr><th>File</th><th>Size / Purpose</th></tr></thead>
+<tbody>
+<tr><td>email.html</td><td>590,675 chars — decoded EMAIL_HTML_B64 working copy</td></tr>
+<tr><td>email_script0.js</td><td>Batch 4 (28 Oct 2026): contact card, calendar, task, spoof check, desktop alerts</td></tr>
+<tr><td>email_script1.js</td><td>Contact card · calendar invite · mail → task · spoof · desktop alerts</td></tr>
+<tr><td>rugs-mail_index.ts</td><td>v37 index (older than live v51)</td></tr>
+<tr><td>index.backup-2026-11-18.html</td><td>Pre-patch backup</td></tr>
+<tr><td>index.before-devhub-removal.html</td><td>Before devhub removal</td></tr>
+<tr><td>email.ready-2026-11-18-6.html</td><td>Versioned email snapshot</td></tr>
+<tr><td>live_index.html</td><td>Live index HTML</td></tr>
+<tr><td>live_mail.html</td><td>Live mail.html</td></tr>
+</tbody>
+</table>
+
+<h2>14. Gmail / Drive Integration</h2>
+<ul>
+<li>Google access: service account with domain-wide delegation (RUGS_SA_JSON)</li>
+<li>MAX_FILE = 20 MB per attachment, 40 MB/logo cap per conversation</li>
+<li>Drive copy: each department gets "Rugs Email Attachments" folder under buyer domain</li>
+<li>Attachment slimming: long Gmail attachment IDs removed after Drive copy</li>
+<li>Attachment action: fetch from Gmail by name/size/mime, capped at 15 MB decoded</li>
+</ul>
+
+<h2>15. Performance Notes</h2>
+<ul>
+<li>365-day history (raised 180 → 365 on 17 Nov 2026)</li>
+<li>Sign-in preload: 10 conversations + 20 pictures, 2 at a time (slow PCs: 25/80/3)</li>
+<li>List draws 60 rows at a time (was 150, fast PCs unchanged)</li>
+<li>Device copy saved 20 s after idle change (was 4 s)</li>
+<li>Blur/transitions disabled on slow PCs</li>
+<li>Status bar: 27px tall, edge-to-edge (html,body{margin:0})</li>
+<li>Preload budget: 15 s → 30 s (INtwo phases: recent 30d, then all quietly)</li>
+</ul>
+
+<h2>16. Open Items / "NOT yet tested in browser"</h2>
+<p>Many STEP patches from PROGRESS.md remain unverified in a real signed-in browser. Key categories:</p>
+<ul>
+<li>Outlook pack features (10 additions: mark read/unread/pin, search, fav folders, not junk, download all, read aloud, immersive reader, quick steps, pre-send check)</li>
+<li>Crop/resize tools (handle dragging, canvas export)</li>
+<li>Forward as attachment (.eml creation + sending)</li>
+<li>EMl preview reader (mime parsing, cid: conversion)</li>
+<li>Status bar + preload (viewed in Edge headless, not signed-in)</li>
+<li>Role-based sent mail viewing</li>
+<li>Team Designing manager-first rule</li>
+<li>Priya critical-only in Vinay's box</li>
+<li>Many others listed per-STEP in PROGRESS.md</li>
+</ul>
+
+<p><em>All 41 inline scripts verified to parse after each patch. index.html checked byte-for-byte against .tmp/email.html after every encode cycle.</em></p>
+
+<hr>
+<p><em>End of audit listing. Generated from workspace C:\Users\team3pr1\Desktop\Workspace on 20 Nov 2026.</em></p>
+</div>
+</body>
+</html>
