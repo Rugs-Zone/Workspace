@@ -541,6 +541,7 @@ function courierName(){const s=$('k_name');if(!s)return '';return s.value==='__o
 function syncShipFields(ship){const intl=ship==='International',s=$('k_name');
   if(s){const other=s.value==='__other',cur=courierName(),keep=other?cur:((COURIER_OPTS[ship]||[]).includes(cur)?cur:'');s.innerHTML=courierOptsHTML(ship,keep);if(other&&!keep)s.value='__other';const ow=$('k_otherw');if(ow)ow.hidden=s.value!=='__other'}
   const dw=$('f_dutyw');if(dw)dw.hidden=!intl;const ew=$('f_expw');if(ew)ew.hidden=!intl;const da=$('f_dacw');if(da)da.hidden=!intl||(($('f_duty')||{}).value!=='Buyer')}
+function isUSA(c){const n=String(c||'').toUpperCase().replace(/[^A-Z]/g,'');return n==='USA'||n==='US'||n==='AMERICA'||n.startsWith('UNITEDSTATES')||n.startsWith('USAREST')}
 function FORMHTML(){
   const c=view.cur,d=c.d,b=d.buyer,k=d.courier||{};
   return `<div class="row" style="margin-bottom:14px"><button class="btn sm" data-a="back">&larr; All invoices</button></div>
@@ -566,7 +567,7 @@ function FORMHTML(){
    <div><label class="l" for="b_tax">Buyer tax / VAT no. (optional)</label><input id="b_tax" value="${esc(b.tax)}"></div>
    <div><label class="l" for="f_inco">Incoterm</label><input id="f_inco" value="${esc(d.incoterm)}" placeholder="FOB, CIF, EXW"></div>
   </div></div>
-  <div class="panel"><h2>2. Packets and items</h2><div id="pk"></div>
+  <div class="panel"><h2>2. Packets and items</h2><p class="note" id="usnote" style="color:var(--bad,#c0392b);font-weight:700" ${isUSA(d.dest_country||b.country)?'':'hidden'}>USA invoice: HSN code and content (Description) are mandatory for every item.</p><div id="pk"></div>
    <button class="btn sm" id="addpk" style="margin-top:6px">+ Add packet</button><div class="tot"><span id="gq">0 pcs</span><span>Invoice value</span><span id="grand">0.00</span></div>
    <div class="grid" style="margin-top:8px"><div class="span2"><label class="l" for="f_tag">Heading line printed in bold (optional)</label><input id="f_tag" value="${esc(d.tag)}" list="tagopts" placeholder="e.g. TRADE FREE SAMPLE(NOT FOR SALE)"><datalist id="tagopts"><option value="TRADE FREE SAMPLE(NOT FOR SALE)"></datalist></div>
    <div><label class="l" style="margin-top:22px"><input type="checkbox" id="f_rex" ${d.rex?'checked':''} style="width:auto"> Print the REX / origin declaration</label></div></div>
@@ -604,7 +605,7 @@ $('main').addEventListener('click',e=>{const t=e.target.closest('button');if(!t|
 
 $('main').addEventListener('change',e=>{const i=e.target;if(i.dataset&&i.dataset.k==='desc'&&view&&view.t==='form'){const v=i.value.trim();if(v&&!/made in india/i.test(v))i.value=v.replace(/[\s,.;-]+$/,'')+' - Made in India'}});
 
-function bindForm(){const n=$('b_name'),c=$('b_code');if(!n||!c)return;
+function bindForm(){const dc=$('f_dcountry'),un=$('usnote');if(dc&&un){const t=()=>{un.hidden=!isUSA(dc.value)};dc.addEventListener('input',t);dc.addEventListener('change',t)}const n=$('b_name'),c=$('b_code');if(!n||!c)return;
   const low=x=>String(x||'').trim().toLowerCase(),byName=v=>buyers.find(x=>low(x.name)===low(v));
   /* the buyer already on the form: re-entering it must not overwrite an address typed by hand */
   let filled=byName(n.value);
@@ -626,6 +627,7 @@ async function saveForm(andSubmit){
   if(!COUNTRY_LIST.includes(d.dest_country)){m.innerHTML=fail('Pick the final destination country from the list.');$('f_dcountry').focus();return}
   if(!d.dest_city){m.innerHTML=fail('Enter the final destination city.');$('f_city').focus();return}
   if(!d.packets.length||!flatItems(d).some(i=>(+i.qty||0)*(+i.rate||0)>0)){m.innerHTML=fail('Add at least one item with quantity and rate.');return}
+  if(isUSA(d.dest_country)){for(let pi=0;pi<d.packets.length;pi++)for(let ii=0;ii<d.packets[pi].items.length;ii++){const it=d.packets[pi].items[ii],k=!String(it.hsn||'').trim()?'hsn':!String(it.desc||'').trim()?'desc':'';if(k){m.innerHTML=fail('USA invoice: enter the '+(k==='hsn'?'HSN code':'content (Description)')+' for packet '+(pi+1)+', item '+(ii+1)+' (mandatory for USA).');const pe=$('pk').querySelectorAll('[data-p]')[pi],rows=pe?[...pe.querySelectorAll('tbody tr')].filter(tr=>[...tr.querySelectorAll('input')].some(x=>['prod','desc','rate'].includes(x.dataset.k)&&x.value.trim())):[],inp=rows[ii]&&rows[ii].querySelector('[data-k='+k+']');if(inp)inp.focus();return}}}
   m.innerHTML='<p class="note">Saving...</p>';
   let r=await api('cd_inv_save',{p_id:view.cur.id,p_d:d,p_ship:view.cur.ship});if(!r.ok){m.innerHTML=fail(r.error);return}
   setRow(r.row);view.cur.id=r.row.id;view.cur.inv_no=r.row.inv_no;
