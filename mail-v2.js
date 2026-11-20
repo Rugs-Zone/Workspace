@@ -174,6 +174,10 @@
   function vwGo(d) { if (!VW || VW.items.length < 2) return; var i = (VW.i + d + VW.items.length) % VW.items.length; vwShow(VW.items, i, VW.opener); }
   function vwZoom(f) { if (!VW) return; var img = VW.el.querySelector(".v2vimg"); if (!img) return; VW.z = f === 0 ? 1 : Math.min(8, Math.max(0.1, (VW.z || 1) * f)); img.style.transform = "scale(" + VW.z + ")"; img.classList.toggle("zoomed", VW.z !== 1); }
   function bytes(a) {
+    // 20 Nov 2026: the mail app keeps one copy of each attachment for the session (rzAttBytes) and
+    // quietly brings the small ones in when a mail is opened, so this usually returns without a trip
+    // to Gmail. The old way is kept for a page where the app has not provided it.
+    if (typeof window.rzAttBytes === "function") return window.rzAttBytes(a.box, a.gid, a.name);
     return api("attachment", { mailbox: a.box, gmailId: a.gid, name: a.name }).then(function (r) {
       var bin = atob(r.b64 || ""), u8 = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
