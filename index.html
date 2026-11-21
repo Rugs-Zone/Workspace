@@ -964,6 +964,12 @@
   tr:last-child td{border-bottom:none}
   .task-att-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
   .task-att-row img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block}
+  /* 21 Nov 2026: a photo picked for a new task can be taken off again before it is assigned */
+  .nt-img{position:relative;display:inline-block;line-height:0}
+  .nt-img-x{position:absolute;top:-7px;right:-7px;width:20px;height:20px;padding:0;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--sub);font:inherit;font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .nt-img-x:hover{background:var(--danger);border-color:var(--danger);color:#fff}
+  .nt-img-note{align-self:center;font-size:11.5px;color:var(--sub)}
+  .insp-edited{display:block;font-size:11px;color:var(--sub)}
   .task-text{min-width:260px;max-width:460px;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
   .badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700}
   .badge.Pending{background:var(--pending);color:var(--pending-ink)}
@@ -5189,6 +5195,10 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   var ANON_KEY = "sb_publishable_puw8o_XzDvXmitIaNZvCtQ_5UGjXTBB";
   var FN_URL = SUPABASE_URL + "/functions/v1/deleg-api";
   var ADMIN_FN_URL = SUPABASE_URL + "/functions/v1/deleg-admin";
+  // 21 Nov 2026: Inspection edits only. Its own function so that opening this right to the whole
+  // team did not mean redeploying deleg-admin, which also holds Press & Blogs, the buyer portal
+  // and in-app notifications.
+  var INSP_FN_URL = SUPABASE_URL + "/functions/v1/insp-edit";
   var ADMIN_FN_ACTIONS = ["adminRecordUpdate", "adminRecordDelete", "pressList", "pressCreate", "createNotification", "getMyNotifications", "markNotificationSeen", "leaveRequestCreateWithApprover", "samplingBuyerSummary", "samplingBuyerLinkCreate", "samplingBuyerLinkEmail", "buyerInviteSend", "buyerAccountsList", "staffBuyerDashboard"];
 
   // Mirrors the backend's NOTIF_TYPES registry (index.ts) — used only as the
@@ -5235,7 +5245,8 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
     if (state.doer && state.doer.doc_id && body.requester_doc_id === undefined) body.requester_doc_id = state.doer.doc_id;
     // Newer actions (admin Edit/Delete, Press & Blogs, notifications) live in
     // the small companion function "deleg-admin"; everything else in deleg-api.
-    var url = ADMIN_FN_ACTIONS.indexOf(action) !== -1 ? ADMIN_FN_URL : FN_URL;
+    var url = action === "inspectionUpdate" ? INSP_FN_URL
+      : ADMIN_FN_ACTIONS.indexOf(action) !== -1 ? ADMIN_FN_URL : FN_URL;
     return fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": "Bearer " + ANON_KEY, "apikey": ANON_KEY },
@@ -6104,7 +6115,7 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
             state.press.unshift({ id: prId, title: p.title, platform: p.platform, url: p.url, summary: p.summary, image_url: p.image_url, published_on: p.published_on, pinned: !!p.pinned, created_at: new Date().toISOString() });
             resolve({ id: prId }); break;
           }
-          case "adminRecordUpdate": case "adminRecordDelete": resolve({ id: p.id }); break;
+          case "adminRecordUpdate": case "adminRecordDelete": case "inspectionUpdate": resolve({ id: p.id }); break;
           default: resolve(null);
         }
       }, 250);
@@ -13301,18 +13312,40 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       '<div id="ntAssigneeList" style="max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:8px 12px">' + rows + "</div>" +
       '<div id="ntCount" style="margin-top:8px;padding:8px 12px;border-radius:8px;background:var(--pending,#fff7ed);font-size:13px"><b>0 people selected</b></div></div>' +
       '<div class="field"><label>Task details</label><textarea id="ntTask" placeholder="Describe the task…"></textarea></div>' +
-      '<div class="field"><label>📎 Attach images / photos (optional, up to 3)</label><input type="file" id="ntFiles" accept="image/*" multiple /><div id="ntFilePrev" class="task-att-row"></div></div>' +
+      '<div class="field"><label>📎 Attach images / photos (optional, up to 3 — ✕ takes one off)</label><input type="file" id="ntFiles" accept="image/*" multiple /><div id="ntFilePrev" class="task-att-row"></div></div>' +
       '<div class="field"><label>Deadline</label>' + dtFieldHtml("ntDl", "") + "</div>" +
       '<div class="modal-err" id="ntErr"></div>' +
       '<div class="modal-actions"><button class="btn secondary" id="ntCancel">Cancel</button><button class="btn" id="ntSave">Assign Task</button></div>'
     );
     dtFieldWire("ntDl");
     var ntImages = [];
+    var NT_MAX_IMGS = 3;
+    // 21 Nov 2026: each picked photo gets a ✕ so a wrong one can be taken off, and picking again
+    // ADDS to the three instead of replacing them — the old handler overwrote the whole list, so
+    // choosing a second photo silently threw the first one away.
+    function ntDrawImgs() {
+      var prev = document.getElementById("ntFilePrev");
+      if (!prev) return;
+      prev.innerHTML = ntImages.map(function (u, i) {
+        return '<span class="nt-img"><img src="' + u + '" alt="Photo ' + (i + 1) + '">' +
+          '<button type="button" class="nt-img-x" data-ntimg="' + i + '" title="Take this photo off" aria-label="Take photo ' + (i + 1) + ' off">✕</button></span>';
+      }).join("") +
+        (ntImages.length ? '<span class="nt-img-note">' + ntImages.length + " of " + NT_MAX_IMGS +
+          (ntImages.length < NT_MAX_IMGS ? " — pick again to add another" : " — that is the most") + "</span>" : "");
+      Array.prototype.forEach.call(prev.querySelectorAll("[data-ntimg]"), function (b) {
+        b.addEventListener("click", function () { ntImages.splice(Number(b.dataset.ntimg), 1); ntDrawImgs(); });
+      });
+    }
     document.getElementById("ntFiles").addEventListener("change", function () {
-      var files = Array.prototype.slice.call(this.files || [], 0, 3);
+      var picked = Array.prototype.slice.call(this.files || []);
+      this.value = "";                      // so picking the same file again still fires change
+      var room = NT_MAX_IMGS - ntImages.length;
+      if (room <= 0) { toast("Three photos is the most one task can carry — take one off first", true); return; }
+      var files = picked.slice(0, room), left = picked.length - files.length;
       Promise.all(files.map(opsCompressImage)).then(function (imgs) {
-        ntImages = imgs.map(function (x) { return x.data; });
-        document.getElementById("ntFilePrev").innerHTML = ntImages.map(function (u) { return '<img src="' + u + '" alt="">'; }).join("");
+        imgs.forEach(function (x) { if (ntImages.length < NT_MAX_IMGS) ntImages.push(x.data); });
+        ntDrawImgs();
+        if (left > 0) toast(left + (left === 1 ? " photo was" : " photos were") + " left out — three is the most", true);
       }).catch(function () { toast("Couldn't read that image", true); });
     });
     function ntUpdateCount() {
@@ -16122,10 +16155,15 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
         "<td>" + esc(v.buyer_name || "—") + "</td>" +
         "<td>" + d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + "</td>" +
         "<td>" + esc(v.reason || "—") + "</td>" +
-        "<td>" + esc(v.created_by || "—") + "</td>" +
-        '<td><span class="badge ' + bvSt[1] + '">' + bvSt[2] + "</span></td>" + (state.doer.is_admin ? "<td>" + admBtns("inspection", v) + "</td>" : "") + "</tr>";
+        "<td>" + esc(v.created_by || "—") +
+          (v.edited_by ? '<span class="insp-edited">edited by ' + esc(v.edited_by) + (v.edited_at ? " · " + new Date(v.edited_at).toLocaleDateString(undefined, { day: "2-digit", month: "short" }) : "") + "</span>" : "") +
+        "</td>" +
+        '<td><span class="badge ' + bvSt[1] + '">' + bvSt[2] + "</span></td>" +
+        // 21 Nov 2026: everyone who can open this page may fix the details or the date;
+        // Delete is still only for admins.
+        "<td>" + admBtnsFor("inspection", v, true, !!state.doer.is_admin) + "</td></tr>";
     }).join("");
-    wrap.innerHTML = "<table><thead><tr><th>Person</th><th>Buyer</th><th>When</th><th>Reason</th><th>Logged by</th><th>Status</th>" + (state.doer.is_admin ? "<th></th>" : "") + "</tr></thead><tbody>" + rows + "</tbody></table>";
+    wrap.innerHTML = "<table><thead><tr><th>Person</th><th>Buyer</th><th>When</th><th>Reason</th><th>Logged by</th><th>Status</th><th></th></tr></thead><tbody>" + rows + "</tbody></table>";
   }
   var inspSaveBtn = document.getElementById("inspSaveBtn");
   if (inspSaveBtn) {
@@ -16222,12 +16260,22 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   };
   function admIdOf(kind, row) { var def = ADM_DEFS[kind]; return def && def.idOf ? def.idOf(row) : row.id; }
   // Returns the Edit + Delete buttons (admins only; "" for everyone else).
-  function admBtns(kind, row) {
-    if (!state.doer || !state.doer.is_admin || !row || !ADM_DEFS[kind]) return "";
+  // 21 Nov 2026: Edit and Delete are granted separately now, because Inspection lets anyone who
+  // can open the page correct a wrong date while DELETING an inspection stays with admins.
+  // admBtns keeps its old meaning (an admin gets both); admBtnsFor spells out who gets what.
+  function admBtnsFor(kind, row, canEdit, canDelete) {
+    if (!state.doer || !row || !ADM_DEFS[kind] || (!canEdit && !canDelete)) return "";
     var id = admIdOf(kind, row);
     ADM_ROWS[kind + "::" + id] = row;
-    return '<span class="adm-actions"><button type="button" class="adm-btn adm-edit" data-kind="' + kind + '" data-id="' + esc(id) + '" title="Edit (admin)">✏️ Edit</button>' +
-      '<button type="button" class="adm-btn adm-del" data-kind="' + kind + '" data-id="' + esc(id) + '" title="Delete (admin)">🗑️ Delete</button></span>';
+    var isAdm = !!state.doer.is_admin;
+    return '<span class="adm-actions">' +
+      (canEdit ? '<button type="button" class="adm-btn adm-edit" data-kind="' + kind + '" data-id="' + esc(id) + '" title="' + (isAdm ? "Edit (admin)" : "Fix the details or the date") + '">✏️ Edit</button>' : "") +
+      (canDelete ? '<button type="button" class="adm-btn adm-del" data-kind="' + kind + '" data-id="' + esc(id) + '" title="Delete (admin)">🗑️ Delete</button>' : "") +
+      "</span>";
+  }
+  function admBtns(kind, row) {
+    var isAdm = !!(state.doer && state.doer.is_admin);
+    return admBtnsFor(kind, row, isAdm, isAdm);
   }
   function admRemoveFromState(kind, id) {
     var def = ADM_DEFS[kind];
@@ -16238,7 +16286,10 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
   function admOpenEdit(kind, id) {
     var def = ADM_DEFS[kind], row = ADM_ROWS[kind + "::" + id];
     if (!def || !row) return;
-    var html = "<h3>Edit " + esc(def.label) + '</h3><div class="sub" style="margin:-4px 0 10px">Admin edit — changes save straight away, no approval emails are sent.</div>';
+    var html = "<h3>Edit " + esc(def.label) + '</h3><div class="sub" style="margin:-4px 0 10px">' +
+      (state.doer && state.doer.is_admin
+        ? "Admin edit — changes save straight away, no approval emails are sent."
+        : "Changes save straight away and no e-mails are sent. Your name is shown against the correction.") + "</div>";
     def.fields.forEach(function (f, i) {
       var v = row[f.k], fid = "admF" + i, input;
       if (f.type === "textarea") input = '<textarea id="' + fid + '" rows="3">' + esc(v == null ? "" : v) + "</textarea>";
@@ -16270,7 +16321,10 @@ if (document.readyState === "loading") document.addEventListener("DOMContentLoad
       });
       if (kind === "leave") patch.is_short_leave = patch.leave_type === "Short Leave";
       var btn = document.getElementById("admSave"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
-      api("adminRecordUpdate", { requester_doc_id: state.doer.doc_id, kind: kind, id: id, patch: patch }).then(function () {
+      // 21 Nov 2026: an inspection goes through its own small function, which allows anyone who
+      // can open the Inspection page (deleg-admin's adminRecordUpdate is admin-only, and is left
+      // that way for every other module).
+      api(kind === "inspection" ? "inspectionUpdate" : "adminRecordUpdate", { requester_doc_id: state.doer.doc_id, kind: kind, id: id, patch: patch }).then(function () {
         Object.keys(patch).forEach(function (k) { if (patch[k] !== undefined) row[k] = patch[k]; });
         closeModal(); toast("Saved.");
         return def.reload();
