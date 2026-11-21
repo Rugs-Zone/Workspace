@@ -617,7 +617,12 @@ document.getElementById('logoImg').src=LOGO;
 const $=s=>document.querySelector(s);
 /* LIVE = running inside the Google Apps Script web app (real Gmail). Otherwise it's the demo with sample data. */
 const LIVE=true;
-const API='https://asbgfjngxsabnnzgxugu.supabase.co/functions/v1/rugs-mail';
+/* MAIL_API_URL (22 Nov 2026): where the mail server lives. Leave '' = Supabase. On switch day put the company server link here
+   (e.g. 'https://mail-api.rugscreation.com'); the app then calls <link>/rugs-mail, /rugs-mail-list, -task, -switch, -cal.
+   Test on ONE browser only: in the console run  localStorage.setItem('rugs-mail-api','http://localhost:8787')  and reload; remove with localStorage.removeItem('rugs-mail-api'). */
+const MAIL_API_URL='';
+let MAIL_API_TEST='';try{MAIL_API_TEST=(localStorage.getItem('rugs-mail-api')||'').replace(/\/+$/,'')}catch(e){}
+const API=((MAIL_API_TEST||MAIL_API_URL||'https://asbgfjngxsabnnzgxugu.supabase.co/functions/v1').replace(/\/+$/,''))+'/rugs-mail';
 let TOKEN='';try{TOKEN=localStorage.getItem('rugs-token')||''}catch(e){}
 async function api(action,p={}){let r;try{r=await fetch(action==='list'||action==='img'||action==='more'?API+'-list':action==='taskDoers'||action==='taskCreate'?API+'-task':API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...p,action,token:TOKEN})})}catch(e){throw new Error('No internet connection — try again')}
  const j=await r.json().catch(()=>({error:'Server error '+r.status}));
@@ -3510,7 +3515,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-21-1';
+const APP_BUILD='2026-11-21-2';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
