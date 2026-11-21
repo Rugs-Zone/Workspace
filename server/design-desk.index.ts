@@ -29,9 +29,13 @@ const CFG = {
   // it from scratch. 10s keeps each tick small and safe; the saved bf:/fx: progress in dd_config
   // means it still finishes the same backfill over many small ticks instead of one huge one.
   CRON_BUDGET_MS: 10000,
+  FILES_BUDGET_MS: 25000, // 21 Nov 2026: the copying step is no longer memory-bound, so give it a real share
   BUCKET: "design-desk",
   BATCH: 4, // concurrent Gmail calls per step — was 10, too much memory per tick
-  LOCK_TTL_MS: 30000, // skip a tick if the previous one (same job) hasn't finished within this
+  LOCK_TTL_MS: 150000, // skip a tick if the previous one (same job) hasn't finished within this.
+  // 21 Nov 2026: was 30000, which is SHORTER than a files run is now allowed to take - the next
+  // tick would have treated a healthy run as stale and started a second one on top of it. 150 s is
+  // the function's own wall-clock limit, so a run is only ever treated as dead once it really is.
 };
 const READ = "https://www.googleapis.com/auth/gmail.readonly";
 const SEND = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/gmail.modify"];
@@ -250,9 +254,14 @@ async function cronTick() {
 // ---------- files: index every real attachment + keep a backup copy in Google Drive ----------
 const FILE_BACKUP_MAX = 25 * 1048576;
 // 21 Nov 2026: how much file one cron tick may handle, and how many goes a single file gets
-// before it is set aside. Both exist to keep a tick inside the runtime's memory, so a big design
-// file can never kill the function (and with it whatever else that worker was serving).
-const TICK_BYTES = 24 * 1048576;
+// before it is set aside.
+// Memory is now bounded by the BIGGEST SINGLE file (FILE_BACKUP_MAX, 25 MB), not by the total,
+// because each one is streamed, written to Drive and released before the next is picked up. So
+// TICK_BYTES is only about not hogging the worker and the Gmail/Drive quota for a whole run: most
+// of these files are 0.3-8 MB .tif, so this is several of them a tick, and a single big one ends
+// the tick early. BACKUP_TRIES is the real safety net: a file that still kills the run is set
+// aside after this many goes instead of being picked again for ever.
+const TICK_BYTES = 80 * 1048576;
 const BACKUP_TRIES = 3;
 const KINDS: Record<string, string[]> = {
   image: ["jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff", "webp", "heic"],
@@ -477,7 +486,7 @@ async function backupFiles(endAt: number) {
 }
 // cron for files: index new attachments (TL since 2019, designers 90 days), then copy them to Drive
 async function filesTick() {
-  const t0 = Date.now(), budget = CFG.CRON_BUDGET_MS, report: any = { scan: [], backup: 0 };
+  const t0 = Date.now(), budget = CFG.FILES_BUDGET_MS || CFG.CRON_BUDGET_MS, report: any = { scan: [], backup: 0 };
   const tl = await tlBox();
   const days = Number(await getCfg("tl_history_days")) || CFG.TL_HISTORY_DAYS;
   const ds = await designers();

@@ -178,11 +178,41 @@ one(OLD_LOOP, NEW_LOOP, 'one file a tick, the try recorded before the download')
 one(`const FILE_BACKUP_MAX = 25 * 1048576;`,
   `const FILE_BACKUP_MAX = 25 * 1048576;
 // 21 Nov 2026: how much file one cron tick may handle, and how many goes a single file gets
-// before it is set aside. Both exist to keep a tick inside the runtime's memory, so a big design
-// file can never kill the function (and with it whatever else that worker was serving).
-const TICK_BYTES = 24 * 1048576;
+// before it is set aside.
+// Memory is now bounded by the BIGGEST SINGLE file (FILE_BACKUP_MAX, 25 MB), not by the total,
+// because each one is streamed, written to Drive and released before the next is picked up. So
+// TICK_BYTES is only about not hogging the worker and the Gmail/Drive quota for a whole run: most
+// of these files are 0.3-8 MB .tif, so this is several of them a tick, and a single big one ends
+// the tick early. BACKUP_TRIES is the real safety net: a file that still kills the run is set
+// aside after this many goes instead of being picked again for ever.
+const TICK_BYTES = 80 * 1048576;
 const BACKUP_TRIES = 3;`,
   'TICK_BYTES and BACKUP_TRIES');
+
+/* ------------------- 4. give the copying a usable share of the tick ------------------------- */
+/* The 10-second budget was set on 15 Nov to stop the crashes, and the first 6 seconds of it go on
+   the "new mail in the last 3 days" scans - so the copying got about 4 seconds, which is one file.
+   Now that a tick cannot run out of memory, the files job gets 25 seconds (the mail-sync job keeps
+   its 10). The lock has to outlive a run or a second tick would start on top of the first, which
+   is the overlap that caused the trouble in the first place - so it goes to the function's own
+   wall-clock limit of 150 seconds. */
+one(`  CRON_BUDGET_MS: 10000,`,
+  `  CRON_BUDGET_MS: 10000,
+  FILES_BUDGET_MS: 25000, // 21 Nov 2026: the copying step is no longer memory-bound, so give it a real share`,
+  'FILES_BUDGET_MS setting');
+
+one(`  LOCK_TTL_MS: 30000, // skip a tick if the previous one (same job) hasn't finished within this`,
+  `  LOCK_TTL_MS: 150000, // skip a tick if the previous one (same job) hasn't finished within this.
+  // 21 Nov 2026: was 30000, which is SHORTER than a files run is now allowed to take - the next
+  // tick would have treated a healthy run as stale and started a second one on top of it. 150 s is
+  // the function's own wall-clock limit, so a run is only ever treated as dead once it really is.`,
+  'lock outlives a run');
+
+one(`async function filesTick() {
+  const t0 = Date.now(), budget = CFG.CRON_BUDGET_MS, report: any = { scan: [], backup: 0 };`,
+  `async function filesTick() {
+  const t0 = Date.now(), budget = CFG.FILES_BUDGET_MS || CFG.CRON_BUDGET_MS, report: any = { scan: [], backup: 0 };`,
+  'filesTick uses the files budget');
 
 /* getAtt (a designer pressing Download on one attachment) is deliberately NOT changed: it hands
    the base64 straight back to the browser and needs j.data, so asking Gmail for the size only
