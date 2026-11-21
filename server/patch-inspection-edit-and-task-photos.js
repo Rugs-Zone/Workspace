@@ -160,8 +160,17 @@ one(`    var ntImages = [];
       }).join("") +
         (ntImages.length ? '<span class="nt-img-note">' + ntImages.length + " of " + NT_MAX_IMGS +
           (ntImages.length < NT_MAX_IMGS ? " — pick again to add another" : " — that is the most") + "</span>" : "");
+      // Each cross remembers the PHOTO it belongs to, not its position in the row: the row is
+      // redrawn after every removal, so a position captured when it was drawn can point at a
+      // different photo by the time it is clicked. If that photo has already gone, do nothing.
       Array.prototype.forEach.call(prev.querySelectorAll("[data-ntimg]"), function (b) {
-        b.addEventListener("click", function () { ntImages.splice(Number(b.dataset.ntimg), 1); ntDrawImgs(); });
+        var mine = ntImages[Number(b.dataset.ntimg)];
+        b.addEventListener("click", function () {
+          var at = ntImages.indexOf(mine);
+          if (at === -1) return;
+          ntImages.splice(at, 1);
+          ntDrawImgs();
+        });
       });
     }
     document.getElementById("ntFiles").addEventListener("change", function () {
