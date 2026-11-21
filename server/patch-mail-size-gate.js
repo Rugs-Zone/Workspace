@@ -60,7 +60,9 @@ const NEW = "/* 21 Nov 2026: measure the WHOLE mail, not only the attachments.\n
   "    goes out, and the other requests being served at that moment die with it - which is what\n" +
   "    everybody sees as \"the mail server was busy for a moment\". Checked here, before the window\n" +
   "    closes, so the written mail is never lost. */\n" +
-  " const WIRE_MAX=20*1024*1024;   /* one request; 15 MB of files is about 20 MB on the wire */\n" +
+  " const WIRE_MAX=21*1024*1024;   /* one request. The full 15 MB of files is about 20 MB on the wire,\n" +
+  "    so this sits just above it: the files keep their own familiar message, and this catches the\n" +
+  "    body - which is where 36, 80 and 117 MB were coming from. */\n" +
   " const _bytes=x=>{try{return new Blob([String(x||'')]).size}catch(e){return String(x||'').length}};\n" +
   " const _weigh=()=>{const fl=[...(q('#cat')&&q('#cat')._olk||[])];\n" +
   "  const body=_bytes(ed&&ed.innerHTML),files=Math.ceil(fl.reduce((a,x)=>a+x.size,0)*4/3);\n" +
