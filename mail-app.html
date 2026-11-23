@@ -1793,6 +1793,10 @@ function liveOpen(t,o){
        It has no Gmail id, so it can never come back in Gmail's answer - it is not a missing mail. */
     const all=t.msgs.every(x=>x.full||x.light||!x.gid);
     t.full=all;
+    /* 23 Nov 2026: pull the older mails in quietly, so none of them is left folded and
+       empty and every mail shows its own formatting instead of a flat text fallback */
+    try{const MORE_FILL=25,rest=t.msgs.filter(x=>x.light&&x.gid).slice(-MORE_FILL);
+     if(rest.length)setTimeout(function(){try{openLight(t,rest)}catch(e){}},400)}catch(e){}
     L.err=all?'':'Gmail did not send back every mail in this conversation.';
     return all;
    }catch(e){last=e.message||'Could not load the mail';if(i===0)await new Promise(z=>setTimeout(z,1200))}
@@ -3536,7 +3540,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-23-9';
+const APP_BUILD='2026-11-23-10';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
