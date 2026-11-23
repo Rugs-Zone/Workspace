@@ -164,6 +164,68 @@ const ok = (name, pass, extra) => { checks.push({ name, pass, extra }); };
   });
   ok('scrolling right does not push the name off screen', stuck.moved < 2, JSON.stringify(stuck));
 
+  /* ---- the list refreshes itself from the server (23 Nov) ---------------- */
+  // stub the app's own api() so we can see when it asks the server for the list
+  await page.evaluate(() => {
+    window.__bootCalls = 0;
+    api = function (action) {
+      if (action !== 'boot') return Promise.resolve({});
+      window.__bootCalls++;
+      const mk = (id, name, login, dept, role, active) => ({ id, name, login, dept_id: dept, role, active, perm: { transfer: 1 }, access: {}, has_password: true });
+      const users = [];
+      users.push(mk('adm', 'Priyanshu Tomar', 'marketing@rugscreation.com', 'alpha', 'Admin', true));
+      users.push(mk('jm', 'Jatin Munjal', 'jatinmunjyal@rugscreation.com', 'pulse', 'Executive', true));
+      for (let i = 0; i < 3; i++) users.push(mk('n' + i, 'Newcomer ' + i, 'new' + i + '@rugscreation.com', 'pulse', 'Executive', true));
+      return Promise.resolve({
+        gone: {}, ai: false, settings: {},
+        me: { id: 'adm', name: 'Priyanshu Tomar', login: 'marketing@rugscreation.com', dept_id: 'alpha', role: 'Admin', perm: {}, access: {} },
+        depts: [
+          { id: 'alpha', name: 'Merch · Team Alpha', mailbox: 'teamalpha@rugscreation.com', color: '#ff5001' },
+          { id: 'pulse', name: 'Team Pulse', mailbox: 'teampulse@rugscreation.com', color: '#9b59b6' }
+        ],
+        users
+      });
+    };
+  });
+
+  // leaving the tab and coming back pulls the newest list
+  await page.evaluate(() => { adminTab = 'overview'; render(); });
+  await page.waitForTimeout(100);
+  await page.evaluate(() => { adminTab = 'users'; USRQ = ''; render(); });
+  await page.waitForTimeout(400);
+  const refreshed = await page.evaluate(() => ({
+    calls: window.__bootCalls,
+    rows: document.querySelectorAll('tr[data-urow]').length,
+    names: [...document.querySelectorAll('tr[data-urow] .uName')].map(i => i.value)
+  }));
+  ok('opening the tab fetches the newest list', refreshed.calls === 1, 'calls=' + refreshed.calls);
+  ok('a person added elsewhere now appears', refreshed.names.includes('Jatin Munjal'), 'rows=' + refreshed.rows);
+  ok('the stale list is replaced, not added to', refreshed.rows === 5, 'rows=' + refreshed.rows);
+
+  // staying on the tab does not keep hammering the server
+  await page.evaluate(() => { render(); render(); });
+  await page.waitForTimeout(200);
+  ok('staying on the tab does not fetch again', (await page.evaluate(() => window.__bootCalls)) === 1);
+
+  // the Refresh button works on demand
+  await page.click('#usrref');
+  await page.waitForTimeout(300);
+  ok('the Refresh button fetches the list', (await page.evaluate(() => window.__bootCalls)) === 2);
+
+  // typing in the table is never interrupted by the automatic fetch
+  await page.evaluate(() => {
+    window.__bootCalls = 0;
+    document.querySelector('tr[data-urow] .uName').focus();
+    USRTAB = false;          // pretend the tab was just opened
+    admUsrReload(false);
+  });
+  await page.waitForTimeout(200);
+  ok('it does not pull the list away while you are typing in it', (await page.evaluate(() => window.__bootCalls)) === 0);
+
+  // a duplicate user ID is explained in plain words
+  const dup = await page.evaluate(() => friendly('duplicate key value violates unique constraint "rm_users_login_key"'));
+  ok('a taken user ID is explained plainly', /already used by somebody else/i.test(dup), dup);
+
   ok('no page errors', errors.length === 0, errors.join(' | '));
 
   await browser.close();

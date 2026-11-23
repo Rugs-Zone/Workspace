@@ -1050,7 +1050,7 @@ function pageAdmin(){if(who(ME).role!=='Admin'){const ad=PEOPLE.filter(p=>p.role
   </tbody></table></div>
   <div class="setform"><input type="text" id="ndName" placeholder="New department, e.g. Shipping"><span class="mbin"><input type="text" id="ndBox" placeholder="mailbox, e.g. shipping"><em>@${DOMAIN}</em></span><button class="btn pri" data-dadd>+ Create department</button></div>
   <p class="lead" style="margin:0;font-size:12.5px">The mailbox must be a real Google Workspace user (not a group) for that department. Team Alpha is fixed to teamalpha@${DOMAIN}.</p></section>`}
- if(adminTab==='users'){body=`<section class="box"><h3>Users <span id="usrn">${PEOPLE.length}</span></h3><div class="usrbar"><input type="search" id="usrq" value="${esc(USRQ)}" placeholder="Search a person — name, user ID, team or role" aria-label="Search users"><span class="sub" id="usrhint"></span></div><div class="atable"><table><thead><tr><th>Person</th><th>User ID (login)</th><th>Department</th><th>Role</th><th title="Can assign mail">Assign</th><th title="Can transfer to other departments">Transfer</th><th title="Can delete inside the app (never from Google)">Delete</th><th title="Can open other people's dashboards">Dashboards</th><th title="Buddy: gets the team's new mail automatically when the CRM and the TL are both on leave">Buddy</th><th title="New mail from these buyer domains is assigned to this person automatically, e.g. ikea.com, kmart.com.au">Auto-assign domains</th><th title="Extra addresses that deliver into the team mailbox for this person, e.g. merchandiser4@rugscreation.com. Their own user ID always counts.">Aliases</th><th>Status</th><th></th></tr></thead><tbody>
+ if(adminTab==='users'){body=`<section class="box"><h3>Users <span id="usrn">${PEOPLE.length}</span></h3><div class="usrbar"><input type="search" id="usrq" value="${esc(USRQ)}" placeholder="Search a person — name, user ID, team or role" aria-label="Search users"><button type="button" class="btn" id="usrref" title="Fetch the newest list of people from the server">↻ Refresh</button><span class="sub" id="usrhint"></span></div><div class="atable"><table><thead><tr><th>Person</th><th>User ID (login)</th><th>Department</th><th>Role</th><th title="Can assign mail">Assign</th><th title="Can transfer to other departments">Transfer</th><th title="Can delete inside the app (never from Google)">Delete</th><th title="Can open other people's dashboards">Dashboards</th><th title="Buddy: gets the team's new mail automatically when the CRM and the TL are both on leave">Buddy</th><th title="New mail from these buyer domains is assigned to this person automatically, e.g. ikea.com, kmart.com.au">Auto-assign domains</th><th title="Extra addresses that deliver into the team mailbox for this person, e.g. merchandiser4@rugscreation.com. Their own user ID always counts.">Aliases</th><th>Status</th><th></th></tr></thead><tbody>
   ${PEOPLE.map(p=>`<tr data-urow="${p.id}" class="${p.active?'':'off'}"><td><span class="nm2">${av(p.name,'sm')}<input type="text" class="uName" value="${esc(p.name)}" aria-label="Name for ${esc(p.name)}"></span></td><td><input type="email" class="uLogin" value="${esc(p.login)}" aria-label="Login"></td><td><select class="uDept" aria-label="Department for ${esc(p.name)}"><option value="" ${p.dept?'':'selected'}>— No team yet —</option>${DEPTS.map(d=>`<option value="${d.id}" ${p.dept===d.id?'selected':''}>${esc(d.name)}</option>`).join('')}</select></td><td><select class="uRole" aria-label="Role for ${esc(p.name)}">${ROLES.map(r=>`<option ${p.role===r?'selected':''}>${r}</option>`).join('')}</select></td>
    ${['assign','transfer','delete','dashboards','buddy'].map(k=>`<td class="c"><input type="checkbox" class="uP" data-k="${k}" ${p.role==='Admin'||p.perm?.[k]?'checked':''} ${p.role==='Admin'?'disabled':''} aria-label="${k}"></td>`).join('')}<td><input type="text" class="uDom" value="${esc(p.perm?.domains||'')}" placeholder="e.g. ikea.com" style="min-width:150px" aria-label="Auto-assign domains for ${esc(p.name)}"></td><td><input type="text" class="uAli" value="${esc(p.perm?.aliases||'')}" placeholder="e.g. merchandiser4@${DOMAIN}" style="min-width:190px" aria-label="Aliases for ${esc(p.name)}"></td>
    <td><span class="tag ${p.active?'t-done':'t-late'}">${p.active?'Active':'Off'}</span>${p.hasPw===false?' <span class="tag t-new">No password</span>':''}</td>
@@ -2161,6 +2161,7 @@ function friendly(m){m=String(m||'');
  if(/has not allowed|sign-in for .* failed|Invalid email or User ID/i.test(m))return "This mailbox isn't connected to Google yet. Ask the admin.";
  if(/^Drive /i.test(m))return "Google Drive didn't answer. Try again later.";
  if(/set your own password/i.test(m))return 'Please set your own password first.';
+ if(/duplicate key|rm_users_login_key|already exists/i.test(m))return 'That user ID is already used by somebody else. Press \u21bb Refresh to see the newest list \u2014 they may already be there.';
  return m}
 /* inbox empty while Google mail is still arriving */
 function loadingNote(){if(S.loadingMail)return 'Loading your mail…';
@@ -3527,7 +3528,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-23-1';
+const APP_BUILD='2026-11-23-2';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -5312,6 +5313,13 @@ function admUsrFilter(){
   const h=document.getElementById('usrhint');
   if(h)h.textContent=words.length?(shown?'':'Nobody matches that.'):'Scroll the table sideways for the rest of the columns.';
 }
+let USRTAB=false;/* 23 Nov 2026: true while the Users tab is the one on screen */
+function admUsrReload(force){
+  /* never pull the list out from under somebody who is typing in it */
+  const a=document.activeElement;
+  if(!force&&a&&a.closest&&a.closest('.atable'))return;
+  api('boot').then(function(b){applyBoot(b);render()}).catch(function(e){try{toast(e.message)}catch(x){}});
+}
 const _rndUsr=render;
 render=function(){
   const a=document.activeElement;
@@ -5319,10 +5327,13 @@ render=function(){
   const pos=had?a.selectionStart:null;
   _rndUsr.apply(this,arguments);
   const box=document.getElementById('usrq');
-  if(!box)return;
+  if(!box){USRTAB=false;return}
   box.value=USRQ;
   box.oninput=function(){USRQ=box.value;admUsrFilter()};
+  const rb=document.getElementById('usrref');
+  if(rb)rb.onclick=function(){admUsrReload(true)};
   admUsrFilter();
+  if(!USRTAB){USRTAB=true;admUsrReload(false)}/* opened the tab: get the newest list once */
   if(had){try{box.focus();if(pos!=null)box.setSelectionRange(pos,pos)}catch(e){}}
 };
 </script>
