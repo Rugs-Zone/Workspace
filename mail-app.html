@@ -3536,7 +3536,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-23-8';
+const APP_BUILD='2026-11-23-9';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -5374,12 +5374,13 @@ document.addEventListener('keydown',function(e){
   if(L&&L.innerHTML.trim())return;                                 /* a dialog or compose window is open */
   maxOpen(false);
 },true);
-let USRTAB=false;/* 23 Nov 2026: true while the Users tab is the one on screen */
+let USRTAB=false,USRGOT=0;/* USRGOT: when the people list last came from the server *//* 23 Nov 2026: true while the Users tab is the one on screen */
 function admUsrReload(force){
   /* never pull the list out from under somebody who is typing in it */
   const a=document.activeElement;
   if(!force&&a&&a.closest&&a.closest('.atable'))return;
-  api('boot').then(function(b){applyBoot(b);render()}).catch(function(e){try{toast(e.message)}catch(x){}});
+  USRGOT=Date.now();
+  api('boot').then(function(b){applyBoot(b);USRGOT=Date.now();render()}).catch(function(e){try{toast(e.message)}catch(x){}});
 }
 const _rndUsr=render;
 render=function(){
@@ -5394,7 +5395,8 @@ render=function(){
   const rb=document.getElementById('usrref');
   if(rb)rb.onclick=function(){admUsrReload(true)};
   admUsrFilter();
-  if(!USRTAB){USRTAB=true;admUsrReload(false)}/* opened the tab: get the newest list once */
+  if(!USRTAB){USRTAB=true;USRGOT=0}/* opened the tab */
+  if(Date.now()-USRGOT>10000)admUsrReload(false);/* keep it fresh while the tab is open */
   if(had){try{box.focus();if(pos!=null)box.setSelectionRange(pos,pos)}catch(e){}}
 };
 </script>
