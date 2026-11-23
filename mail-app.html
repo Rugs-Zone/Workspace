@@ -887,6 +887,8 @@ function canAssignOut(){const p=who(ME);return !!p&&(p.role==='Admin'||['CRM','M
 const _ownBase=ownerSelect;ownerSelect=function(t){
  const base=_ownBase(t);
  if(!canAssignOut())return base;
+ /* 23 Nov 2026: a manager-first team (Team Designing) hands work out inside its own team only */
+ if(mgrFirst(t.dept))return base;
  const by={};PEOPLE.filter(p=>p.dept!==t.dept&&isWorker(p)&&p.active!==false&&p.role!=='Admin').forEach(p=>{(by[p.dept]=by[p.dept]||[]).push(p)});
  const groups=Object.keys(by).filter(d=>dept(d)).map(d=>'<optgroup label="'+esc(dept(d).name)+'">'
   +by[d].map(p=>'<option value="x:'+p.id+'">'+esc(p.name)+(onLeave(p.id)?' \u00b7 on leave':'')+'</option>').join('')+'</optgroup>').join('');
@@ -3534,7 +3536,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-23-7';
+const APP_BUILD='2026-11-23-8';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
