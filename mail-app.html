@@ -745,7 +745,7 @@ function inView(t){if(view.type==='crit')return t.folder!=='deleted'&&inScope(t)
   if(view.id==='late')return st(t)==='late';
   if(view.id==='today')return st(t)==='today';
   if(view.id==='flag')return t.flag}
- if(view.type==='box'){if(t.dept!==view.dept)return false;if(view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||m.ours)&&!recvLast(t);   /* 20 Nov 2026: ours is the last word */if(view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t))&&recvLast(t);return t.folder===view.folder}
+ if(view.type==='box'){if(t.dept!==view.dept)return false;if(view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||m.ours)&&!hasRecv(t);   /* 23 Nov 2026: Sent = we wrote and nobody has answered yet */if(view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));   /* 23 Nov 2026: it stays in the Inbox after we reply */return t.folder===view.folder}
  if(view.type==='person')return t.owner===view.id&&t.folder==='inbox';
  if(view.type==='folder')return t.folder===view.folder;
  return false}
@@ -3528,7 +3528,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-23-2';
+const APP_BUILD='2026-11-23-3';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3896,11 +3896,11 @@ const colleagueIn=(m,t)=>!!m&&m.ours&&!m.by&&!!m.email&&String(m.email).toLowerC
 const toThisBox=(m,t)=>{const b=String((t&&t.box)||'').toLowerCase();return !!b&&!!m&&((String(m.to||'')+' '+String(m.cc||'')).toLowerCase().includes(b))};
 const recvMsg=(m,t)=>!(m.by||m.ours)||colleagueIn(m,t)||toThisBox(m,t)||(!!m&&!m.by&&isOtp(t));   /* 20 Nov 2026: a login code is always received mail - our Wizone codes are sent from marketing@ */
 const _ivC=inView;inView=function(t){
- if(view.type==='box'&&t.dept===view.dept&&view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t))&&recvLast(t);   /* 20 Nov 2026: only while the last word is theirs */
+ if(view.type==='box'&&t.dept===view.dept&&view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));   /* 23 Nov 2026: anything somebody sent us stays in the Inbox, answered or not */
  /* 20 Nov 2026: Sent = what we sent and nobody has answered yet. The moment a mail comes in, the
     conversation belongs to the Inbox (it is the same conversation, with our mail inside it). */
- if(view.type==='box'&&t.dept===view.dept&&view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||(m.ours&&!colleagueIn(m,t)))&&!recvLast(t);   /* 20 Nov 2026: ours is the last word */
- if(view.type==='all')return inScope(t)&&t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t))&&recvLast(t);
+ if(view.type==='box'&&t.dept===view.dept&&view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||(m.ours&&!colleagueIn(m,t)))&&!hasRecv(t);   /* 23 Nov 2026: Sent = waiting for an answer */
+ if(view.type==='all')return inScope(t)&&t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));   /* 23 Nov 2026: same rule for All inboxes */
  return _ivC(t)};
 // a conversation with only colleague mail is shown under the colleague's name (not "(unknown)")
 const _mrC=mapRow;mapRow=function(){const t=_mrC.apply(this,arguments);try{if(t&&(!t.email||t.from==='(unknown)')){const m=[...t.msgs].reverse().find(x=>colleagueIn(x,t));if(m){t.from=m.from||m.email;t.email=m.email}}}catch(e){}return t};
@@ -4236,7 +4236,7 @@ const _rlS2=renderList;renderList=function(){_rlS2();document.body.classList.tog
 /* 20 Nov 2026: a conversation sits where its NEWEST mail points - in the Inbox while the last word
    is theirs, in Sent once we have answered. recvLast() is that question, asked in one place. */
 function recvLast(t){const m=(t&&t.msgs||[])[(t&&t.msgs||[]).length-1];return !!m&&recvMsg(m,t)}
-function isInboxMail(t){return t.folder==='inbox'&&in60(t)&&hasRecv(t)&&recvLast(t)&&!isWsNotif(t)}
+function isInboxMail(t){return t.folder==='inbox'&&in60(t)&&hasRecv(t)&&!isWsNotif(t)}   /* 23 Nov 2026: counts follow the list - answered mail still counts as Inbox mail */
 function inboxUnreadN(deptId){return S.threads.filter(t=>t.unread&&(deptId?t.dept===deptId:inScope(t))&&isInboxMail(t)).length}
 // Inbox list header: "Inbox · 1,547 unread" (hover shows how many conversations in total)
 const _rlU=renderList;renderList=function(){_rlU();try{if(!((view.type==='box'&&view.folder==='inbox')||view.type==='all'))return;
