@@ -1158,7 +1158,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-gtog],[dat
  if('genpw'in d){$('#nuPass').value=genPw();return}
  if('uadd'in d){const n=$('#nuName').value.trim(),lg=$('#nuLogin').value.trim().toLowerCase(),pw=$('#nuPass').value;
   if(!n||!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(lg)){toast('Add a full name and a valid user ID (email)');return}if(pw.length<6){toast('Password needs at least 6 characters');return}
-  if(PEOPLE.some(z=>z.login===lg)){toast('That user ID already exists');return}const nid='u'+Date.now().toString(36);PEOPLE.push(mkPeople([P(nid,n,$('#nuDept').value,$('#nuRole').value,lg,pw)])[0]);saveOrg(true);toast('Creating…');window._orgP.then(b=>b&&api('setPassword',{id:nid,password:pw})).then(r=>{if(r){toast(`${n} created — they can sign in now`);render()}}).catch(e=>toast(e.message));return}
+  if(PEOPLE.some(z=>z.login===lg)){toast('That user ID already exists');return}const nid='u'+Date.now().toString(36);PEOPLE.push(mkPeople([P(nid,n,$('#nuDept').value,$('#nuRole').value,lg,pw)])[0]);saveOrg(true);const _ub=document.querySelector('[data-uadd]');if(_ub){_ub.disabled=true;_ub.textContent='Creating…'}toast('Creating '+n+'… this can take a few seconds');(async()=>{try{const _sv=await window._orgP;if(!_sv)throw new Error('the server did not save it. Press ↻ Refresh and try again');await api('setPassword',{id:nid,password:pw});try{applyBoot(await api('boot'))}catch(e){}USRQ='';['#nuName','#nuLogin','#nuPass'].forEach(function(q){const el=$(q);if(el)el.value=''});render();const made=(PEOPLE||[]).some(function(z){return z.id===nid||String(z.login||'').toLowerCase()===lg});toast(made?n+' created — they can sign in now':n+' was saved but is not in the list yet. Press ↻ Refresh in a moment.');}catch(e){try{applyBoot(await api('boot'))}catch(x){}render();toast('Could not create '+n+': '+((e&&e.message)||'the server refused it'));}finally{const bt=document.querySelector('[data-uadd]');if(bt){bt.disabled=false;bt.textContent='+ Create user'}}})();return}
  if(d.qdel){e.stopPropagation();const t=T_(d.qdel);t.prev=t.folder;t.folder='deleted';hist(t,'n',`Deleted from Rugs Email by ${who(ME).name} — original kept in ${dept(t.dept).box}rugscreation.com`);save();if(openId==t.id)openId=null;undoToast('Deleted · the original stays in the company mailbox',()=>{t.folder=t.prev&&t.prev!=='deleted'?t.prev:'inbox';reopenMail(t);hist(t,'n',`Delete undone by ${who(ME).name}`);save();render()});render();return}
  if(d.restore){e.stopPropagation();const t=T_(d.restore);t.folder=t.prev&&t.prev!=='deleted'?t.prev:'inbox';reopenMail(t);hist(t,'n',`Restored by ${who(ME).name}`);save();toast('Restored to '+t.folder);render();return}
  if(d.dashas!==undefined){dashAs=d.dashas;render();return}
@@ -3534,7 +3534,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-23-4';
+const APP_BUILD='2026-11-23-5';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
