@@ -3534,7 +3534,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-23-5';
+const APP_BUILD='2026-11-23-7';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -5319,6 +5319,59 @@ function admUsrFilter(){
   const h=document.getElementById('usrhint');
   if(h)h.textContent=words.length?(shown?'':'Nobody matches that.'):'Scroll the table sideways for the rest of the columns.';
 }
+/* 23 Nov 2026: Outlook — double-click a mail to open it full screen, Esc to come back */
+function maxOpen(on){
+  const b=document.body;
+  if(on===b.classList.contains('maxread'))return;
+  b.classList.toggle('maxread',!!on);
+  try{renderRead();fitFrames()}catch(e){}
+}
+/* the row is replaced when the first click opens the mail, so count the clicks by conversation */
+let _dcId=null,_dcAt=0;
+function dcRow(e){
+  const el=e.target;
+  if(!el||!el.closest)return null;
+  const row=el.closest('[data-open]');
+  if(!row)return null;
+  if(el.closest('button,a,input,select,textarea,label'))return null;   /* the row's own hover buttons */
+  if(matchMedia('(max-width:760px)').matches)return null;              /* phones open full screen anyway */
+  try{return idv(row.getAttribute('data-open'))||null}catch(x){return null}
+}
+document.addEventListener('click',function(e){
+  const id=dcRow(e);
+  if(!id){_dcId=null;return}
+  const now=Date.now();
+  if(_dcId===id&&now-_dcAt<500){
+    _dcId=null;_dcAt=0;
+    try{const sel=window.getSelection&&window.getSelection();if(sel&&sel.removeAllRanges)sel.removeAllRanges()}catch(x){}
+    maxOpen(true);
+    return;
+  }
+  _dcId=id;_dcAt=now;
+},true);
+document.addEventListener('dblclick',function(e){
+  const el=e.target;
+  if(!el||!el.closest)return;
+  const row=el.closest('[data-open]');
+  if(!row)return;
+  if(el.closest('button,a,input,select,textarea,label'))return;   /* the row's own hover buttons */
+  if(matchMedia('(max-width:760px)').matches)return;               /* phones open full screen anyway */
+  let id;try{id=idv(row.getAttribute('data-open'))}catch(x){return}
+  if(!id)return;
+  e.preventDefault();
+  try{const sel=window.getSelection&&window.getSelection();if(sel&&sel.removeAllRanges)sel.removeAllRanges()}catch(x){}
+  try{if(typeof openId==='undefined'||openId!==id)open(id)}catch(x){}
+  maxOpen(true);
+});
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape'||e.defaultPrevented)return;
+  if(!document.body.classList.contains('maxread'))return;
+  const t=e.target;
+  if(t&&t.closest&&t.closest('input,textarea,select,[contenteditable="true"]'))return;
+  const L=document.getElementById('layer');
+  if(L&&L.innerHTML.trim())return;                                 /* a dialog or compose window is open */
+  maxOpen(false);
+},true);
 let USRTAB=false;/* 23 Nov 2026: true while the Users tab is the one on screen */
 function admUsrReload(force){
   /* never pull the list out from under somebody who is typing in it */
