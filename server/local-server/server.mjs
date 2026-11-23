@@ -30,6 +30,9 @@ function pick(url, p) {
   return "main";
 }
 
+/* 23 Nov 2026: admin changes are written to the log even when they work, so "who changed what,
+   and when" can be answered afterwards. Rare actions only - ordinary mail traffic is not logged. */
+const ADMIN_ACTIONS = new Set(["saveOrg", "setPassword", "setPasswords", "deleteUser", "oldMailSet", "emailGoLive"]);
 const PORT = Number(process.env.PORT || 8787);
 http.createServer(async (rq, rs) => {
   if (rq.method === "GET" && rq.url.startsWith("/health")) {
@@ -38,15 +41,24 @@ http.createServer(async (rq, rs) => {
     try { const j = JSON.parse(process.env.RUGS_SA_JSON || "{}"); out.gmail_key = j.client_email ? "loaded (" + j.client_email + ")" : "MISSING"; } catch { out.gmail_key = "INVALID JSON"; }
     rs.writeHead(200, { "content-type": "application/json" }); return rs.end(JSON.stringify(out, null, 1));
   }
+  let pj = {};
   try {
     const chunks = []; for await (const c of rq) chunks.push(c);
     const body = Buffer.concat(chunks);
     const req = new Request("http://localhost" + rq.url, { method: rq.method, headers: rq.headers, body: ["GET", "HEAD"].includes(rq.method) ? undefined : body });
-    let pj = {}; try { pj = JSON.parse(body.toString("utf8") || "{}"); } catch {}
+    try { pj = JSON.parse(body.toString("utf8") || "{}"); } catch {}
     const res = await H[pick(rq.url, pj)](req);
+    const out = Buffer.from(await res.arrayBuffer());
+    /* 23 Nov 2026: a refused request used to leave NOTHING in server-log.txt, which is why
+       "the user was not created" could not be looked up afterwards. Only the action name, the
+       status and the server's own message are written - never the body, so no password or
+       token is ever logged. Admin changes are logged when they succeed too, because they are
+       rare and it must be possible to see afterwards what was done and when. */
+    if (res.status >= 400) log("REFUSED", pj.action || rq.url, "->", res.status, out.toString("utf8").slice(0, 300));
+    else if (ADMIN_ACTIONS.has(pj.action)) log("admin:", pj.action, "ok");
     rs.writeHead(res.status, { ...Object.fromEntries(res.headers), "access-control-allow-private-network": "true" });   // Chrome: public page -> localhost
-    rs.end(Buffer.from(await res.arrayBuffer()));
-  } catch (e) { rs.writeHead(500, { "content-type": "application/json" }); rs.end(JSON.stringify({ error: String(e.message || e) })); }
+    rs.end(out);
+  } catch (e) { log("CRASHED", pj.action || rq.url, "->", String(e.message || e)); rs.writeHead(500, { "content-type": "application/json" }); rs.end(JSON.stringify({ error: String(e.message || e) })); }
 }).listen(PORT, () => console.log(new Date().toISOString(), "rugs-mail local API on port", PORT));
 
 /* ---- timers that replace the pg_cron jobs ---- */
