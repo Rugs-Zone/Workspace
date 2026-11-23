@@ -24,9 +24,52 @@ async function init() {
 }
 
 const pkCache = new Map();
+/* 23 Nov 2026: an upsert with no onConflict uses the table's primary key, the way PostgREST does.
+   If the database has lost its primary keys (a pg_dump restored without them - exactly what
+   happened on the office server, where saving the Admin page died with "upsert without onConflict
+   is not supported by the shim"), fall back to the key the table is MEANT to have. This is the
+   same key Supabase has, so a save behaves identically with or without the constraint. */
+export const KEYS = {
+  rm_users: ["id"],
+  rm_departments: ["id"],
+  rm_settings: ["key"],
+  rm_mailboxes: ["mailbox"],
+  rm_messages: ["mailbox", "gmail_id"],
+  rm_threads: ["mailbox", "gmail_thread_id"],
+  rm_presence: ["mailbox", "gmail_thread_id", "user_id"],
+  rm_drive_folders: ["mailbox", "key"],
+  rm_sessions: ["token_hash"],
+  rm_login_attempts: ["login"],
+  rm_activity: ["id"],
+  rm_scheduled: ["id"]
+};
 async function pkOf(table) {
-  if (!pkCache.has(table)) { const r = await pool.query("select a.attname from pg_index i join pg_attribute a on a.attrelid=i.indrelid and a.attnum = any(i.indkey) where i.indrelid = ('public.' || quote_ident($1))::regclass and i.indisprimary", [table]); pkCache.set(table, r.rows.map((x) => x.attname)); }
+  if (!pkCache.has(table)) {
+    const r = await pool.query("select a.attname from pg_index i join pg_attribute a on a.attrelid=i.indrelid and a.attnum = any(i.indkey) where i.indrelid = ('public.' || quote_ident($1))::regclass and i.indisprimary", [table]);
+    let cols = r.rows.map((x) => x.attname);
+    if (!cols.length && KEYS[table]) {
+      cols = KEYS[table].slice();
+      console.log(new Date().toISOString(), "sbshim: " + table + " has no primary key in this database - using the built-in key (" + cols.join(", ") + ")");
+    }
+    pkCache.set(table, cols);
+  }
   return pkCache.get(table);
+}
+/* is there a unique index (or primary key) on exactly these columns? "on conflict" needs one. */
+const uqCache = new Map();
+async function hasUnique(table, cols) {
+  const k = table + "|" + cols.slice().sort().join(",");
+  if (!uqCache.has(k)) {
+    const r = await pool.query(
+      "select array_agg(a.attname::text order by a.attname) as cols from pg_index i" +
+      " join lateral unnest(i.indkey) u(att) on true" +
+      " join pg_attribute a on a.attrelid = i.indrelid and a.attnum = u.att" +
+      " where i.indrelid = ('public.' || quote_ident($1))::regclass and i.indisunique and i.indpred is null" +
+      " group by i.indexrelid", [table]);
+    const want = cols.slice().sort().join(",");
+    uqCache.set(k, r.rows.some((x) => (x.cols || []).join(",") === want));
+  }
+  return uqCache.get(k);
 }
 const q = (id) => '"' + String(id).replace(/"/g, '""') + '"';
 // "col", "prefs->ooo", "prefs->>ooo"  ->  SQL expression
@@ -105,6 +148,15 @@ class QB {
       // insert / upsert
       const rows = Array.isArray(this.vals) ? this.vals : [this.vals];
       if (!rows.length) return { data: this.ret ? [] : null, error: null };
+      /* 23 Nov 2026: "on conflict (...)" needs a real unique index on those columns. If this
+         database has lost it, do the same job by hand - update the row, and insert it only if
+         there was nothing to update - so a save works with no change to the database. */
+      if (this.op === "upsert") {
+        const oc0 = (this.uo.onConflict || "").split(",").map((s) => s.trim()).filter(Boolean);
+        const oc1 = oc0.length ? oc0 : await pkOf(this.t);
+        if (!oc1.length) throw new Error("upsert without onConflict is not supported by the shim");
+        if (!(await hasUnique(this.t, oc1))) return await this._upsertByHand(T, rows, oc1);
+      }
       const keys = [...new Set(rows.flatMap((x) => Object.keys(x)))];
       const tuples = rows.map((x) => "(" + keys.map((k) => { params.push(x[k] === undefined ? null : this._val(k, x[k])); return "$" + params.length; }).join(", ") + ")");
       sql = "insert into " + T + " (" + keys.map(q).join(", ") + ") values " + tuples.join(", ");
@@ -119,6 +171,42 @@ class QB {
       r = await pool.query(sql, params);
       return this._fin(this.ret ? r.rows : null);
     } catch (e) { return { data: null, error: { message: e.message, code: e.code, details: e.detail || null } }; }
+  }
+  /* upsert on a table that has no unique index for these columns: update, else insert.
+     One row at a time, so one bad row cannot take the others down with it. */
+  async _upsertByHand(T, rows, oc) {
+    const out = [];
+    for (const row of rows) {
+      const wp = oc.map((k) => this._val(k, row[k]));
+      const where = oc.map((k, i) => q(k) + " = $" + (i + 1)).join(" and ");
+      const rest = Object.keys(row).filter((k) => !oc.includes(k));
+      let hit = false;
+      if (rest.length && !this.uo.ignoreDuplicates) {
+        const p = wp.slice();
+        const sets = rest.map((k) => { p.push(this._val(k, row[k])); return q(k) + " = $" + p.length; });
+        const u = await pool.query("update " + T + " set " + sets.join(", ") + " where " + where + (this.ret ? " returning " + selList(this.cols) : ""), p);
+        if (u.rowCount) { hit = true; if (this.ret && u.rows[0]) out.push(u.rows[0]); }
+      } else {
+        const e = await pool.query("select 1 from " + T + " where " + where + " limit 1", wp);
+        if (e.rowCount) hit = true;
+      }
+      if (hit) continue;
+      const ks = Object.keys(row);
+      const p = []; const vals = ks.map((k) => { p.push(row[k] === undefined ? null : this._val(k, row[k])); return "$" + p.length; });
+      try {
+        const i = await pool.query("insert into " + T + " (" + ks.map(q).join(", ") + ") values (" + vals.join(", ") + ")" + (this.ret ? " returning " + selList(this.cols) : ""), p);
+        if (this.ret && i.rows[0]) out.push(i.rows[0]);
+      } catch (e) {
+        if (e.code !== "23505") throw e;   // somebody inserted the same row a moment ago: update it instead
+        if (rest.length && !this.uo.ignoreDuplicates) {
+          const p2 = wp.slice();
+          const sets = rest.map((k) => { p2.push(this._val(k, row[k])); return q(k) + " = $" + p2.length; });
+          const u2 = await pool.query("update " + T + " set " + sets.join(", ") + " where " + where + (this.ret ? " returning " + selList(this.cols) : ""), p2);
+          if (this.ret && u2.rows[0]) out.push(u2.rows[0]);
+        }
+      }
+    }
+    return this._fin(this.ret ? out : null);
   }
   _fin(rows, count) {
     if (rows === null) return { data: null, error: null };

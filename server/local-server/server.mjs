@@ -81,6 +81,35 @@ else {
   every(600000, sql("rm-sync-recheck", "select public.rm_sync_recheck()"));
 }
 
+/* ---- 23 Nov 2026: put back any primary key this database is missing ----
+   A pg_dump restored without its constraints leaves tables with no primary key, and then an
+   upsert has nothing to match on - that is what killed saving the Admin page on the office
+   server ("upsert without onConflict is not supported by the shim"). The shim now copes on its
+   own, so this is only to put the database right. It is deliberately timid: a key is added ONLY
+   when the columns hold no NULLs and no duplicates, every table is handled on its own, and a
+   failure is logged and skipped. Nothing outside the rm_ tables is touched. */
+async function ensureKeys() {
+  const { KEYS } = await import("./sbshim.mjs");
+  let made = 0, skipped = 0;
+  for (const [t, cols] of Object.entries(KEYS)) {
+    try {
+      const ex = await pool.query("select to_regclass('public.' || $1) is not null as there, (select count(*) from pg_index i where i.indrelid = ('public.' || quote_ident($1))::regclass and i.indisprimary) as pk", [t]);
+      if (!ex.rows[0].there) continue;                 // table not in this database
+      if (Number(ex.rows[0].pk) > 0) continue;         // already has one
+      const list = cols.map((c) => '"' + c + '"').join(", ");
+      const nulls = await pool.query(`select count(*)::int n from public."${t}" where ` + cols.map((c) => `"${c}" is null`).join(" or "));
+      if (nulls.rows[0].n) { skipped++; log("key check:", t, "- NOT added,", nulls.rows[0].n, "row(s) have an empty", cols.join("/")); continue; }
+      const dup = await pool.query(`select count(*)::int n from (select 1 from public."${t}" group by ${list} having count(*) > 1) d`);
+      if (dup.rows[0].n) { skipped++; log("key check:", t, "- NOT added,", dup.rows[0].n, "duplicate value(s) of", cols.join("+")); continue; }
+      const t0 = Date.now();
+      await pool.query(`alter table public."${t}" add primary key (${list})`);
+      made++; log("key check:", t, "- primary key (" + cols.join(", ") + ") added in", Date.now() - t0, "ms");
+    } catch (e) { skipped++; log("key check:", t, "- could not add the key:", e.message); }
+  }
+  log("key check finished:", made, "added,", skipped, "left alone");
+}
+setTimeout(() => ensureKeys().catch((e) => log("key check failed:", e.message)), 5000);
+
 /* ---- 23 Nov 2026: the server keeps itself up to date (no more copying by hand) ---- */
 const UPD_BASE = (process.env.UPDATE_BASE || "https://raw.githubusercontent.com/Rugs-Zone/Workspace/main/server/local-server/").replace(/[/]+$/, "") + "/";
 const UPD_FILES = ["server.mjs", "sbshim.mjs", "rugs-mail.bundle.mjs", "rugs-mail-list.bundle.mjs", "rugs-mail-task.bundle.mjs", "rugs-mail-switch.bundle.mjs", "rugs-mail-cal.bundle.mjs", "rugs-mail-push.bundle.mjs"];

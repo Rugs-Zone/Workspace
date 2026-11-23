@@ -6,6 +6,65 @@ pg.types.setTypeParser(1184, (v) => new Date(v).toISOString());
 pg.types.setTypeParser(1114, (v) => (/* @__PURE__ */ new Date(v + "Z")).toISOString());
 pg.types.setTypeParser(1082, (v) => v);
 var pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
+
+// 23 Nov 2026: PostgREST-style upsert support (see patch-shim-upsert.mjs)
+var RM_KEYS = { rm_users: ["id"], rm_departments: ["id"], rm_settings: ["key"], rm_mailboxes: ["mailbox"], rm_messages: ["mailbox", "gmail_id"], rm_threads: ["mailbox", "gmail_thread_id"], rm_presence: ["mailbox", "gmail_thread_id", "user_id"], rm_drive_folders: ["mailbox", "key"], rm_sessions: ["token_hash"], rm_login_attempts: ["login"], rm_activity: ["id"], rm_scheduled: ["id"] };
+var rmPkCache = /* @__PURE__ */ new Map();
+async function rmPkOf(table) {
+  if (!rmPkCache.has(table)) {
+    const r = await pool.query("select a.attname from pg_index i join pg_attribute a on a.attrelid=i.indrelid and a.attnum = any(i.indkey) where i.indrelid = ('public.' || quote_ident($1))::regclass and i.indisprimary", [table]);
+    let cols = r.rows.map((x) => x.attname);
+    if (!cols.length && RM_KEYS[table]) { cols = RM_KEYS[table].slice(); console.log(new Date().toISOString(), "shim: " + table + " has no primary key here - using the built-in key (" + cols.join(", ") + ")"); }
+    rmPkCache.set(table, cols);
+  }
+  return rmPkCache.get(table);
+}
+var rmUqCache = /* @__PURE__ */ new Map();
+async function rmHasUnique(table, cols) {
+  const k = table + "|" + cols.slice().sort().join(",");
+  if (!rmUqCache.has(k)) {
+    const r = await pool.query("select array_agg(a.attname::text order by a.attname) as cols from pg_index i join lateral unnest(i.indkey) u(att) on true join pg_attribute a on a.attrelid = i.indrelid and a.attnum = u.att where i.indrelid = ('public.' || quote_ident($1))::regclass and i.indisunique and i.indpred is null group by i.indexrelid", [table]);
+    const want = cols.slice().sort().join(",");
+    rmUqCache.set(k, r.rows.some((x) => (x.cols || []).join(",") === want));
+  }
+  return rmUqCache.get(k);
+}
+// no unique index for these columns: update the row, and insert it only if there was none
+async function rmUpsertByHand(self, T, rows, oc) {
+  const out = [];
+  for (const row of rows) {
+    const wp = oc.map((k) => self._val(k, row[k]));
+    const where = oc.map((k, i) => q(k) + " = $" + (i + 1)).join(" and ");
+    const rest = Object.keys(row).filter((k) => !oc.includes(k));
+    let hit = false;
+    if (rest.length && !self.uo.ignoreDuplicates) {
+      const p = wp.slice();
+      const sets = rest.map((k) => { p.push(self._val(k, row[k])); return q(k) + " = $" + p.length; });
+      const u = await pool.query("update " + T + " set " + sets.join(", ") + " where " + where + (self.ret ? " returning " + selList(self.cols) : ""), p);
+      if (u.rowCount) { hit = true; if (self.ret && u.rows[0]) out.push(u.rows[0]); }
+    } else {
+      const e = await pool.query("select 1 from " + T + " where " + where + " limit 1", wp);
+      if (e.rowCount) hit = true;
+    }
+    if (hit) continue;
+    const ks = Object.keys(row);
+    const p = []; const vals = ks.map((k) => { p.push(row[k] === void 0 ? null : self._val(k, row[k])); return "$" + p.length; });
+    try {
+      const i = await pool.query("insert into " + T + " (" + ks.map(q).join(", ") + ") values (" + vals.join(", ") + ")" + (self.ret ? " returning " + selList(self.cols) : ""), p);
+      if (self.ret && i.rows[0]) out.push(i.rows[0]);
+    } catch (e) {
+      if (e.code !== "23505") throw e;
+      if (rest.length && !self.uo.ignoreDuplicates) {
+        const p2 = wp.slice();
+        const sets = rest.map((k) => { p2.push(self._val(k, row[k])); return q(k) + " = $" + p2.length; });
+        const u2 = await pool.query("update " + T + " set " + sets.join(", ") + " where " + where + (self.ret ? " returning " + selList(self.cols) : ""), p2);
+        if (self.ret && u2.rows[0]) out.push(u2.rows[0]);
+      }
+    }
+  }
+  return self._fin(self.ret ? out : null);
+}
+
 var jsonCols = null;
 var fnInfo = null;
 async function init() {
@@ -209,8 +268,10 @@ var QB = class {
       }).join(", ") + ")");
       sql = "insert into " + T + " (" + keys.map(q).join(", ") + ") values " + tuples.join(", ");
       if (this.op === "upsert") {
-        const oc = (this.uo.onConflict || "").split(",").map((s) => s.trim()).filter(Boolean);
+        let oc = (this.uo.onConflict || "").split(",").map((s) => s.trim()).filter(Boolean);
+        if (!oc.length) oc = await rmPkOf(this.t);
         if (!oc.length) throw new Error("upsert without onConflict is not supported by the shim");
+        if (!(await rmHasUnique(this.t, oc))) return await rmUpsertByHand(this, T, rows, oc);
         const upd = keys.filter((k) => !oc.includes(k));
         sql += " on conflict (" + oc.map(q).join(", ") + ")" + (this.uo.ignoreDuplicates || !upd.length ? " do nothing" : " do update set " + upd.map((k) => q(k) + " = excluded." + q(k)).join(", "));
       }
