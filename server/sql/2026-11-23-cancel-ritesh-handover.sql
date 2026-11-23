@@ -1,0 +1,59 @@
+-- 23 Nov 2026 — cancelled on the user's instruction ("cancel all ritesh work").
+--
+-- Found waiting in the database (NOT created in this session): cron job 27
+-- `ritesh-handover-1840`, schedule "10 13 23 11 *" = 23 Nov 2026 18:40 IST, which ran
+-- public.rz_ritesh_handover() and then unscheduled itself.
+--
+-- By the time it was found, Ritesh had already been removed by hand everywhere
+-- (Workspace record removed + 9 sessions revoked, Rugs Email user deleted, Courier
+-- login switched off), so the only things the job would still have done were:
+--   * give PRIYANSHU TOMAR (doc_id priyanshu_tomar_marketing) super_admin plus the
+--     UNION of Ritesh's visible_modules / visible_sections / managed_modules / module_roles
+--   * set perm.buddy = 1 on Rugs Email user 'adm'
+-- The user chose to cancel, so Priyanshu's access stays exactly as it was.
+--
+-- WHAT WAS RUN (in this order):
+--   select cron.unschedule('ritesh-handover-1840');
+--   drop function public.rz_ritesh_handover();
+--
+-- The function was dropped as well because it is SECURITY DEFINER and would still have
+-- handed out those rights to anyone who called it. Its exact body is kept below, so the
+-- handover can be put back if it is ever wanted again.
+--
+-- ---------------------------------------------------------------------------
+-- ORIGINAL DEFINITION (for reference only — do NOT run unless you want the handover)
+-- ---------------------------------------------------------------------------
+-- CREATE OR REPLACE FUNCTION public.rz_ritesh_handover()
+--  RETURNS text
+--  LANGUAGE plpgsql
+--  SECURITY DEFINER
+--  SET search_path TO 'public'
+-- AS $function$
+-- declare r deleg_doers; n_thr int;
+-- begin
+--   select * into r from deleg_doers where doc_id='EMPAZHFHA';
+--   -- 1. Workspace: give Priyanshu everything Ritesh had
+--   update deleg_doers p set
+--     role = 'super_admin', is_admin = true, can_assign = true, can_view_master = true, can_view_audit = true,
+--     visible_modules = (select jsonb_agg(distinct m) from (select jsonb_array_elements(coalesce(p.visible_modules,'[]'::jsonb)) m union select jsonb_array_elements(coalesce(r.visible_modules,'[]'::jsonb))) x),
+--     visible_sections = (select jsonb_agg(distinct m) from (select jsonb_array_elements(coalesce(p.visible_sections,'[]'::jsonb)) m union select jsonb_array_elements(coalesce(r.visible_sections,'[]'::jsonb))) x),
+--     managed_modules = (select coalesce(jsonb_agg(distinct m),'[]'::jsonb) from (select jsonb_array_elements(coalesce(p.managed_modules,'[]'::jsonb)) m union select jsonb_array_elements(coalesce(r.managed_modules,'[]'::jsonb))) x),
+--     module_roles = coalesce(r.module_roles,'{}'::jsonb) || coalesce(p.module_roles,'{}'::jsonb)
+--   where p.doc_id='priyanshu_tomar_marketing';
+--   -- 2. Workspace: take everything from Ritesh and block his login
+--   update deleg_doers set role='employee', is_admin=false, can_assign=false, can_view_master=false, can_view_audit=false,
+--     visible_modules='[]'::jsonb, visible_sections='[]'::jsonb, managed_modules='[]'::jsonb, module_roles='{}'::jsonb,
+--     pass = 'locked-' || md5(random()::text || clock_timestamp()::text) || md5(random()::text)
+--   where doc_id='EMPAZHFHA';
+--   delete from deleg_sessions where doc_id='EMPAZHFHA';
+--   -- 3. Rugs Email: his mail to Priyanshu, Ritesh switched off
+--   update rm_threads set owner_id='adm', updated_at=now() where owner_id='umvkv0zd018';
+--   get diagnostics n_thr = row_count;
+--   update rm_users set perm = perm || '{"buddy":1}'::jsonb where id='adm';
+--   update rm_users set active=false, role='Executive', perm='{}'::jsonb where id='umvkv0zd018';
+--   delete from rm_sessions where user_id='umvkv0zd018';
+--   -- 4. Courier: switch his login off
+--   delete from cd_sessions where uid in (select id from cd_users where doc_id='EMPAZHFHA');
+--   update cd_users set active=false where doc_id='EMPAZHFHA';
+--   return 'done, mail threads moved: '||n_thr;
+-- end $function$;
