@@ -313,6 +313,17 @@ body.dragging iframe{pointer-events:none}
 .atable input[type=text],.atable input[type=email],.atable select{border:1px solid var(--line);background:var(--pane2);border-radius:8px;padding:5px 8px;min-width:120px}
 .atable input[type=color]{width:34px;height:28px;border:0;background:none;padding:0}
 .atable tr.off td{opacity:.55}
+.usrbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-2px 0 2px}
+.usrbar input{flex:1;min-width:220px;max-width:430px;border:1px solid var(--line);background:var(--pane2);border-radius:10px;padding:8px 12px;font:inherit;color:inherit}
+.usrbar .sub{font-size:12px;color:var(--muted)}
+.atable{max-width:100%;scrollbar-width:thin}
+.atable::-webkit-scrollbar{height:10px}
+.atable::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
+.atable td:first-child{position:sticky;left:0;z-index:1;background:var(--pane)}
+.atable th:first-child{position:sticky;left:0;z-index:3;background:var(--pane2)}
+.atable input[type=text],.atable input[type=email],.atable select{min-width:0}
+.atable .uName{width:148px}.atable .uLogin{width:186px}.atable .uDept{width:150px}.atable .uRole{width:130px}
+.atable .uDom{min-width:0!important;width:130px}.atable .uAli{min-width:0!important;width:160px}
 .nm2{display:inline-flex;gap:6px;align-items:center}
 .dim2{display:block;color:var(--muted);font-size:11px}
 .mbin{display:inline-flex;align-items:center;gap:2px}.mbin em{font-style:normal;color:var(--muted);font-size:12px}
@@ -1018,6 +1029,7 @@ function pageDash(){const ME0=ME,boss=can('dashboards',ME0);if(!boss||(dashAs&&!
 const genPw=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';let o='';const r=new Uint32Array(10);(crypto.getRandomValues?crypto.getRandomValues(r):r.forEach((_,i)=>r[i]=Math.random()*1e9));r.forEach(x=>o+=a[x%a.length]);return o.slice(0,4)+'@'+o.slice(4,8)};
 const COLORS=['#ff5001','#2f6fe0','#7a3fd1','#1f8a4c','#b86e00','#e0457b','#0f766e','#c026d3'];
 let adminTab='overview';
+let USRQ='';/* 23 Nov 2026: what is typed in the Admin -> Users search box */
 const ROLES=['Merchandiser','CRM','Manager','Executive','Admin'];
 const mailOf=d=>d.box+DOMAIN;
 function pageAdmin(){if(who(ME).role!=='Admin'){const ad=PEOPLE.filter(p=>p.role==='Admin'&&p.active!==false).map(p=>p.name);
@@ -1038,7 +1050,7 @@ function pageAdmin(){if(who(ME).role!=='Admin'){const ad=PEOPLE.filter(p=>p.role
   </tbody></table></div>
   <div class="setform"><input type="text" id="ndName" placeholder="New department, e.g. Shipping"><span class="mbin"><input type="text" id="ndBox" placeholder="mailbox, e.g. shipping"><em>@${DOMAIN}</em></span><button class="btn pri" data-dadd>+ Create department</button></div>
   <p class="lead" style="margin:0;font-size:12.5px">The mailbox must be a real Google Workspace user (not a group) for that department. Team Alpha is fixed to teamalpha@${DOMAIN}.</p></section>`}
- if(adminTab==='users'){body=`<section class="box"><h3>Users <span>${PEOPLE.length}</span></h3><div class="atable"><table><thead><tr><th>Person</th><th>User ID (login)</th><th>Department</th><th>Role</th><th title="Can assign mail">Assign</th><th title="Can transfer to other departments">Transfer</th><th title="Can delete inside the app (never from Google)">Delete</th><th title="Can open other people's dashboards">Dashboards</th><th title="Buddy: gets the team's new mail automatically when the CRM and the TL are both on leave">Buddy</th><th title="New mail from these buyer domains is assigned to this person automatically, e.g. ikea.com, kmart.com.au">Auto-assign domains</th><th title="Extra addresses that deliver into the team mailbox for this person, e.g. merchandiser4@rugscreation.com. Their own user ID always counts.">Aliases</th><th>Status</th><th></th></tr></thead><tbody>
+ if(adminTab==='users'){body=`<section class="box"><h3>Users <span id="usrn">${PEOPLE.length}</span></h3><div class="usrbar"><input type="search" id="usrq" value="${esc(USRQ)}" placeholder="Search a person — name, user ID, team or role" aria-label="Search users"><span class="sub" id="usrhint"></span></div><div class="atable"><table><thead><tr><th>Person</th><th>User ID (login)</th><th>Department</th><th>Role</th><th title="Can assign mail">Assign</th><th title="Can transfer to other departments">Transfer</th><th title="Can delete inside the app (never from Google)">Delete</th><th title="Can open other people's dashboards">Dashboards</th><th title="Buddy: gets the team's new mail automatically when the CRM and the TL are both on leave">Buddy</th><th title="New mail from these buyer domains is assigned to this person automatically, e.g. ikea.com, kmart.com.au">Auto-assign domains</th><th title="Extra addresses that deliver into the team mailbox for this person, e.g. merchandiser4@rugscreation.com. Their own user ID always counts.">Aliases</th><th>Status</th><th></th></tr></thead><tbody>
   ${PEOPLE.map(p=>`<tr data-urow="${p.id}" class="${p.active?'':'off'}"><td><span class="nm2">${av(p.name,'sm')}<input type="text" class="uName" value="${esc(p.name)}" aria-label="Name for ${esc(p.name)}"></span></td><td><input type="email" class="uLogin" value="${esc(p.login)}" aria-label="Login"></td><td><select class="uDept" aria-label="Department for ${esc(p.name)}"><option value="" ${p.dept?'':'selected'}>— No team yet —</option>${DEPTS.map(d=>`<option value="${d.id}" ${p.dept===d.id?'selected':''}>${esc(d.name)}</option>`).join('')}</select></td><td><select class="uRole" aria-label="Role for ${esc(p.name)}">${ROLES.map(r=>`<option ${p.role===r?'selected':''}>${r}</option>`).join('')}</select></td>
    ${['assign','transfer','delete','dashboards','buddy'].map(k=>`<td class="c"><input type="checkbox" class="uP" data-k="${k}" ${p.role==='Admin'||p.perm?.[k]?'checked':''} ${p.role==='Admin'?'disabled':''} aria-label="${k}"></td>`).join('')}<td><input type="text" class="uDom" value="${esc(p.perm?.domains||'')}" placeholder="e.g. ikea.com" style="min-width:150px" aria-label="Auto-assign domains for ${esc(p.name)}"></td><td><input type="text" class="uAli" value="${esc(p.perm?.aliases||'')}" placeholder="e.g. merchandiser4@${DOMAIN}" style="min-width:190px" aria-label="Aliases for ${esc(p.name)}"></td>
    <td><span class="tag ${p.active?'t-done':'t-late'}">${p.active?'Active':'Off'}</span>${p.hasPw===false?' <span class="tag t-new">No password</span>':''}</td>
@@ -3515,7 +3527,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-21-3';
+const APP_BUILD='2026-11-23-1';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -5275,4 +5287,42 @@ const _ivSent=inView;inView=function(t){
 
   window.__olpackApi = { searchDlg, qsDlg, qsRun, qsList, immersive, readAloud, zipAll, attsOf, unsubLink, notJunk, preSendWarnings, favToggle, favList, manageFoldersDlg };
 })();
-/* __olpack:end */</script>
+/* __olpack:end */
+/* 23 Nov 2026 — Admin -> Users & passwords: live search over the user list.
+   The rows are drawn as before; this only hides the ones that do not match,
+   so nothing about saving, passwords or permissions changes. */
+function admUsrFilter(){
+  const box=document.getElementById('usrq');if(!box)return;
+  const words=String(USRQ||'').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  let shown=0,total=0;
+  document.querySelectorAll('tr[data-urow]').forEach(function(tr){
+    total++;
+    const val=function(sel){const e=tr.querySelector(sel);return e?String(e.value||''):''};
+    const ds=tr.querySelector('.uDept');
+    const dept=(ds&&ds.options[ds.selectedIndex])?ds.options[ds.selectedIndex].text:'';
+    const hay=(val('.uName')+' '+val('.uLogin')+' '+dept+' '+val('.uRole')+' '+
+      (tr.classList.contains('off')?'off inactive deactivated':'active')+' '+
+      val('.uDom')+' '+val('.uAli')).toLowerCase();
+    const ok=!words.length||words.every(function(w){return hay.indexOf(w)>=0});
+    tr.style.display=ok?'':'none';
+    if(ok)shown++;
+  });
+  const n=document.getElementById('usrn');
+  if(n)n.textContent=words.length?(shown+' of '+total):String(total);
+  const h=document.getElementById('usrhint');
+  if(h)h.textContent=words.length?(shown?'':'Nobody matches that.'):'Scroll the table sideways for the rest of the columns.';
+}
+const _rndUsr=render;
+render=function(){
+  const a=document.activeElement;
+  const had=!!(a&&a.id==='usrq');
+  const pos=had?a.selectionStart:null;
+  _rndUsr.apply(this,arguments);
+  const box=document.getElementById('usrq');
+  if(!box)return;
+  box.value=USRQ;
+  box.oninput=function(){USRQ=box.value;admUsrFilter()};
+  admUsrFilter();
+  if(had){try{box.focus();if(pos!=null)box.setSelectionRange(pos,pos)}catch(e){}}
+};
+</script>
