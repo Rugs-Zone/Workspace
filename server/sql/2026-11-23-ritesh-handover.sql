@@ -1,0 +1,11 @@
+-- 23 Nov 2026: at 18:40 IST (13:10 UTC) take every right from Ritesh (EMPAZHFHA / rm_users umvkv0zd018)
+-- and give them to Priyanshu Tomar (priyanshu_tomar_marketing / rm_users adm).
+-- Function public.rz_ritesh_handover() is live in Supabase; run once by cron job 'ritesh-handover-1840',
+-- which removes itself afterwards. To cancel before 18:40: select cron.unschedule('ritesh-handover-1840');
+--
+-- What it does:
+-- Workspace (deleg_doers): Priyanshu -> role super_admin, admin flags on, modules/sections/managed modules = his + Ritesh's.
+--   Ritesh -> role employee, all flags off, no modules/sections, password replaced by an unknown value, sessions deleted.
+-- Rugs Email (rm_users): Ritesh's conversations -> Priyanshu; Priyanshu gets perm.buddy; Ritesh inactive, no perms, sessions deleted.
+-- Courier (cd_users): Ritesh inactive, sessions deleted.
+-- His account rows are kept (not deleted) so his name still shows in old history.
