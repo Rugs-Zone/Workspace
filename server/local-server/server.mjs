@@ -101,14 +101,24 @@ async function ensureKeys() {
       if (nulls.rows[0].n) { skipped++; log("key check:", t, "- NOT added,", nulls.rows[0].n, "row(s) have an empty", cols.join("/")); continue; }
       const dup = await pool.query(`select count(*)::int n from (select 1 from public."${t}" group by ${list} having count(*) > 1) d`);
       if (dup.rows[0].n) { skipped++; log("key check:", t, "- NOT added,", dup.rows[0].n, "duplicate value(s) of", cols.join("+")); continue; }
+      /* Adding a primary key locks the table while the index is built. On a big table that
+         would stop the whole mailbox answering, so a large table is left alone unless somebody
+         asks for it, and we never wait more than 3 seconds for the lock. */
+      const big = (await pool.query(`select count(*)::int n from (select 1 from public."${t}" limit 60000) z`)).rows[0].n;
+      if (big >= 50000 && process.env.KEYREPAIR_BIG !== "1") { skipped++; log("key check:", t, "- NOT added, too big to lock during the day (set KEYREPAIR_BIG=1 to allow it)"); continue; }
       const t0 = Date.now();
-      await pool.query(`alter table public."${t}" add primary key (${list})`);
-      made++; log("key check:", t, "- primary key (" + cols.join(", ") + ") added in", Date.now() - t0, "ms");
+      const c = await pool.connect();
+      try {
+        await c.query("set lock_timeout = '3s'");
+        await c.query(`alter table public."${t}" add primary key (${list})`);
+        made++; log("key check:", t, "- primary key (" + cols.join(", ") + ") added in", Date.now() - t0, "ms");
+      } finally { c.release(); }
     } catch (e) { skipped++; log("key check:", t, "- could not add the key:", e.message); }
   }
   log("key check finished:", made, "added,", skipped, "left alone");
 }
-setTimeout(() => ensureKeys().catch((e) => log("key check failed:", e.message)), 5000);
+if (process.env.KEYREPAIR_OFF === "1") log("key check is OFF (KEYREPAIR_OFF=1)");
+else setTimeout(() => ensureKeys().catch((e) => log("key check failed:", e.message)), 5000);
 
 /* ---- 23 Nov 2026: the server keeps itself up to date (no more copying by hand) ---- */
 const UPD_BASE = (process.env.UPDATE_BASE || "https://raw.githubusercontent.com/Rugs-Zone/Workspace/main/server/local-server/").replace(/[/]+$/, "") + "/";
