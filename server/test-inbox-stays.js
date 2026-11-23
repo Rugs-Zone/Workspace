@@ -1,8 +1,9 @@
-/* Checks the folder rule in the real built app:
- *   Inbox = anything somebody sent us, whether we have answered it or not
- *   Sent  = only what we sent that nobody has answered yet
- * and that an answered conversation still counts in the Inbox numbers and
- * still shows for whoever owns it.
+/* Checks the folder rule in the real built app, using the user's own example:
+ *   11:00 buyer writes  -> Inbox
+ *   11:01 we reply      -> our reply is in Sent, the conversation STAYS in the Inbox
+ *   11:03 buyer answers -> the Inbox row moves to 11:03, trail 11:03 / 11:01 / 11:00
+ * so a conversation can be in both folders, and a Sent row shows OUR message
+ * (To: …, our time, our words), not the buyer's newest one.
  *
  *   node server/test-inbox-stays.js
  */
@@ -49,14 +50,25 @@ const ok = (name, pass, extra) => checks.push({ name, pass, extra });
     out.buyerInInbox = look(buyerOnly, 'inbox');
     out.buyerInSent = look(buyerOnly, 'sent');
     out.answeredStillInInbox = look(weReplied, 'inbox');
-    out.answeredNotInSent = look(weReplied, 'sent');
+    out.sentNotMineHidden = look(weReplied, 'sent');   // Nikhil did not send it (17 Nov rule)
     // viewed as the manager: Team Designing is manager-first, so an executive
     // is not shown mail nobody owns, which has nothing to do with the folder rule
     const lookM = (t, folder) => { view = { type: 'box', dept: 'dsg', folder }; ME = 'mala'; return !!inView(t); };
+    out.answeredAlsoInSent = lookM(weReplied, 'sent');  // Mala sent it, so she sees it in Sent
     out.oursInSent = lookM(weSentOnly, 'sent');
     out.oursNotInInbox = !lookM(weSentOnly, 'inbox');
-    out.answeredLeavesSent = !lookM(sentThenAnswered, 'sent');
+    out.answeredStaysInSent = lookM(sentThenAnswered, 'sent');
     out.answeredEntersInbox = lookM(sentThenAnswered, 'inbox');
+
+    // the Sent ROW must be about our own mail
+    view = { type: 'box', dept: 'dsg', folder: 'sent' }; ME = 'mala';
+    const html = rowHTML({ ...weReplied, pre: 'hello', email: 'buyer@ikea.com', sub: 'Loom file', unread: false, hist: [] });
+    out.sentRowToLine = /To: *buyer@ikea.com/.test(html);
+    out.sentRowOurWords = /reply/.test(html) && !/>hello</.test(html);
+    out.sentRowOurTime = (typeof lastOut === 'function') && lastOut(weReplied) === ourMsg.at;
+    view = { type: 'box', dept: 'dsg', folder: 'inbox' };
+    const ih = rowHTML({ ...weReplied, pre: 'hello', email: 'buyer@ikea.com', sub: 'Loom file', unread: false, hist: [] });
+    out.inboxRowUnchanged = /hello/.test(ih) && !/To: *buyer/.test(ih);
 
     // the five Inbox counts follow the same rule
     out.countsAnswered = !!isInboxMail(weReplied);
@@ -82,10 +94,11 @@ const ok = (name, pass, extra) => checks.push({ name, pass, extra });
   ok('a buyer\u2019s mail is in the Inbox', r.buyerInInbox);
   ok('a buyer\u2019s mail is not in Sent', !r.buyerInSent);
   ok('after we reply it STAYS in the Inbox', r.answeredStillInInbox);
-  ok('after we reply it does not jump to Sent', r.answeredNotInSent === false);
+  ok('after we reply our reply also shows in Sent', r.answeredAlsoInSent);
+  ok('a colleague who did not send it does not see it in Sent', r.sentNotMineHidden === false);
   ok('a mail we sent with no answer is in Sent', r.oursInSent);
   ok('a mail we sent with no answer is not in the Inbox', r.oursNotInInbox);
-  ok('once answered it leaves Sent', r.answeredLeavesSent);
+  ok('a conversation we wrote in stays in Sent after they answer', r.answeredStaysInSent);
   ok('once answered it is in the Inbox', r.answeredEntersInbox);
   ok('an answered mail still counts in the Inbox numbers', r.countsAnswered);
   ok('a mail we only sent does not count as Inbox mail', r.countsOursOnly);
@@ -93,6 +106,10 @@ const ok = (name, pass, extra) => checks.push({ name, pass, extra });
   ok('the owner sees it after it is handed to him', r.ownerSeesIt);
   ok('a colleague who does not own it does not see it', r.otherDoesNotSeeIt);
   ok('the manager still sees it', r.managerSeesIt);
+  ok('a Sent row is addressed "To: the buyer"', r.sentRowToLine);
+  ok('a Sent row previews OUR words, not the buyer’s', r.sentRowOurWords);
+  ok('a Sent row is timed by our own mail', r.sentRowOurTime);
+  ok('the Inbox row is unchanged', r.inboxRowUnchanged);
   ok('no page errors', errors.length === 0, errors.join(' | '));
 
   await browser.close();

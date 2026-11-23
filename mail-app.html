@@ -745,7 +745,7 @@ function inView(t){if(view.type==='crit')return t.folder!=='deleted'&&inScope(t)
   if(view.id==='late')return st(t)==='late';
   if(view.id==='today')return st(t)==='today';
   if(view.id==='flag')return t.flag}
- if(view.type==='box'){if(t.dept!==view.dept)return false;if(view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||m.ours)&&!hasRecv(t);   /* 23 Nov 2026: Sent = we wrote and nobody has answered yet */if(view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));   /* 23 Nov 2026: it stays in the Inbox after we reply */return t.folder===view.folder}
+ if(view.type==='box'){if(t.dept!==view.dept)return false;if(view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||m.ours);   /* 23 Nov 2026: Sent = anything we wrote in, answered or not */if(view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));   /* 23 Nov 2026: it stays in the Inbox after we reply */return t.folder===view.folder}
  if(view.type==='person')return t.owner===view.id&&t.folder==='inbox';
  if(view.type==='folder')return t.folder===view.folder;
  return false}
@@ -757,6 +757,12 @@ function listRows(){const q=$('#q').value.trim().toLowerCase();
  if(q)r=S.threads.filter(t=>[t.from,t.email,t.sub,t.pre,t.promise,who(t.owner)?.name].join(' ').toLowerCase().includes(q));
  const isSent=view.type==='box'&&view.folder==='sent';return r.sort((a,b)=>isSent?lastOut(b)-lastOut(a):b.last-a.last)}
 const lastOut=t=>Math.max(0,...t.msgs.filter(m=>m.by||m.ours).map(m=>m.at));
+/* 23 Nov 2026: in Sent, the row is about what WE wrote - the last mail that went out
+   from this mailbox - so the preview is our words, matching the "To: …" and the time. */
+const outMsg=t=>{const o=(t&&t.msgs||[]).filter(m=>m.by||m.ours);return o.length?o[o.length-1]:null};
+function rowPre(t){if(!(view.type==='box'&&view.folder==='sent'))return t.pre;
+ const m=outMsg(t);if(!m)return t.pre;
+ return String(m.body||'').replace(/\s+/g,' ').trim().slice(0,160)||t.pre}
 
 /* ---------- render ---------- */
 function render(){applyLayout();renderTop();renderRail();renderFolders();
@@ -826,7 +832,7 @@ function rowName(t){const ms=(t&&t.msgs)||[],last=ms[ms.length-1];
 function rowHTML(t){const s=st(t),[l,c]=TAG[s],o=who(t.owner),priv=isPrivate(t),x=t.hist.find(h=>h.t==='x');
  return `<div draggable="true" class="m ${t.unread?'unread':''} ${openId===t.id?'open':''}" data-open="${t.id}" role="button" tabindex="0">
  <span>${av(rowName(t))}</span><div class="body"><div class="r1"><span class="who">${view.type==='box'&&view.folder==='sent'?'To: '+esc(t.email):esc(rowName(t))}</span><span class="time" title="${tLong(t.last)}">${tShort(view.type==='box'&&view.folder==='sent'?lastOut(t):t.last)}</span></div>
- <div class="sub">${priv?ico('lock')+' Private — login code':esc(cleanSub(t.sub))}</div><div class="pre">${priv?'Hidden from the team. Only the account owner can open it.':esc(t.pre)}</div>
+ <div class="sub">${priv?ico('lock')+' Private — login code':esc(cleanSub(t.sub))}</div><div class="pre">${priv?'Hidden from the team. Only the account owner can open it.':esc(rowPre(t))}</div>
  <div class="tags">${critChips(t)}${viaTags(t)}${lbHTML(t)}${!t.owner&&s!=='done'&&isGeneric(t)?'<span class="tag t-done">Generic</span>':''}${t.promise&&s!=='done'?`<span class="tag ${s==='late'?'t-late':'t-prom'}">${s==='late'?ico('clock')+' ':''}${dueTxt(t)}</span>`:`<span class="tag ${c}">${l}</span>`}${x?`<span class="tag t-xfer" title="${!t.owner&&s!=='done'?'Owner to be chosen by '+esc(decTxt(t.dept)):''}">${ico('fwd')} Transferred${!t.owner&&s!=='done'?' · '+esc(deciders(t.dept).map(p=>p.name.split(' ')[0]).join(', ')||'admin')+' to assign':''}</span>`:''}${o?`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted)">${av(o.name,'sm')}${esc(o.name.split(' ')[0])}</span>`:''}${t.att?'<span class="tag t-asg" title="Has attachment">'+ico('clip','Has attachment')+'</span>':''}${t.flag?'<span class="tag t-flag" title="Flagged">'+ico('flag','Flagged')+'</span>':''}</div></div>
  <div class="qa"><button data-qdone="${t.id}" title="Mark done" aria-label="Mark done">${ico('check')}</button><button data-qflag="${t.id}" title="Flag" aria-label="Flag">${ico('flag')}</button><button data-xfer="${t.id}" title="Transfer to department" aria-label="Transfer">${ico('fwd')}</button><button data-qarch="${t.id}" title="Archive" aria-label="Archive">${ico('archive')}</button>${t.folder==='deleted'?`<button data-restore="${t.id}" title="Restore" aria-label="Restore">↺</button>`:`<button data-qdel="${t.id}" title="Delete from Rugs Email (original stays in the company mailbox)" aria-label="Delete">${ico('trash')}</button>`}</div></div>`}
 /* ---------- incoming mail exactly as received (HTML, logos, banners, disclaimers) ---------- */
@@ -3528,7 +3534,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-23-3';
+const APP_BUILD='2026-11-23-4';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3899,7 +3905,7 @@ const _ivC=inView;inView=function(t){
  if(view.type==='box'&&t.dept===view.dept&&view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));   /* 23 Nov 2026: anything somebody sent us stays in the Inbox, answered or not */
  /* 20 Nov 2026: Sent = what we sent and nobody has answered yet. The moment a mail comes in, the
     conversation belongs to the Inbox (it is the same conversation, with our mail inside it). */
- if(view.type==='box'&&t.dept===view.dept&&view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||(m.ours&&!colleagueIn(m,t)))&&!hasRecv(t);   /* 23 Nov 2026: Sent = waiting for an answer */
+ if(view.type==='box'&&t.dept===view.dept&&view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||(m.ours&&!colleagueIn(m,t)));   /* 23 Nov 2026: Sent = anything we wrote in; the Inbox keeps its own copy of the conversation */
  if(view.type==='all')return inScope(t)&&t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));   /* 23 Nov 2026: same rule for All inboxes */
  return _ivC(t)};
 // a conversation with only colleague mail is shown under the colleague's name (not "(unknown)")
