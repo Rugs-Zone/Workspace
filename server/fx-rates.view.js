@@ -97,6 +97,13 @@ function fxCss() {
     ".fx-master{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}",
     ".fx-master input{width:auto;flex-shrink:0}",
     ".fx-soon{opacity:.72}",
+    /* the rate riding in the bulletin bar at the top of every page */
+    ".ticker-item.tk-fx{cursor:pointer;text-decoration:none;color:var(--sidebar-ink)}",
+    ".ticker-item.tk-fx:hover b{text-decoration:underline}",
+    ".ticker-item.tk-fx b{font-variant-numeric:tabular-nums}",
+    ".ticker-item.tk-fx .tk-up{color:#7ee787}",
+    ".ticker-item.tk-fx .tk-down{color:#ffa198}",
+    ".ticker-item.tk-fx .tk-flat{color:var(--sidebar-sub)}",
     ".fx-soon .fx-rec,.fx-soon .fx-addrow{pointer-events:none}",
     "@media (max-width:780px){.fx-two{grid-template-columns:1fr}.fx-tablebox{max-height:340px}}"
   ].join("\n");
@@ -366,6 +373,47 @@ function fxWaCard() {
     "</section>";
 }
 
+/* ---------- the rate in the Bulletin bar at the top of every page ----------
+   renderNoticeTicker() asks fxTickerItem() for one line. The rate is fetched once
+   and then at most every half hour, and only for people who may see the module —
+   fx-api refuses anybody else, so there is no point asking on their behalf.
+   A failure is swallowed: the bulletin is not the place to show an error. */
+var FX_TICK = { at: 0, busy: false, stats: null };
+function fxTickerLoad() {
+  if (FX_TICK.busy || state.demo || !state.doer) return;
+  if (typeof canSeeFxRates === "function" && !canSeeFxRates()) return;
+  if (Date.now() - FX_TICK.at < 30 * 60000) return;
+  FX_TICK.busy = true;
+  fxApi("fxState").then(function (res) {
+    FX_TICK.busy = false; FX_TICK.at = Date.now(); FX_TICK.stats = res.stats || null;
+    if (!state.fx) state.fx = res;                       /* the module opens instantly later */
+    if (typeof renderNoticeTicker === "function") renderNoticeTicker();
+  }).catch(function () { FX_TICK.busy = false; FX_TICK.at = Date.now(); });
+}
+function fxTickerItem() {
+  fxTickerLoad();
+  var st = FX_TICK.stats;
+  if (!st || !st.today) return "";
+  fxCss();
+  var chg = st.yesterday ? st.today.r - st.yesterday.r : 0;
+  var pct = st.yesterday && st.yesterday.r ? (chg / st.yesterday.r) * 100 : 0;
+  var cls = chg > 0 ? "tk-up" : chg < 0 ? "tk-down" : "tk-flat";
+  var move = st.yesterday
+    ? '<span class="' + cls + '">' + (chg > 0 ? "▲" : chg < 0 ? "▼" : "•") + " " + Math.abs(chg).toFixed(2) + " (" + Math.abs(pct).toFixed(2) + "%)</span>"
+    : '<span class="tk-flat">first day</span>';
+  return '<a class="ticker-item tk-fx" data-fxgoto="1" role="button" tabindex="0" title="Open USD–INR Rates">' +
+    '<span class="tk-emoji">💵</span>1 USD = <b>' + esc(fxMoney(st.today.r)) + "</b> " + move +
+    " · " + esc(fxDay(st.today.d)) + "</a>";
+}
+document.addEventListener("click", function (ev) {
+  if (ev.target.closest && ev.target.closest("[data-fxgoto]") && typeof goToView === "function") goToView("fxrates");
+});
+document.addEventListener("keydown", function (ev) {
+  if ((ev.key === "Enter" || ev.key === " ") && ev.target.closest && ev.target.closest("[data-fxgoto]") && typeof goToView === "function") {
+    ev.preventDefault(); goToView("fxrates");
+  }
+});
+
 /* ---------- clicks ---------- */
 function fxBusy(btn, label) {
   if (!btn) return function () {};
@@ -375,7 +423,12 @@ function fxBusy(btn, label) {
 }
 function fxReload(msg) {
   if (msg) toast(msg);
-  return fxApi("fxState").then(function (res) { state.fx = res; paintFxRates(); })
+  return fxApi("fxState").then(function (res) {
+    state.fx = res;
+    FX_TICK.stats = res.stats || null; FX_TICK.at = Date.now();      /* the bulletin shows the new rate at once */
+    paintFxRates();
+    if (typeof renderNoticeTicker === "function") renderNoticeTicker();
+  })
     .catch(function (e) { toast(e.message); });
 }
 document.addEventListener("click", function (ev) {

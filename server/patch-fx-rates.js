@@ -4,7 +4,7 @@
  * (the block between the markers is replaced, never doubled). The backend (edge function
  * fx-api + the two pg_cron jobs) is already live and is not touched.
  *
- * Seven places, the same ones every native Workspace screen uses:
+ * Eight places, the same ones every native Workspace screen uses:
  *   1. the screen's markup           (next to view-spareparts)
  *   2. the code                      (between __fx:start / __fx:end, by the ops helpers)
  *   3. the tile                      (MODULE_DEFS)
@@ -12,6 +12,7 @@
  *   5. the render call               (next to renderSpareParts)
  *   6. the "can you open it" check   (switchView)
  *   7. the tile is always there for admins (the module grid)
+ *   8. one line in renderNoticeTicker, so the rate leads the Bulletin bar
  *
  * Access note: fx-api decides with `is_admin || visible_modules contains "fxrates"`, so the
  * tile follows Manage Visibility like plantelec — NOT "Delegated module access"
@@ -112,6 +113,20 @@ if (!already('m.key !== "fxrates"', 'tile for admins')) {
       if (canSeeFxRates()) { var fxDef = allModuleDefs.find(function (m) { return m.key === "fxrates"; }); if (fxDef) modules.push(fxDef); }
       // Spare Parts: admins + people given it in Module access.`,
     'tile for admins'
+  );
+}
+
+/* ---- 8. the rate rides in the Bulletin bar at the top of every page ---- */
+if (!already('if (typeof fxTickerItem === "function") { var fxLine', 'rate in the bulletin')) {
+  one(
+    ['    var items = [];', '    notices.forEach(function (n) {'].join('\n'),
+    [
+      '    var items = [];',
+      '    /* 24 Nov 2026: the USD–INR rate leads the bulletin, for the people who may see it */',
+      '    if (typeof fxTickerItem === "function") { var fxLine = fxTickerItem(); if (fxLine) items.push(fxLine); }',
+      '    notices.forEach(function (n) {'
+    ].join('\n'),
+    'rate in the bulletin'
   );
 }
 

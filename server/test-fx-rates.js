@@ -355,6 +355,88 @@ function makeState(days, opts) {
   ok('the chart fits the screen width', phone.chartW <= 360, String(phone.chartW));
   ok('the table box is shorter on a phone', phone.tableBox <= 345, String(phone.tableBox));
 
+  /* ---------- 13. the rate in the Bulletin bar ---------- */
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.goto(FILE);
+  await page.evaluate((d) => { window.__fxData = d; window.__calls = []; FX_TICK.at = 0; FX_TICK.stats = null; }, makeState(40));
+  const tick = await page.evaluate(async () => {
+    renderNoticeTicker();                       // first paint: no rate yet, it starts fetching
+    const before = document.querySelectorAll('#tickerTrack .tk-fx').length;
+    await new Promise(r => setTimeout(r, 120));  // the answer comes back and repaints
+    const items = [...document.querySelectorAll('#tickerTrack .ticker-item')];
+    return {
+      before,
+      shown: document.getElementById('tickerBar').classList.contains('show'),
+      first: items[0] ? items[0].className : '',
+      text: items[0] ? items[0].textContent.replace(/\s+/g, ' ').trim() : '',
+      total: items.length,
+      doubled: document.querySelectorAll('#tickerTrack .tk-fx').length,
+      others: items.map(i => i.textContent.replace(/\s+/g, ' ').trim()).filter(t => /Office closed|Holiday/.test(t)).length,
+      calls: window.__calls.filter(c => c.action === 'fxState').length
+    };
+  });
+  ok('the rate is not in the bar before the answer arrives', tick.before === 0, String(tick.before));
+  ok('once it arrives the rate leads the Bulletin', /tk-fx/.test(tick.first) && /1 USD = ₹\d+\.\d\d/.test(tick.text), tick.first + ' | ' + tick.text);
+  ok('it shows the move with an arrow and the %', /[▲▼] \d+\.\d\d \(\d+\.\d\d%\)/.test(tick.text), tick.text);
+  ok('and the day it is for', /\d{2} \w{3}/.test(tick.text), tick.text);
+  ok('the notices and holidays are still there', tick.others >= 2, String(tick.others));
+  ok('the loop stays seamless (every item twice)', tick.doubled === 2 && tick.total % 2 === 0, JSON.stringify({ fx: tick.doubled, total: tick.total }));
+  ok('the bar is shown', tick.shown);
+  ok('one fetch, not one per repaint', tick.calls === 1, String(tick.calls));
+
+  const tickAgain = await page.evaluate(async () => {
+    window.__calls = [];
+    renderNoticeTicker(); renderNoticeTicker(); renderNoticeTicker();
+    await new Promise(r => setTimeout(r, 60));
+    return window.__calls.filter(c => c.action === 'fxState').length;
+  });
+  ok('repainting the bar does not ask the server again', tickAgain === 0, String(tickAgain));
+
+  const tickClick = await page.evaluate(async () => {
+    window.__goto = [];
+    document.querySelector('#tickerTrack .tk-fx').click();
+    const byKey = (() => { const el = document.querySelector('#tickerTrack .tk-fx'); el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); return window.__goto.slice(); })();
+    return { goto: byKey, tabindex: document.querySelector('#tickerTrack .tk-fx').getAttribute('tabindex') };
+  });
+  ok('clicking it opens the module, and so does Enter', tickClick.goto.join(',') === 'fxrates,fxrates' && tickClick.tabindex === '0', JSON.stringify(tickClick));
+
+  const tickNoAccess = await page.evaluate(async () => {
+    FX_TICK.at = 0; FX_TICK.stats = null;
+    state.doer.is_admin = false; state.doer.visible_modules = ['tasks', 'notices'];   // no fxrates
+    window.__calls = [];
+    renderNoticeTicker();
+    await new Promise(r => setTimeout(r, 80));
+    const out = { calls: window.__calls.filter(c => c.action === 'fxState').length, fx: document.querySelectorAll('#tickerTrack .tk-fx').length, items: document.querySelectorAll('#tickerTrack .ticker-item').length };
+    state.doer.is_admin = true; state.doer.visible_modules = null;
+    return out;
+  });
+  ok('somebody without the module is never asked for, and never shown, the rate', tickNoAccess.calls === 0 && tickNoAccess.fx === 0, JSON.stringify(tickNoAccess));
+  ok('their bulletin still has the notices and holidays', tickNoAccess.items >= 4, String(tickNoAccess.items));
+
+  const tickFail = await page.evaluate(async () => {
+    FX_TICK.at = 0; FX_TICK.stats = null;
+    window.__fxFail = { status: 500, error: 'boom' };
+    window.__toasts = [];
+    renderNoticeTicker();
+    await new Promise(r => setTimeout(r, 100));
+    const out = { fx: document.querySelectorAll('#tickerTrack .tk-fx').length, toasts: window.__toasts.length, items: document.querySelectorAll('#tickerTrack .ticker-item').length };
+    window.__fxFail = null;
+    return out;
+  });
+  ok('a failed rate fetch is silent in the bulletin and leaves the rest alone', tickFail.fx === 0 && tickFail.toasts === 0 && tickFail.items >= 4, JSON.stringify(tickFail));
+
+  const tickOnly = await page.evaluate(async () => {
+    FX_TICK.at = Date.now(); FX_TICK.stats = { today: { d: '2026-11-24', r: 88.9, s: 'ECB' }, yesterday: { d: '2026-11-23', r: 88.97, s: 'ECB' } };
+    state.notices = []; state.holidays = [];
+    renderNoticeTicker();
+    const out = { shown: document.getElementById('tickerBar').classList.contains('show'), items: document.querySelectorAll('#tickerTrack .ticker-item').length, down: !!document.querySelector('#tickerTrack .tk-down') };
+    state.notices = [{ title: 'Office closed on Saturday', pinned: true, created_at: '2026-11-20T10:00:00Z' }];
+    state.holidays = [{ name: 'Christmas', holiday_date: '2026-12-25' }];
+    return out;
+  });
+  ok('with no notices at all the bar still runs, just the rate', tickOnly.shown && tickOnly.items === 2, JSON.stringify(tickOnly));
+  ok('a fall is marked with the down tint as well as the arrow', tickOnly.down);
+
   console.log('');
   checks.forEach(c => console.log((c.p ? 'PASS  ' : 'FAIL  ') + c.n + (c.p ? '' : '   -> ' + (c.x === undefined ? '' : c.x))));
   const bad = checks.filter(c => !c.p).length;
