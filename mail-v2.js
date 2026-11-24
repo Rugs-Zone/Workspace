@@ -84,6 +84,8 @@
     'body.v2 .v2spin{width:28px;height:28px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;animation:v2r .8s linear infinite}',
     '@keyframes v2r{to{transform:rotate(360deg)}}',
     '@media (prefers-reduced-motion:reduce){body.v2 .v2spin{animation-duration:2.4s}body.v2 .v2vimg{transition:none}}',
+    'body.v2 .v2veml{background:#fff;color:#201f1e;padding:14px 16px;max-width:980px;margin:0 auto;width:100%;overflow:auto}',
+    'body.v2 .v2veml .emlh{background:#f5f5f5;border-color:#e1dfdd}',
     '@media (max-width:760px){body.v2 .v2vnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:40px;height:56px}body.v2 .v2vnav.prev{left:0}body.v2 .v2vnav.next{right:0}body.v2 .v2att{width:100%}}',
     /* ---------- phone: actions fixed at the bottom of the open mail ---------- */
     '@media (max-width:760px){body.v2 .maxb{display:none!important}body.v2 #read>.acts.v2bottom{position:sticky;bottom:0;z-index:5;background:var(--pane);border-top:1px solid var(--line);border-bottom:0!important;margin:0!important;padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px))!important;justify-content:space-around;flex-wrap:nowrap}',
@@ -129,10 +131,14 @@
     { re: /\.(pptx?|pps|ppsx|odp)$/i, c: "#c43e1c", l: "P", v: "office" },
     { re: /\.(png|jpe?g|gif|webp|bmp|heic|svg)$/i, c: "#8764b8", l: "IMG", v: "img" },
     { re: /\.(txt|log|json|xml)$/i, c: "#616161", l: "TXT", v: "text" },
-    { re: /\.(zip|rar|7z)$/i, c: "#986f0b", l: "ZIP", v: "none" }
+    { re: /\.(zip|rar|7z)$/i, c: "#986f0b", l: "ZIP", v: "none" },
+    /* 24 Nov 2026: a mail sent as a file - drawn by the app's own .eml reader (window.rzEmlMount) */
+    { re: /\.eml$/i, c: "#0f6cbd", l: "MAIL", v: "eml" },
+    { re: /\.msg$/i, c: "#0f6cbd", l: "MAIL", v: "msg" }
   ];
   function kindOf(name, mime) {
     for (var i = 0; i < KIND.length; i++) if (KIND[i].re.test(name || "")) return KIND[i];
+    if (/message\/rfc822/i.test(mime || "")) return { c: "#0f6cbd", l: "MAIL", v: "eml" };
     if (/^image\//i.test(mime || "")) return KIND[4];
     if (/pdf/i.test(mime || "")) return KIND[0];
     return { c: "#616161", l: "FILE", v: "none" };
@@ -253,6 +259,23 @@
     if (did && (k.v === "office" || (k.v === "pdf" && phone && typeof window.rzPdfMount !== "function"))) { drivePreview(); return; }
     if (k.v === "office") {
       body.innerHTML ='<div class="v2vmsg"><b>' + txt(a.name) + '</b><span>' + (a.saving ? "This file is being copied to Google Drive — the preview works within a minute or two. You can download it now." : "This file has no Google Drive copy, so it can't be previewed here. Download it to open it.") + '</span><div class="v2vacts"><button type="button" class="v2vb" data-vw="dl">⬇ Download</button>' + (a.saving ? '<button type="button" class="v2vb" data-vw="retry">Try again</button>' : '') + '</div></div>';
+      return;
+    }
+    if (k.v === "msg") {
+      body.innerHTML = '<div class="v2vmsg"><b>' + txt(a.name) + '</b><span>This is an Outlook .msg file. It cannot be opened here \u2014 download it and open it in Outlook.</span><div class="v2vacts"><button type="button" class="v2vb" data-vw="dl">\u2b07 Download</button></div></div>';
+      return;
+    }
+    /* 24 Nov 2026: a mail sent as a file, read in the browser and drawn like a received mail
+       (header, body in the same sandboxed frame, pictures from the internet blocked, its own
+       files openable) - Google Drive has no viewer for message/rfc822 at all. */
+    if (k.v === "eml") {
+      if (typeof window.rzEmlMount !== "function") { fail("This mail file cannot be shown on this page. Download it to open it."); return; }
+      if (!a.gid) { fail("The original mail is not available."); return; }
+      bytes(a).then(function (b) {
+        if (VW !== me || VW.cur !== a) return;
+        body.innerHTML = '<div class="v2veml"></div>';
+        window.rzEmlMount(body.firstChild, b.u8, a.name);
+      }).catch(function (e) { if (VW !== me || VW.cur !== a) return; fail(e && e.message ? e.message : "Could not open the mail file."); });
       return;
     }
     if (k.v === "none") { fail("This kind of file can't be previewed. Download it to open it."); return; }

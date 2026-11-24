@@ -593,9 +593,13 @@ async function saveMessage(box, m, sentBy = null) {
   return row;
 }
 async function rebuildThread(box, tid, newIn) {
-  const { data: ms } = await sb.from("rm_messages").select("direction,subject,snippet,sent_at,labels,from_email,from_name,to_text,cc_text,delivered_to,list_unsub").eq("mailbox", box).eq("gmail_thread_id", tid).order("sent_at");
+  const { data: ms } = await sb.from("rm_messages").select("direction,subject,snippet,sent_at,labels,from_email,from_name,to_text,cc_text,delivered_to,list_unsub,sent_by").eq("mailbox", box).eq("gmail_thread_id", tid).order("sent_at");
   if (!ms || !ms.length) return;
   const ext = (x) => x.direction === "in" && !isOwn(String(x.from_email || "").toLowerCase());
+  /* 24 Nov 2026: a colleague's mail (another @rugscreation.com address, not sent from Rugs Email)
+     is mail somebody sent TO this mailbox - it makes the conversation unread and reopens it. */
+  const colleague = (x) => x.direction === "out" && !x.sent_by && String(x.from_email || "").toLowerCase() !== String(box).toLowerCase() && isOwn(String(x.from_email || "").toLowerCase());
+  const inb = (x) => ext(x) || colleague(x);
   const last = ms[ms.length - 1], firstIn = ms.find(ext);
   const cpEmail = firstIn ? firstIn.from_email : ms.flatMap((x) => addrs(x.to_text)).find((e) => e !== box && !isOwn(e)) || "";
   const cpName = firstIn ? firstIn.from_name : cpEmail;
@@ -613,7 +617,7 @@ async function rebuildThread(box, tid, newIn) {
     last_msg_at: last.sent_at,
     has_in: !!firstIn,
     has_out: ms.some((x) => !ext(x)),
-    unread: ms.some((x) => ext(x) && (x.labels || []).includes("UNREAD")),
+    unread: ms.some((x) => inb(x) && (x.labels || []).includes("UNREAD")),
     updated_at: (/* @__PURE__ */ new Date()).toISOString(),
     first_reply_at: firstReply ? firstReply.sent_at : null,
     // every To / Cc / Delivered-To address (newest mail first) — used by the alias rule and the "via" tag
@@ -625,7 +629,7 @@ async function rebuildThread(box, tid, newIn) {
     row.done_at = (/* @__PURE__ */ new Date()).toISOString();
     row.cats = c.includes("auto") ? c : [...c, "auto"];
     await log(box, tid, null, "rule", "Auto-closed \u2014 automatic mail (" + cpEmail + ")");
-  } else if (!auto && cur && cur.status === "done" && newIn && last.direction === "in") {
+  } else if (!auto && cur && cur.status === "done" && newIn && inb(last)) {
     row.status = cur.owner_id ? "open" : "new";
     await log(box, tid, null, "reopen", "Reopened \u2014 new mail from " + cpName);
   }
@@ -656,7 +660,7 @@ async function syncWindow(box, tok, from, to, left, t0, size = 200) {
       try {
         const m = await gmail(tok, `messages/${id}?format=full`);
         const r = await saveMessage(box, m);
-        touched.set(m.threadId, touched.get(m.threadId) || false || r.direction === "in");
+        touched.set(m.threadId, touched.get(m.threadId) || false || r.direction === "in" || (!r.sent_by && String(r.from_email || "").toLowerCase() !== String(box).toLowerCase() && isOwn(String(r.from_email || "").toLowerCase())));
       } catch (e) {
         console.log("skip message", box, id, String(e.message).slice(0, 120));
       }
@@ -873,7 +877,12 @@ async function gmailWrite(box, tid, patch, before) {
     }
     if (wantRead) {
       if (patch.unread) {
-        const { data: m } = await sb.from("rm_messages").select("gmail_id").eq("mailbox", box).eq("gmail_thread_id", tid).eq("direction", "in").order("sent_at", { ascending: false }).limit(1).maybeSingle();
+        let { data: m } = await sb.from("rm_messages").select("gmail_id").eq("mailbox", box).eq("gmail_thread_id", tid).eq("direction", "in").order("sent_at", { ascending: false }).limit(1).maybeSingle();
+        if (!m) {
+          /* 24 Nov 2026: a colleague's mail - newest message that is not ours and was not sent from here */
+          const { data: all } = await sb.from("rm_messages").select("gmail_id,from_email,sent_by,sent_at").eq("mailbox", box).eq("gmail_thread_id", tid).order("sent_at", { ascending: false }).limit(20);
+          m = (all || []).find((x) => !x.sent_by && String(x.from_email || "").toLowerCase() !== String(box).toLowerCase()) || null;
+        }
         if (m) {
           await gmail(tok, `messages/${m.gmail_id}/modify`, { method: "POST", body: JSON.stringify({ addLabelIds: ["UNREAD"] }) });
           did.push("unread");
@@ -1580,9 +1589,14 @@ ${String(p.thread.body || "").slice(0, 3e3)}
       await needBox(u, p.mailbox, "view");
       const tok = await gToken(p.mailbox, READ);
       const m = await gmail(tok, `messages/${p.gmailId}?format=full`);
-      const a2 = attachments(m.payload).find((x) => x.name === p.name) || inlineParts(m.payload).find((x) => x.name === p.name);
+      /* 24 Nov 2026: with p.size (the size the attachment list recorded) the right part is picked
+         when one mail carries two parts of the same name - a mail attached inside a mail. */
+      const named = attachments(m.payload).filter((x) => x.name === p.name).concat(inlineParts(m.payload).filter((x) => x.name === p.name));
+      const want = Number(p.size) || 0;
+      const a2 = (want && named.find((x) => Math.abs((x.size || 0) - want) <= 64)) || named[0];
       if (!a2) throw new E("Attachment not found", 404);
-      if ((a2.size || 0) > 15 * 1024 * 1024) throw new E("Over 15 MB \u2014 open it in Google Drive or Gmail");
+      const mb = (a2.size || 0) / 1048576;
+      if (mb > 25) throw new E("This file is " + mb.toFixed(1) + " MB \u2014 too big to open in Rugs Email. Open the mail in Gmail to get it.");
       let data = a2.data || "";
       const aid = a2.id || a2.aid;
       if (!data && aid) data = (await gmail(tok, `messages/${p.gmailId}/attachments/${aid}`)).data || "";

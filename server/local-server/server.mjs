@@ -195,8 +195,74 @@ async function put(c, key, value) {
   await c.query("delete from public.rm_settings where key = $1", [key]);
   await c.query("insert into public.rm_settings (key, value, updated_at) values ($1, $2::jsonb, now())", [key, JSON.stringify(value)]);
 }
+
+/* ---- 24 Nov 2026: dry run, nothing is changed (see server/patch-onetime-inbox-report.js) ---- */
+const REPORTS = [{
+  id: "restore-inbox-after-reply-2026-11-24",
+  parts: [{
+    name: "in the Sent folder although somebody sent us mail in them",
+    sql: `select t.mailbox, t.gmail_thread_id as id, t.subject, t.last_msg_at,
+                  (t.last_msg_at > now() - interval '60 days') as in_window
+             from public.rm_threads t
+            where coalesce(t.folder, 'inbox') = 'sent'
+              and exists (select 1 from public.rm_messages m
+                           where m.mailbox = t.mailbox and m.gmail_thread_id = t.gmail_thread_id
+                             and (m.direction = 'in' or (m.sent_by is null and lower(coalesce(m.from_email,'')) <> lower(t.mailbox))))
+            order by t.last_msg_at desc`
+  }, {
+    name: "a colleague wrote back but the conversation stayed Done (last 60 days)",
+    sql: `select t.mailbox, t.gmail_thread_id as id, t.subject, t.last_msg_at, true as in_window
+             from public.rm_threads t
+            where t.status = 'done' and coalesce(t.folder, 'inbox') = 'inbox'
+              and t.last_msg_at > now() - interval '60 days'
+              and t.done_at is not null and t.last_msg_at > t.done_at
+              and (select m.direction from public.rm_messages m
+                    where m.mailbox = t.mailbox and m.gmail_thread_id = t.gmail_thread_id
+                    order by m.sent_at desc, m.gmail_id desc limit 1) = 'out'
+              and (select (m.sent_by is null and lower(coalesce(m.from_email,'')) <> lower(t.mailbox))
+                     from public.rm_messages m
+                    where m.mailbox = t.mailbox and m.gmail_thread_id = t.gmail_thread_id
+                    order by m.sent_at desc, m.gmail_id desc limit 1)
+            order by t.last_msg_at desc`
+  }]
+}];
+
+async function oneTimeReportJob(j) {
+  const mark = "report_" + j.id;
+  if ((await pool.query("select 1 from public.rm_settings where key = $1", [mark])).rowCount) return;
+  const c = await pool.connect();
+  try {
+    await c.query("set statement_timeout = '120s'");
+    const out = { at: new Date().toISOString(), note: "dry run only - nothing was changed", parts: [] };
+    for (const part of j.parts) {
+      const rows = (await c.query(part.sql)).rows;
+      const per = {};
+      rows.forEach((r) => { per[r.mailbox] = (per[r.mailbox] || 0) + 1; });
+      const p = {
+        what: part.name,
+        total: rows.length,
+        inside_the_60_day_inbox_window: rows.filter((r) => r.in_window).length,
+        older: rows.filter((r) => !r.in_window).length,
+        per_mailbox: per,
+        samples: rows.slice(0, 10).map((r) => ({ mailbox: r.mailbox, id: r.id, subject: String(r.subject || "").slice(0, 120) })),
+        ids: rows.map((r) => r.mailbox + "|" + r.id).slice(0, 5000)
+      };
+      out.parts.push(p);
+      log("dry run", j.id, "-", part.name + ":", p.total, "conversations",
+        p.total ? "(" + Object.keys(per).map((k) => k.split("@")[0] + " " + per[k]).join(", ") + ")" : "");
+      p.samples.forEach((x) => log("   e.g.", x.mailbox.split("@")[0], x.subject));
+    }
+    await put(c, mark, out);
+    log("dry run", j.id, "- written to rm_settings." + mark + "; NOTHING was changed");
+  } catch (e) {
+    log("dry run", j.id, "failed (nothing was changed):", e.message);
+  } finally { c.release(); }
+}
 if (process.env.ONETIME_OFF === "1") log("one-time repairs are OFF (ONETIME_OFF=1)");
-else setTimeout(async () => { for (const j of ONETIME) await oneTimeJob(j).catch((e) => log("one-time job", j.id, "error:", e.message)); }, 9000);
+else setTimeout(async () => {
+  for (const j of ONETIME) await oneTimeJob(j).catch((e) => log("one-time job", j.id, "error:", e.message));
+  for (const j of REPORTS) await oneTimeReportJob(j).catch((e) => log("dry run", j.id, "error:", e.message));
+}, 9000);
 
 /* ---- 24 Nov 2026: where "Report a problem" lands ----------------------------------------
    One small table. It is created here rather than by hand, because this server is the only
