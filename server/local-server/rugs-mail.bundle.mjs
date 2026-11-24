@@ -889,7 +889,7 @@ async function gmailWrite(box, tid, patch, before) {
   }
   return did;
 }
-async function historySync(box, t0) {
+async function historySync(box, t0, budget = DEADLINE_MS) {
   const { data: st } = await sb.from("rm_mailboxes").select("history_id").eq("mailbox", box).maybeSingle();
   const tok = await gToken(box, READ);
   const restart = async (why) => {
@@ -902,7 +902,7 @@ async function historySync(box, t0) {
   const ev = /* @__PURE__ */ new Map();
   let pt = "", latest = st.history_id, complete = true;
   do {
-    if (Date.now() - t0 > DEADLINE_MS) {
+    if (Date.now() - t0 > budget) {
       complete = false;
       break;
     }
@@ -932,6 +932,9 @@ async function historySync(box, t0) {
   const tids = /* @__PURE__ */ new Set();
   const all = [...msgs];
   for (let i = 0; i < all.length; i += 25) {
+    /* 24 Nov 2026: stop at the budget rather than eating the whole tick. history_id is not
+       moved forward, so the next tick reads this same window again. */
+    if (Date.now() - t0 > budget + 4e3) return { mailbox: box, history: "partial, will continue", wrote: i };
     await Promise.all(all.slice(i, i + 25).map(async ([id, m]) => {
       const { data } = await sb.from("rm_messages").update({ labels: m.labels }).eq("mailbox", box).eq("gmail_id", id).select("gmail_id");
       if (data && data.length) tids.add(m.tid);
@@ -1266,6 +1269,20 @@ async function cronRun(t0) {
   } catch (e) {
     out.push({ scheduled: e.message });
   }
+  /* 24 Nov 2026: what changed in GMAIL is copied over FIRST, with its own small budget.
+     It used to run after every mailbox had fetched its new mail, against the same 25-second
+     budget - so on a busy tick it never ran at all and a mail read, archived or deleted in
+     Gmail never reached Rugs Email. See server/patch-gmail-history-first.js. */
+  const HIST_MS = 8e3;
+  let histLeft = 4;                       // at most four mailboxes a tick, so fetching mail always gets its turn
+  for (const d of order) {
+    if (histLeft <= 0 || Date.now() - t0 > HIST_MS) break;
+    try {
+      if (await gmailOn(d.mailbox)) { histLeft--; out.push(await historySync(d.mailbox, t0, HIST_MS)); }
+    } catch (e) {
+      out.push({ mailbox: d.mailbox, history_error: String(e.message).slice(0, 200) });
+    }
+  }
   for (const d of order) {
     if (Date.now() - t0 > DEADLINE_MS) break;
     try {
@@ -1275,14 +1292,7 @@ async function cronRun(t0) {
       out.push({ mailbox: d.mailbox, error: e.message });
     }
   }
-  for (const d of order) {
-    if (Date.now() - t0 > DEADLINE_MS) break;
-    try {
-      if (await gmailOn(d.mailbox)) out.push(await historySync(d.mailbox, t0));
-    } catch (e) {
-      out.push({ mailbox: d.mailbox, history_error: String(e.message).slice(0, 200) });
-    }
-  }
+
   try {
     out.push({ rules: await applyRules() });
   } catch (e) {

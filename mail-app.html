@@ -635,7 +635,7 @@ const MAIL_API_URL='https://mail-api.rugserp.com';
 let MAIL_API_TEST='';try{MAIL_API_TEST=(localStorage.getItem('rugs-mail-api')||'').replace(/\/+$/,'')}catch(e){}
 const API=((MAIL_API_TEST||MAIL_API_URL||'https://asbgfjngxsabnnzgxugu.supabase.co/functions/v1').replace(/\/+$/,''))+'/rugs-mail';
 let TOKEN='';try{TOKEN=localStorage.getItem('rugs-token')||''}catch(e){}
-async function api(action,p={}){let r;try{r=await fetch(action==='list'||action==='img'||action==='more'?API+'-list':action==='taskDoers'||action==='taskCreate'?API+'-task':API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...p,action,token:TOKEN})})}catch(e){throw new Error('No internet connection — try again')}
+async function api(action,p={}){let r;try{r=await fetch(action==='list'||action==='img'||action==='more'||action==='find'?API+'-list':action==='taskDoers'||action==='taskCreate'?API+'-task':API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...p,action,token:TOKEN})})}catch(e){throw new Error('No internet connection — try again')}
  const j=await r.json().catch(()=>({error:'Server error '+r.status}));
  if(!r.ok||j.error){if(r.status===401&&action!=='login'&&window.__liveReady)sessionEnd(j.error);throw new Error(friendly(j.error||('Error '+r.status)))}return j}
 const MIN=6e4,H=36e5,D=864e5,NOW=Date.now();
@@ -721,7 +721,10 @@ const dueTxt=t=>{const d=Math.round((sod(t.due)-sod(NOW))/D);return d<0?`${-d}d 
 /* Nov 2026: a person's work starts from their first login (prefs.workFrom). Older mail stays visible,
    but it is not counted as their pending work ("Needs owner", "To assign"). */
 const WF=()=>{const v=Date.parse((S.prefs&&S.prefs.workFrom)||'');return isNaN(v)?0:v};
-const isWork=t=>{if(isWsNotif(t))return false;if(!hasRecv(t))return false;const tf=(S.trackFrom||{})[t.dept];if(!tf)return false;const w=Math.max(WF(),tf);return(t.last||0)>=w};   // team must be activated (Admin → Departments)
+/* 24 Nov 2026: a conversation the system put back after a wrong bulk-done is work again,
+   however old it is - otherwise the repair would hand it back into nobody's list. */
+const sysReopened=t=>{if(t._sysre===undefined)t._sysre=(t.hist||[]).some(h=>String(h.txt||'').indexOf('Reopened by system')===0);return t._sysre};
+const isWork=t=>{if(isWsNotif(t))return false;if(!hasRecv(t))return false;if(sysReopened(t))return true;const tf=(S.trackFrom||{})[t.dept];if(!tf)return false;const w=Math.max(WF(),tf);return(t.last||0)>=w};   // team must be activated (Admin → Departments)
 /* Who delegates unassigned mail (15 Nov 2026): the MANAGER of each team does it for his own team.
    Priya is CRM for the whole company (perm.crm_depts lists the teams), so she still sees every team and
    can help, but assigning is no longer only her job. A manager with no crm_depts gets his own team. */
@@ -1040,11 +1043,50 @@ let adminTab='overview';
 let USRQ='';/* 23 Nov 2026: what is typed in the Admin -> Users search box */
 const ROLES=['Merchandiser','CRM','Manager','Executive','Admin'];
 const mailOf=d=>d.box+DOMAIN;
+
+/* ---------- 24 Nov 2026: Report a problem ---------- */
+let REPS=null,repsAt=0;                                  /* what the admin's list last showed */
+function repWhere(){return app==='mail'?(view.type==='box'?(dept(view.dept)?.name||view.dept)+' \u00b7 '+view.folder:view.type+' \u00b7 '+(view.id||view.folder||'')):String(app||'')}
+function repDlg(t){
+ const L=dlg('Report a problem',
+  '<div class="fld"><label for="rpN">What went wrong? One line is enough.</label><input type="text" id="rpN" maxlength="300" placeholder="e.g. this mail shows only the short preview"></div>'+
+  '<p class="lead" style="margin:0;font-size:12.5px">Sent with it: '+(t?'this conversation ('+esc(cleanSub(t.sub).slice(0,60))+'), ':'')+'your name, the page you are on ('+esc(repWhere())+') and the app version ('+esc(APP_BUILD)+') \u2014 so nobody has to ring you back to ask. The mail itself is not sent.</p>',
+  '<button class="btn" data-c>Cancel</button><button class="btn pri" data-ok>Send to the admin</button>');
+ L.querySelector('[data-c]').onclick=()=>{L.innerHTML=''};
+ setTimeout(()=>L.querySelector('#rpN')?.focus(),30);
+ L.querySelector('[data-ok]').onclick=()=>{
+  const note=(L.querySelector('#rpN').value||'').trim();
+  if(note.length<3){toast('Please write one line about the problem');return}
+  const b=L.querySelector('[data-ok]');b.disabled=true;b.textContent='Sending\u2026';
+  api('report',{note,thread:t?gidOf(t):'',box:t?t.box:'',page:repWhere(),build:APP_BUILD,agent:String(navigator.userAgent||'').slice(0,200)})
+   .then(()=>{L.innerHTML='';toast('Thank you \u2014 the admin has it, with everything needed to look into it')})
+   .catch(e=>{b.disabled=false;b.textContent='Send to the admin';toast('Could not send it: '+e.message)})};
+}
+function repsLoad(force){if(REPS&&!force&&Date.now()-repsAt<20000)return;repsAt=Date.now();
+ api('reports',{limit:200}).then(r=>{REPS=r.reports||[];if(app==='admin')render()}).catch(e=>{REPS=[];toast('Could not load the problem reports: '+e.message)})}
+function repsHTML(){
+ if(!REPS)return '<p class="lead">Loading\u2026</p>';
+ if(!REPS.length)return '<p class="lead">Nothing reported. When somebody presses \u201cReport a problem\u201d it appears here.</p>';
+ const row=r=>'<tr'+(r.done_at?' style="opacity:.55"':'')+'><td>'+esc(tShort(new Date(r.at).getTime()))+'</td><td><b>'+esc(who(r.user_id)?.name||r.user_id||'?')+'</b></td><td>'+esc(r.note||'')+'</td><td>'+esc(r.page||'')+'<br><span style="color:var(--muted)">'+esc(r.build||'')+'</span></td><td>'+(r.gmail_thread_id?'<button class="btn" data-rpopen="'+esc(r.mailbox+'|'+r.gmail_thread_id)+'">Open the mail</button>':'')+'</td><td>'+(r.done_at?'\u2713 handled':'<button class="btn pri" data-rpdone="'+r.id+'">Handled</button>')+'</td></tr>';
+ return '<section class="box"><h3>Problems people reported</h3><div style="overflow:auto"><table><thead><tr><th>When</th><th>Who</th><th>What they wrote</th><th>Where / version</th><th>Mail</th><th></th></tr></thead><tbody>'+REPS.map(row).join('')+'</tbody></table></div></section>';
+}
+document.addEventListener('click',e=>{
+ const o=e.target.closest('[data-rpopen]');
+ if(o){const [box,tid]=o.dataset.rpopen.split('|');const t=S.threads.find(z=>z.box===box&&gidOf(z)===tid);
+  if(t){app='mail';view={type:'box',dept:t.dept,folder:t.folder==='deleted'?'deleted':'inbox'};open(t.id);return}
+  toast('Fetching that conversation\u2026');api('find',{ids:[box+'|'+tid]}).then(r=>{mergeList(r);const t2=S.threads.find(z=>z.box===box&&gidOf(z)===tid);
+   if(!t2)return toast('That conversation is not in the mailboxes you can see');app='mail';view={type:'box',dept:t2.dept,folder:'inbox'};open(t2.id)}).catch(err=>toast('Could not open it: '+err.message));return}
+ const d=e.target.closest('[data-rpdone]');
+ if(d){const id=d.dataset.rpdone;d.disabled=true;api('reportDone',{id:Number(id)}).then(()=>{const r=(REPS||[]).find(x=>String(x.id)===String(id));if(r)r.done_at=new Date().toISOString();render()}).catch(err=>{d.disabled=false;toast(err.message)})}
+});
 function pageAdmin(){if(who(ME).role!=='Admin'){const ad=PEOPLE.filter(p=>p.role==='Admin'&&p.active!==false).map(p=>p.name);
  const who_=ad.length?ad.join(' and '):'the admin';
  return `<div class="page"><h2>Admin</h2><p class="lead">Only ${ad.length>1?'the admins':'the admin'} (${esc(who_)}) can open this. Ask ${ad.length>1?'one of them':'them'} if you need something changed.</p></div>`}
- const tabs=[['overview','Overview'],['depts','Departments'],['users','Users & passwords'],['access','Visibility & sharing'],['switch','🔁 Switch ID']];
+ const waitN=(REPS||[]).filter(r=>!r.done_at).length;
+ const tabs=[['overview','Overview'],['depts','Departments'],['users','Users & passwords'],['access','Visibility & sharing'],['switch','🔁 Switch ID'],['probs','🛠 Problems'+(waitN?' ('+waitN+')':'')]];   /* 24 Nov 2026 */
+ if(adminTab==='probs')repsLoad();
  let body='';
+ if(adminTab==='probs'){body=repsHTML()}
  if(adminTab==='overview'){const act=PEOPLE.filter(p=>p.active);
   body=`<div class="tiles"><div class="tile"><b>${DEPTS.length}</b><span>Departments</span></div><div class="tile"><b>${DEPTS.length}</b><span>Shared mailboxes</span></div><div class="tile good"><b>${act.length}</b><span>Active users</span></div><div class="tile"><b>${PEOPLE.length-act.length}</b><span>Deactivated</span></div><div class="tile cool"><b>${PEOPLE.filter(p=>Object.keys(p.access||{}).some(k=>p.access[k])).length}</b><span>People with shared access</span></div></div>
   ${boxStatusHTML()}<div class="dgr"><section class="box"><h3>Departments and their mailbox</h3>${DEPTS.map(d=>`<div class="prow"><span class="nm"><span class="ddot" style="background:${d.color}"></span>${esc(d.name)}</span><span class="vv">${esc(mailOf(d))} · ${PEOPLE.filter(p=>p.dept===d.id&&p.active).length} people</span></div>`).join('')}<button class="btn" data-atab="depts" style="width:fit-content">Manage departments →</button></section>
@@ -1112,6 +1154,10 @@ function toast(m){document.querySelectorAll('.toast').forEach(x=>x.remove());con
 function hist(t,type,txt){t.hist.push({t:type,txt,at:Date.now()})}
 function assign(t,pid){const p=who(pid);t.owner=pid;if(t.status==='new')t.status='open';hist(t,'a',`Assigned to ${p.name} by ${who(ME).name}`);save();toast(`Assigned to ${p.name.split(' ')[0]}${onLeave(p.id)?' (on leave!)':''}`)}
 function done(t){t.status='done';t.unread=false;hist(t,'d',`Marked done by ${who(ME).name}`);save()}
+/* 24 Nov 2026: closing a mail the other side is still waiting for says so, with Undo. */
+function done1(t){if(!t)return;const waiting=t.status!=='done'&&typeof lastInMsg==='function'&&lastInMsg(t);done(t);render();
+ if(waiting)undoToast('Marked done — but '+(rowName(t)||'the other side')+' wrote last and nobody has answered',()=>{reopenMail(t);save();render()});
+ else toast('Done ✓')}
 function open(id){openId=id;const t=T_(id);if(t){t.unread=false;save()}render();$('#read')?.scrollTo?.(0,0);if(LIVE&&t)liveOpen(t)}
 
 document.addEventListener('click',e=>{const b=e.target.closest('[data-gtog],[data-lbtog],[data-sync],[data-maxread],[data-mall],[data-mtog],[data-profile],#hamb,#syncBtn,#fsBtn,[data-atab],[data-dsave],[data-ddel],[data-dadd],[data-usave],[data-upw],[data-uact],[data-udel],[data-genpw],[data-uadd],[data-adddept],[data-deldept],[data-addperson],[data-delperson],[data-qdel],[data-restore],[data-dashas],[data-jump],[data-full],[data-who],[data-lf],[data-lbside],[data-xferto],[data-stage],[data-crmreply],[data-contact],[data-ctcopy],[data-person],[data-app],[data-fav],[data-box],[data-userf],[data-delf],[data-newf],[data-compose],[data-tab],[data-filt],[data-open],[data-draft],[data-back],[data-reply],[data-fwd],[data-fwdatt],[data-xfer],[data-done],[data-reopen],[data-take],[data-promise],[data-qsend],[data-qdone],[data-qflag],[data-qarch],[data-goto],[data-newcirc],#bell,#meBtn,[data-fullretry]');if(!b)return;const d=b.dataset;
@@ -1183,7 +1229,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-gtog],[dat
  if(d.reply){const _t=T_(d.reply),_all=('all'in d);withFull(_t,()=>compose({t:_t,all:_all}));return}
  if(d.fwd){const _t=T_(d.fwd);withFull(_t,()=>compose({t:_t,fwd:true}));return}
  if(d.fwdatt){const _t=T_(d.fwdatt);withFull(_t,()=>fwdAsAtt(_t));return}
- if(d.done){const t=T_(d.done);done(t);toast('Done ✓');render();return}
+ if(d.done){done1(T_(d.done));return}   /* 24 Nov 2026: warns + Undo when nobody answered */
  if(d.reopen){const t=T_(d.reopen);t.status='open';hist(t,'a','Reopened by '+who(ME).name);save();render();return}
  if(d.take){const t=T_(d.take);if(t.dept!==who(ME).dept){toast('You can take over only in your own department — transfer it instead');return}assign(t,ME);render();return}
  if(d.promise){promiseDlg(T_(d.promise));return}
@@ -1207,7 +1253,8 @@ document.addEventListener('change',e=>{if(e.target.dataset.acc){const p=PEOPLE.f
  if(e.target.id==='mpick'){const v=e.target.value.split(':');view=v[0]==='fav'?{type:'fav',id:v[1]}:{type:'box',dept:v[1],folder:v[2]};openId=null;filt='all';render();return}
  if(e.target.dataset.own){const t=T_(e.target.dataset.own),v=String(e.target.value||'');
   if(v.slice(0,2)==='x:')assignAway(t,v.slice(2));else assign(t,v);render()}});
-let qt;$('#q').addEventListener('input',()=>{clearTimeout(qt);qt=setTimeout(()=>{if(app!=='mail'){app='mail'}render()},150)});
+let qt;$('#q').addEventListener('input',()=>{clearTimeout(qt);qt=setTimeout(()=>{if(app!=='mail'){app='mail'}render()},150);clearTimeout(fndT);fndT=setTimeout(()=>serverFind($('#q').value),450)});   /* 24 Nov 2026: and ask the server */
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'){clearTimeout(fndT);serverFind($('#q').value,true)}});
 
 /* the mail trail: every earlier mail in the conversation, newest first, as Outlook quotes it */
 function trailOf(t,upto){const ms=t.msgs.slice(0,upto==null?t.msgs.length:upto);
@@ -1561,10 +1608,11 @@ function bell(){if($('.pop')){$('#layer').innerHTML='';return}
  $('#mar').onclick=()=>{S.notifs.forEach(n=>n.read=true);save();$('#layer').innerHTML='';renderTop()}}
 function meMenu(){if($('.pop')){$('#layer').innerHTML='';return}const me=who(ME);
  $('#layer').innerHTML=`<div class="pop" role="dialog" aria-label="Account"><header><div class="person">${av(me.name)}<div class="w"><b>${esc(me.name)}</b><span>${esc(me.role)} · ${esc(dept(me.dept).name)}</span></div></div></header><div class="menu">
- <button id="mP">${ico('user')} My profile</button><button id="mW">${ico('key')} Change my password</button>${LIVE?'':'<button id="mN">📥 Simulate a new email (AI tags the topic)</button>'}<button id="mU">${ico('logout')} Sign out</button><button id="mL">${onLeave(ME)?ico('check')+' I’m back — mark available':ico('plane')+' Going on leave'}</button><button id="mS">${ico('edit')} My signature</button><button id="mT">${ico('sun')} Light / dark</button>${LIVE?'':'<button id="mR">↺ Reset sample data</button>'}</div></div>`;
+ <button id="mP">${ico('user')} My profile</button><button id="mW">${ico('key')} Change my password</button>${LIVE?'':'<button id="mN">📥 Simulate a new email (AI tags the topic)</button>'}<button id="mU">${ico('logout')} Sign out</button><button id="mL">${onLeave(ME)?ico('check')+' I’m back — mark available':ico('plane')+' Going on leave'}</button><button id="mS">${ico('edit')} My signature</button><button id="mB">\u{1F6E0} Report a problem</button><button id="mT">${ico('sun')} Light / dark</button>${LIVE?'':'<button id="mR">↺ Reset sample data</button>'}</div></div>`;
  $('#mL').onclick=()=>{S.leaves=S.leaves||{};S.leaves[ME]=!onLeave(ME);api('saveProfile',{on_leave:S.leaves[ME]}).catch(()=>{});save();$('#layer').innerHTML='';toast(onLeave(ME)?'On leave — team sees you as away':'Welcome back 👋');render()};
  if($('#mN'))$('#mN').onclick=()=>{$('#layer').innerHTML='';const t=newDemoMail();app='mail';view={type:'box',dept:t.dept,folder:'inbox'};tab='focused';lfilt='';filt='all';open(t.id);toast(`✦ AI tagged the topic as ${LB(t.label).name} (${t.conf}% sure)`)};
  $('#mP').onclick=()=>{$('#layer').innerHTML='';profileDlg()};
+ $('#mB').onclick=()=>{$('#layer').innerHTML='';repDlg(openId?T_(openId):null)};   /* 24 Nov 2026 */
  $('#mW').onclick=()=>{const L=dlg('Change my password',`<div class="fld"><label for="opw">Current password</label><input type="password" id="opw" autocomplete="current-password"></div><div class="fld"><label for="npw1">New password (min 8 characters)</label><input type="password" id="npw1" autocomplete="new-password"></div><div class="fld"><label for="npw2">New password again</label><input type="password" id="npw2" autocomplete="new-password"></div>`,`<button class="btn" data-c>Cancel</button><button class="btn pri" data-ok>Change password</button>`);
   L.querySelector('[data-c]').onclick=()=>L.innerHTML='';L.querySelector('[data-ok]').onclick=()=>{const o=L.querySelector('#opw').value,a=L.querySelector('#npw1').value,b=L.querySelector('#npw2').value;if(a.length<8||!/[A-Za-z]/.test(a)||!/\d/.test(a)){toast('Use at least 8 characters with letters and a number');return}if(a!==b){toast('The two new passwords are different');return}
   api('changePassword',{oldPassword:o,newPassword:a}).then(()=>{L.innerHTML='';toast('Password changed ✓')}).catch(e=>toast(e.message))}};
@@ -2420,7 +2468,7 @@ const qMatch=(t,o)=>{const L=x=>String(x||'').toLowerCase();
  const hay=[t.from,t.email,t.sub,t.pre,t.promise,who(t.owner)?.name,...t.msgs.map(m=>m.body),...t.msgs.flatMap(m=>(m.atts||[]).map(a=>a.name))].join(' ').toLowerCase();
  return o.words.every(w=>hay.includes(w))};
 listRows=function(){const raw=$('#q').value.trim();let r;
- if(raw){const o=parseQ(raw);r=S.threads.filter(t=>qMatch(t,o));if(SEARCH_HITS&&SEARCH_Q===raw){const have=new Set(r.map(t=>t.id));S.threads.forEach(t=>{if(!have.has(t.id)&&SEARCH_HITS.has(t.box+'|'+gidOf(t)))r.push(t)})}}
+ if(raw){const o=parseQ(raw);r=S.threads.filter(t=>qMatch(t,o));if(FND.q===raw&&FND.ids.size){const fh=new Set(r.map(t=>t.id));S.threads.forEach(t=>{if(!fh.has(t.id)&&FND.ids.has(t.id))r.push(t)})}   /* 24 Nov 2026: what the server found, even when the words are only inside the mail */if(SEARCH_HITS&&SEARCH_Q===raw){const have=new Set(r.map(t=>t.id));S.threads.forEach(t=>{if(!have.has(t.id)&&SEARCH_HITS.has(t.box+'|'+gidOf(t)))r.push(t)})}}
  else{r=S.threads.filter(inView);
   const special=view.type==='fav'&&['snoozed','remind'].includes(view.id);if(!special)r=r.filter(t=>!snoozed(t));
   if(view.type==='box'&&view.folder==='inbox')r=r.filter(t=>tab==='other'?othTab(t):!othTab(t));
@@ -2517,8 +2565,39 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-xfav],[dat
  if(b.dataset.xblock){const em=String(th.email||'').toLowerCase();rcAsk(`Block ${em}? Their new mail goes straight to Junk for the whole team. This conversation moves to Junk now.`,()=>{S.blocked=[...new Set([...(S.blocked||[]),em])];th.prev=th.folder;th.folder='junk';hist(th,'n',`Sender blocked by ${who(ME).name}`);save();openId=null;toast('🚫 Blocked — undo in ⚙ Rules & blocked senders');render()})}});
 function rcAsk(msg,ok){const L=dlg('Please confirm',`<p style="margin:0">${esc(msg)}</p>`,`<button class="btn" data-c>Cancel</button><button class="btn pri" data-ok>Yes</button>`);L.querySelector('[data-c]').onclick=()=>L.innerHTML='';L.querySelector('[data-ok]').onclick=()=>{L.innerHTML='';ok()}}
 /* search: Outlook words + search inside attachments (Gmail) */
+
+/* ---------- 24 Nov 2026: search also asks the server ---------- */
+let FND={q:'',ids:new Set(),busy:false,err:'',text:true,at:0,n:0,ms:0},fndT=0;
+function fndClear(){FND={q:'',ids:new Set(),busy:false,err:'',text:true,at:0,n:0,ms:0}}
+function serverFind(raw,again){const q=String(raw||'').trim();
+ if(q.length<3){if(FND.q)fndClear();return}
+ if(!again&&FND.q===q&&(FND.busy||FND.at))return;                 /* already asked for this */
+ FND={q,ids:FND.q===q?FND.ids:new Set(),busy:true,err:'',text:FND.text,at:0,n:0,ms:0};
+ try{renderListKeep()}catch(e){}
+ api('find',{q,limit:200}).then(r=>{
+  if(($('#q')?.value||'').trim()!==q)return;                      /* they typed on */
+  if(!Array.isArray(r.words)){FND={q,ids:new Set(),busy:false,err:'',text:true,at:0,n:0,ms:0};return}   /* 24 Nov 2026: an office server that has not updated yet answers with the ordinary list - never treat that as a search */
+  const before=new Set(S.threads.map(t=>t.id)),bd=boxDept(),ids=new Set();
+  mergeList(r);
+  (r.threads||[]).forEach(row=>{const home=bd[String(row.mailbox).toLowerCase()];if(home)ids.add(home+':'+row.gmail_thread_id)});
+  FND={q,ids,busy:false,err:'',text:r.text!==false,at:Date.now(),n:[...ids].filter(i=>!before.has(i)).length,ms:r.ms||0};
+  render();
+ }).catch(e=>{if(($('#q')?.value||'').trim()!==q)return;
+  FND={q,ids:new Set(),busy:false,err:e.message||'Search failed',text:true,at:Date.now(),n:0,ms:0};
+  try{renderListKeep()}catch(e2){}});
+}
+/* the line under the search box */
+const _rlFND=renderList;renderList=function(){_rlFND();
+ const raw=($('#q')?.value||'').trim(),h=document.querySelector('.list .lhead');if(!h||!raw)return;
+ let txt='',btn='';
+ if(raw.length<3)txt='Type three letters or more to search all the mail on the server';
+ else if(FND.busy&&FND.q===raw)txt='Looking through all the mail on the server\u2026';
+ else if(FND.err&&FND.q===raw){txt='Could not search the server: '+FND.err;btn='<button class="btn" data-fndgo>Try again</button>'}
+ else if(FND.q===raw&&FND.at){txt=(FND.n?'+'+FND.n+' older conversation'+(FND.n===1?'':'s')+' found on the server':'Nothing older found on the server')+(FND.text?'':' \u00b7 the mail text is not searched yet (the server is still building its search index)');}
+ if(txt)h.insertAdjacentHTML('beforeend','<div class="shelp"><span>\ud83d\udd0e '+esc(txt)+'</span>'+btn+'</div>')};
+document.addEventListener('click',e=>{if(e.target.closest('[data-fndgo]'))serverFind(($('#q')?.value||''),true)});
 function gSearch(){const raw=$('#q').value.trim();if(!raw)return;const o=parseQ(raw),gq=[o.words.join(' '),o.from?'from:'+o.from:'',o.to?'to:'+o.to:'',o.subject?'subject:'+o.subject:'',o.att?'has:attachment':''].filter(Boolean).join(' ');
- toast('🔎 Searching inside mail and attachments…');api('search',{q:gq||raw}).then(r=>{SEARCH_Q=raw;SEARCH_HITS=new Set((r.hits||[]).map(h=>h.mailbox+'|'+h.threadId));const n=S.threads.filter(t=>SEARCH_HITS.has(t.box+'|'+gidOf(t))).length;toast(`🔎 ${n} conversation${n===1?'':'s'} found in mail and attachments`+((r.hits||[]).length>n?` · ${(r.hits||[]).length-n} more are older than what is loaded here`:''));renderList()}).catch(e=>toast('Search: '+e.message))}
+ toast('🔎 Searching inside mail and attachments…');api('search',{q:gq||raw}).then(r=>{SEARCH_Q=raw;SEARCH_HITS=new Set((r.hits||[]).map(h=>h.mailbox+'|'+h.threadId));const n=S.threads.filter(t=>SEARCH_HITS.has(t.box+'|'+gidOf(t))).length;const miss=(r.hits||[]).map(x=>x.mailbox+'|'+x.threadId).filter(k=>!S.threads.some(t=>t.box+'|'+gidOf(t)===k));toast(`🔎 ${n} conversation${n===1?'':'s'} found in mail and attachments`+(miss.length?` · fetching ${miss.length} older one${miss.length===1?'':'s'}…`:''));renderList();if(miss.length)api('find',{ids:miss.slice(0,400)}).then(r2=>{mergeList(r2);toast(`🔎 ${S.threads.filter(t=>SEARCH_HITS.has(t.box+'|'+gidOf(t))).length} found—older mail included`);render()}).catch(e=>toast('Could not load the older ones: '+e.message))}).catch(e=>toast('Search: '+e.message))}
 const _rlX=renderList;
 renderList=function(){_rlX();const raw=$('#q')?.value.trim();const h=document.querySelector('.list .lhead');if(!h)return;
  if(raw)h.insertAdjacentHTML('beforeend',`<div class="shelp"><button class="btn" data-xgsearch>🔎 Also search inside attachments &amp; all of Gmail</button><span>Tips: <code>from:ikea</code> <code>subject:invoice</code> <code>has:attachment</code> <code>is:unread</code> <code>after:2026-10-01</code> <code>cat:urgent</code></span></div>`)};
@@ -3023,10 +3102,39 @@ document.addEventListener('change',e=>{const c=e.target;if(c.dataset.msel){c.che
 function bulkMove(to){if(to==='deleted'&&!can('delete')){toast("You can't delete mail");return}const ts=[...SEL].map(T_).filter(t=>t&&canSee(t.dept)==='full'&&t.folder!==to);const back=ts.map(t=>[t,t.folder,t.prev]);
  ts.forEach(t=>{t.prev=t.folder;t.folder=to;hist(t,'n',`${to==='deleted'?'Deleted':'Moved to '+to} by ${who(ME).name}`)});save();SEL.clear();if(openId&&ts.some(t=>t.id===openId))openId=null;render();
  undoToast(`${ts.length} mail${ts.length===1?'':'s'} ${to==='deleted'?'deleted':'moved to '+to}`,()=>{back.forEach(([t,f,p])=>{t.folder=f;t.prev=p;if(f!=='deleted')reopenMail(t);hist(t,'n',`Move undone by ${who(ME).name}`)});save();render()})}
+
+/* 24 Nov 2026: a bulk "Done" used to close everything ticked in one click with no question.
+   On 16 Nov that closed 367 Team Alpha conversations in twenty minutes, 178 of them buyer
+   mails nobody had answered - real work, gone from every work list. So it asks first, shows
+   the count, and warns about exactly those. askBulkDone(list, go) calls go(list to close). */
+const lastInMsg=t=>{const l=(t&&t.msgs)||[],m=l[l.length-1];return !!m&&recvMsg(m,t)};
+function askBulkDone(ts,go){
+ const todo=(ts||[]).filter(t=>t&&t.status!=='done');
+ if(!todo.length){toast('Nothing to mark done');return}
+ const wait=todo.filter(lastInMsg),N=todo.length,M=wait.length;
+ if(N===1&&!M){go(todo);return}                                  /* one answered mail: as before */
+ const list=wait.slice(0,8).map(t=>'<li><b>'+esc(rowName(t))+'</b> - '+esc(t.sub||'(no subject)')+' <span style="color:var(--muted)">'+esc(tShort(t.last))+'</span></li>').join('');
+ const L=dlg('Mark '+N+' conversation'+(N===1?'':'s')+' done?',
+  '<p class="lead">'+(N===1?'This conversation':'These '+N+' conversations')+' will be closed: they leave My work, Needs owner, To assign, Home and the reports, and stop counting as open work. The mail itself is not moved, deleted or changed.</p>'+
+  (M?'<div style="border:1px solid var(--red);background:var(--redbg);border-radius:10px;padding:10px 12px;margin:10px 0">'+
+     '<b style="color:var(--red)">In '+M+' of '+N+', the other side wrote last and nobody has answered yet.</b>'+
+     '<div style="margin-top:4px">Closing '+(M===1?'it':'those')+' hides work somebody is still waiting for. That is what happened on 16 November, when 178 unanswered buyer mails were closed in one go.</div>'+
+     '<ul style="margin:8px 0 0 18px;padding:0">'+list+'</ul>'+(M>8?'<div style="margin-top:4px">...and '+(M-8)+' more.</div>':'')+
+     '</div>':''),
+  '<button class="btn" data-c>Cancel</button>'+
+  (M&&M<N?'<button class="btn" data-dall>Mark all '+N+' done</button><button class="btn pri" data-dsafe>Close the '+(N-M)+' answered, leave '+M+' waiting</button>'
+   :M?'<button class="btn" data-dall>Mark '+(N===1?'it':'all '+N)+' done anyway</button>'
+   :'<button class="btn pri" data-dall>Mark '+N+' done</button>'));
+ const shut=()=>{$('#layer').innerHTML=''};
+ L.querySelector('[data-c]').onclick=shut;
+ const sf=L.querySelector('[data-dsafe]');if(sf)sf.onclick=()=>{shut();go(todo.filter(t=>!lastInMsg(t)))};
+ L.querySelector('[data-dall]').onclick=()=>{shut();go(todo)};
+}
+try{window.rzAskBulkDone=askBulkDone}catch(e){}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-bk]');if(!b)return;const k=b.dataset.bk,ts=[...SEL].map(T_).filter(t=>t&&canSee(t.dept)==='full');
  if(k==='clear'){SEL.clear();renderListKeep();return}
  if(k==='read'||k==='unread')ts.forEach(t=>t.unread=k==='unread');
- if(k==='done')ts.forEach(t=>{if(t.status!=='done')done(t)});
+ if(k==='done'){askBulkDone(ts,l=>{l.forEach(t=>done(t));SEL.clear();toast(l.length+' mail'+(l.length===1?'':'s')+' marked done');render()});return}   /* 24 Nov 2026: ask first, warn about unanswered mail */
  if(k==='flag')ts.forEach(t=>t.flag=true);
  if(k==='delete'){bulkMove('deleted');return}
  save();SEL.clear();toast(`${ts.length} mail${ts.length===1?'':'s'} updated`);render()});
@@ -3049,7 +3157,7 @@ document.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return
  if(ro)return;
  if(k==='x'){SEL.has(t.id)?SEL.delete(t.id):SEL.add(t.id);renderListKeep();return}
  if(k==='e'||k==='Delete'||k==='#'){e.preventDefault();const to=k==='e'?'archive':'deleted';if(to==='deleted'&&!can('delete')){toast("You can't delete mail");return}const nx=rows[i+1]||rows[i-1];const from=t.folder,pv=t.prev;t.prev=from;t.folder=to;hist(t,'n',`${to==='deleted'?'Deleted':'Archived'} by ${who(ME).name}`);save();openId=nx?nx.id:null;render();undoToast(to==='deleted'?'Deleted':'Archived',()=>{t.folder=from;t.prev=pv;hist(t,'n',`Undone by ${who(ME).name}`);save();openId=t.id;render()});return}
- if(k==='d'){done(t);toast('Done ✓');render();return}
+ if(k==='d'){done1(t);return}   /* 24 Nov 2026: warns + Undo when nobody answered */
  if(k==='s'){t.flag=!t.flag;save();render();return}
  if(k==='u'){t.unread=true;save();openId=null;render();return}});
 /* (C) print a conversation */
@@ -3540,7 +3648,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-23-10';
+const APP_BUILD='2026-11-24-1';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3655,7 +3763,7 @@ function cmOpen(t,x,y,row){cmClose();_cmT=t;_cmBack=row;const full=canSee(t.dept
  m.innerHTML=it('reply','↩ Reply',full?'':'View only')+it('replyall','↩↩ Reply all',full?'':'View only')+it('fwd','↪ Forward')+it('fwdatt','📎 Forward as attachment')+'<hr>'
   +it('mine','👤 Assign to me',!full?'View only':t.owner===ME?'Already yours':'')+'<div class="cmsub"><button type="button" role="menuitem" aria-haspopup="menu" data-cm="move"'+(full?'':' disabled')+'>📁 Move to… ▸</button><div class="cmlist" role="menu" aria-label="Move to">'+mv.map(([k,l])=>'<button type="button" role="menuitem" data-cm="to:'+esc(k)+'">'+esc(l)+'</button>').join('')+'</div></div>'
   +it('flag',t.flag?'⚑ Clear flag':'⚑ Flag')+it('unread',t.unread?'✉ Mark read':'✉ Mark unread')+'<hr>'
-  +it('ignore',ign?'🔔 Stop ignoring':'🔕 Ignore conversation',full?'':'View only')+it('del','🗑 Delete',!full||!can('delete')?"You can't delete this mail":'');
+  +it('ignore',ign?'🔔 Stop ignoring':'🔕 Ignore conversation',full?'':'View only')+it('del','🗑 Delete',!full||!can('delete')?"You can't delete this mail":'')+'<hr>'+it('report','\u{1F6E0} Report a problem');
  document.body.appendChild(m);
  const W=m.offsetWidth,H=m.offsetHeight;m.style.left=Math.max(4,Math.min(x,innerWidth-W-4))+'px';m.style.top=Math.max(4,Math.min(y,innerHeight-H-4))+'px';
  const sub=m.querySelector('.cmlist');if(sub&&x+W+180>innerWidth)sub.classList.add('left');
@@ -3673,6 +3781,7 @@ document.addEventListener('click',e=>{const m=document.querySelector('.cmenu');i
  e.preventDefault();e.stopPropagation();if(b.disabled)return;const a=b.dataset.cm,t=_cmT;if(!t)return;
  if(a==='move'){m.querySelector('.cmsub').classList.toggle('open');return}
  cmClose();
+ if(a==='report'){repDlg(t);return}   /* 24 Nov 2026 */
  if(a==='reply')compose({t});else if(a==='replyall')compose({t,all:true});else if(a==='fwd')compose({t,fwd:true});else if(a==='fwdatt')fwdAsAtt(t);
  else if(a==='mine'){assign(t,ME);toast('Assigned to you');render()}
  else if(a==='flag'){t.flag=!t.flag;save();render()}
@@ -5032,6 +5141,20 @@ const _ivSent=inView;inView=function(t){
     return (Array.isArray(l) && l.length) ? l : DEFAULT_QS;
   };
   function qsRun(step, list) {
+    /* 24 Nov 2026: a step that closes mail asks first, and warns about conversations whose
+       newest mail came in (the 16 Nov bulk-done lesson). The ones left open are skipped
+       by the whole step, not just by the "done" part of it. */
+    const _acts = step.acts || [];
+    if (_acts.indexOf('done') >= 0 && typeof window.rzAskBulkDone === 'function') {
+      const _l = (list || []).filter(Boolean);
+      if (_l.some(t => t.status !== 'done')) {
+        window.rzAskBulkDone(_l, keep => qsGo(step, _l.filter(t => t.status === 'done' || keep.indexOf(t) >= 0)));
+        return;
+      }
+    }
+    qsGo(step, list);
+  }
+  function qsGo(step, list) {
     let n = 0, skipped = 0;
     list.forEach(t => {
       if (!t) return;
@@ -5198,7 +5321,7 @@ const _ivSent=inView;inView=function(t){
   function pickList(t) {
     try {
       if (typeof SEL !== 'undefined' && SEL.size) {
-        const l = [].slice.call(SEL).map(T_).filter(Boolean);
+        const l = [...SEL].map(T_).filter(Boolean);   /* 24 Nov 2026: SEL is a Set - slice on it gave [] */
         if (l.length) return l;
       }
     } catch (e) {}

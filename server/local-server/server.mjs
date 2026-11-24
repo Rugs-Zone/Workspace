@@ -120,6 +120,158 @@ async function ensureKeys() {
 if (process.env.KEYREPAIR_OFF === "1") log("key check is OFF (KEYREPAIR_OFF=1)");
 else setTimeout(() => ensureKeys().catch((e) => log("key check failed:", e.message)), 5000);
 
+/* ---- 24 Nov 2026: one-time repairs ----------------------------------------------------
+   A job here runs ONCE on this database and then never again: it writes itself down in
+   rm_settings ("job_<id>"), and the next start sees that and does nothing. Before it changes
+   anything it saves the old values in rm_settings ("undo_<id>"), so it can be put back
+   exactly. It also refuses to run if the number of conversations it finds is not close to
+   what was expected, because that means the data is not what the job was written for.
+   Everything happens in ONE transaction, so a crash can never leave it half done.
+
+   reopen-bulk-done-2026-11-16: on 16 Nov between 13:40 and 14:00 UTC (19:10-19:30 IST) 367
+   Team Alpha conversations were marked done in one go. In 178 of them the BUYER wrote last and
+   nobody had answered, so real work was closed and disappeared from the work lists. Those 178
+   are put back to waiting. Nothing else is touched - not the owner, not read/unread, not the
+   folder - and the mail itself is never moved or changed. */
+const ONETIME = [{
+  id: "reopen-bulk-done-2026-11-16",
+  box: "teamalpha@rugscreation.com",
+  min: 50, max: 400,
+  note: "Reopened by system: marked done by mistake on 16 Nov",
+  // done threads of that mailbox, closed inside that half hour, still in the Inbox,
+  // whose NEWEST message came in (the buyer wrote last and was never answered)
+  find: `select t.gmail_thread_id as id, t.status, t.done_at, t.owner_id
+           from public.rm_threads t
+          where t.mailbox = $1
+            and t.status = 'done'
+            and t.done_at >= '2026-11-16 13:40:00+00'
+            and t.done_at <  '2026-11-16 14:00:00+00'
+            and coalesce(t.folder, 'inbox') = 'inbox'
+            and (select m.direction from public.rm_messages m
+                  where m.mailbox = t.mailbox and m.gmail_thread_id = t.gmail_thread_id
+                  order by m.sent_at desc, m.gmail_id desc limit 1) = 'in'
+          order by t.gmail_thread_id`
+}];
+
+async function oneTimeJob(j) {
+  const mark = "job_" + j.id, undo = "undo_" + j.id;
+  if ((await pool.query("select 1 from public.rm_settings where key = $1", [mark])).rowCount) return;
+  const c = await pool.connect();
+  try {
+    await c.query("set lock_timeout = '5s'");
+    await c.query("set statement_timeout = '180s'");
+    await c.query("begin");
+    const rows = (await c.query(j.find, [j.box])).rows;
+    if (rows.length < j.min || rows.length > j.max) {
+      await c.query("rollback");
+      return log("one-time job", j.id, "- NOT run:", rows.length, "conversations found, expected between", j.min, "and", j.max, "- the data is not what this job was written for, so nothing was changed");
+    }
+    const ids = rows.map((r) => r.id);
+    /* keep the old status and done_at first, so this can be undone exactly */
+    const keep = { at: new Date().toISOString(), mailbox: j.box, threads: rows.map((r) => ({ id: r.id, status: r.status, done_at: r.done_at })) };
+    await put(c, undo, keep);
+    /* the same rule the sync uses when a new mail reopens a closed conversation:
+       somebody owns it -> open, nobody owns it -> new (waiting to be given out) */
+    const n = (await c.query(
+      `update public.rm_threads
+          set status = case when owner_id is null then 'new' else 'open' end,
+              done_at = null,
+              updated_at = now()
+        where mailbox = $1 and gmail_thread_id = any($2::text[])`, [j.box, ids])).rowCount;
+    await c.query(
+      `insert into public.rm_activity (mailbox, gmail_thread_id, user_id, kind, text, at)
+       select $1, x, null, 'reopen', $2, now() from unnest($3::text[]) as x`, [j.box, j.note, ids]);
+    await put(c, mark, { at: new Date().toISOString(), reopened: n, undo_key: undo });
+    await c.query("commit");
+    log("one-time job", j.id, "- done:", n, "conversations put back to waiting; the old values are in rm_settings." + undo);
+  } catch (e) {
+    try { await c.query("rollback"); } catch {}
+    log("one-time job", j.id, "FAILED, nothing was changed:", e.message);
+  } finally { c.release(); }
+}
+/* written this way (delete, then insert) so it also works on a database whose rm_settings
+   has lost its primary key - an upsert there has nothing to match on */
+async function put(c, key, value) {
+  await c.query("delete from public.rm_settings where key = $1", [key]);
+  await c.query("insert into public.rm_settings (key, value, updated_at) values ($1, $2::jsonb, now())", [key, JSON.stringify(value)]);
+}
+if (process.env.ONETIME_OFF === "1") log("one-time repairs are OFF (ONETIME_OFF=1)");
+else setTimeout(async () => { for (const j of ONETIME) await oneTimeJob(j).catch((e) => log("one-time job", j.id, "error:", e.message)); }, 9000);
+
+/* ---- 24 Nov 2026: where "Report a problem" lands ----------------------------------------
+   One small table. It is created here rather than by hand, because this server is the only
+   thing that can reach the office database. Created once; after that the statement does
+   nothing. The admin reads it in Rugs Email -> Admin -> Problems. */
+async function reportsTable() {
+  try {
+    await pool.query(`create table if not exists public.rm_reports (
+      id bigserial primary key,
+      user_id text,
+      mailbox text,
+      gmail_thread_id text,
+      note text,
+      page text,
+      build text,
+      agent text,
+      switched_by text,
+      at timestamptz not null default now(),
+      done_at timestamptz,
+      done_by text)`);
+    await pool.query("create index if not exists rm_reports_at on public.rm_reports (at desc)");
+  } catch (e) { log("problem reports table:", e.message); }
+}
+setTimeout(() => reportsTable().catch((e) => log("problem reports table failed:", e.message)), 7000);
+
+/* ---- 24 Nov 2026: the index that makes searching the mail TEXT possible ----------------
+   Searching inside the mail text means reading rm_messages.body_text, which Postgres keeps
+   out of line (TOAST): on the live data that is a 2.2 GB read and about 10 seconds per
+   search - far too slow, and far too heavy for this little server, which is exactly the kind
+   of thing that used to make Rugs Email answer "the mail server was busy".
+
+   A trigram index fixes it. Measured on a full copy of the live database (349,164 messages):
+   built in 175 seconds, 468 MB on disk, and a search then takes 0.7 s instead of 10 s.
+
+   Until this index exists, rugs-mail-list's "find" action simply does not look inside the
+   mail text (it answers "text": false and the app says so) - so nothing breaks either way.
+
+   It is built with CREATE INDEX CONCURRENTLY, which does NOT lock the table: people can read
+   and write mail normally the whole time. If it is interrupted it leaves an unusable index
+   behind; that is detected and dropped, and the next start tries again. */
+async function searchIndex() {
+  const mark = "job_search-index-2026-11-24";
+  if ((await pool.query("select 1 from public.rm_settings where key = $1", [mark])).rowCount) return;
+  try {
+    const st = fs.statfsSync(here);
+    const freeGB = (st.bsize * st.bavail) / 1073741824;
+    if (freeGB < 3) return log("search index - NOT built: only", freeGB.toFixed(1), "GB free on this disk (it needs about 0.5 GB, and 3 GB free to be safe)");
+  } catch { /* older Node: no disk check, carry on */ }
+  const c = await pool.connect();
+  try {
+    const sz = (await pool.query("select pg_total_relation_size('public.rm_messages') b")).rows[0].b;
+    if (Number(sz) > 12 * 1073741824) return log("search index - NOT built: rm_messages is", (Number(sz) / 1073741824).toFixed(1), "GB, bigger than this job was written for");
+    /* an unusable leftover from an interrupted build */
+    const bad = await pool.query("select c.relname from pg_class c join pg_index i on i.indexrelid = c.oid where c.relname = 'rm_msg_body_trgm' and not i.indisvalid");
+    if (bad.rowCount) { await c.query("drop index if exists public.rm_msg_body_trgm"); log("search index - dropped an unfinished index from an earlier try"); }
+    await c.query("create extension if not exists pg_trgm");
+    const t0 = Date.now();
+    await c.query("set lock_timeout = '30s'");
+    await c.query("set statement_timeout = 0");                 // a real build takes minutes
+    await c.query("set maintenance_work_mem = '256MB'");
+    log("search index - building it now (people can keep using their mail; it takes a few minutes)");
+    await c.query("create index concurrently if not exists rm_msg_body_trgm on public.rm_messages using gin (body_text gin_trgm_ops)");
+    const ok = (await pool.query("select i.indisvalid v from pg_class c join pg_index i on i.indexrelid = c.oid where c.relname = 'rm_msg_body_trgm'")).rows[0];
+    if (!ok || !ok.v) throw new Error("the index was built but is not usable");
+    const size = (await pool.query("select pg_size_pretty(pg_relation_size('public.rm_msg_body_trgm')) s")).rows[0].s;
+    await put(c, mark, { at: new Date().toISOString(), seconds: Math.round((Date.now() - t0) / 1000), size });
+    log("search index - done in", Math.round((Date.now() - t0) / 1000), "s,", size, "- searching the mail text is now fast");
+  } catch (e) {
+    log("search index - NOT built (searching the mail text stays off, everything else works):", e.message);
+    try { await c.query("drop index if exists public.rm_msg_body_trgm"); } catch {}
+  } finally { c.release(); }
+}
+if (process.env.SEARCHINDEX_OFF === "1") log("the search index job is OFF (SEARCHINDEX_OFF=1)");
+else setTimeout(() => searchIndex().catch((e) => log("search index error:", e.message)), 60000);
+
 /* ---- 23 Nov 2026: the server keeps itself up to date (no more copying by hand) ---- */
 const UPD_BASE = (process.env.UPDATE_BASE || "https://raw.githubusercontent.com/Rugs-Zone/Workspace/main/server/local-server/").replace(/[/]+$/, "") + "/";
 const UPD_FILES = ["server.mjs", "sbshim.mjs", "rugs-mail.bundle.mjs", "rugs-mail-list.bundle.mjs", "rugs-mail-task.bundle.mjs", "rugs-mail-switch.bundle.mjs", "rugs-mail-cal.bundle.mjs", "rugs-mail-push.bundle.mjs"];

@@ -451,6 +451,20 @@
     return (Array.isArray(l) && l.length) ? l : DEFAULT_QS;
   };
   function qsRun(step, list) {
+    /* 24 Nov 2026: a step that closes mail asks first, and warns about conversations whose
+       newest mail came in (the 16 Nov bulk-done lesson). The ones left open are skipped
+       by the whole step, not just by the "done" part of it. */
+    const _acts = step.acts || [];
+    if (_acts.indexOf('done') >= 0 && typeof window.rzAskBulkDone === 'function') {
+      const _l = (list || []).filter(Boolean);
+      if (_l.some(t => t.status !== 'done')) {
+        window.rzAskBulkDone(_l, keep => qsGo(step, _l.filter(t => t.status === 'done' || keep.indexOf(t) >= 0)));
+        return;
+      }
+    }
+    qsGo(step, list);
+  }
+  function qsGo(step, list) {
     let n = 0, skipped = 0;
     list.forEach(t => {
       if (!t) return;
@@ -617,7 +631,7 @@
   function pickList(t) {
     try {
       if (typeof SEL !== 'undefined' && SEL.size) {
-        const l = [].slice.call(SEL).map(T_).filter(Boolean);
+        const l = [...SEL].map(T_).filter(Boolean);   /* 24 Nov 2026: SEL is a Set - slice on it gave [] */
         if (l.length) return l;
       }
     } catch (e) {}
