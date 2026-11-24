@@ -2596,6 +2596,31 @@ const _rlFND=renderList;renderList=function(){_rlFND();
  else if(FND.q===raw&&FND.at){txt=(FND.n?'+'+FND.n+' older conversation'+(FND.n===1?'':'s')+' found on the server':'Nothing older found on the server')+(FND.text?'':' \u00b7 the mail text is not searched yet (the server is still building its search index)');}
  if(txt)h.insertAdjacentHTML('beforeend','<div class="shelp"><span>\ud83d\udd0e '+esc(txt)+'</span>'+btn+'</div>')};
 document.addEventListener('click',e=>{if(e.target.closest('[data-fndgo]'))serverFind(($('#q')?.value||''),true)});
+
+/* ---------- 24 Nov 2026: say what is being hidden, instead of just hiding it ---------- */
+function hiddenNote(){
+ if(app!=='mail')return '';
+ const bits=[];
+ /* (a) the admin's "hide everything from before Go live" tick */
+ if(OLDMAIL.hide_before_live&&OLDMAIL.live_at){
+  const n=S.threads.filter(t=>beforeLive(t)&&(view.type!=='box'||t.dept===view.dept)).length;
+  const day=new Date(OLDMAIL.live_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+  if(n)bits.push('Mail from before Go live ('+day+') is hidden for everyone \u2014 '+n+' conversation'+(n===1?'':'s')+' here. '+(who(ME).role==='Admin'?'Admin \u2192 Overview \u2192 Old mail to show them again.':'Ask the admin to untick it in Admin \u2192 Old mail.'));
+ }
+ /* (b) a filter chip that is leaving rows out */
+ if(filt!=='all'){
+  const was=filt;let all=0;
+  try{filt='all';all=listRows().length}finally{filt=was}
+  const now=listRows().length;
+  const name={unread:'Unread',open:'Open',mine:'Assigned to me',alias:'Alias'}[filt]||filt;
+  if(all>now)bits.push('The '+name+' filter is hiding '+(all-now)+' conversation'+(all-now===1?'':'s')+' in this folder.<button class="btn" data-showall style="margin-left:8px">Show all</button>');
+ }
+ return bits.length?'<div class="shelp"><span>\u2139\ufe0f '+bits.join('</span></div><div class="shelp"><span>')+'</span></div>':'';
+}
+const _rlHid=renderList;renderList=function(){_rlHid();
+ const h=document.querySelector('.list .lhead');if(!h)return;
+ const n=hiddenNote();if(n)h.insertAdjacentHTML('beforeend',n)};
+document.addEventListener('click',e=>{if(e.target.closest('[data-showall]')){filt='all';render()}});
 function gSearch(){const raw=$('#q').value.trim();if(!raw)return;const o=parseQ(raw),gq=[o.words.join(' '),o.from?'from:'+o.from:'',o.to?'to:'+o.to:'',o.subject?'subject:'+o.subject:'',o.att?'has:attachment':''].filter(Boolean).join(' ');
  toast('🔎 Searching inside mail and attachments…');api('search',{q:gq||raw}).then(r=>{SEARCH_Q=raw;SEARCH_HITS=new Set((r.hits||[]).map(h=>h.mailbox+'|'+h.threadId));const n=S.threads.filter(t=>SEARCH_HITS.has(t.box+'|'+gidOf(t))).length;const miss=(r.hits||[]).map(x=>x.mailbox+'|'+x.threadId).filter(k=>!S.threads.some(t=>t.box+'|'+gidOf(t)===k));toast(`🔎 ${n} conversation${n===1?'':'s'} found in mail and attachments`+(miss.length?` · fetching ${miss.length} older one${miss.length===1?'':'s'}…`:''));renderList();if(miss.length)api('find',{ids:miss.slice(0,400)}).then(r2=>{mergeList(r2);toast(`🔎 ${S.threads.filter(t=>SEARCH_HITS.has(t.box+'|'+gidOf(t))).length} found—older mail included`);render()}).catch(e=>toast('Could not load the older ones: '+e.message))}).catch(e=>toast('Search: '+e.message))}
 const _rlX=renderList;
@@ -3226,13 +3251,20 @@ let MORE_PAGE=null,MORE_DL=0;   // progress hook and deadline - used by the sign
 async function loadMoreBox(deptId,phase){const d=dept(deptId);if(!d||!window.__liveReady)return;const box=mailOf(d).toLowerCase(),st=MORE[box]||(MORE[box]={busy:false,done:false,recent:false});if(st.busy||st.done)return;
  const all=phase==='all',lim=Date.now()-(all?HIST_DAYS:Math.min(RECENT_DAYS,HIST_DAYS))*D;st.busy=true;
  DLS.busy=true;DLS.phase=all?'all':'recent';try{stbarPaint()}catch(e){}
- try{for(let page=0;page<80;page++){const mine=S.threads.filter(t=>t.dept===deptId&&!t._cache&&t.msgs.some(m=>!m.ours&&!m.by));const oldest=mine.length?Math.min(...mine.map(t=>t.last)):Date.now();
-   DLS.oldest=oldest;DLS.n=mine.length;try{stbarPaint()}catch(e){}
-   if(oldest<=lim){if(all)st.done=true;st.recent=true;break}
+ /* 24 Nov 2026: walk backwards on a cursor the SERVER's answers move, NOT on the oldest
+    conversation in memory - one stray old mail in the device copy used to make this loader
+    think the mailbox was finished, which is how 3-15 Nov went missing from Team Alpha's
+    Inbox. See server/patch-loader-gap.js. */
+ if(!st.cur)st.cur=Date.now();
+ try{for(let page=0;page<80;page++){
+   DLS.oldest=st.cur;DLS.n=S.threads.filter(t=>t.dept===deptId&&!t._cache&&t.msgs.some(m=>!m.ours&&!m.by)).length;try{stbarPaint()}catch(e){}
+   if(st.cur<=lim){if(all)st.done=true;st.recent=true;break}
    if(!all&&MORE_DL&&Date.now()>MORE_DL)break;   // sign-in has waited long enough: the rest goes on quietly
-   const r=await api('more',{box,before:oldest,limit:500});if(r.history_days)HIST_DAYS=r.history_days;const n=mergeList(r);
+   const r=await api('more',{box,before:st.cur,limit:500});if(r.history_days)HIST_DAYS=r.history_days;mergeList(r);
+   const got=r.threads||[];
+   if(got.length){const back=Math.min(...got.map(x=>Date.parse(x.last_msg_at)||Date.now()));st.cur=back<st.cur?back:st.cur-D}   /* never stand still */
    if(app==='mail')renderListKeep();renderFolders();if(MORE_PAGE)try{MORE_PAGE(deptId)}catch(e){}
-   if((r.threads||[]).length<500||!n){st.done=true;st.recent=true;break}
+   if(got.length<500){st.done=true;st.recent=true;break}   /* a short page is the real end of the mailbox */
    if(all)await new Promise(go=>setTimeout(go,window.SLOW_PC?900:250))}}   // gentle on a small server and an old PC
  catch(e){if(!all)toast('Could not load older mail: '+e.message)}
  finally{st.busy=false;DLS.busy=false;if(st.done)DLS.doneAt=Date.now();try{stbarPaint()}catch(e){}if(app==='mail')renderListKeep()}}
@@ -3648,7 +3680,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-24-1';
+const APP_BUILD='2026-11-24-2';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
