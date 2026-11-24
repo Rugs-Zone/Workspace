@@ -466,9 +466,42 @@ function partOf(p, mime2) {
 }
 function attachments(p, out = []) {
   if (!p) return out;
-  if (p.filename && p.body?.attachmentId) out.push({ id: p.body.attachmentId, name: p.filename, mime: p.mimeType, size: p.body.size || 0 });
+  const hv = (nm) => (p.headers || []).find((h) => h.name.toLowerCase() === nm)?.value || "";
+  const disp = hv("content-disposition");
+  const cid = hv("content-id").replace(/[<>\s]/g, "") || hv("x-attachment-id").trim();
+  const inline = /^\s*inline/i.test(disp) || (!!cid && !/^\s*attachment/i.test(disp));
+  if (p.filename && p.body?.attachmentId) out.push({ id: p.body.attachmentId, name: p.filename, mime: p.mimeType, size: p.body.size || 0, ...inline ? { inline: true } : {}, ...cid ? { cid } : {} });
+  /* 24 Nov 2026: a mail attached as a file that Gmail expanded instead of keeping whole - no
+     attachmentId to fetch, so it is marked and the download rebuilds it from these parts */
+  else if (/^message\/rfc822$/i.test(p.mimeType || "") && (p.parts || []).length) {
+    const nm = p.filename || ((p.parts[0].headers || []).find((h) => h.name.toLowerCase() === "subject")?.value || "Attached mail").replace(/[\\/:*?"<>|\r\n]+/g, " ").trim().slice(0, 80) + ".eml";
+    out.push({ id: "", name: /\.eml$/i.test(nm) ? nm : nm + ".eml", mime: "message/rfc822", size: p.body?.size || 0, rebuild: true, part: p });
+  }
   for (const c of p.parts || []) attachments(c, out);
   return out;
+}
+/* write a Gmail payload back out as a mail file. Gmail hands us each body already decoded, so
+   every part goes out as base64 and says so; headers are kept as they came. */
+function rfc822Raw(part) {
+  const CRLF = "\r\n";
+  const one = (p) => {
+    const keep = (p.headers || []).filter((h) => !/^content-transfer-encoding$/i.test(h.name));
+    const ct = keep.find((h) => /^content-type$/i.test(h.name));
+    if ((p.parts || []).length) {
+      let bd = /boundary="?([^";]+)"?/i.exec(ct?.value || "")?.[1] || "";
+      const hs = keep.slice();
+      if (!bd) { bd = "rzb" + Math.random().toString(36).slice(2, 10); hs.push({ name: "Content-Type", value: (p.mimeType || "multipart/mixed") + '; boundary="' + bd + '"' }); }
+      return hs.map((h) => h.name + ": " + h.value).join(CRLF) + CRLF + CRLF +
+        (p.parts || []).map((c) => "--" + bd + CRLF + one(c)).join("") + "--" + bd + "--" + CRLF;
+    }
+    const b64 = toStdB64(String(p.body?.data || "")).replace(/[^A-Za-z0-9+/=]/g, "");
+    const wrapped = (b64.match(/.{1,76}/g) || []).join(CRLF);
+    const hs = keep.concat(b64 ? [{ name: "Content-Transfer-Encoding", value: "base64" }] : []);
+    return hs.map((h) => h.name + ": " + h.value).join(CRLF) + CRLF + CRLF + wrapped + CRLF;
+  };
+  const msg = (part.parts || [])[0];
+  if (!msg) throw new E("That attached mail could not be read from Gmail", 502);
+  return one(msg);
 }
 function inlineParts(p, out = []) {
   if (!p) return out;
@@ -582,7 +615,7 @@ async function saveMessage(box, m, sentBy = null) {
     // full mail stays in Gmail; opened live (no copy in Supabase)
     sent_at: new Date(Number(m.internalDate)).toISOString(),
     has_attachments: atts.length > 0,
-    attachments: atts,
+    attachments: atts.map(({ part, ...x }) => x),   /* 24 Nov 2026: never store the Gmail payload of an expanded attached mail */
     labels: m.labelIds || [],
     rfc_message_id: h["message-id"] || null,
     list_unsub: !!h["list-unsubscribe"],
@@ -1007,7 +1040,7 @@ async function folder(tok, box, key, name, parent) {
   return f.id;
 }
 var skipAtt = (a) => /^image\//i.test(a.mime || "") && (a.size || 0) < 4e4;
-var slimAtts = (a) => (Array.isArray(a) ? a : []).map((x) => ({ name: x.name, mime: x.mime, size: x.size }));
+var slimAtts = (a) => (Array.isArray(a) ? a : []).map((x) => ({ name: x.name, mime: x.mime, size: x.size, ...x.inline ? { inline: true } : {}, ...x.cid ? { cid: x.cid } : {} }));
 async function driveCopy(limit = 5, t0 = Date.now()) {
   const cols = "mailbox,gmail_id,gmail_thread_id,direction,from_email,to_text,sent_at,attachments,drive_tries";
   const { data: fresh } = await sb.from("rm_messages").select(cols).eq("has_attachments", true).is("drive_status", null).order("sent_at", { ascending: false }).limit(limit);
@@ -1021,7 +1054,7 @@ async function driveCopy(limit = 5, t0 = Date.now()) {
     if (Date.now() - t0 > DEADLINE_MS) break;
     const files = [];
     try {
-      const atts = (m.attachments || []).filter((a) => !skipAtt(a));
+      const atts = (m.attachments || []).filter((a) => !skipAtt(a) && a.id);   /* 24 Nov 2026: an expanded attached mail has no id to fetch */
       if (!atts.length) {
         await sb.from("rm_messages").update({ drive_status: "none", drive_files: [], attachments: slimAtts(m.attachments) }).eq("mailbox", m.mailbox).eq("gmail_id", m.gmail_id);
         continue;
@@ -1597,6 +1630,11 @@ ${String(p.thread.body || "").slice(0, 3e3)}
       if (!a2) throw new E("Attachment not found", 404);
       const mb = (a2.size || 0) / 1048576;
       if (mb > 25) throw new E("This file is " + mb.toFixed(1) + " MB \u2014 too big to open in Rugs Email. Open the mail in Gmail to get it.");
+      if (a2.rebuild) {
+        /* an attached mail Gmail expanded: build the .eml back from its parts */
+        const raw = rfc822Raw(a2.part);
+        return { name: a2.name, mime: "message/rfc822", b64: Buffer.from(raw, "utf8").toString("base64"), rebuilt: true };
+      }
       let data = a2.data || "";
       const aid = a2.id || a2.aid;
       if (!data && aid) data = (await gmail(tok, `messages/${p.gmailId}/attachments/${aid}`)).data || "";

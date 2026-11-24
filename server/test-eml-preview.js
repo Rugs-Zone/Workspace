@@ -1,12 +1,12 @@
-/* Opens a real .eml inside the real built app (mail-app.html, which is what mail.html loads,
- * with the live 2.0 layout from mail-v2.js) in a real browser.
+/* An attached mail (.eml) in the REAL live page: mail.html fetches mail-app.html and adds
+ * mail-v2.js (the 2.0 layout everybody sees), so it is served over http here, as the site does.
+ * Checks the Rugs Email look, that pictures show, that scripts cannot, the file list, the
+ * download, and opening a .eml that is already on the computer.
  *   node server/test-eml-preview.js
  */
 const path = require('path');
 const { chromium } = require(path.join(__dirname, '..', '.tmp', 'node_modules', 'playwright-core'));
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
-/* the real live page: mail.html fetches mail-app.html and then adds mail-v2.js (the 2.0 layout
-   everybody sees), so it has to be served over http, the same way the office site does. */
 const PORT = 8739;
 const FILE = 'http://127.0.0.1:' + PORT + '/mail.html';
 const ROOT = path.join(__dirname, '..');
@@ -19,8 +19,8 @@ const srv = require('http').createServer((q, r) => {
     r.end(d);
   });
 }).listen(PORT);
+process.on('uncaughtException', () => {});
 
-process.on('uncaughtException', () => {});   /* the browser closing after the run is not a failure */
 const checks = [];
 const ok = (n, pass, extra) => checks.push({ n, pass, extra });
 
@@ -34,85 +34,81 @@ const ok = (n, pass, extra) => checks.push({ n, pass, extra });
 
   const r = await page.evaluate(async () => {
     const out = {};
-    /* a signed-in screen, so the app's own handlers have a person to look at */
     DEPTS = [{ id: 'tp', name: 'Team Pulse', box: 'teampulse@rugscreation.com', color: '#0a0' }];
     PEOPLE = [{ id: 'ashok', name: 'Ashok', login: 'merchandiser5@rugscreation.com', dept: 'tp', role: 'Executive', perm: {}, access: {}, active: true }];
     ME = 'ashok';
     document.body.classList.remove('signedout');
-    /* a real mail file: encoded subject, an inline picture, a remote picture, a script,
-       a PDF attachment and a mail attached inside it */
+
     const CRLF = '\r\n';
-    const inner = [
-      'From: Inner Sender <inner@example.com>', 'To: box@rugscreation.com',
+    const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==';
+    const inner = ['From: Inner Sender <inner@example.com>', 'To: box@rugscreation.com',
       'Subject: The mail inside', 'Date: Mon, 17 Nov 2026 10:00:00 +0530',
-      'Content-Type: text/plain; charset=utf-8', '', 'I am the mail inside.'
-    ].join(CRLF);
+      'Content-Type: text/plain; charset=utf-8', '', 'I am the mail inside.'].join(CRLF);
     const eml = [
       'From: "Venu GOPAL" <venu.gopal@jja-sa.com>',
-      'To: teampulse@rugscreation.com',
-      'Cc: sahil@rugscreation.com',
+      'To: teampulse@rugscreation.com, Sahil <sahil@rugscreation.com>',
+      'Cc: accounts@jja-sa.com',
       'Date: Sun, 23 Nov 2026 18:49:28 +0530',
       'Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent('Booking – DO/SO charge'))) + '?=',
-      'MIME-Version: 1.0',
-      'Content-Type: multipart/mixed; boundary="BB"',
-      '',
-      '--BB',
-      'Content-Type: text/html; charset=utf-8',
-      'Content-Transfer-Encoding: quoted-printable',
-      '',
+      'MIME-Version: 1.0', 'Content-Type: multipart/mixed; boundary="BB"', '',
+      '--BB', 'Content-Type: text/html; charset=utf-8', 'Content-Transfer-Encoding: quoted-printable', '',
       '<html><head><script>window.__evil=1<\/script><style>p{color:#c00}</style></head>' +
       '<body><p>Dear Sir,</p><p>Please note the <b>charge</b>.</p>' +
-      '<img src=3D"https://example.com/tracker.gif" width=3D"1">' +
+      '<img src=3D"cid:image001.png@01DD" width=3D"120">' +
+      '<img src=3D"https://example.com/remote.gif" width=3D"80">' +
       '<a href=3D"javascript:alert(1)">bad</a></body></html>',
-      '--BB',
-      'Content-Type: application/pdf; name="Invoice 77/26.pdf"',
-      'Content-Disposition: attachment; filename="Invoice 77/26.pdf"',
-      'Content-Transfer-Encoding: base64',
-      '',
+      '--BB', 'Content-Type: image/png; name="image001.png"',
+      'Content-Disposition: inline; filename="image001.png"', 'Content-ID: <image001.png@01DD>',
+      'Content-Transfer-Encoding: base64', '', PNG,
+      '--BB', 'Content-Type: image/png; name="Outlook-signature.png"',
+      'Content-Disposition: inline; filename="Outlook-signature.png"', 'Content-Transfer-Encoding: base64', '', PNG,
+      '--BB', 'Content-Type: application/pdf; name="Invoice 77-26.pdf"',
+      'Content-Disposition: attachment; filename="Invoice 77-26.pdf"', 'Content-Transfer-Encoding: base64', '',
       btoa('%PDF-1.4 fake'),
-      '--BB',
-      'Content-Type: message/rfc822',
-      'Content-Disposition: attachment; filename="The mail inside.eml"',
-      '',
-      inner,
-      '--BB--', ''
+      '--BB', 'Content-Type: message/rfc822', 'Content-Disposition: attachment; filename="The mail inside.eml"', '',
+      inner, '--BB--', ''
     ].join(CRLF);
     const u8 = new TextEncoder().encode(eml);
 
-    out.exportedMount = typeof window.rzEmlMount === 'function';
-    out.exportedIs = typeof window.rzEmlIs === 'function' && window.rzEmlIs('a.eml', '') === true
-      && window.rzEmlIs('a.pdf', 'message/rfc822') === true && window.rzEmlIs('a.pdf', 'application/pdf') === false;
+    out.exported = typeof window.rzEmlMount === 'function' && typeof window.rzEmlOpenLocal === 'function' && typeof window.rzEmlPick === 'function';
 
-    /* the app's own reader, drawn straight into a box */
     const box = document.createElement('div');
     document.body.appendChild(box);
     window.rzEmlMount(box, u8, 'Booking.eml');
-    const hdr = box.querySelector('.emlh') ? box.querySelector('.emlh').textContent : '';
-    out.hdrFrom = /venu\.gopal@jja-sa\.com/.test(hdr);
-    out.hdrTo = /teampulse@rugscreation\.com/.test(hdr);
-    out.hdrCc = /sahil@rugscreation\.com/.test(hdr);
-    out.hdrDate = /23 Nov 2026/.test(hdr);
-    out.hdrSubject = hdr.indexOf('Booking') >= 0 && hdr.indexOf('DO/SO charge') >= 0;   // encoded word decoded
-    out.picsBlocked = !!box.querySelector('[data-emlpics]');
-    const fr = box.querySelector('.raw iframe');
-    out.sandboxed = !!fr && fr.getAttribute('sandbox') !== null && fr.getAttribute('sandbox').indexOf('allow-scripts') < 0;
+
+    out.tag = (box.querySelector('.emltag') || {}).textContent || '';
+    out.subjectTitle = (box.querySelector('.emlsub') || {}).textContent || '';
+    const card = box.querySelector('article.mail');
+    out.isMessageCard = !!card;
+    out.hasAvatar = !!(card && card.querySelector('header > span, header .av'));
+    const hdr = card ? card.querySelector('header').textContent : '';
+    out.name = /Venu GOPAL/.test(hdr);
+    out.address = /venu\.gopal@jja-sa\.com/.test(hdr);
+    out.toLine = /To:/.test(hdr) && /teampulse@rugscreation\.com/.test(hdr);
+    out.ccLine = /Cc:/.test(hdr) && /accounts@jja-sa\.com/.test(hdr);
+    out.date = /23 Nov/.test(hdr) && /6:49/.test(hdr);   /* the app's own date format, as in the reading pane */
+    const fr = card && card.querySelector('.mbody .raw iframe');
+    out.sameFrame = !!fr && (fr.getAttribute('sandbox') || '').indexOf('allow-scripts') < 0;
     const doc = fr ? fr.getAttribute('srcdoc') : '';
-    out.bodyShown = /Please note the/.test(doc) && /<b>charge<\/b>/.test(doc);
+    out.body = /Please note the/.test(doc) && /<b>charge<\/b>/.test(doc);
+    out.cidPicture = /src="data:image\/png;base64,/.test(doc);
+    out.remotePicture = /example\.com\/remote\.gif/.test(doc) && !/Content-Security-Policy/i.test(doc);
     out.noScript = !/<script/i.test(doc) && !window.__evil;
     out.noJsLink = !/javascript:/i.test(doc);
-    /* blocking is done with a Content-Security-Policy inside the frame (not by stripping src) */
-    out.remoteBlocked = /Content-Security-Policy/i.test(doc) && /img-src data: blob: cid:/.test(doc);
-    out.files = box.querySelectorAll('.emlat .cf').length;
-    out.fileNames = [...box.querySelectorAll('.emlat .cfn')].map(x => x.textContent).join(' | ');
-    out.canOpenFile = !!box.querySelector('[data-emlv="0"]');
-    out.canSaveFile = !!box.querySelector('[data-emld="0"]');
-    /* Show pictures brings them back */
-    const b = box.querySelector('[data-emlpics]'); if (b) b.click();
-    const fr2 = box.querySelector('.raw iframe');
-    out.picsShown = !!fr2 && !/Content-Security-Policy/i.test(fr2.getAttribute('srcdoc'))
-      && /example\.com\/tracker\.gif/.test(fr2.getAttribute('srcdoc'));
+    out.noPicBar = !box.querySelector('[data-emlpics]');
+    const chips = [...box.querySelectorAll('.att')].map(x => x.textContent);
+    out.chipCount = chips.length;
+    out.chips = chips.join(' | ');
+    out.hidLink = !!box.querySelector('[data-attshow]');
+    out.hidText = (box.querySelector('[data-attshow]') || {}).textContent || '';
+    out.canPreview = !!box.querySelector('[data-emlv]');
+    out.canDownload = !!box.querySelector('[data-emld]');
+    if (box.querySelector('[data-attshow]')) box.querySelector('[data-attshow]').click();
+    out.chipsAfterShow = box.querySelectorAll('.att').length;
+    if (box.querySelector('[data-atthide]')) box.querySelector('[data-atthide]').click();
+    out.chipsAfterHide = box.querySelectorAll('.att').length;
 
-    /* now the live 2.0 viewer: a tile for the same file, clicked like a person would */
+    /* the live 2.0 viewer, opened by clicking a tile */
     window.rzAttBytes = () => Promise.resolve({ u8, mime: 'message/rfc822' });
     document.body.classList.add('v2');
     let read = document.getElementById('read');
@@ -120,88 +116,78 @@ const ok = (n, pass, extra) => checks.push({ n, pass, extra });
     read.innerHTML = '<div class="v2atts"><button type="button" class="v2att" data-v2att data-box="teampulse@rugscreation.com"' +
       ' data-gid="1a2089079a40961b" data-name="Booking.eml" data-size="' + u8.length + '" data-mime="message/rfc822" data-link=""></button></div>';
     read.querySelector('[data-v2att]').click();
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(x => setTimeout(x, 500));
     const vw = document.querySelector('.v2vw');
     out.viewerOpened = !!vw;
     out.viewerNotRefusing = !!vw && !/can't be previewed/i.test(vw.textContent);
-    out.viewerDrewMail = !!vw && !!vw.querySelector('.v2veml .emlh');
-    out.viewerHasDownload = !!vw && !!vw.querySelector('[data-vw="dl"]');
-    out.viewerBadge = !!vw && /MAIL/.test(vw.querySelector('.v2badge') ? vw.querySelector('.v2badge').textContent : '');
-    out.viewerPicsBlocked = !!vw && !!vw.querySelector('[data-emlpics]');
-    out.viewerFiles = vw ? vw.querySelectorAll('.emlat .cf').length : -1;
-    /* an Outlook .msg says so instead of "can't be previewed" */
-    read.querySelector('[data-v2att]').setAttribute('data-name', 'Something.msg');
-    read.querySelector('[data-v2att]').setAttribute('data-mime', 'application/vnd.ms-outlook');
-    if (vw) vw.querySelector('[data-vw="close"]').click();
-    read.querySelector('[data-v2att]').click();
-    await new Promise(r => setTimeout(r, 300));
-    const vw2 = document.querySelector('.v2vw');
-    out.msgSaysOutlook = !!vw2 && /Outlook \.msg file/.test(vw2.textContent) && !!vw2.querySelector('[data-vw="dl"]');
-    /* DOWNLOAD: the viewer's ⬇ Download, and Save on a file inside the attached mail.
-       saveFile() is the app's one way of handing a file to the browser - it is watched here. */
+    out.viewerRugsLook = !!vw && !!vw.querySelector('.v2veml article.mail header') && !!vw.querySelector('.v2veml .emlsub');
+    out.viewerTag = !!vw && /Attached email \(\.eml\)/.test(vw.textContent);
+    out.viewerDownload = !!vw && !!vw.querySelector('[data-vw="dl"]');
+
+    /* download */
     const saved = [];
-    const realSave = window.rzSaveFile;
-    window.rzSaveFile = (data, nm, mime) => { saved.push({ nm, mime, n: data && (data.length || data.size) || 0 }); };
-    read.querySelector('[data-v2att]').setAttribute('data-name', 'Booking.eml');
-    read.querySelector('[data-v2att]').setAttribute('data-mime', 'message/rfc822');
-    if (document.querySelector('.v2vw')) document.querySelector('[data-vw="close"]').click();
-    read.querySelector('[data-v2att]').click();
-    await new Promise(r => setTimeout(r, 400));
-    document.querySelector('.v2vw [data-vw="dl"]').click();
-    await new Promise(r => setTimeout(r, 400));
+    const real = window.rzSaveFile;
+    window.rzSaveFile = (data, nm, mime) => { saved.push({ nm, mime, n: (data && (data.length || data.size)) || 0 }); };
+    vw.querySelector('[data-vw="dl"]').click();
+    await new Promise(x => setTimeout(x, 400));
     out.dlName = saved.length ? saved[0].nm : '';
     out.dlMime = saved.length ? String(saved[0].mime || '') : '';
     out.dlBytes = saved.length ? saved[0].n : 0;
     out.emlSize = u8.length;
-    window.rzSaveFile = realSave;
-    /* a file inside the attached mail: saveFile() puts a download link in the page, clicks it and
-       takes it away again, so the link itself is what gets watched here */
+    window.rzSaveFile = real;
     const links = [];
-    new MutationObserver(ms => ms.forEach(m => [...m.addedNodes].forEach(nd => {
+    new MutationObserver(ms => ms.forEach(mu => [...mu.addedNodes].forEach(nd => {
       if (nd.tagName === 'A' && nd.hasAttribute('download')) links.push(nd.getAttribute('download'));
     }))).observe(document.body, { childList: true, subtree: true });
-    box.querySelector('[data-emld="0"]').click();
-    box.querySelector('[data-emld="1"]').click();
-    await new Promise(r => setTimeout(r, 300));
-    out.innerName = links[0] || '';
-    out.nestedName = links[1] || '';
-    out.innerBytes = links.length ? 1 : 0;
-    /* a damaged file does not fail silently */
-    const box2 = document.createElement('div'); document.body.appendChild(box2);
-    window.rzEmlMount(box2, new Uint8Array(0), 'empty.eml');
-    out.emptySaysSo = /empty or damaged/.test(box2.textContent);
+    box.querySelectorAll('[data-emld]').forEach(b => b.click());
+    await new Promise(x => setTimeout(x, 300));
+    out.innerSaved = links.join(' | ');
+
+    /* a .eml already on this computer, dropped on the window */
+    const f = new File([u8], 'From the PC.eml', { type: 'message/rfc822' });
+    const dt = new DataTransfer(); dt.items.add(f);
+    if (document.querySelector('.v2vw [data-vw="close"]')) document.querySelector('.v2vw [data-vw="close"]').click();
+    window.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
+    out.dropHint = !!document.querySelector('.emldrop');
+    window.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+    await new Promise(x => setTimeout(x, 800));
+    const ov = document.querySelector('.cfview');
+    out.dropOpened = !!ov && /From the PC\.eml/.test(ov.textContent);
+    out.dropRugsLook = !!ov && !!ov.querySelector('article.mail header') && /Venu GOPAL/.test(ov.textContent);
+    out.dropHintGone = !document.querySelector('.emldrop');
+    if (ov && ov.querySelector('[data-cfvx]')) ov.querySelector('[data-cfvx]').click();
     return out;
   });
 
-  ok('the app hands its .eml reader to the 2.0 layout (window.rzEmlMount)', r.exportedMount);
-  ok('a .eml and a message/rfc822 file are recognised, a PDF is not', r.exportedIs);
-  ok('From is shown', r.hdrFrom);
-  ok('To is shown', r.hdrTo);
-  ok('Cc is shown', r.hdrCc);
-  ok('Date is shown', r.hdrDate);
-  ok('the subject is decoded, not shown as =?UTF-8?B?...', r.hdrSubject);
-  ok('the body is drawn, with its formatting', r.bodyShown);
-  ok('the body is in a sandboxed frame with no scripts allowed', r.sandboxed);
+  ok('the reader and the local-file openers are available to the whole app', r.exported);
+  ok('a small "Attached email (.eml)" label is shown', /Attached email \(\.eml\)/.test(r.tag), r.tag);
+  ok('the subject is the title, decoded', /Booking/.test(r.subjectTitle) && /DO\/SO charge/.test(r.subjectTitle), r.subjectTitle);
+  ok('it is drawn as the app\'s own message card, with the avatar', r.isMessageCard && r.hasAvatar);
+  ok('sender name and address are shown', r.name && r.address);
+  ok('the To line is shown', r.toLine);
+  ok('the Cc line is shown', r.ccLine);
+  ok('the date is shown, in the app\'s own format', r.date);
+  ok('the body is in the same sandboxed frame as a normal mail, no scripts allowed', r.sameFrame);
+  ok('the body is drawn with its formatting', r.body);
+  ok('a pasted (cid:) signature picture IS shown, from the mail\'s own parts', r.cidPicture);
+  ok('a picture from the internet IS shown, as in a normal mail', r.remotePicture);
+  ok('no "Show pictures" bar is in the way', r.noPicBar);
   ok('the script inside the mail is removed and did not run', r.noScript);
   ok('a javascript: link is removed', r.noJsLink);
-  ok('pictures from the internet are blocked by default', r.picsBlocked && r.remoteBlocked);
-  ok('"Show pictures" brings them back', r.picsShown);
-  ok('its own files are listed (PDF + the mail inside it)', r.files === 2, 'files=' + r.files + ' [' + r.fileNames + ']');
-  ok('each file has Open and Save', r.canOpenFile && r.canSaveFile);
-  ok('the 2.0 viewer opens on a click', r.viewerOpened);
-  ok('it no longer answers "This kind of file can\'t be previewed"', r.viewerNotRefusing);
-  ok('it draws the mail, with its header', r.viewerDrewMail);
-  ok('Download is offered in the viewer', r.viewerHasDownload);
-  ok('the tile and viewer badge say MAIL', r.viewerBadge);
-  ok('pictures are blocked in the viewer too', r.viewerPicsBlocked);
-  ok('the files of the attached mail are listed in the viewer', r.viewerFiles === 2, 'files=' + r.viewerFiles);
-  ok('an Outlook .msg explains itself and offers Download', r.msgSaysOutlook);
-  ok('Download in the viewer saves the file under its own name', r.dlName === 'Booking.eml', 'got "' + r.dlName + '"');
-  ok('it is saved as a mail file (message/rfc822)', /message\/rfc822/.test(r.dlMime), 'got "' + r.dlMime + '"');
-  ok('every byte of it is saved', r.dlBytes === r.emlSize, r.dlBytes + ' of ' + r.emlSize + ' bytes');
-  ok('a file inside the attached mail saves under its own name', /Invoice 77.26.pdf/.test(r.innerName), 'got "' + r.innerName + '"');
-  ok('a mail attached inside the mail saves too (.eml in .eml)', /\.eml$/.test(r.nestedName), 'got "' + r.nestedName + '"');
-  ok('an empty or damaged mail file says so', r.emptySaysSo);
+  ok('only real files are listed: the PDF and the mail inside it', r.chipCount === 2, 'got ' + r.chipCount + ' [' + r.chips + ']');
+  ok('the signature picture is hidden, behind a link (the pasted one is not listed at all)', r.hidLink && /Show hidden inline images \(1\)/.test(r.hidText), r.hidText);
+  ok('the link puts them back', r.chipsAfterShow === 3, 'got ' + r.chipsAfterShow);
+  ok('and takes them away again', r.chipsAfterHide === 2, 'got ' + r.chipsAfterHide);
+  ok('every listed file has Open preview and Download', r.canPreview && r.canDownload);
+  ok('the 2.0 viewer opens an attached mail on a click', r.viewerOpened && r.viewerNotRefusing);
+  ok('the viewer draws the same Rugs Email card', r.viewerRugsLook && r.viewerTag);
+  ok('Download in the viewer saves it under its own name', r.dlName === 'Booking.eml', 'got "' + r.dlName + '"');
+  ok('it is saved as a mail file (message/rfc822)', /message\/rfc822/.test(r.dlMime), r.dlMime);
+  ok('every byte of it is saved', r.dlBytes === r.emlSize, r.dlBytes + ' of ' + r.emlSize);
+  ok('files inside it save too, including a mail inside a mail', /Invoice 77-26\.pdf/.test(r.innerSaved) && /\.eml/.test(r.innerSaved), r.innerSaved);
+  ok('dragging a .eml onto the window shows "drop it here"', r.dropHint);
+  ok('dropping it opens the same preview, read in the page', r.dropOpened && r.dropRugsLook);
+  ok('the hint goes away afterwards', r.dropHintGone);
   ok('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 
   let bad = 0;

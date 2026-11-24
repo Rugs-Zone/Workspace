@@ -28,6 +28,21 @@
 <script>
 // Rugs Email on its own page (Nov 2026). The mail app itself lives inside the Workspace file (index.html,
 // EMAIL_HTML_B64), so this page always runs the same, latest version — only the look is Outlook-style.
+/* 24 Nov 2026: when Windows starts the installed app WITH a .eml file, the file arrives
+   before the mail app has loaded. It is kept here and the app picks it up when it is ready. */
+(function () {
+  try {
+    if (!('launchQueue' in window)) return;
+    window.__RUGS_LAUNCH_FILES__ = [];
+    launchQueue.setConsumer(function (p) {
+      if (!p || !p.files || !p.files.length) return;
+      p.files[0].getFile().then(function (f) {
+        if (typeof window.rzEmlOpenLocal === 'function') window.rzEmlOpenLocal(f);
+        else window.__RUGS_LAUNCH_FILES__.push(f);
+      }).catch(function () {});
+    });
+  } catch (e) {}
+})();
 (function () {
   try { if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {}); } catch (e) {}
 

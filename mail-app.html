@@ -1608,9 +1608,10 @@ function bell(){if($('.pop')){$('#layer').innerHTML='';return}
  $('#mar').onclick=()=>{S.notifs.forEach(n=>n.read=true);save();$('#layer').innerHTML='';renderTop()}}
 function meMenu(){if($('.pop')){$('#layer').innerHTML='';return}const me=who(ME);
  $('#layer').innerHTML=`<div class="pop" role="dialog" aria-label="Account"><header><div class="person">${av(me.name)}<div class="w"><b>${esc(me.name)}</b><span>${esc(me.role)} · ${esc(dept(me.dept).name)}</span></div></div></header><div class="menu">
- <button id="mP">${ico('user')} My profile</button><button id="mW">${ico('key')} Change my password</button>${LIVE?'':'<button id="mN">📥 Simulate a new email (AI tags the topic)</button>'}<button id="mU">${ico('logout')} Sign out</button><button id="mL">${onLeave(ME)?ico('check')+' I’m back — mark available':ico('plane')+' Going on leave'}</button><button id="mS">${ico('edit')} My signature</button><button id="mB">\u{1F6E0} Report a problem</button><button id="mT">${ico('sun')} Light / dark</button>${LIVE?'':'<button id="mR">↺ Reset sample data</button>'}</div></div>`;
+ <button id="mP">${ico('user')} My profile</button><button id="mW">${ico('key')} Change my password</button>${LIVE?'':'<button id="mN">📥 Simulate a new email (AI tags the topic)</button>'}<button id="mU">${ico('logout')} Sign out</button><button id="mL">${onLeave(ME)?ico('check')+' I’m back — mark available':ico('plane')+' Going on leave'}</button><button id="mS">${ico('edit')} My signature</button><button id="mE">\u{1f4e7} Open an .eml file</button><button id="mB">\u{1F6E0} Report a problem</button><button id="mT">${ico('sun')} Light / dark</button>${LIVE?'':'<button id="mR">↺ Reset sample data</button>'}</div></div>`;
  $('#mL').onclick=()=>{S.leaves=S.leaves||{};S.leaves[ME]=!onLeave(ME);api('saveProfile',{on_leave:S.leaves[ME]}).catch(()=>{});save();$('#layer').innerHTML='';toast(onLeave(ME)?'On leave — team sees you as away':'Welcome back 👋');render()};
  if($('#mN'))$('#mN').onclick=()=>{$('#layer').innerHTML='';const t=newDemoMail();app='mail';view={type:'box',dept:t.dept,folder:'inbox'};tab='focused';lfilt='';filt='all';open(t.id);toast(`✦ AI tagged the topic as ${LB(t.label).name} (${t.conf}% sure)`)};
+ if($('#mE'))$('#mE').onclick=()=>{$('#layer').innerHTML='';emlPick()};
  $('#mP').onclick=()=>{$('#layer').innerHTML='';profileDlg()};
  $('#mB').onclick=()=>{$('#layer').innerHTML='';repDlg(openId?T_(openId):null)};   /* 24 Nov 2026 */
  $('#mW').onclick=()=>{const L=dlg('Change my password',`<div class="fld"><label for="opw">Current password</label><input type="password" id="opw" autocomplete="current-password"></div><div class="fld"><label for="npw1">New password (min 8 characters)</label><input type="password" id="npw1" autocomplete="new-password"></div><div class="fld"><label for="npw2">New password again</label><input type="password" id="npw2" autocomplete="new-password"></div>`,`<button class="btn" data-c>Cancel</button><button class="btn pri" data-ok>Change password</button>`);
@@ -2634,9 +2635,58 @@ setInterval(()=>{if(!window.__liveReady)return;let ch=false;S._rem=S._rem||{};
 
 /* ================= Outlook-style extras · batch 3 (team & attachments) ================= */
 /* attachment preview straight from Gmail */
+/* ================= 24 Nov 2026: real files, not signature pictures =================
+   One rule for the attachment bar, the count, Download all and a previewed .eml. */
+const SIG_NAME=/^(image\d|img\d|outlook-|ole|oledata|logo|icon|sig|signature|banner|footer|spacer|social|facebook|twitter|linkedin|insta|whats|youtube|pixel|tracker)/i;
+const isImgAtt=a=>/^image\//i.test((a&&a.mime)||'')||/\.(png|jpe?g|gif|webp|bmp|svg|ico|tiff?)$/i.test((a&&a.name)||'');
+const INL_SMALL=20*1024;
+function bodyUsesAtt(m,a){
+ try{const h=String((m&&(m.raw||m.html))||'');if(!h)return false;
+  if(a.cid&&h.toLowerCase().indexOf(String(a.cid).toLowerCase())>=0)return true;
+  const nm=String(a.name||'');if(!nm)return false;
+  return h.indexOf(nm)>=0||h.indexOf(encodeURIComponent(nm))>=0}catch(e){return false}}
+/* { show: the files a person means by "attachments", hide: the pictures the mail itself draws } */
+function attSplit(m){
+ const show=[],hide=[];
+ if(!m)return{show,hide};
+ const dr=(m.files||[]).filter(x=>x&&x.name);
+ const list=dr.length?dr:(m.atts||[]).filter(x=>x&&x.name);
+ const meta=nm=>((m.atts||[]).find(x=>x&&x.name===nm)||{});
+ list.forEach(x=>{
+  const a=Object.assign({},meta(x.name),x);
+  const img=isImgAtt(a),small=(a.size||0)<INL_SMALL,inline=a.inline===true||!!a.cid;
+  const junk=img&&(bodyUsesAtt(m,a)||(inline&&small)||(small&&SIG_NAME.test(String(a.name||''))));
+  (junk?hide:show).push(x)});
+ return{show,hide}}
+const SHOWINL={};                                  /* gid -> the person asked to see them */
+function attShown(m){const sp=attSplit(m);return SHOWINL[(m&&m.gid)||'']?sp.show.concat(sp.hide):sp.show}
 const _attX=attHTML;
-attHTML=function(m,t){const h=_attX(m,t);if(!t||t._local||!m.gid)return h;const names=[...new Set([...(m.atts||[]).filter(x=>!(/^image\//i.test(x.mime||'')&&(x.size||0)<40000)).map(x=>x.name),...(m.files||[]).map(x=>x.name)])].filter(Boolean);
- if(!names.length)return h;return h+`<div class="prevrow">${names.map(n=>`<button class="btn" data-xprev="${esc(n)}" data-gid="${esc(m.gid)}" data-pbox="${esc(t.box)}" title="Open ${esc(n)} here">👁 ${esc(n.length>34?n.slice(0,31)+'…':n)}</button>`).join('')}</div>`};
+attHTML=function(m,t){
+ const sp=attSplit(m),open=!!SHOWINL[(m&&m.gid)||''],shown=open?sp.show.concat(sp.hide):sp.show;
+ if(!shown.length&&!sp.hide.length)return '';
+ const chip=x=>x.link
+  ?`<a class="att" href="${esc(x.link)}" target="_blank" rel="noopener" title="Open in Google Drive">${ico('clip')} ${esc(x.name)} <small style="color:var(--muted)">${fsize(x.size)} · Drive ↗</small></a>`
+  :`<span class="att" title="${x.big?'Too big for automatic copy — open it in Gmail':'Opens here'}">${ico('clip')} ${esc(x.name)} <small style="color:var(--muted)">${fsize(x.size)}${x.big?' · in Gmail':(m.gid?'':' · saving to Drive…')}</small></span>`;
+ let h=shown.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${shown.map(chip).join('')}</div>`:'';
+ if(sp.hide.length)h+=`<div class="attinl"><button type="button" class="lnk" data-${open?'atthide':'attshow'}="${esc((m&&m.gid)||'')}">${open?'Hide the '+sp.hide.length+' inline picture'+(sp.hide.length>1?'s':''):'🖼 Show hidden inline images ('+sp.hide.length+')'}</button><small>pictures the mail already shows in its text (signature logos and icons)</small></div>`;
+ if(!t||t._local||!m.gid)return h;
+ const names=[...new Set(shown.map(x=>x.name))].filter(Boolean);
+ if(!names.length)return h;
+ return h+`<div class="prevrow">${names.map(nm=>`<button class="btn" data-xprev="${esc(nm)}" data-gid="${esc(m.gid)}" data-pbox="${esc(t.box)}" title="Open ${esc(nm)} here without downloading it">👁 Open preview · ${esc(nm.length>34?nm.slice(0,31)+'…':nm)}</button>`).join('')}</div>`};
+window.rzAttSplit=attSplit;window.rzAttShown=attShown;window.rzShowInl=SHOWINL;
+document.addEventListener('click',e=>{
+ const sh=e.target.closest&&e.target.closest('[data-attshow]'),hd=e.target.closest&&e.target.closest('[data-atthide]');
+ if(!sh&&!hd)return;
+ const g=(sh||hd).getAttribute(sh?'data-attshow':'data-atthide');
+ if(String(g||'').indexOf('eml:')===0)return;   /* a previewed .eml draws and toggles its own list */
+ e.preventDefault();e.stopPropagation();
+ if(sh)SHOWINL[g]=true;else delete SHOWINL[g];
+ if(typeof redrawRead==='function')redrawRead();else render()},true);
+(function(){const st=document.createElement('style');st.textContent=
+ '.attinl{margin:6px 0 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}'
+ +'.attinl .lnk{background:none;border:0;padding:0;color:var(--blue,#0f6cbd);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline}'
+ +'.attinl small{color:var(--muted);font-size:11.5px}';
+ document.head.appendChild(st)})();
 /* ============ .eml opened inside Rugs Email (18 Nov 2026) ============
    A .eml file is a raw MIME mail. Everything below reads one in the browser:
    headers (including =?UTF-8?B?..?= encoded words), quoted-printable and
@@ -2705,45 +2755,94 @@ function emlParse(u8){
   used[f.cid||f.name]=1;return q+u});
  out.atts=files.filter(f=>!used[f.cid||f.name]).map(f=>({
   name:f.name||(f.type==='message/rfc822'?'Attached mail.eml':'part.'+(String(f.type).split('/')[1]||'bin')),
-  mime:f.type||'application/octet-stream',bin:f.body||''}));
+  mime:f.type||'application/octet-stream',bin:f.body||'',cid:f.cid||'',inline:f.disp==='inline'}));
  out.atts.forEach(a=>{if(a.mime==='message/rfc822'&&!/\.eml$/i.test(a.name))a.name+='.eml'});
  return out}
 const emlFile=a=>new File([s2b(a.bin)],a.name,{type:a.mime||'application/octet-stream'});
-/* pictures from the internet in an attached mail: blocked until asked for, whoever sent it */
-function emlPicHTML(pm,h){const out=picHTML(pm,h);
- if(pm.showPics||!hasRemote(h)||out.indexOf(PIC_CSP)>=0)return out;
- const hd=out.match(/<head\b[^>]*>/i);return hd?out.replace(hd[0],hd[0]+PIC_CSP):PIC_CSP+out}
-/* draw a parsed .eml into any container, like a received mail */
+/* draw a parsed .eml into any container, as the same message card the reading pane uses */
 function emlMount(el,u8,name){
  let P=null;try{P=emlParse(u8)}catch(e){P=null}
  if(!P||(!P.html&&!P.text&&!P.atts.length&&!P.subject&&!P.from)){
   el.innerHTML='<div class="empty" style="padding:18px"><b>'+esc(name||'This mail file')+'</b><span>This mail file is empty or damaged, so it cannot be shown. Press Download to keep a copy.</span></div>';return}
  const addr=(String(P.from).match(/[\w.+-]+@[\w.-]+\.\w+/)||[''])[0];
- const pm={email:addr,from:P.from,showPics:false,raw:P.html};          // stands in for a message, so the Show pictures rule applies
- const row=(k,v)=>v?'<div class="emlh-r"><span>'+k+'</span><b>'+esc(v)+'</b></div>':'';
+ const who1=String(P.from||'').replace(/<[^>]*>/g,'').replace(/^["'\s]+|["'\s]+$/g,'')||addr||'(unknown sender)';
+ /* stands in for a message: pictures show, exactly as in a normal mail */
+ const pm={email:addr,from:who1,showPics:true,raw:P.html};
+ const when=(()=>{const d=Date.parse(P.date);return d?tLong(d):esc(P.date||'')})();
+ const nmOf=a=>{try{return typeof olkNameFor==='function'?olkNameFor(a):a}catch(e){return a}};
+ const people=v=>String(v||'').split(/,(?![^<]*>)/).map(x=>x.trim()).filter(Boolean).map(nmOf).join(', ');
+ const KEY='eml:'+(name||'')+':'+(P.subject||'');
+ const fake={gid:KEY,raw:P.html,html:'',atts:P.atts.map(a=>({name:a.name,mime:a.mime,size:(a.bin||'').length,inline:!!a.inline,cid:a.cid||''})),files:null};
  const draw=()=>{
+  const sp=(typeof attSplit==='function')?attSplit(fake):{show:fake.atts,hide:[]};
+  const open=!!(window.rzShowInl&&window.rzShowInl[KEY]);
+  const shown=open?sp.show.concat(sp.hide):sp.show;
+  const ix=a=>P.atts.findIndex(x=>x.name===a.name);
   const bodyHTML=P.html||'<pre style="white-space:pre-wrap;font:14px Segoe UI,Arial,sans-serif;margin:0">'+esc(P.text||'(this mail has no message)')+'</pre>';
-  const blocked=!pm.showPics&&hasRemote(bodyHTML);   /* 24 Nov 2026: in a .eml, pictures from the internet are blocked until asked for */
-  el.innerHTML='<div class="emlh">'+row('From',P.from)+row('To',P.to)+row('Cc',P.cc)
-   +row('Date',P.date)+row('Subject',P.subject||'(no subject)')+'</div>'
-   +(blocked?'<div class="picbar" role="note"><span>\u{1f5bc} Pictures from the internet are hidden to protect your privacy.</span><button class="btn" type="button" data-emlpics>Show pictures</button></div>':'')
-   +'<div class="raw"><iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" title="'+esc(P.subject||name||'Attached mail')+'" data-pics="'+(blocked?0:1)+'" srcdoc="'+esc(emlPicHTML(pm,emlSafe(bodyHTML)))+'"></iframe></div>'
-   +(P.atts.length?'<div class="emlat"><label>'+P.atts.length+' file'+(P.atts.length>1?'s':'')+' on this mail</label><div class="cfl" role="list">'
-     +P.atts.map((a,i)=>{const kc=cfKind(a.name,a.mime);
-      return '<div class="cf" role="listitem"><span class="cfb" style="background:'+kc[1]+'" aria-hidden="true">'+kc[0]+'</span>'
-       +'<span class="cfn">'+esc(a.name)+'</span><small>'+fsize((a.bin||'').length)+'</small>'
-       +'<button class="btn" type="button" data-emlv="'+i+'">\u{1f441} Open</button>'
-       +'<button class="btn" type="button" data-emld="'+i+'">⬇ Save</button></div>'}).join('')
-     +'</div></div>':'');
+  el.innerHTML='<div class="emltag" title="This is a mail that arrived as a file">'+ico('mail')+' Attached email (.eml)</div>'
+   +'<h1 class="emlsub">'+esc(P.subject||'(no subject)')+'</h1>'
+   +'<article class="mail emlcard"><header>'+av(who1)+'<div class="w"><b>'+esc(who1)+'</b><span>'+esc(addr||'')+'</span>'
+   +(P.to?'<span class="olkto">To: '+esc(people(P.to))+'</span>':'')
+   +(P.cc?'<span class="olkto">Cc: '+esc(people(P.cc))+'</span>':'')
+   +'</div><time>'+when+'</time></header>'
+   +'<div class="mbody">'
+   +'<div class="raw"><iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" title="'+esc(P.subject||name||'Attached mail')+'" data-pics="1" srcdoc="'+esc(picHTML(pm,emlSafe(bodyHTML)))+'"></iframe></div>'
+   +(shown.length?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'+shown.map(a=>'<span class="att" title="'+esc(a.name)+'">'+ico('clip')+' '+esc(a.name)+' <small style="color:var(--muted)">'+fsize(a.size)+'</small><button class="olkam" type="button" data-emlv="'+ix(a)+'" title="Open preview">\u{1f441}</button><button class="olkam" type="button" data-emld="'+ix(a)+'" title="Download">\u2b07</button></span>').join('')+'</div>':'')
+   +(sp.hide.length?'<div class="attinl"><button type="button" class="lnk" data-'+(open?'atthide':'attshow')+'="'+esc(KEY)+'">'+(open?'Hide the '+sp.hide.length+' inline picture'+(sp.hide.length>1?'s':''):'\u{1f5bc} Show hidden inline images ('+sp.hide.length+')')+'</button><small>pictures this mail already shows in its text</small></div>':'')
+   +'</div></article>';
   try{fitFrames()}catch(e){}
-  const sp=el.querySelector('[data-emlpics]');
-  if(sp)sp.onclick=()=>{pm.showPics=true;draw()};
-  el.querySelectorAll('[data-emlv]').forEach(b=>b.onclick=()=>{const a=P.atts[+b.dataset.emlv];if(a)cfView(emlFile(a))});
-  el.querySelectorAll('[data-emld]').forEach(b=>b.onclick=()=>{const a=P.atts[+b.dataset.emld];if(!a)return;
-   const f=emlFile(a);saveFile(f,a.name,f.type)});
+  el.querySelectorAll('[data-emlv]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const a=P.atts[+b.dataset.emlv];if(a)cfView(emlFile(a))});
+  el.querySelectorAll('[data-emld]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const a=P.atts[+b.dataset.emld];if(!a)return;const f=emlFile(a);saveFile(f,a.name,f.type)});
+  el.querySelectorAll('[data-attshow],[data-atthide]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();
+   window.rzShowInl=window.rzShowInl||{};
+   if(b.hasAttribute('data-attshow'))window.rzShowInl[KEY]=true;else delete window.rzShowInl[KEY];draw()});
  };
  draw()}
-window.rzEmlMount=emlMount;window.rzEmlIs=emlIs;window.rzEmlIsMsg=emlIsMsg;   /* 24 Nov 2026: mail-v2.js draws .eml with this */
+(function(){const st=document.createElement('style');st.textContent=
+ '.emltag{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 9px;margin:0 0 8px}'
+ +'.emltag svg{width:13px;height:13px}'
+ +'.emlsub{font-size:18px;font-weight:600;margin:0 0 6px;line-height:1.3;word-break:break-word}'
+ +'.mail.emlcard{border:0;padding:0}'
+ +'.mail.emlcard header{margin-bottom:6px}'
+ +'.mail.emlcard .olkto{display:block;font-size:12px;color:var(--muted)}';
+ document.head.appendChild(st)})();
+window.rzEmlMount=emlMount;window.rzEmlIs=emlIs;window.rzEmlIsMsg=emlIsMsg;
+/* ---- 24 Nov 2026: a .eml on this computer, opened in the page itself (no upload, no Outlook) ---- */
+function emlOpenLocal(file){
+ if(!file)return;
+ if(!emlIs(file.name,file.type)&&!emlIsMsg(file.name)){toast('That is not a mail file. Pick a .eml file.');return}
+ emlOverlay(file)}
+window.rzEmlOpenLocal=emlOpenLocal;
+function emlPick(){
+ const i=document.createElement('input');i.type='file';i.accept='.eml,.msg,message/rfc822';
+ i.style.display='none';document.body.appendChild(i);
+ i.onchange=()=>{const f=i.files&&i.files[0];i.remove();if(f)emlOpenLocal(f)};
+ i.click()}
+window.rzEmlPick=emlPick;
+/* a file the installed app was started with (kept by mail.html before the app existed) */
+setTimeout(()=>{try{const q=window.__RUGS_LAUNCH_FILES__;if(q&&q.length)emlOpenLocal(q.shift())}catch(e){}},1200);
+/* drag a .eml anywhere onto the window */
+(function(){
+ let bar=null;const show=on=>{
+  if(on&&!bar){bar=document.createElement('div');bar.className='emldrop';bar.textContent='\u{1f4e7} Drop the mail file here to open it';document.body.appendChild(bar)}
+  else if(!on&&bar){bar.remove();bar=null}};
+ const isFile=e=>!!e.dataTransfer&&[...(e.dataTransfer.types||[])].indexOf('Files')>=0;
+ const inCompose=()=>!!document.querySelector('.cfwrap,.cdock,#cb');   /* compose has its own drop handling */
+ addEventListener('dragover',e=>{if(!isFile(e)||inCompose())return;e.preventDefault();show(true)});
+ addEventListener('dragleave',e=>{if(e.relatedTarget)return;show(false)});
+ addEventListener('drop',e=>{
+  if(!isFile(e)||inCompose())return;
+  const f=[...(e.dataTransfer.files||[])].find(x=>emlIs(x.name,x.type)||emlIsMsg(x.name));
+  show(false);if(!f)return;e.preventDefault();emlOpenLocal(f)});
+ const st=document.createElement('style');st.textContent=
+  '.emldrop{position:fixed;inset:auto 0 24px 0;margin:0 auto;width:fit-content;z-index:90;background:var(--blue,#0f6cbd);color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.25);pointer-events:none}';
+ document.head.appendChild(st)})();
+/* the app can be told to open a file by the operating system (installed as an app) */
+(function(){
+ try{if(!('launchQueue' in window)||!window.LaunchParams)return;
+  launchQueue.setConsumer(p=>{if(!p||!p.files||!p.files.length)return;
+   p.files[0].getFile().then(f=>{const go=()=>emlOpenLocal(f);
+    if(window.__liveReady)go();else setTimeout(go,1500)}).catch(()=>{})})}catch(e){}})();
 /* the body of a .eml is shown in the same sandboxed iframe as received mail
    (so no script can run anyway), and these are removed as well */
 function emlSafe(h){
@@ -2887,10 +2986,23 @@ window.rzPdfMount=pdfMount;
 /* 20 Nov 2026: one copy of each attachment per session. previewAtt, the 2.0 viewer and the quiet
    prefetch below all come through here, so a file is fetched from Gmail once and then opens at once. */
 const ATTB={};
+/* 24 Nov 2026: a second copy in the browser's own cache store, keyed by mailbox + message id +
+   file name, so an attachment opened yesterday opens today without going to Gmail at all.
+   It is only a cache: anything missing or broken simply means one normal fetch. */
+const ATT_CACHE='rugs-att-v1';
+const attKeyURL=(box,gid,name)=>'https://rugs-att.local/'+encodeURIComponent(box)+'/'+encodeURIComponent(gid)+'/'+encodeURIComponent(name);
+function attCacheGet(box,gid,name){
+ try{if(!window.caches)return Promise.resolve(null);
+  return caches.open(ATT_CACHE).then(c=>c.match(attKeyURL(box,gid,name)))
+   .then(r=>r?r.arrayBuffer().then(b=>({u8:new Uint8Array(b),mime:fileMime(name,r.headers.get('content-type')||'')})):null)
+   .catch(()=>null)}catch(e){return Promise.resolve(null)}}
+function attCachePut(box,gid,name,u8,mime){
+ try{if(!window.caches||!u8||u8.length>25*1024*1024)return;
+  caches.open(ATT_CACHE).then(c=>c.put(attKeyURL(box,gid,name),new Response(u8,{headers:{'Content-Type':mime||'application/octet-stream'}}))).catch(()=>null)}catch(e){}}
 function attBytes(box,gid,name){const k=box+'|'+gid+'|'+name;
  if(ATTB[k])return ATTB[k];
- return ATTB[k]=api('attachment',{mailbox:box,gmailId:gid,name})
-  .then(r=>({u8:b64Bytes(r.b64),mime:fileMime(name,r.mime)}))
+ return ATTB[k]=attCacheGet(box,gid,name).then(hit=>hit||api('attachment',{mailbox:box,gmailId:gid,name})
+   .then(r=>{const u8=b64Bytes(r.b64),mime=fileMime(name,r.mime);attCachePut(box,gid,name,u8,mime);return{u8,mime}}))
   .catch(e=>{delete ATTB[k];throw e})}
 window.rzAttBytes=attBytes;                       // mail-v2.js shares the same memory
 /* when a mail is opened, bring its small files in quietly so the first click is instant too */
@@ -2901,7 +3013,7 @@ function attPrefetch(t){
   t.msgs.forEach((m,i)=>{
    if(!(open?open.has(i):i===last)||!m.gid)return;
    (m.atts||[]).forEach(a=>{
-    if(n>=3||!a.name||(a.size||0)>2*1024*1024)return;
+    if(n>=1||!a.name||(a.size||0)>2*1024*1024)return;   /* 24 Nov 2026: the first one only */
     const k=t.box+'|'+m.gid+'|'+a.name;if(ATTB[k])return;
     n++;CID_Q.push(()=>attBytes(t.box,m.gid,a.name).catch(()=>{}));
    })});
@@ -3685,7 +3797,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-24-3';
+const APP_BUILD='2026-11-24-4';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -4105,10 +4217,7 @@ const nameList=s=>String(s||'').split(/,(?![^<]*>)/).map(x=>nameOf(x.trim()))
    it upgrades the .att chips here and the .v2att tiles of Rugs Email 2.0 (the
    layout the live Email Tracker uses) with the same code. */
 const ATHUMB={};                                  // gid|name -> data: URL, this session only
-function attListOf(m){
- const f=(m.files||[]).filter(x=>x&&x.name);
- if(f.length)return f;
- return (m.atts||[]).filter(x=>x&&x.name&&!(/^image\//i.test(x.mime||'')&&(x.size||0)<40000))}
+function attListOf(m){return attShown(m)}   /* 24 Nov 2026: the same real-files rule as the bar */
 function attFetch(box,gid,name){
  return api('attachment',{mailbox:box,gmailId:gid,name})}
 function attSave(box,gid,name){
@@ -4137,6 +4246,16 @@ function attMenu(btn,a){
   else if(a.link)window.open(a.link,'_blank','noopener');
   else toast('That file is still being copied — try again in a moment')});
  p.querySelector('button').focus()}
+/* fetch a tile's thumbnail when the tile comes into view (and never for a huge file) */
+const _thObs=typeof IntersectionObserver==='function'?new IntersectionObserver(es=>{
+  es.forEach(en=>{if(!en.isIntersecting)return;_thObs.unobserve(en.target);const f=en.target._olkth;if(f)f()})
+ },{rootMargin:'200px'}):null;
+function olkThumbLater(el,im,box,gid,name,k){
+ const go=()=>{attFetch(box,gid,name).then(r=>{
+   if(!r||!r.b64){im.remove();return}
+   ATHUMB[k]='data:'+(r.mime||'image/png')+';base64,'+r.b64;im.src=ATHUMB[k]}).catch(()=>{im.remove()})};
+ if(!_thObs){go();return}
+ el._olkth=go;_thObs.observe(el)}
 function olkExtras(){
  const R=document.getElementById('read'),t=openId&&T_(openId);
  if(!R||!t)return;
@@ -4163,10 +4282,9 @@ function olkExtras(){
     const k=gid+'|'+name,im=document.createElement('img');im.className='olkth';im.alt='';
     el.insertAdjacentElement('afterbegin',im);
     if(ATHUMB[k])im.src=ATHUMB[k];
-    else attFetch(t.box,gid,name).then(r=>{
-      if(!r||!r.b64){im.remove();return}
-      ATHUMB[k]='data:'+(r.mime||'image/png')+';base64,'+r.b64;im.src=ATHUMB[k]})
-     .catch(()=>{im.remove()})}
+    /* 24 Nov 2026: the picture is fetched only once this tile is really on screen - drawing a
+       mail no longer costs one Gmail fetch per picture before anybody has clicked anything */
+    else olkThumbLater(el,im,t.box,gid,name,k)}
    /* 24 Nov 2026: an attached mail (.eml) opens in Rugs Email, not in Drive */
    if(emlIs(name,mime)&&gid)el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();previewAtt(t.box,gid,name)},true);
    const mb=document.createElement('button');
@@ -5042,9 +5160,16 @@ const _ivSent=inView;inView=function(t){
      6 - Download all attachments as one ZIP
      ======================================================================= */
   function attsOf(t) {
-    const out = [];
+    /* 24 Nov 2026: real files only - the pictures the mail draws in its own text (signature
+       logos, icons) are not attachments a person wants in the ZIP, and are not counted. */
+    const out = [], seen = {};
     ((t && t.msgs) || []).forEach(m => {
-      ((m && m.atts) || []).forEach(a => { if (a && a.name && m.gid) out.push({ name: a.name, gid: m.gid }); });
+      const list = typeof attSplit === 'function' ? attSplit(m).show : ((m && m.atts) || []);
+      list.forEach(a => {
+        if (!a || !a.name || !m.gid) return;
+        const k = m.gid + '|' + a.name; if (seen[k]) return; seen[k] = 1;
+        out.push({ name: a.name, gid: m.gid });
+      });
     });
     return out;
   }

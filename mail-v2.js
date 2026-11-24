@@ -148,16 +148,31 @@
 
   // the attachments of one mail as Outlook-style cards (replaces the plain chips)
   function attCards(m, t) {
+    /* 24 Nov 2026: the app decides which of these are real files (window.rzAttSplit); the
+       pictures the mail draws in its own text get a link under the cards instead. */
+    var split = typeof window.rzAttSplit === "function" ? window.rzAttSplit(m) : null;
+    var open = !!(window.rzShowInl && window.rzShowInl[m.gid || ""]);
+    var src = split ? (open ? split.show.concat(split.hide) : split.show) : null;
+    var hid = split ? split.hide.length : 0;
     var list = [];
-    (m.files || []).forEach(function (x) { if (x && x.name) list.push({ name: x.name, size: x.size, link: x.link || "", big: !!x.big }); });
-    if (!list.length) (m.atts || []).forEach(function (x) { if (x && x.name && !(/^image\//i.test(x.mime || "") && (x.size || 0) < 40000)) list.push({ name: x.name, size: x.size, mime: x.mime, link: "", saving: true }); });
-    if (!list.length) return "";
+    if (src) src.forEach(function (x) {
+      var meta = ((m.atts || []).filter(function (y) { return y && y.name === x.name; })[0]) || {};
+      list.push({ name: x.name, size: x.size, mime: x.mime || meta.mime, link: x.link || "", big: !!x.big, saving: !x.link && !(m.files || []).length });
+    });
+    else {
+      (m.files || []).forEach(function (x) { if (x && x.name) list.push({ name: x.name, size: x.size, link: x.link || "", big: !!x.big }); });
+      if (!list.length) (m.atts || []).forEach(function (x) { if (x && x.name && !(/^image\//i.test(x.mime || "") && (x.size || 0) < 40000)) list.push({ name: x.name, size: x.size, mime: x.mime, link: "", saving: true }); });
+    }
+    var inlLink = hid ? '<div class="attinl"><button type="button" class="lnk" data-' + (open ? "atthide" : "attshow") + '="' + txt(m.gid || "") + '">' +
+      (open ? "Hide the " + hid + " inline picture" + (hid > 1 ? "s" : "") : "\u{1f5bc} Show hidden inline images (" + hid + ")") +
+      '</button><small>pictures the mail already shows in its text (signature logos and icons)</small></div>' : "";
+    if (!list.length) return inlLink;
     var box = t ? t.box : "";
     return '<div class="v2atts" role="list">' + list.map(function (a) {
       var k = kindOf(a.name, a.mime);
       return '<button type="button" role="listitem" class="v2att" data-v2att data-box="' + txt(box) + '" data-gid="' + txt(m.gid || "") + '" data-name="' + txt(a.name) + '" data-size="' + (a.size || 0) + '" data-mime="' + txt(a.mime || "") + '" data-link="' + txt(a.link) + '" title="Open ' + txt(a.name) + '">' +
         '<span class="v2badge" style="background:' + k.c + '" aria-hidden="true">' + k.l + '</span><span class="v2an"><b>' + txt(a.name) + '</b><small>' + txt(sizeTxt(a.size)) + (a.big ? " · over 20 MB, open in Gmail" : a.saving ? " · copying to Drive…" : "") + '</small></span></button>';
-    }).join("") + '</div>';
+    }).join("") + '</div>' + inlLink;
   }
 
   // full-screen viewer: pictures (zoom, next / previous), PDF, Word / Excel / PowerPoint (Google Drive preview), text
