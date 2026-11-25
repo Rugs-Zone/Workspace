@@ -913,7 +913,7 @@ function atrailHTML(t){const box=dept(t.dept).box+'rugscreation.com';
  return `<details class="atrail" open><summary>Activity trail · ${ev.length} event${ev.length>1?'s':''} · newest first</summary><div class="hist">${ev.map((h,i)=>{const inner=`<div><b class="an">${ev.length-i}</b>${esc(h.txt)}${h.mi!=null?' <span class="go">View mail ↑</span>':''}<br><span>${tLong(h.at)}</span></div>`;return h.mi!=null?`<button class="hi h-${h.t} jump" data-jump="${t.id}-${h.mi}">${inner}</button>`:`<div class="hi h-${h.t||'n'}">${inner}</div>`}).join('')}</div></details>`}
 function _renderRead(){const el=$('#read');if(!el)return;const t=S.threads.find(x=>x.id===openId);
  if(!t){el.innerHTML=`<div class="blank"><div><img src="${LOGO}" alt=""><b style="font-size:16px;color:var(--fg)">Pick an email to read</b><br>Assign, transfer and track it right from here.</div></div>`;return}
- const s=st(t),priv=isPrivate(t),d=dept(t.dept),ro=canSee(t.dept)==='view';const os=openMsgs[t.id]||(openMsgs[t.id]=new Set([t.msgs.length-1]));
+ const s=st(t),priv=isPrivate(t),d=dept(t.dept),ro=canSee(t.dept)==='view';const os=openMsgs[t.id]||(openMsgs[t.id]=new Set(t.msgs.map((_,i)=>i).slice(-3)));   /* 25 Nov 2026: the newest three, which are the three the server sends in full */
  el.innerHTML=`<div class="rtop"><div class="rtitle"><button class="back" data-back aria-label="Back to list">←</button><h1>${priv?ico('lock')+' Private security email':esc(cleanSub(t.sub))}</h1><button class="btn maxb" data-maxread title="${document.body.classList.contains('maxread')?'Restore panes':'Maximise reading pane'}">${document.body.classList.contains('maxread')?'⤡ Restore':'⤢ Maximise'}</button></div>
  ${ro?`<div class="ro">${ico('eye')} View only — ${esc(d.name)} is shared with you to read. Reply, assign and delete are turned off.</div>`:''}
  ${priv?'':`<div class="track"><span class="ddot" style="background:${d.color}"></span><b>${esc(d.name)}</b><span class="sp"></span><span class="k">Owner</span>${can('assign')&&!ro?ownerSelect(t):`<b>${esc(who(t.owner)?.name||('Not assigned — '+decTxt(t.dept)+' will choose'))}</b>`}<span class="sp"></span><span class="k">Topic</span><select class="lsel" data-lab="${t.id}" style="--lc:${t.label?LB(t.label).c:'var(--muted)'}" aria-label="Topic"><option value="">No topic</option>${LABELS.map(l=>`<option value="${l.id}" ${t.label===l.id?'selected':''}>${t.label===l.id&&t.ai?'✦ ':''}${l.name}</option>`).join('')}</select><span class="sp"></span><span class="tag ${TAG[s][1]}">${TAG[s][0]}</span>${viaTags(t)}</div>
@@ -1849,7 +1849,12 @@ function liveOpen(t,o){
     t.full=all;
     /* 23 Nov 2026: pull the older mails in quietly, so none of them is left folded and
        empty and every mail shows its own formatting instead of a flat text fallback */
-    try{const MORE_FILL=25,rest=t.msgs.filter(x=>x.light&&x.gid).slice(-MORE_FILL);
+    /* 25 Nov 2026 (heavy-thread rule): only a SHORT conversation fills itself in. Over ten
+       messages the newest three come in full and the rest wait for 'Show 5 older messages',
+       so opening one never pulls two dozen mails nobody asked for. Note slice(-0) would return
+       the whole array, so the empty case is written out. */
+    try{const MORE_FILL=t.msgs.length>10?0:25;
+     const rest=MORE_FILL?t.msgs.filter(x=>x.light&&x.gid).slice(-MORE_FILL):[];
      if(rest.length)setTimeout(function(){try{openLight(t,rest)}catch(e){}},400)}catch(e){}
     L.err=all?'':'Gmail did not send back every mail in this conversation.';
     return all;
@@ -3802,7 +3807,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-25-8';
+const APP_BUILD='2026-11-25-9';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3876,7 +3881,7 @@ const _lrV=listRows;listRows=function(){let r=_lrV();const v=LV();
 function convDedupe(){const seen=new Map();let drop=false;S.threads.forEach((t,i)=>{const nw=t.msgs&&t.msgs.length?Math.max(...t.msgs.map(m=>m.at||0)):0;if(nw>t.last)t.last=nw;const j=seen.get(t.id);if(j==null)seen.set(t.id,i);else{drop=true;const a=S.threads[j];if((t.last||0)>(a.last||0)||((t.last||0)===(a.last||0)&&t.msgs.length>a.msgs.length))seen.set(t.id,i)}});
  if(drop){const keep=new Set(seen.values());S.threads=S.threads.filter((t,i)=>keep.has(i))}}
 const _lrOne=listRows;listRows=function(){try{convDedupe()}catch(e){}return _lrOne()};
-const _openOne=open;open=function(id){if(id!==openId){const t=T_(id);if(t&&t.msgs&&t.msgs.length)openMsgs[t.id]=new Set([t.msgs.length-1])}return _openOne(id)};
+const _openOne=open;open=function(id){if(id!==openId){const t=T_(id);if(t&&t.msgs&&t.msgs.length)openMsgs[t.id]=new Set(t.msgs.map((_,i)=>i).slice(-3))}return _openOne(id)};   /* 25 Nov 2026: the newest THREE bodies (heavy-thread rule step 3) - was the newest one only */
 /* --- the View menu (above the mail list) --- */
 const VM_GROUPS=()=>[
  ['sort','Sort by',[['date','Date'],['from','From'],['subject','Subject'],['size','Size']]],
@@ -6154,3 +6159,84 @@ document.addEventListener('click', function (e) {
  }, 10);
 }, true);
 /* __heavytrail:end */</script>
+
+<script>/* __heavyrule:start  25 Nov 2026: a closed conversation stops costing anything */
+let OPENGEN = 0, OPENWAS = null;
+function openGen() {            /* bumped whenever the open conversation changes */
+ if (openId !== OPENWAS) {
+  OPENWAS = openId;
+  OPENGEN++;
+  try { if (typeof CID_Q !== 'undefined' && CID_Q) CID_Q.length = 0; }   /* drop queued pictures */
+  catch (e) {}
+ }
+ return OPENGEN;
+}
+const _rdGen = render;
+render = function () { openGen(); return _rdGen.apply(this, arguments); };
+/* the pasted-picture loader: stop between pictures once the conversation is closed */
+const _lcpGen = loadCidPics;
+loadCidPics = function (t, o) {
+ const mine = openGen(), forId = t && t.id;
+ const all = o && o.all;
+ if (!all && forId && openId !== forId) return Promise.resolve();    /* not on screen any more */
+ const p = _lcpGen.apply(this, arguments);
+ return p && p.then ? p.then(function (r) { return r; }, function () {}) : p;
+};
+/* the older-mail fetcher: stop between batches of five */
+const _olGen = openLight;
+openLight = function (t, list) {
+ const mine = openGen(), forId = t && t.id;
+ if (forId && openId !== forId) return Promise.resolve();
+ const p = _olGen.apply(this, arguments);
+ return p;
+};
+/* the small-attachment prefetch: never for a conversation that is not open */
+if (typeof attPrefetch === 'function') {
+ const _apGen = attPrefetch;
+ attPrefetch = function (t) {
+  if (t && t.id && openId !== t.id) return;
+  return _apGen.apply(this, arguments);
+ };
+}
+/* note: cidPump is a const arrow and cannot be wrapped - emptying CID_Q above is what stops
+   the queued pictures, and that is enough (a job already in flight simply finishes). */
+/* ---- "Show 5 older messages" under a long trail ---- */
+const OLD_BATCH = 5;
+const _rrHeavy = renderRead;
+renderRead = function () {
+ const r = _rrHeavy.apply(this, arguments);
+ try {
+  const t = openId && T_(openId);
+  if (!t || !t.msgs || t.msgs.length <= 10) return r;          /* only long ones get the line */
+  const body = document.querySelector('#read .rbody');
+  if (!body || body.querySelector('[data-oldmore]')) return r;
+  const folded = t.msgs.filter(function (m, i) { const os = openMsgs[t.id]; return !os || !os.has(i); });
+  if (folded.length < 1) return r;
+  const n = Math.min(OLD_BATCH, folded.length);
+  body.insertAdjacentHTML('beforeend',
+   '<div data-oldmore="1" style="margin:10px 2px;padding:8px 10px;border:1px dashed var(--line);border-radius:6px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+   + '<span>' + folded.length + ' older mail' + (folded.length > 1 ? 's are' : ' is') + ' shown as one line each.</span>'
+   + '<button type="button" class="btn" data-oldshow="' + n + '">Show ' + n + ' older message' + (n > 1 ? 's' : '') + '</button>'
+   + '</div>');
+ } catch (e) {}
+ return r;
+};
+document.addEventListener('click', function (e) {
+ const b = e.target.closest && e.target.closest('[data-oldshow]');
+ if (!b) return;
+ e.preventDefault(); e.stopPropagation();
+ const t = openId && T_(openId);
+ if (!t) return;
+ const want = Math.max(1, Math.min(20, +b.dataset.oldshow || OLD_BATCH));
+ const os = openMsgs[t.id] || (openMsgs[t.id] = new Set());
+ /* the next few below the ones already open, newest of those first */
+ const ix = [];
+ for (let i = t.msgs.length - 1; i >= 0 && ix.length < want; i--) if (!os.has(i)) ix.push(i);
+ if (!ix.length) return;
+ b.disabled = true; b.textContent = 'Loading…';
+ ix.forEach(function (i) { os.add(i); });
+ renderRead();
+ try { openLight(t, ix.map(function (i) { return t.msgs[i]; })); } catch (x) {}
+ try { loadCidPics(t); } catch (x) {}
+}, true);
+/* __heavyrule:end */</script>
