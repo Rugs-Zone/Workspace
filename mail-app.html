@@ -3802,7 +3802,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-25-6';
+const APP_BUILD='2026-11-25-7';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -6043,3 +6043,66 @@ renderRead=function(){
  READK=k;
  return _rrRead.apply(this,arguments)};
 /* __readspeed:end */</script>
+
+<script>/* __rowpatch:start  25 Nov 2026: a click redraws the rows that changed, not all 150 */
+let RP_SIG = '', RP_HTML = null;
+function rpState(rows, cap) {
+ /* everything the list shows APART from the rows themselves - if any of it moved, the
+    whole list (header, chips, notes, counts) has to be drawn the old way */
+ try{
+  const v = LV(), q = document.getElementById('q');
+  /* the day grouping, as a number: the day a mail falls in, not its printed label -
+     dayLabel() formats a date (toLocaleDateString) and 150 of those cost about 9 ms a click */
+  let days = 0;
+  const sentV = view.type==='box' && view.folder==='sent';
+  const off = new Date().getTimezoneOffset() * 60000;
+  for (let i = 0; i < Math.min(rows.length, cap); i++) {
+   const t = sentV ? lastOut(rows[i]) : rows[i].last;
+   days = (days * 31 + Math.floor((t - off) / 86400000)) | 0;
+  }
+  return [view.type, view.dept||'', view.folder||'', view.id||'', view.key||'', tab, filt, lfilt||'',
+   q ? q.value : '', rows.length, cap, days,
+   (typeof SEL !== 'undefined' && SEL) ? SEL.size : 0,
+   syncing ? 1 : 0, Math.floor((S.lastSync||0)/60000), S.ui.hideTopics?1:0, S.drafts.length,
+   v.sort, v.dir, v.vf, v.lines, v.pane||'',
+   (typeof HIST_DAYS!=='undefined'?HIST_DAYS:0),
+   (function(){try{const d=dept(view.dept),st=d&&MORE[mailOf(d).toLowerCase()];return st?(st.done?'d':'')+(st.busy?'b':''):''}catch(e){return ''}})(),
+   (function(){try{return (view.type==='box'&&view.folder==='inbox')||view.type==='all' ? inboxUnreadN(view.type==='all'?undefined:view.dept) : ''}catch(e){return ''}})()
+  ].join('');
+ }catch(e){return 'x'+Math.random()}
+}
+const _rlPatch = renderList;
+window.__rlNoPatch = _rlPatch;   /* so a test can measure with and without this fix in one page */
+renderList = function () {
+ let rows = null, cap = 0, sig = null, want = null;
+ try {
+  const msgs = document.querySelector('.list .msgs');
+  const special = view.type==='box' && view.folder==='drafts';
+  if (special) throw 0;
+  rows = listRows(); cap = listCap(rows.length); sig = rpState(rows, cap);   /* worked out ONCE */
+  if (!msgs || sig !== RP_SIG || !RP_HTML) throw 0;    /* the list itself changed: draw it properly */
+  want = [];
+  for (let i = 0; i < Math.min(rows.length, cap); i++) want.push(rowHTML(rows[i]));
+  const els = msgs.querySelectorAll('.m[data-open]');
+  if (els.length !== want.length) throw 0;
+  let changed = 0;
+  for (let i = 0; i < want.length; i++) {
+   if (RP_HTML[i] === want[i]) continue;
+   els[i].outerHTML = want[i];                        /* only this row is rebuilt */
+   changed++;
+  }
+  RP_HTML = want;
+  window.__rpChanged = changed;
+  return;
+ } catch (e) { /* fall through to the full draw */ }
+ const r = _rlPatch.apply(this, arguments);
+ try {
+  if (!rows) { rows = listRows(); cap = listCap(rows.length); }
+  RP_SIG = sig || rpState(rows, cap);                 /* reuse what was already worked out */
+  if (!want) { want = []; for (let i = 0; i < Math.min(rows.length, cap); i++) want.push(rowHTML(rows[i])); }
+  RP_HTML = want;
+  window.__rpChanged = -1;                            /* -1 = the whole list was drawn */
+ } catch (e) { RP_SIG = ''; RP_HTML = null; }
+ return r;
+};
+/* __rowpatch:end */</script>
