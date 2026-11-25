@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import http from "node:http";
 import crypto from "node:crypto";
+import zlib from "node:zlib";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -74,8 +75,14 @@ http.createServer(async (rq, rs) => {
     if (pj.action === "serverStatus") {
       const r2 = await serverStatus(pj);
       if (r2.status >= 400) log("REFUSED serverStatus ->", r2.status, String(r2.body.error || ""));
-      rs.writeHead(r2.status, { ...SRV_CORS, "content-type": "application/json" });
-      return rs.end(JSON.stringify(r2.body));
+      {
+        const body = Buffer.from(JSON.stringify(r2.body));
+        const hh = { ...SRV_CORS, "content-type": "application/json" };
+        const gz = gzipFor(rq, hh, body);
+        if (gz) { hh["content-encoding"] = "gzip"; hh["vary"] = "Accept-Encoding"; hh["Content-Length"] = String(gz.length); }
+        rs.writeHead(r2.status, hh);
+        return rs.end(gz || body);
+      }
     }
     const res = await H[pick(rq.url, pj)](req);
     const out = Buffer.from(await res.arrayBuffer());
@@ -86,8 +93,13 @@ http.createServer(async (rq, rs) => {
        rare and it must be possible to see afterwards what was done and when. */
     if (res.status >= 400) log("REFUSED", pj.action || rq.url, "->", res.status, out.toString("utf8").slice(0, 300));
     else if (ADMIN_ACTIONS.has(pj.action)) log("admin:", pj.action, "ok");
-    rs.writeHead(res.status, { ...Object.fromEntries(res.headers), "access-control-allow-private-network": "true" });   // Chrome: public page -> localhost
-    rs.end(out);
+    {
+      const hh = { ...Object.fromEntries(res.headers), "access-control-allow-private-network": "true" };   // Chrome: public page -> localhost
+      const gz = gzipFor(rq, hh, out);
+      if (gz) { hh["content-encoding"] = "gzip"; hh["vary"] = "Accept-Encoding"; delete hh["content-length"]; hh["Content-Length"] = String(gz.length); }
+      rs.writeHead(res.status, hh);
+      rs.end(gz || out);
+    }
   } catch (e) { log("CRASHED", pj.action || rq.url, "->", String(e.message || e)); rs.writeHead(500, { "content-type": "application/json" }); rs.end(JSON.stringify({ error: String(e.message || e) })); }
 }).listen(PORT, () => console.log(new Date().toISOString(), "rugs-mail local API on port", PORT));
 
@@ -605,6 +617,25 @@ async function teamAmanJob(j) {
 }
 if (process.env.ONETIME_OFF !== "1") setTimeout(() => teamAmanJob(TEAM_AMAN).catch((e) => log("one-time job", TEAM_AMAN.id, "error:", e.message)), 21000);
 /* __teamaman:end */
+
+/* ---- 25 Nov 2026: answers are gzipped when the browser accepts it   __gzip:start ----
+   Opening a heavy conversation sent back 2-4 MB of JSON uncompressed; a list page 3.4 MB.
+   Level 5 costs a few milliseconds and saves most of those bytes. Small answers, and
+   anything already encoded, are left exactly as they were. */
+const GZ_MIN = 1024;
+function gzipFor(rq, headers, body) {
+  try {
+    if (!body || body.length < GZ_MIN) return null;
+    const ae = String(rq.headers["accept-encoding"] || "");
+    if (!/\bgzip\b/i.test(ae)) return null;
+    const h = {}; for (const k in headers) h[k.toLowerCase()] = headers[k];
+    if (h["content-encoding"]) return null;
+    const type = String(h["content-type"] || "");
+    if (type && !/json|text|javascript|xml|html|csv/i.test(type)) return null;
+    return zlib.gzipSync(body, { level: 5 });
+  } catch (e) { return null; }
+}
+/* __gzip:end */
 
 /* ---- 25 Nov 2026: what the Server page reads   __srvview:start ----------------------
    Read-only, and only for somebody signed in to Rugs Email as role Admin: it is checked with

@@ -1381,7 +1381,7 @@ const FONTS=['Calibri','Aptos','Arial','Segoe UI','Georgia','Times New Roman','V
 const SIZES=[['1','8'],['2','10'],['3','12'],['4','14'],['5','18'],['6','24'],['7','36']];
 /* keep formatting, drop anything unsafe (scripts, event handlers, outside links in images) */
 function cleanHTML(html){const d=new DOMParser().parseFromString('<div>'+html+'</div>','text/html');
- d.querySelectorAll('script,style,iframe,object,embed,form,input,button,meta,link').forEach(n=>n.remove());
+ d.querySelectorAll('script,style,iframe,object,embed,form,input,button,meta,link,[data-trailmore]').forEach(n=>n.remove());
  d.querySelectorAll('*').forEach(n=>{[...n.attributes].forEach(a=>{const v=a.value.trim().toLowerCase();if(a.name.startsWith('on')||((a.name==='href'||a.name==='src')&&v.startsWith('javascript:'))||(n.tagName==='IMG'&&a.name==='src'&&!v.startsWith('data:image/')&&!v.startsWith('https:')))n.removeAttribute(a.name)});if(n.tagName==='A'){n.setAttribute('target','_blank');n.setAttribute('rel','noopener')}});
  return d.body.firstChild.innerHTML}
 const TB=(cmd,label,title,val)=>`<button type="button" class="tbb" data-cmd="${cmd}" ${val?`data-val="${val}"`:''} title="${title}" aria-label="${title}">${label}</button>`;
@@ -3802,7 +3802,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-25-7';
+const APP_BUILD='2026-11-25-8';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -6106,3 +6106,51 @@ renderList = function () {
  return r;
 };
 /* __rowpatch:end */</script>
+
+<script>/* __heavytrail:start  25 Nov 2026: a reply quotes the newest 3 mails, the rest on request */
+const TRAIL_OPEN = 3;                 /* how many earlier mails are quoted straight away */
+const TM_REST = new Map(); let TM_N = 0;
+const _teOld = trailEditHTML;
+trailEditHTML = function (t) {
+ try {
+  const tr = trailOf(t);
+  if (tr.length <= TRAIL_OPEN + 1) return _teOld.apply(this, arguments);   /* short trail: as before */
+  const keepFrom = tr.length - TRAIL_OPEN;                                  /* the newest few */
+  let h = '';
+  for (let i = tr.length - 1; i >= keepFrom; i--) h += trailBlock(tr[i], i);
+  const tok = 'tm' + (++TM_N);
+  TM_REST.set(tok, { t: t, hi: keepFrom });
+  const n = keepFrom;
+  h += '<div data-trailmore="' + tok + '" contenteditable="false" style="margin:10px 0;padding:8px 10px;border:1px dashed var(--line);border-radius:6px;background:var(--bg2,rgba(127,127,127,.06));font-size:13px;color:var(--muted)">'
+    + '\u{1F4DC} ' + n + ' older mail' + (n > 1 ? 's are' : ' is') + ' not quoted, to keep this reply quick. '
+    + '<button type="button" data-trailshow="' + tok + '" class="btn" style="margin-left:6px">Show quoted text</button>'
+    + '</div>';
+  return h;
+ } catch (e) { return _teOld.apply(this, arguments); }
+};
+/* pressing it builds the older quotes and puts them where they belong */
+document.addEventListener('click', function (e) {
+ const b = e.target.closest && e.target.closest('[data-trailshow]');
+ if (!b) return;
+ e.preventDefault();
+ const tok = b.dataset.trailshow, info = TM_REST.get(tok);
+ const line = document.querySelector('[data-trailmore="' + tok + '"]');
+ if (!info || !line) { if (line) line.remove(); return; }
+ b.disabled = true; b.textContent = 'Adding…';
+ setTimeout(function () {
+  try {
+   const tr = trailOf(info.t);
+   let h = '';
+   for (let i = info.hi - 1; i >= 0; i--) h += trailBlock(tr[i], i);
+   line.insertAdjacentHTML('beforebegin', h);
+   line.remove();
+   TM_REST.delete(tok);
+   /* keep the per-mail tickboxes in step */
+   document.querySelectorAll('[data-qsel]').forEach(function (cb) { if (+cb.dataset.qsel < info.hi) cb.checked = true; });
+   const ctr = document.getElementById('ctr'); if (ctr) ctr.checked = true;
+   if (typeof toast === 'function') toast('The whole trail is in the mail now');
+   if (typeof loadCidPics === 'function') { try { loadCidPics(info.t, { all: true }); } catch (x) {} }
+  } catch (x) { if (typeof toast === 'function') toast('Could not add the older mails: ' + x.message); }
+ }, 10);
+}, true);
+/* __heavytrail:end */</script>

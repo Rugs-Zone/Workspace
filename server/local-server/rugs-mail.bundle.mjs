@@ -1268,7 +1268,7 @@ async function outOfOffice(t0) {
 async function threadFull(box, tid, ids) {
   const { data: m } = await sb.from("rm_messages").select("gmail_id,direction,body_text,sent_at").eq("mailbox", box).eq("gmail_thread_id", tid).order("sent_at");
   const tok = await gToken(box, READ);
-  const FULL_N = 5;
+  const FULL_N = 3;   /* 25 Nov 2026: the pane opens the newest, a reply quotes the newest 3 - see server/patch-thread-full3.js */
   const rows = m || [];
   const want = Array.isArray(ids) && ids.length ? new Set(ids.slice(0, 20).map(String)) : null;
   const need = want ? rows.filter((x) => want.has(String(x.gmail_id))) : rows.slice(-FULL_N);
