@@ -3807,7 +3807,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-25-10';
+const APP_BUILD='2026-11-25-11';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -4656,11 +4656,15 @@ function uiRestore(){
    if(typeof s.app==='string')app=s.app;
    if(s.view&&typeof s.view==='object'&&(!s.view.dept||dept(s.view.dept)))view=s.view;
    if(typeof s.tab==='string')tab=s.tab;
-   if(typeof s.filt==='string')filt=s.filt;
-   if(typeof s.lfilt==='string')lfilt=s.lfilt;
+   /* __cleanopen:start 25 Nov 2026: the PLACE comes back, the NARROWING does not.
+      A filter chip, a topic filter or a leftover search used to be restored for 12 hours, and
+      that is what made an Inbox of 557 conversations show 25 ("Open"), 9 ("Unread") or none at
+      all (a stale search). The Inbox now always opens showing its mail; choosing Open again is
+      one click, and the list still says when a filter is hiding something. __cleanopen:end */
+   filt='all';lfilt='';
    if(typeof s.adminTab==='string')adminTab=s.adminTab;
    if(typeof s.dashAs==='string'&&(!s.dashAs||who(s.dashAs)))dashAs=s.dashAs;
-   const q=$('#q');if(q&&typeof s.q==='string')q.value=s.q;
+   const q=$('#q');if(q)q.value='';   /* 25 Nov 2026: never reopen into somebody's old search */
    if(s.openId&&T_(s.openId)){UI_READY=true;open(s.openId);return}}
  }catch(e){}
  UI_READY=true;render()}
