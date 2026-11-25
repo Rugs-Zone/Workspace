@@ -3798,7 +3798,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-25-2';
+const APP_BUILD='2026-11-25-3';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3860,7 +3860,7 @@ function explode(rows){const sent=view.type==='box'&&view.folder==='sent',inb=vi
  rows.forEach(t=>{const mine=m=>!!(m.by||(m.ours&&!colleagueIn(m,t)));   /* what WE sent, as the Sent folder counts it */
   const ms=t.msgs.filter(m=>sent?mine(m):inb?recvMsg(m,t):true);const lastIn=[...t.msgs].reverse().find(m=>recvMsg(m,t));
   if(!ms.length){out.push(t);return}
-  ms.forEach(m=>{const p=Object.create(t);p.last=m.at;p.from=m.from||t.from;p.email=m.email||t.email;p.pre=String(m.body||'').replace(/\s+/g,' ').slice(0,200);p.unread=!!t.unread&&m===lastIn;p.att=(m.atts&&m.atts.length)||(m.files&&m.files.length)?'1':'';p._one=true;out.push(p)})});
+  ms.forEach(m=>{const p=Object.create(t);p.last=m.at;p.from=m.from||t.from;p.email=m.email||t.email;p.pre=String(m.body||'').replace(/\s+/g,' ').slice(0,200);p.unread=!!t.unread&&m===lastIn;p.att=(m.atts&&m.atts.length)||(m.files&&m.files.length)?'1':'';p._one=true;p._mi=t.msgs.indexOf(m);out.push(p)})});
  return out}
 const _lrV=listRows;listRows=function(){let r=_lrV();const v=LV();
  if(v.vf!=='all')r=r.filter(t=>v.vf==='unread'?t.unread:v.vf==='att'?hasAtt(t):v.vf==='flag'?!!t.flag:v.vf==='men'?mentionsMe(t):v.vf==='tome'?toMe(t):true);
@@ -5824,3 +5824,112 @@ render=function(){
  }catch(e){}
 };
 /* __mirror:end */</script>
+
+<script>/* __rowmail:start  25 Nov 2026: a row opens ITS OWN mail, and every row shows the time */
+/* the time on a row: today 10:42, yesterday "Yesterday 10:42", this week "Mon 10:42",
+   older "5 Nov 10:42", an earlier year "5 Nov 2025 10:42" */
+function rowTime(t0){
+ const d=new Date(t0),tm=d.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'});
+ if(sod(t0)===sod(NOW))return tm;
+ if(sod(t0)===sod(NOW)-D)return 'Yesterday '+tm;
+ if(NOW-t0<6*D)return d.toLocaleDateString('en-IN',{weekday:'short'})+' '+tm;
+ const sameYear=d.getFullYear()===new Date(NOW).getFullYear();
+ return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',...(sameYear?{}:{year:'numeric'})})+' '+tm}
+const _rhRow=rowHTML;
+rowHTML=function(t){
+ let h=_rhRow.apply(this,arguments);
+ try{
+  /* which mail is this row? (one row per mail since 24 Nov) */
+  if(t&&t._mi!=null&&t._mi>=0)h=h.replace('data-open="','data-mi="'+t._mi+'" data-open="');
+  /* show the time on every row, not only the recent ones */
+  const when=(view.type==='box'&&view.folder==='sent')?lastOut(t):t.last;
+  h=h.replace(/(<span class="time"[^>]*>)([\s\S]*?)(<\/span>)/,(m0,a,b,c)=>a+esc(rowTime(when))+c);
+ }catch(e){}
+ return h};
+/* a click on a row: remember which mail was clicked, before the app's own handler runs */
+let WANT_MI=null;
+document.addEventListener('click',e=>{
+ try{
+  const b=e.target.closest('[data-open][data-mi]');
+  if(!b||e.target.closest('.qa'))return;
+  WANT_MI={id:idv(b.dataset.open),mi:+b.dataset.mi};
+ }catch(x){}
+},true);
+document.addEventListener('keydown',e=>{
+ try{
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  const b=e.target&&e.target.closest&&e.target.closest('[data-open][data-mi]');
+  if(!b)return;
+  WANT_MI={id:idv(b.dataset.open),mi:+b.dataset.mi};
+ }catch(x){}
+},true);
+const _openRow=open;
+open=function(id){
+ let want=null;
+ if(WANT_MI&&WANT_MI.id===id)want=WANT_MI.mi;
+ WANT_MI=null;
+ const t=T_(id);
+ if(t&&want!=null&&t.msgs&&t.msgs[want]){
+  openMsgs[id]=new Set([want]);          /* open the mail that was clicked, not the newest */
+ }
+ const r=_openRow.apply(this,arguments);
+ if(t&&want!=null&&t.msgs&&t.msgs[want]){
+  try{if(t.msgs[want].light)openLight(t,[t.msgs[want]])}catch(e){}   /* not read from Gmail yet */
+  setTimeout(()=>{try{
+   const a=document.getElementById('msg-'+id+'-'+want),box=a&&a.closest('.rbody');
+   if(!a)return;
+   if(box){let y=0,n=a;while(n&&n!==box){y+=n.offsetTop;n=n.offsetParent}if(n!==box)y=a.offsetTop-box.offsetTop;
+    box.scrollTo({top:Math.max(0,y-12),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}
+   a.classList.remove('flash');void a.offsetWidth;a.classList.add('flash');
+  }catch(e){}},40);
+ }
+ return r};
+/* __rowmail:end */</script>
+
+<script>/* __listspeed:start  25 Nov 2026: a redraw stops rebuilding a list that has not changed */
+/* has anything the list depends on moved? (cheap: a few numbers per conversation) */
+function mailFp(){
+ try{
+  const a=S.threads;let h=a.length|0;
+  for(let i=0;i<a.length;i++){const t=a[i];
+   h=(h*31+(t.last|0))|0;
+   h=(h*31+((t.unread?1:0)+(t.flag?2:0)+(t.pinned?4:0)))|0;
+   h=(h*31+(t.status?t.status.charCodeAt(0):0))|0;
+   h=(h*31+(t.folder?t.folder.charCodeAt(0):0))|0;
+   h=(h*31+(t.owner?t.owner.length*7+t.owner.charCodeAt(0):0))|0;
+   h=(h*31+((t.msgs&&t.msgs.length)||0))|0}
+  return h;
+ }catch(e){return Math.random()}
+}
+function listKey(){
+ try{
+  const v=LV(),q=document.getElementById('q');
+  return [mailFp(),view.type,view.dept||'',view.folder||'',view.id||'',view.key||'',
+   tab,filt,lfilt||'',q?q.value:'',dashAs||'',ME,
+   v.sort,v.dir,v.vf,v.conv?1:0].join('|');
+ }catch(e){return 'x'+Math.random()}
+}
+let LRC={k:'',at:0,rows:null};
+const _lrSpd=listRows;
+listRows=function(){
+ const k=listKey(),now=Date.now();
+ if(LRC.rows&&LRC.k===k&&now-LRC.at<1000)return LRC.rows.slice();
+ const rows=_lrSpd.apply(this,arguments);
+ LRC={k:k,at:now,rows:rows};
+ return rows.slice()};
+/* each row's HTML, dropped as soon as the mail changes */
+const RHC=new Map(); let RHF=null;
+const _rhSpd=rowHTML;
+rowHTML=function(t){
+ const fp=mailFp();
+ if(RHF!==fp){RHC.clear();RHF=fp}
+ let key=null;
+ try{key=[t.id,t._mi==null?'':t._mi,view.type,view.folder||'',view.dept||'',
+  openId===t.id?1:0,t.unread?1:0,st(t),t.owner||'',t.flag?1:0,t.folder||'',t.last,
+  t.att||'',t.promise||'',t.due||'',t.topic||'',t.for_owner||'',
+  (t.cats||[]).join(','),(t.hist||[]).length,(t.msgs||[]).length].join('|')}catch(e){key=null}
+ if(key){const hit=RHC.get(key);if(hit!==undefined)return hit}
+ const h=_rhSpd.apply(this,arguments);
+ if(key){if(RHC.size>6000)RHC.clear();RHC.set(key,h)}
+ return h};
+/* __listspeed:end */</script>
