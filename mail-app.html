@@ -771,7 +771,11 @@ function rowPre(t){if(!(view.type==='box'&&view.folder==='sent'))return t.pre;
 function render(){applyLayout();renderTop();renderRail();renderFolders();
  const main=$('#main');
  if(app==='mail'){const _om=document.querySelector('.list .msgs'),_sc=_om?_om.scrollTop:0,_lk=JSON.stringify([view,tab,filt,typeof lfilt==='undefined'?'':lfilt,$('#q')?$('#q').value:'']),_same=!!_om&&_lk===window.__rcListKey;window.__rcListKey=_lk;
-  main.innerHTML=`<section class="list" aria-label="Messages"></section><div class="split" data-split="L" role="separator" aria-label="Resize message list" title="Drag to resize · double-click to reset"></div><section class="read" id="read" aria-label="Reading pane"></section>`;renderList();const _nm=document.querySelector('.list .msgs');if(_nm&&_same)_nm.scrollTop=_sc;renderRead()}
+  /* 25 Nov 2026: build these three once and keep them - throwing the pane away on every
+     redraw is what re-created the mail's iframes and made a click feel slow */
+  if(!(main.firstElementChild&&main.querySelector(':scope > .list')&&main.querySelector(':scope > #read')))
+   main.innerHTML=`<section class="list" aria-label="Messages"></section><div class="split" data-split="L" role="separator" aria-label="Resize message list" title="Drag to resize · double-click to reset"></div><section class="read" id="read" aria-label="Reading pane"></section>`;
+  renderList();const _nm=document.querySelector('.list .msgs');if(_nm&&_same)_nm.scrollTop=_sc;renderRead()}
  else if(app==='admin'||app==='setup')main.innerHTML=pageAdmin();else if(app==='dash')main.innerHTML=pageDash();else if(app==='contacts')main.innerHTML=pageContacts();else if(app==='tasks')main.innerHTML=pageTasks();else if(app==='people')main.innerHTML=pagePeople();else if(app==='news')main.innerHTML=pageNews();else main.innerHTML=pageActivity();
  document.body.classList.toggle('reading',app==='mail'&&!!openId)}
 function renderTop(){const me=who(ME);const n=PEOPLE.filter(p=>p.dept===me.dept&&p.active).length;$('#mbx').innerHTML=me.role==='Admin'?`${ico('admin')} Admin · ${esc(mailOf(dept(me.dept)))}`:`${ico('inbox')} ${esc(mailOf(dept(me.dept)))} <span>· shared by ${n}</span>`;$('#meAv').outerHTML=av(me.name,'',onLeave(ME)?'away':'on').replace('class="av ','id="meAv" class="av ');$('#meName').textContent=me.name.split(' ')[0];
@@ -1708,7 +1712,7 @@ function mapRow(r,ms,acts,old,home){
  const hist=acts.filter(a=>a.kind!=='send').map(a=>({t:KIND[a.kind]||a.kind||'n',txt:a.text,at:Date.parse(a.at)}));
  const att=(ms.flatMap(m=>m.attachments||[])[0]||{}).name||'';
  const t={id:home+':'+r.gmail_thread_id,box:r.mailbox,dept:r.dept_id||home,from:r.counterpart_name||r.counterpart_email||'(unknown)',email:r.counterpart_email||'',
-  sub:r.subject||'(no subject)',pre:(r.snippet||'').slice(0,160),last:Date.parse(r.last_msg_at)||Date.now(),unread:!!r.unread,flag:!!r.flagged,owner:r.owner_id||'',
+  sub:r.subject||'(no subject)',pre:(r.snippet||'').slice(0,160),last:Math.max(Date.parse(r.last_msg_at)||0,...ms.map(m=>Date.parse(m.sent_at)||0))||Date.now(),unread:!!r.unread,flag:!!r.flagged,owner:r.owner_id||'',
   status:r.status||(r.owner_id?'open':'new'),promise:r.promise||'',due:r.due_at?Date.parse(r.due_at):null,folder:r.folder||'inbox',prev:r.prev_folder||'',
   other:isOther(r.counterpart_email),att,label:r.topic||'',ai:r.topic_ai!==false,conf:r.topic_conf||0,msgs,hist,_hn:hist.length,full:false,cc:'',
   firstReply:r.first_reply_at?Date.parse(r.first_reply_at):null,doneAt:r.done_at?Date.parse(r.done_at):null,
@@ -3360,8 +3364,8 @@ const _rlA=renderList;renderList=function(){_rlA();if(!(view.type==='fav'&&(view
 /* ================= Nov 2026: Inbox = the whole last 60 days (older pages load in the background) ================= */
 const MORE={};
 function mergeList(r){const by={},ac={};(r.messages||[]).forEach(m=>{const k=m.mailbox+'|'+m.gmail_thread_id;(by[k]=by[k]||[]).push(m)});(r.activity||[]).forEach(a=>{const k=a.mailbox+'|'+a.gmail_thread_id;(ac[k]=ac[k]||[]).push(a)});
- const bd=boxDept(),have=new Set(S.threads.map(t=>t.id));let n=0;
- (r.threads||[]).forEach(row=>{const home=bd[String(row.mailbox).toLowerCase()];if(!home)return;const id=home+':'+row.gmail_thread_id;if(have.has(id))return;const k=row.mailbox+'|'+row.gmail_thread_id,t=mapRow(row,by[k]||[],ac[k]||[],null,home);if(!t.msgs.length)return;S.threads.push(t);metaSaved[id]=JSON.stringify(metaOf(t));n++});return n}
+ const bd=boxDept(),have=new Map(S.threads.map((t,i)=>[t.id,i]));let n=0;
+ (r.threads||[]).forEach(row=>{const home=bd[String(row.mailbox).toLowerCase()];if(!home)return;const id=home+':'+row.gmail_thread_id;if(have.has(id)){const o=S.threads[have.get(id)];const nl=Date.parse(row.last_msg_at)||0;if(!o||o._local||nl<=o.last||metaSaved[id]!==JSON.stringify(metaOf(o)))return;const k0=row.mailbox+'|'+row.gmail_thread_id,t0=mapRow(row,by[k0]||[],ac[k0]||[],o,home);if(t0.msgs.length>=o.msgs.length){S.threads[have.get(id)]=t0;metaSaved[id]=JSON.stringify(metaOf(t0));n++}return}const k=row.mailbox+'|'+row.gmail_thread_id,t=mapRow(row,by[k]||[],ac[k]||[],null,home);if(!t.msgs.length)return;S.threads.push(t);metaSaved[id]=JSON.stringify(metaOf(t));n++});return n}
 /* 19 Nov 2026: phase "recent" = the newest RECENT_DAYS days (the sign-in screen waits for this, so
    the Inbox is complete when it opens); phase "all" = the rest of HIST_DAYS, quietly afterwards. */
 const RECENT_DAYS=30;
@@ -3798,7 +3802,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-25-3';
+const APP_BUILD='2026-11-25-5';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3845,8 +3849,8 @@ function viaTags(t){const v=viaOf(t),f=t.forOwner&&who(t.forOwner);
 /* ================= Nov 2026: View menu · All inboxes · right-click menu · Ignore conversation ================= */
 /* --- each person's view choices (saved in their prefs, so they follow them to every device) --- */
 const LV_DEF={sort:'date',dir:'desc',vf:'all',pane:'right',conv:true,lines:1};
-/* 24 Nov 2026: conv is fixed at false - every mail is its own row for everybody */
-const LV=()=>Object.assign({},LV_DEF,(S.prefs&&S.prefs.lv)||{},{conv:false});
+/* 25 Nov 2026: conv is fixed at TRUE - one row per conversation, Outlook way (patch-one-row-per-conv.js) */
+const LV=()=>Object.assign({},LV_DEF,(S.prefs&&S.prefs.lv)||{},{conv:true});
 function setLV(k,v){const x={...LV(),[k]:v};S.prefs={...S.prefs,lv:x};api('savePrefs',{prefs:{lv:x}}).catch(e=>toast('Not saved: '+e.message));applyLV();render()}
 function applyLV(){const v=LV(),b=document.body;['rp-right','rp-bottom','rp-off','pl0','pl1','pl2'].forEach(c=>b.classList.remove(c));b.classList.add('rp-'+v.pane,'pl'+v.lines)}
 const myAddrs=()=>{const me=who(ME);if(!me)return[];return[String(me.login||'').toLowerCase(),...String(me.perm?.aliases||'').toLowerCase().split(/[\s,;]+/)].filter(x=>x.includes('@'))};
@@ -3868,6 +3872,11 @@ const _lrV=listRows;listRows=function(){let r=_lrV();const v=LV();
  const sent=view.type==='box'&&view.folder==='sent',dk=t=>t._one?t.last:(sent?lastOut(t):t.last),sg=v.dir==='asc'?1:-1;
  const key=v.sort==='from'?t=>String(t.from||'').toLowerCase():v.sort==='subject'?t=>cleanSub(t.sub).toLowerCase().replace(/^((re|fw|fwd)\s*:\s*)+/i,''):v.sort==='size'?sizeOf:dk;
  return r.sort((a,b)=>{const x=key(a),y=key(b);const c=typeof x==='string'?x.localeCompare(y):x-y;return (c||dk(a)-dk(b))*sg})};
+/* __oneRowConv 25 Nov 2026: never two rows for one conversation; row time = newest mail; open = newest mail */
+function convDedupe(){const seen=new Map();let drop=false;S.threads.forEach((t,i)=>{const nw=t.msgs&&t.msgs.length?Math.max(...t.msgs.map(m=>m.at||0)):0;if(nw>t.last)t.last=nw;const j=seen.get(t.id);if(j==null)seen.set(t.id,i);else{drop=true;const a=S.threads[j];if((t.last||0)>(a.last||0)||((t.last||0)===(a.last||0)&&t.msgs.length>a.msgs.length))seen.set(t.id,i)}});
+ if(drop){const keep=new Set(seen.values());S.threads=S.threads.filter((t,i)=>keep.has(i))}}
+const _lrOne=listRows;listRows=function(){try{convDedupe()}catch(e){}return _lrOne()};
+const _openOne=open;open=function(id){if(id!==openId){const t=T_(id);if(t&&t.msgs&&t.msgs.length)openMsgs[t.id]=new Set([t.msgs.length-1])}return _openOne(id)};
 /* --- the View menu (above the mail list) --- */
 const VM_GROUPS=()=>[
  ['sort','Sort by',[['date','Date'],['from','From'],['subject','Subject'],['size','Size']]],
@@ -5897,7 +5906,8 @@ function mailFp(){
    h=(h*31+(t.status?t.status.charCodeAt(0):0))|0;
    h=(h*31+(t.folder?t.folder.charCodeAt(0):0))|0;
    h=(h*31+(t.owner?t.owner.length*7+t.owner.charCodeAt(0):0))|0;
-   h=(h*31+((t.msgs&&t.msgs.length)||0))|0}
+   h=(h*31+((t.msgs&&t.msgs.length)||0))|0;
+   h=(h*31+(t.label?t.label.charCodeAt(0):0))|0}
   return h;
  }catch(e){return Math.random()}
 }
@@ -5921,15 +5931,115 @@ listRows=function(){
 const RHC=new Map(); let RHF=null;
 const _rhSpd=rowHTML;
 rowHTML=function(t){
- const fp=mailFp();
- if(RHF!==fp){RHC.clear();RHF=fp}
+ /* no global clear: each row's own key below is what decides (see patch-speed-everywhere.js) */
  let key=null;
  try{key=[t.id,t._mi==null?'':t._mi,view.type,view.folder||'',view.dept||'',
   openId===t.id?1:0,t.unread?1:0,st(t),t.owner||'',t.flag?1:0,t.folder||'',t.last,
   t.att||'',t.promise||'',t.due||'',t.topic||'',t.for_owner||'',
-  (t.cats||[]).join(','),(t.hist||[]).length,(t.msgs||[]).length].join('|')}catch(e){key=null}
+  (t.cats||[]).join(','),(t.hist||[]).length,(t.msgs||[]).length,
+  (function(m){return m?((m.light?'L':'')+(m.failed?'F':'')+(m.sending?'S':'')+String(m.body||'').length+'/'+String(m.from||'').length):''})((t.msgs||[])[(t.msgs||[]).length-1])].join('|')}catch(e){key=null}
  if(key){const hit=RHC.get(key);if(hit!==undefined)return hit}
  const h=_rhSpd.apply(this,arguments);
  if(key){if(RHC.size>6000)RHC.clear();RHC.set(key,h)}
  return h};
 /* __listspeed:end */</script>
+
+<script>/* __speedall:start  25 Nov 2026: stop redoing work that has not changed */
+/* ---- 1. the folder pane and the left rail ---- */
+function paneKey(){
+ try{
+  return [mailFp(),app,view.type,view.dept||'',view.folder||'',view.id||'',lfilt||'',
+   ME,dashAs||'',S.drafts.length,(S.notifs||[]).filter(n=>!n.read).length,
+   JSON.stringify(S.ui&&S.ui.col||{}),(S.prefs&&S.prefs.folders||[]).join(','),
+   (S.folders||[]).length,DEPTS.length,PEOPLE.length].join('|');
+ }catch(e){return 'x'+Math.random()}
+}
+let FOLDK='',RAILK='';
+const _rfSpd=renderFolders;
+renderFolders=function(){
+ const k=paneKey();
+ const el=document.getElementById('folders');
+ if(k===FOLDK&&el&&el.innerHTML)return;      /* nothing it shows has changed */
+ FOLDK=k;return _rfSpd.apply(this,arguments)};
+const _rrSpd=renderRail;
+renderRail=function(){
+ const k=paneKey();
+ const el=document.getElementById('rail');
+ if(k===RAILK&&el&&el.innerHTML)return;
+ RAILK=k;return _rrSpd.apply(this,arguments)};
+/* ---- 2. the unread count of a mailbox: once per change, not once per redraw ---- */
+let IUN={},IUNK='';
+const _iuSpd=inboxUnreadN;
+inboxUnreadN=function(deptId){
+ const k=mailFp()+'|'+ME+'|'+(view.type||'');
+ if(k!==IUNK){IUN={};IUNK=k}
+ const id=deptId||'*';
+ if(IUN[id]!==undefined)return IUN[id];
+ const n=_iuSpd.apply(this,arguments);
+ IUN[id]=n;return n};
+/* ---- 3. the visibility rules, shared inside one redraw and never across one ----
+   Each entry point that draws starts a fresh pass. Inside one pass nothing can change
+   (it is all synchronous), so sharing the answer is exact; a new pass always works it
+   out again. There is no time window, so there is no way to show a stale row. */
+let PASS=0;
+function memoCtx(){
+ /* the same question about the same mail has a different answer in another mailbox,
+    another folder or for another person - so all of that belongs in the key */
+ try{return PASS+'|'+(view.type||'')+'|'+(view.folder||'')+'|'+(view.dept||'')+'|'+(view.id||'')
+  +'|'+(view.key||'')+'|'+ME+'|'+(typeof tab==='undefined'?'':tab)+'|'+(typeof filt==='undefined'?'':filt)
+  +'|'+(typeof lfilt==='undefined'?'':lfilt)}catch(e){return 'x'+Math.random()}
+}
+function memoPass(fn){
+ let map=new WeakMap(),at='\u0000';
+ return function(t){
+  if(!t||typeof t!=='object')return fn.apply(this,arguments);
+  const now=memoCtx();
+  if(at!==now){map=new WeakMap();at=now}
+  const hit=map.get(t);
+  if(hit!==undefined)return hit;
+  const v=fn.apply(this,arguments);
+  map.set(t,v);return v}
+}
+seeMine=memoPass(seeMine);
+sentSeen=memoPass(sentSeen);
+inView=memoPass(inView);
+isInboxMail=memoPass(isInboxMail);
+const _rdPass=render;        render=function(){PASS++;return _rdPass.apply(this,arguments)};
+const _rlPass=renderList;    renderList=function(){PASS++;return _rlPass.apply(this,arguments)};
+const _rfPass=renderFolders; renderFolders=function(){PASS++;return _rfPass.apply(this,arguments)};
+const _raPass=renderRail;    renderRail=function(){PASS++;return _raPass.apply(this,arguments)};
+if(typeof renderListKeep==='function'){const _rkPass=renderListKeep;renderListKeep=function(){PASS++;return _rkPass.apply(this,arguments)}}
+if(typeof renderRead==='function'){const _rrdPass=renderRead;renderRead=function(){PASS++;return _rrdPass.apply(this,arguments)}}
+/* __speedall:end */</script>
+
+<script>/* __readspeed:start  25 Nov 2026: the reading pane is rebuilt only when its mail changed */
+let READB = 0;
+/* anything done inside the pane always forces a rebuild */
+['click','keydown','change'].forEach(ev=>document.addEventListener(ev,e=>{
+ try{if(e.target&&e.target.closest&&e.target.closest('#read'))READB++}catch(x){}
+},true));
+function readKey(){
+ try{
+  if(app!=='mail')return 'not-mail|'+READB;
+  if(!openId)return 'none|'+READB;
+  const t=S.threads.find(x=>x.id===openId);
+  if(!t)return 'gone|'+openId+'|'+READB;
+  const os=openMsgs[t.id]?[...openMsgs[t.id]].sort().join(','):'';
+  const ms=t.msgs||[];let m='';
+  for(let i=0;i<ms.length;i++){const x=ms[i];
+   m+=(x.light?'L':'')+(x.failed?'F':'')+(x.sending?'S':'')
+     +String(x.raw||'').length+'.'+String(x.html||'').length+'.'+String(x.body||'').length
+     +'.'+((x.atts&&x.atts.length)||(x.files&&x.files.length)||0)+';'}
+  return [openId,os,ms.length,m,t.status,t.owner||'',t.flag?1:0,t.folder||'',t.unread?1:0,
+   t.promise||'',t.due||'',(t.hist||[]).length,(t.cats||[]).join(','),t.label||'',
+   document.body.classList.contains('maxread')?1:0,READB].join('|');
+ }catch(e){return 'x'+Math.random()}
+}
+let READK=' ';
+const _rrRead=renderRead;
+renderRead=function(){
+ const k=readKey(),el=document.getElementById('read');
+ if(k===READK&&el&&el.querySelector('*')){try{fitFrames()}catch(e){}return}
+ READK=k;
+ return _rrRead.apply(this,arguments)};
+/* __readspeed:end */</script>
