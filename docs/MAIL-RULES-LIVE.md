@@ -37,6 +37,7 @@ Three lists: **A** what is live, **B** what is agreed but deliberately NOT live 
 | R15 | "Mine" = sent from Rugs Email by me, or from Outlook under my own name, or from my own address / alias |
 | R16 | Sent under a name that is **nobody's** ("Team Pulse") — stays with the whole team |
 | R17 | **One row per mail** — every mail in a conversation has its own row, sender and time (LOCKED ON, 26/27 Nov; it is a switch on Admin → 📜 Mail rules). Two mails sent in the same second are ordered by their Gmail id, so they never swap |
+| R17a | **A row opens ITS OWN mail as the main mail** (27 Nov) — the clicked mail sits first and expanded, only OLDER mails are listed below it, and anything NEWER waits behind one thin bar at the top ("N newer mail(s) in this conversation · sender time ↑"; click it and they come back above). Reply / Reply all / Forward / Forward as attachment then answer the CLICKED mail — the quote stops at it, Reply goes to its sender, Reply all takes its Cc, a forward offers its files. Opened any other way (search hit, link, "Show all N mails") there is no focus and the pane is unchanged. Works on an R8m "Sent by …" row and in Sent |
 | R18 | A Sent row shows **our** words, our time, and "To: …" |
 
 ### Needs owner / To assign

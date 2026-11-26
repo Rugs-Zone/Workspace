@@ -113,3 +113,19 @@ As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha, and as
       **not** in Needs owner or My work
 - [ ] the manager's **own** sent mail is still in his Sent only
 - [ ] `rzMem()`: the caps still hold with the extra rows
+
+## Bug 7 (R17a - a row opens ITS OWN mail) - what the tester should check
+
+- [ ] as **Shubham**: click the **Ashok 5:08 pm** row - **Ashok 5:08 is the top mail and is
+      the open one**; Mia 5:20 is behind a thin bar "1 newer mail in this conversation · Mia
+      Chen 5:20 pm ↑"; the older 4:50 mail is still folded below
+- [ ] click that bar - Mia 5:20 comes back **above**, the bar goes, 5:08 stays open and the
+      screen does not jump
+- [ ] click the **Mia 5:20 pm** row - she is on top, Ashok 5:08 below, **no bar**
+- [ ] **Reply** from the 5:08 view: the quote stops at 5:08 (nothing of 5:20 in the editor),
+      and on an incoming mail Reply goes to **that** sender
+- [ ] **Forward** from that view: the file box offers the clicked mail's files, not a newer
+      mail's; **Forward as attachment** sends the clicked mail as the .eml
+- [ ] **"Show all N mails"** and a **search hit** still show the whole conversation, no bar
+- [ ] as **Ashok in Sent**: clicking his 5:08 row puts his mail on top with Mia behind the bar
+
