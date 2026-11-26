@@ -836,9 +836,24 @@ function renderList(){const el=document.querySelector('.list');if(!el)return;
 function rowName(t){const ms=(t&&t.msgs)||[],last=ms[ms.length-1];
  const u=last&&last.by?who(last.by):null;
  return (u&&u.name)||(last&&last.from)||t.from||t.email||'(unknown)'}
+/* __rowpeople 26 Nov 2026: with ONE row per conversation the row used to name only the
+ newest message's sender, so a mail from anybody else in the same conversation had no name
+ on screen at all (Aman Singh Verma 25 Nov 17:34 sat under a row reading "Manfred Mui,
+ 8:21 pm", who wrote after him). The row now names the conversation's people, newest
+ first, like Gmail and Outlook. rowName() is untouched - the avatar still follows the
+ newest sender - and the Sent folder keeps its own "To: ..." line. */
+function rowWho(t){const ms=(t&&t.msgs)||[];if(ms.length<2)return rowName(t);
+ const out=[],seen=new Set();
+ for(let i=ms.length-1;i>=0&&out.length<3;i--){const m=ms[i];let nm='';
+  if(m&&m.by)nm=(m.by===ME?'me':String(((who(m.by)||{}).name)||''));
+  if(!nm&&m)nm=String(m.from||m.email||'');
+  nm=nm.trim();if(!nm)continue;
+  const k=nm.toLowerCase();if(seen.has(k))continue;seen.add(k);out.push(nm)}
+ if(!out.length)return rowName(t);
+ return out.join(', ')+' '+ms.length}
 function rowHTML(t){const s=st(t),[l,c]=TAG[s],o=who(t.owner),priv=isPrivate(t),x=t.hist.find(h=>h.t==='x');
  return `<div draggable="true" class="m ${t.unread?'unread':''} ${openId===t.id?'open':''}" data-open="${t.id}" role="button" tabindex="0">
- <span>${av(rowName(t))}</span><div class="body"><div class="r1"><span class="who">${view.type==='box'&&view.folder==='sent'?'To: '+esc(t.email):esc(rowName(t))}</span><span class="time" title="${tLong(t.last)}">${tShort(view.type==='box'&&view.folder==='sent'?lastOut(t):t.last)}</span></div>
+ <span>${av(rowName(t))}</span><div class="body"><div class="r1"><span class="who">${view.type==='box'&&view.folder==='sent'?'To: '+esc(t.email):esc(rowWho(t))}</span><span class="time" title="${tLong(t.last)}">${tShort(view.type==='box'&&view.folder==='sent'?lastOut(t):t.last)}</span></div>
  <div class="sub">${priv?ico('lock')+' Private — login code':esc(cleanSub(t.sub))}</div><div class="pre">${priv?'Hidden from the team. Only the account owner can open it.':esc(rowPre(t))}</div>
  <div class="tags">${critChips(t)}${viaTags(t)}${lbHTML(t)}${!t.owner&&s!=='done'&&isGeneric(t)?'<span class="tag t-done">Generic</span>':''}${t.promise&&s!=='done'?`<span class="tag ${s==='late'?'t-late':'t-prom'}">${s==='late'?ico('clock')+' ':''}${dueTxt(t)}</span>`:`<span class="tag ${c}">${l}</span>`}${x?`<span class="tag t-xfer" title="${!t.owner&&s!=='done'?'Owner to be chosen by '+esc(decTxt(t.dept)):''}">${ico('fwd')} Transferred${!t.owner&&s!=='done'?' · '+esc(deciders(t.dept).map(p=>p.name.split(' ')[0]).join(', ')||'admin')+' to assign':''}</span>`:''}${o?`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted)">${av(o.name,'sm')}${esc(o.name.split(' ')[0])}</span>`:''}${t.att?'<span class="tag t-asg" title="Has attachment">'+ico('clip','Has attachment')+'</span>':''}${t.flag?'<span class="tag t-flag" title="Flagged">'+ico('flag','Flagged')+'</span>':''}</div></div>
  <div class="qa"><button data-qdone="${t.id}" title="Mark done" aria-label="Mark done">${ico('check')}</button><button data-qflag="${t.id}" title="Flag" aria-label="Flag">${ico('flag')}</button><button data-xfer="${t.id}" title="Transfer to department" aria-label="Transfer">${ico('fwd')}</button><button data-qarch="${t.id}" title="Archive" aria-label="Archive">${ico('archive')}</button>${t.folder==='deleted'?`<button data-restore="${t.id}" title="Restore" aria-label="Restore">↺</button>`:`<button data-qdel="${t.id}" title="Delete from Rugs Email (original stays in the company mailbox)" aria-label="Delete">${ico('trash')}</button>`}</div></div>`}
@@ -3824,7 +3839,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-6';
+const APP_BUILD='2026-11-26-7';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');

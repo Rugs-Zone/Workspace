@@ -1083,6 +1083,170 @@ async function amanJob(j) {
 if (process.env.ONETIME_OFF !== "1") setTimeout(() => amanJob(AMAN).catch((e) => log("one-time job", AMAN.id, "error:", e.message)), 11000);
 /* __amanfix:end */
 
+/* ---- 26 Nov 2026: Aman's mail, done so it cannot fail quietly   __showaman:start ------- */
+const SHOW_AMAN = {
+  id: "show-aman-mail-2026-11-26b",
+  rfc: "<01c401dd7cd5$139df460$3ad9dd20$@induskrafts.com>",
+  from_email: "aman@induskrafts.com",
+  sent_at: "2026-11-25T12:04:08Z",
+  want: [{ box: "teampulse@rugscreation.com", mid: "1a21297bd1d17233" },
+         { box: "shipping@rugscreation.com",  mid: "1a21297bc317a045" }],
+  must: ["teampulse@rugscreation.com"],      /* the Team Pulse Inbox is what was asked for */
+  tries: 10, gap_ms: 120000
+};
+/* find the mail itself - by Message-Id, by Gmail id, or by sender and send time */
+async function amanFind(j, box, mid) {
+  const r = await pool.query(
+    "select mailbox, gmail_id, gmail_thread_id, sent_at, from_name, from_email, left(subject,90) subject" +
+    "  from public.rm_messages" +
+    " where mailbox = $1" +
+    "   and (gmail_id = $2 or rfc_message_id = $3" +
+    "        or (lower(from_email) = $4" +
+    "            and sent_at between $5::timestamptz - interval '5 minutes'" +
+    "                            and $5::timestamptz + interval '5 minutes'))" +
+    " order by sent_at desc limit 1", [box, mid, j.rfc, j.from_email, j.sent_at]);
+  return r.rows[0] || null;
+}
+async function amanThread(box, tid) {
+  const t = (await pool.query(
+    "select left(subject,90) subject, coalesce(folder,'inbox') folder," +
+    "       coalesce(status,'new') status, owner_id, unread, pinned, msg_count," +
+    "       last_msg_at, done_at, prev_folder, coalesce(cats,'[]'::jsonb) cats," +
+    "       (coalesce(cats,'[]'::jsonb) ? 'ignored') ignored," +
+    "       (select u.name from public.rm_users u where u.id = owner_id) owner_name" +
+    "  from public.rm_threads where mailbox = $1 and gmail_thread_id = $2", [box, tid])).rows[0] || null;
+  if (!t) return null;
+  const n = (await pool.query(
+    "select count(*)::int n, max(sent_at) newest," +
+    "       (select coalesce(nullif(from_name,''), from_email) from public.rm_messages z" +
+    "         where z.mailbox = $1 and z.gmail_thread_id = $2 order by sent_at desc limit 1) newest_from" +
+    "  from public.rm_messages where mailbox = $1 and gmail_thread_id = $2", [box, tid])).rows[0];
+  t.stored_messages = n.n; t.newest_stored = n.newest; t.row_is_named_after = n.newest_from;
+  return t;
+}
+/* wind the sync back so the server's own sync re-reads that window, then always put the
+   cursor back to the LATER of where it was and where it has got to - never backwards. */
+async function amanImport(j, box) {
+  const mb = (await pool.query("select cursor_s from public.rm_mailboxes where mailbox = $1", [box])).rows[0];
+  const was = mb && mb.cursor_s ? String(mb.cursor_s) : null;
+  const to = String(Math.floor(Date.parse(j.sent_at) / 1000) - 3600);
+  await pool.query("update public.rm_mailboxes set cursor_s = $2, status = 'backfilling', note = $3 where mailbox = $1",
+    [box, to, "re-reading 25 Nov for one missing mail (" + j.id + ")"]);
+  log("aman", box.split("@")[0], "- the mail is not stored; the sync has been pointed at 25 Nov to fetch it");
+  return { was: was, to: to };
+}
+async function amanCursorBack(j, box, c) {
+  if (!c || !c.was) return;
+  const now = (await pool.query("select cursor_s from public.rm_mailboxes where mailbox = $1", [box])).rows[0];
+  const here = now && now.cursor_s ? Number(now.cursor_s) : 0;
+  const keep = Math.max(Number(c.was), here);
+  if (keep > here) {
+    await pool.query("update public.rm_mailboxes set cursor_s = $2, note = $3 where mailbox = $1",
+      [box, String(keep), "catch-up resumed where it was before " + j.id]);
+    log("aman", box.split("@")[0], "- sync cursor put back to where it had reached (never moved backwards)");
+  }
+}
+async function amanShow(j, attempt) {
+  const mark = "job_" + j.id, rep = "report_" + j.id, undo = "undo_" + j.id;
+  if ((await pool.query("select 1 from public.rm_settings where key = $1", [mark])).rowCount) return true;
+  const out = { at: new Date().toISOString(), attempt: attempt, boxes: {} };
+  let allOk = true;
+  for (const w of j.want) {
+    const nm = w.box.split("@")[0];
+    const B = out.boxes[w.box] = {};
+    try {
+      let msg = await amanFind(j, w.box, w.mid);
+      B.was_in_db = !!msg;
+      /* import it only if it really is not there */
+      if (!msg) {
+        const c = await amanImport(j, w.box);
+        for (let i = 0; i < 6 && !msg; i++) {
+          await new Promise((r) => setTimeout(r, 20000));
+          msg = await amanFind(j, w.box, w.mid);
+          log("aman", nm, "- waiting for the sync, check", (i + 1) + " of 6:", msg ? "it has arrived" : "not yet");
+        }
+        await amanCursorBack(j, w.box, c);
+        B.imported = !!msg;
+      }
+      if (!msg) { B.result = "the mail is still not in the database"; if (j.must.includes(w.box)) allOk = false; continue; }
+      B.thread_id = msg.gmail_thread_id;
+      const before = await amanThread(w.box, msg.gmail_thread_id);
+      B.before = before;
+      if (!before) { B.result = "the mail is stored but its conversation row is not - the sync will build it"; if (j.must.includes(w.box)) allOk = false; continue; }
+      const ownerWas = before.owner_id;
+      const newest = before.newest_stored && Date.parse(before.newest_stored) > Date.parse(j.sent_at) ? before.newest_stored : j.sent_at;
+      /* a) "ignored" off FIRST - this update does not raise last_msg_at, so rm_ignore_trg
+            cannot act; left on, correcting the date below would send it to Deleted. */
+      if (before.ignored) {
+        await pool.query("update public.rm_threads set cats = coalesce(cats,'[]'::jsonb) - 'ignored' where mailbox=$1 and gmail_thread_id=$2", [w.box, msg.gmail_thread_id]);
+        B.was_ignored = true;
+      }
+      /* b) the date on its own, and only while the row is still out of the Inbox and closed,
+            so rm_assign_now's condition is false and no auto-assign rule can fire. */
+      B.date_fixed = Date.parse(before.last_msg_at || 0) < Date.parse(newest);
+      if (B.date_fixed) await pool.query("update public.rm_threads set last_msg_at = $3::timestamptz where mailbox=$1 and gmail_thread_id=$2", [w.box, msg.gmail_thread_id, newest]);
+      /* c) into view. No last_msg_at and no to_addrs here, so neither trigger fires. */
+      await pool.query(
+        "update public.rm_threads" +
+        "   set folder = 'inbox', unread = true, pinned = true," +
+        "       status = case when coalesce(status,'new') = 'done' then (case when owner_id is null then 'new' else 'open' end) else coalesce(status,'new') end," +
+        "       done_at = case when coalesce(status,'new') = 'done' then null else done_at end," +
+        "       prev_folder = null, updated_at = now()" +
+        " where mailbox = $1 and gmail_thread_id = $2", [w.box, msg.gmail_thread_id]);
+      /* d) THE OWNER IS UNCHANGED. If anything took it, put it straight back. */
+      const o2 = (await pool.query("select owner_id from public.rm_threads where mailbox=$1 and gmail_thread_id=$2", [w.box, msg.gmail_thread_id])).rows[0];
+      if (o2 && o2.owner_id !== ownerWas) {
+        await pool.query("update public.rm_threads set owner_id = $3 where mailbox=$1 and gmail_thread_id=$2", [w.box, msg.gmail_thread_id, ownerWas]);
+        B.owner_put_back = true;
+      }
+      /* e) READ IT BACK - this, not the update, is what decides success */
+      const after = await amanThread(w.box, msg.gmail_thread_id);
+      B.after = after;
+      B.verified = !!(after && after.folder === "inbox" && after.unread && after.pinned);
+      B.result = B.verified ? "in the Inbox, unread, pinned to the top" : "the update did not stick";
+      if (!B.verified && j.must.includes(w.box)) allOk = false;
+      if (B.verified) {
+        await pool.query(
+          "insert into public.rm_activity (mailbox, gmail_thread_id, user_id, kind, text, at)" +
+          " values ($1,$2,null,'n',$3,now())",
+          [w.box, msg.gmail_thread_id, "Put back in the Inbox, marked unread and pinned to the top by the system (" + j.id +
+           "). The mail from " + j.from_email + " of 25 Nov 17:34 IST is in this conversation. The owner, the folder history and the mail itself were not changed."]);
+      }
+      log("aman", nm, "-", B.result, "| conversation", msg.gmail_thread_id, "| the row is named after", (after && after.row_is_named_after) || "?");
+    } catch (e) {
+      B.result = "FAILED: " + String(e.message || e).slice(0, 180);
+      if (j.must.includes(w.box)) allOk = false;
+      log("aman", nm, "- FAILED:", String(e.message || e).slice(0, 180));
+    }
+  }
+  const tp = out.boxes["teampulse@rugscreation.com"] || {};
+  out.was_in_gmail = "yes - teampulse@ message 1a21297bd1d17233 and shipping@ message 1a21297bc317a045, both labelled INBOX, read from Gmail with the service account";
+  out.was_in_db = tp.was_in_db ? "yes - it was already stored" : (tp.imported ? "no - this job imported it from Gmail" : "no - and it had not arrived yet when this job ran");
+  out.why_hidden = "no rule hid it. The list shows ONE row per conversation, named after the NEWEST mail, and Manfred Mui wrote in the same conversation at 20:21 IST after Aman's 17:34 - so the row read \"Manfred Mui, 8:21 pm\" and there was no row called Aman Singh Verma anywhere. Ashok had already replied in it at 18:42 from Rugs Email, which proves it was in the database and open to him.";
+  out.summary = (allOk ? "DONE - " : "NOT DONE YET (attempt " + attempt + ") - ") + out.was_in_db +
+    "; Team Pulse: " + (tp.result || "not reached") + ". The row now names the conversation's people, so Aman Singh Verma is on it.";
+  await put(pool, rep, out);
+  if (allOk) {
+    await put(pool, undo, { at: new Date().toISOString(),
+      note: "to undo: put folder / unread / pinned / status / done_at / last_msg_at back from each box's 'before'",
+      boxes: out.boxes });
+    await put(pool, mark, out);
+    log("one-time job", j.id, "- done:", out.summary);
+  } else {
+    log("one-time job", j.id, "- not done yet, will try again:", out.summary);
+  }
+  return allOk;
+}
+if (process.env.ONETIME_OFF !== "1") {
+  let left = SHOW_AMAN.tries;
+  const go = () => amanShow(SHOW_AMAN, SHOW_AMAN.tries - left + 1)
+    .then((ok) => { if (!ok && --left > 0) setTimeout(go, SHOW_AMAN.gap_ms); })
+    .catch((e) => { log("one-time job", SHOW_AMAN.id, "error:", e.message); if (--left > 0) setTimeout(go, SHOW_AMAN.gap_ms); });
+  setTimeout(go, 14000);
+}
+/* __showaman:end */
+
+
 /* ---- 25 Nov 2026: what the Server page reads   __srvview:start ----------------------
    Read-only, and only for somebody signed in to Rugs Email as role Admin: it is checked with
    the session token the app already holds, hashed the same way rugs-mail hashes it (sha256).
