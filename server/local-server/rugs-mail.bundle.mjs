@@ -716,6 +716,22 @@ async function syncBox(box, t0, force = false, budget = 25) {
   let cursor = Number(st?.cursor_s) || nowS - FIRST_DAYS * 86400;
   let back = Number(st?.back_s) || (Number(st?.cursor_s) ? nowS - FIRST_DAYS * 86400 : cursor);
   let saved = 0, scanned = 0, live = true, skipped = 0, stalled = false;
+  /* __newestfirst 26 Nov 2026: THE NEWEST MAIL IS NEVER STARVED. The walk below is
+     sequential from cursor_s and a window that fills the budget does not advance it, so
+     while the cursor is behind (an outage, Gmail list errors, or a job that wound it back
+     to re-read a window) no newer mail was fetched at all and a mail sitting in Gmail's
+     inbox today never reached the app. Read the last two hours FIRST with its own slice of
+     the budget; the cursor is not moved, so the catch-up still fills the gap behind it. */
+  if (nowS - cursor > 2 * 3600) {
+    try {
+      const r0 = await syncWindow(box, tok, nowS - 2 * 3600, nowS + 60, Math.max(5, Math.floor(budget / 2)), t0);
+      saved += r0.saved;
+      scanned += r0.scanned;
+      if (r0.saved) console.log("newest first", box, "saved", r0.saved, "mail from the last 2 hours while the cursor is", Math.round((nowS - cursor) / 3600), "hour(s) behind");
+    } catch (e) {
+      console.log("newest-first window failed", box, String(e.message).slice(0, 120));
+    }
+  }
   while (Date.now() - t0 < DEADLINE_MS) {
     const from = cursor - 3600, to = Math.min(nowS + 60, cursor + WINDOW);
     let r;
