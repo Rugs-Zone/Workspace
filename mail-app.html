@@ -3816,7 +3816,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-1';
+const APP_BUILD='2026-11-26-2';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -6269,3 +6269,61 @@ document.addEventListener('scroll', function (e) {
  } catch (x) {}
 }, true);
 /* __scrollpage:end */</script>
+
+<script>/* __findconvui:start  26 Nov 2026: "where is this conversation?" on the Server page */
+let SRVFIND2 = '', SRVFOUND = null;
+const _srvH = srvHTML;
+srvHTML = function () {
+ let h = _srvH.apply(this, arguments);
+ try {
+  const rows = (SRV && SRV.found) || null;
+  const box = '<section class="box"><h3>Where is a conversation?</h3>'
+   + '<p class="lead" style="margin:0 0 8px">Type part of a subject, a sender’s address or a Gmail id. It answers from the live database — which mailbox it is in, which folder, who owns it, whether it is Done or unread. Read-only.</p>'
+   + '<div class="srvbar"><input type="search" id="srvlook" value="' + esc(SRVFIND2) + '" placeholder="e.g. Geo Chenille, or aman@induskrafts.com">'
+   + '<button class="btn pri" data-srvlook>Look it up</button></div>'
+   + (rows ? (rows.length
+      ? '<div class="atable"><table><thead><tr><th>Mailbox</th><th>Subject</th><th>Folder</th><th>Status</th><th>Owner</th><th>Unread</th><th>Mails</th><th>Newest</th></tr></thead><tbody>'
+        + rows.map(function (r) {
+            const bad = (r.folder !== 'inbox');
+            return '<tr' + (bad ? ' style="background:color-mix(in srgb,var(--bad) 10%,transparent)"' : '') + '>'
+             + '<td>' + esc(String(r.mailbox).split('@')[0]) + '</td>'
+             + '<td>' + esc(String(r.subject || '').slice(0, 60)) + '</td>'
+             + '<td><b>' + esc(r.folder) + '</b></td>'
+             + '<td>' + esc(r.status) + '</td>'
+             + '<td>' + esc(r.owner_name || (r.owner_id ? r.owner_id : 'nobody')) + '</td>'
+             + '<td>' + (r.unread ? 'yes' : 'no') + '</td>'
+             + '<td>' + (r.msg_count || 0) + '</td>'
+             + '<td class="sub">' + esc(tShort(new Date(r.last_msg_at).getTime())) + '</td></tr>';
+          }).join('')
+        + '</tbody></table></div><p class="lead" style="margin:6px 0 0">A row shaded red is NOT in the Inbox — its folder says where it went.</p>'
+      : '<p class="lead">Nothing in the database matches “' + esc(SRV.found_for || '') + '”.</p>') : '')
+   + ((SRV && SRV.found_error) ? '<p class="lead" style="color:var(--bad)">' + esc(SRV.found_error) + '</p>' : '')
+   + '</section>';
+  h = box + h;
+ } catch (e) {}
+ return h;
+};
+const _rndFind = render;
+render = function () {
+ const a = document.activeElement, had = !!(a && a.id === 'srvlook'), pos = had ? a.selectionStart : null;
+ const r = _rndFind.apply(this, arguments);
+ try {
+  const inp = document.getElementById('srvlook');
+  if (inp) {
+   inp.onchange = function () { SRVFIND2 = inp.value.trim(); };
+   inp.onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); SRVFIND2 = inp.value.trim(); srvLook(); } };
+   if (had) { try { inp.focus(); if (pos != null) inp.setSelectionRange(pos, pos); } catch (x) {} }
+  }
+  const b = document.querySelector('[data-srvlook]');
+  if (b) b.onclick = function () { const i = document.getElementById('srvlook'); SRVFIND2 = i ? i.value.trim() : SRVFIND2; srvLook(); };
+ } catch (e) {}
+ return r;
+};
+function srvLook() {
+ if (!SRVFIND2 || SRVFIND2.length < 3) { toast('Type at least three letters'); return; }
+ const b = document.querySelector('[data-srvlook]'); if (b) { b.disabled = true; b.textContent = 'Looking…'; }
+ api('serverStatus', { lines: 40, look: SRVFIND2 }).then(function (r) { SRV = r; SRVERR = ''; })
+  .catch(function (e) { SRVERR = e.message || 'the server did not answer'; })
+  .then(function () { if (app === 'admin' && adminTab === 'srv') render(); });
+}
+/* __findconvui:end */</script>

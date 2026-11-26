@@ -890,6 +890,27 @@ async function serverStatus(p) {
       .map((r) => ({ id: String(r.key).replace(/^(job|report)_/, ""), kind: String(r.key).split("_")[0],
         at: r.updated_at, summary: scrub(String((r.value && (r.value.summary || r.value.note)) || "")).slice(0, 300) }));
   } catch {}
+  /* __findconv:start 26 Nov 2026: look a conversation up in the live database */
+  if (p.look && String(p.look).trim().length >= 3) {
+    const q = String(p.look).trim().slice(0, 120);
+    try {
+      const r = await pool.query(
+        `select t.mailbox, t.gmail_thread_id, left(t.subject,90) subject, coalesce(t.folder,'inbox') folder,
+                coalesce(t.status,'new') status, t.owner_id, t.unread, t.msg_count, t.last_msg_at,
+                t.counterpart_email, (select u.name from public.rm_users u where u.id = t.owner_id) owner_name
+           from public.rm_threads t
+          where t.subject ilike '%' || $1 || '%'
+             or t.gmail_thread_id = $1
+             or t.counterpart_email ilike '%' || $1 || '%'
+             or exists (select 1 from public.rm_messages m
+                         where m.mailbox = t.mailbox and m.gmail_thread_id = t.gmail_thread_id
+                           and (m.gmail_id = $1 or lower(m.from_email) = lower($1)))
+          order by t.last_msg_at desc limit 25`, [q]);
+      out.found = r.rows;
+      out.found_for = q;
+    } catch (e) { out.found = []; out.found_error = String(e.message || e).slice(0, 160); }
+  }
+  /* __findconv:end */
   const f = logFileTail(n);
   out.log = f ? f.lines : LOGBUF.slice(-n);
   out.log_source = f ? f.from + " (" + f.size_kb + " KB, the whole history)" : "this run only - there is no log file on this PC";
