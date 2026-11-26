@@ -71,7 +71,10 @@ listRows = function () {
   let raw = ''; try { raw = ($('#q') ? $('#q').value : '').trim(); } catch (e) { }
   if (!raw) return r;                            /* every other view is untouched */
   const o = parseQ(raw), k = t => rowWhen(t);
-  return r.slice().sort((a, b) => (srchRank(a, o) - srchRank(b, o)) || (k(b) - k(a)));
+  /* 27 Nov: ...and two mails sent in the same second are ordered by their Gmail id, so a
+     search result never swaps two rows between one redraw and the next. */
+  const tie = (a, b) => (typeof rowTie === 'function' ? rowTie(b, a) : 0);
+  return r.slice().sort((a, b) => (srchRank(a, o) - srchRank(b, o)) || (k(b) - k(a)) || tie(a, b));
 };
 
 /* ============================================================ 5 · folder tag = */

@@ -8,6 +8,7 @@ people adding lines on the same night can never stop the auto-push.
 
 | # | Bug | Who | Rule | Status | Build |
 |---|-----|-----|------|--------|-------|
+| 3 | Mails arriving minute by minute were not each shown: two mails sent in the SAME SECOND could swap places on every redraw, "Expand all" did not read as "the other mails are here", a poll bringing 2+ mails only opened the newest, and the row cache (600) was too small for per-mail rows | everyone | R17 | **fixed, not yet click-tested** | 2026-11-27-2 |
 | 2 | Search hides mail: it ranked by date, a number matched inside a longer number (4815 found 24815), the filters never reached the server and a 400-row subquery had no ORDER BY | everyone | - | **fixed, not yet click-tested** | 2026-11-27-1 |
 | 1 | A mail in a conversation has no row of its own — the row shows whoever wrote last (e.g. Aman Singh Verma 25 Nov 17:34 showed as "Manfred Mui, 8:21 pm") | everyone | R17 | **fixed, not yet click-tested** | 2026-11-26-24 |
 
@@ -45,3 +46,14 @@ As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha:
 - [ ] `from:` + a name finds mail the browser had never loaded (it is filtered on the server)
 - [ ] a search with many hits offers **Show the next 500** at the bottom
 - [ ] a member still does NOT find a conversation a colleague owns (ownership is unchanged)
+
+## Bug 3 (minute-by-minute mails) - what the tester should check
+
+As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha:
+
+- [ ] a conversation with several mails shows **one row per mail**, each with its own sender and time
+- [ ] rows an exact minute apart show different times and are in the right order
+- [ ] open it: **every** mail is listed with sender and time, newest open
+- [ ] the bar at the top says **"Show all N mails"** and pressing it opens all of them
+- [ ] leave it open for a few minutes - when new mail lands, EVERY new mail appears as its own row
+- [ ] `rzMem()` in the console: the stores are inside their caps and it now also prints the row-cache size

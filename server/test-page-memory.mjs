@@ -57,7 +57,12 @@ console.log("\n=== the budgets the app ships with ===");
 ck("opened mail", A.MEM_RAWC, 15 * MB);
 ck("attachments", A.MEM_ATTB, 10 * MB);
 ck("thumbnails", A.MEM_THUMB, 4 * MB);
-ck("the row-HTML cache is capped at 600, not 6000", /RHC.size>600/.test(src), true);
+/* 27 Nov 2026: the row cache is no longer a flat 600. One row per mail (R17) draws about
+   700 rows for a full Inbox window, so a flat 600 cleared the cache on almost every redraw
+   and did nothing at all. The ceiling now follows the rows really drawn, and is bounded. */
+ck("the row-HTML cache ceiling follows the rows drawn", /RHC\.size>\(window\.__rhcMax\|\|600\)/.test(src), true);
+ck("...starting at the old 600", /window\.__rhcMax\|\|600/.test(src), true);
+ck("...and it is bounded, so it cannot grow for ever", /Math\.min\(2000,\s*Math\.max\(600/.test(src), true);
 
 console.log("\n=== RAWC · opened mail with pasted screenshots ===");
 clear(A.RAWC); A.noConv();

@@ -956,7 +956,7 @@ function _renderRead(){const el=$('#read');if(!el)return;const t=S.threads.find(
  ${ro?`<div class="ro">${ico('eye')} View only — ${esc(d.name)} is shared with you to read. Reply, assign and delete are turned off.</div>`:''}
  ${priv?'':`<div class="track"><span class="ddot" style="background:${d.color}"></span><b>${esc(d.name)}</b><span class="sp"></span><span class="k">Owner</span>${can('assign')&&!ro?ownerSelect(t):`<b>${esc(who(t.owner)?.name||('Not assigned — '+decTxt(t.dept)+' will choose'))}</b>`}<span class="sp"></span><span class="k">Topic</span><select class="lsel" data-lab="${t.id}" style="--lc:${t.label?LB(t.label).c:'var(--muted)'}" aria-label="Topic"><option value="">No topic</option>${LABELS.map(l=>`<option value="${l.id}" ${t.label===l.id?'selected':''}>${t.label===l.id&&t.ai?'✦ ':''}${l.name}</option>`).join('')}</select><span class="sp"></span><span class="tag ${TAG[s][1]}">${TAG[s][0]}</span>${viaTags(t)}</div>
  <div class="acts">${ro?'':`<button class="btn pri" data-reply="${t.id}">${ico('reply')} Reply</button><button class="btn" data-reply="${t.id}" data-all>Reply all</button>`}<button class="btn" data-fwd="${t.id}">Forward</button><button class="btn" data-fwdatt="${t.id}" title="Send the original mail as a file (.eml) the other side can open">Forward as attachment</button>${can('transfer')&&!ro?`<button class="btn vio" data-xfer="${t.id}">${ico('fwd')} Transfer</button>`:''}${ro||!hasRecv(t)?'':s==='done'?`<button class="btn" data-reopen="${t.id}">Reopen</button>`:`<button class="btn ok" data-done="${t.id}">${ico('check')} Done</button>`}${ro?'':`<button class="btn" data-take="${t.id}">Take over</button>`}${!can('delete')||ro?'':t.folder==='deleted'?`<button class="btn" data-restore="${t.id}">↺ Restore</button>`:`<button class="btn" data-qdel="${t.id}" title="Original stays in the company mailbox">${ico('trash')} Delete</button>`}</div>
- ${t.msgs.length>1?`<div class="convbar"><span>Conversation · ${t.msgs.length} mails · newest first</span><button class="btn" data-mall="open">Expand all</button><button class="btn" data-mall="close">Collapse all</button></div>`:''}`}</div>
+ ${t.msgs.length>1?`<div class="convbar"><span>Conversation · ${t.msgs.length} mails · newest first</span><button class="btn pri" data-mall="open" title="__showall: open every mail in this conversation">Show all ${t.msgs.length} mails</button><button class="btn" data-mall="close">Collapse all</button></div>`:''}`}</div>
  <div class="rbody">
  ${(()=>{const L=LD[t.id]||{};if(t._local||t.full)return '';
   if(L.saved)return `<div class="promise"><span>${ico('mail')}</span><b>Showing the saved copy of this conversation<br><span class="sub">${esc(L.err)} Every mail and its text are here. Pictures and the exact layout come straight from Google Mail \u2014 press Retry for those.</span></b><button class="btn" data-fullretry="${t.id}">\u21bb Retry</button></div>`;
@@ -1795,7 +1795,11 @@ async function loadList(full){const r=await api('list',full?{}:{since:lastList})
   const k=row.mailbox+'|'+row.gmail_thread_id,t=mapRow(row,by[k]||[],ac[k]||[],old,home);if(!t.msgs.length)return;
   const ins=x=>x?x.msgs.filter(m=>typeof recvMsg==='function'?recvMsg(m,x):!m.ours).length:0;   /* 24 Nov 2026: a colleague's mail is mail we received */
   if(!full&&ins(t)>ins(old))newMail++;
-  if(old){S.threads[ex]=t;if(openMsgs[id]&&t.msgs.length>old.msgs.length)openMsgs[id].add(t.msgs.length-1)}else S.threads.push(t);
+  if(old){S.threads[ex]=t;
+  /* __newmsgs: the 15-second poll can bring several mails at once - open EVERY one of
+     them, not only the newest, or the ones in between stay folded with no sign of it. */
+  if(openMsgs[id]&&t.msgs.length>old.msgs.length)for(let _i=old.msgs.length;_i<t.msgs.length;_i++)openMsgs[id].add(_i);
+ }else S.threads.push(t);
   metaSaved[id]=JSON.stringify(metaOf(t));changed++});
  return{newMail,changed,n:(r.threads||[]).length}}
 
@@ -3436,7 +3440,9 @@ const _rlA=renderList;renderList=function(){_rlA();if(!(view.type==='fav'&&(view
 const MORE={};
 function mergeList(r){const by={},ac={};(r.messages||[]).forEach(m=>{const k=m.mailbox+'|'+m.gmail_thread_id;(by[k]=by[k]||[]).push(m)});(r.activity||[]).forEach(a=>{const k=a.mailbox+'|'+a.gmail_thread_id;(ac[k]=ac[k]||[]).push(a)});
  const bd=boxDept(),have=new Map(S.threads.map((t,i)=>[t.id,i]));let n=0;
- (r.threads||[]).forEach(row=>{const home=bd[String(row.mailbox).toLowerCase()];if(!home)return;const id=home+':'+row.gmail_thread_id;if(have.has(id)){const o=S.threads[have.get(id)];const nl=Date.parse(row.last_msg_at)||0;if(!o||o._local||nl<=o.last||metaSaved[id]!==JSON.stringify(metaOf(o)))return;const k0=row.mailbox+'|'+row.gmail_thread_id,t0=mapRow(row,by[k0]||[],ac[k0]||[],o,home);if(t0.msgs.length>=o.msgs.length){S.threads[have.get(id)]=t0;metaSaved[id]=JSON.stringify(metaOf(t0));n++}return}const k=row.mailbox+'|'+row.gmail_thread_id,t=mapRow(row,by[k]||[],ac[k]||[],null,home);if(!t.msgs.length)return;S.threads.push(t);metaSaved[id]=JSON.stringify(metaOf(t));n++});return n}
+ (r.threads||[]).forEach(row=>{const home=bd[String(row.mailbox).toLowerCase()];if(!home)return;const id=home+':'+row.gmail_thread_id;if(have.has(id)){const o=S.threads[have.get(id)];const nl=Date.parse(row.last_msg_at)||0;if(!o||o._local||nl<=o.last||metaSaved[id]!==JSON.stringify(metaOf(o)))return;const k0=row.mailbox+'|'+row.gmail_thread_id,t0=mapRow(row,by[k0]||[],ac[k0]||[],o,home);if(t0.msgs.length>=o.msgs.length){S.threads[have.get(id)]=t0;metaSaved[id]=JSON.stringify(metaOf(t0));n++;
+   /* __newmsgs2: same as the poll - if this conversation is open, open the new mails too */
+   if(openMsgs[id]&&t0.msgs.length>o.msgs.length)for(let _j=o.msgs.length;_j<t0.msgs.length;_j++)openMsgs[id].add(_j)}return}const k=row.mailbox+'|'+row.gmail_thread_id,t=mapRow(row,by[k]||[],ac[k]||[],null,home);if(!t.msgs.length)return;S.threads.push(t);metaSaved[id]=JSON.stringify(metaOf(t));n++});return n}
 /* 19 Nov 2026: phase "recent" = the newest RECENT_DAYS days (the sign-in screen waits for this, so
    the Inbox is complete when it opens); phase "all" = the rest of HIST_DAYS, quietly afterwards. */
 const RECENT_DAYS=30;
@@ -3877,7 +3883,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-27-1';
+const APP_BUILD='2026-11-27-2';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3955,7 +3961,7 @@ const _lrV=listRows;listRows=function(){let r=_lrV();const v=LV();
     top. It did for a few hours this morning, which pushed a pinned Tuesday conversation
     above today's mail in the Inbox and in Sent. The pin itself is untouched and the row
     still shows its tag; only the ordering ignores it again. */
- return r.sort((a,b)=>{const x=key(a),y=key(b);const c=typeof x==='string'?x.localeCompare(y):x-y;return (c||dk(a)-dk(b))*sg})};
+ return r.sort((a,b)=>{const x=key(a),y=key(b);const c=typeof x==='string'?x.localeCompare(y):x-y;return (c||dk(a)-dk(b)||rowTie(a,b))*sg   /* __rowtie: two mails sent in the same second are ordered by their Gmail id, so they never swap */})};
 /* __oneRowConv 25 Nov 2026: never two rows for one conversation; row time = newest mail; open = newest mail */
 function convDedupe(){const seen=new Map();let drop=false;S.threads.forEach((t,i)=>{const nw=t.msgs&&t.msgs.length?Math.max(...t.msgs.map(m=>m.at||0)):0;if(nw>t.last)t.last=nw;const j=seen.get(t.id);if(j==null)seen.set(t.id,i);else{drop=true;const a=S.threads[j];if((t.last||0)>(a.last||0)||((t.last||0)===(a.last||0)&&t.msgs.length>a.msgs.length))seen.set(t.id,i)}});
  if(drop){const keep=new Set(seen.values());S.threads=S.threads.filter((t,i)=>keep.has(i))}}
@@ -6107,7 +6113,7 @@ rowHTML=function(t){
   (function(m){return m?((m.light?'L':'')+(m.failed?'F':'')+(m.sending?'S':'')+String(m.body||'').length+'/'+String(m.from||'').length):''})((t.msgs||[])[(t.msgs||[]).length-1])].join('|')}catch(e){key=null}
  if(key){const hit=RHC.get(key);if(hit!==undefined)return hit}
  const h=_rhSpd.apply(this,arguments);
- if(key){if(RHC.size>600)RHC.clear();RHC.set(key,h)}   /* __mem2: ~450 rows are ever drawn */
+ if(key){if(RHC.size>(window.__rhcMax||600))RHC.clear();RHC.set(key,h)}   /* __rhcmax: 600 was written when a row meant a conversation; one row per mail draws ~700 */   /* __mem2: ~450 rows are ever drawn */
  return h};
 /* __listspeed:end */</script>
 
@@ -7720,7 +7726,10 @@ listRows = function () {
   let raw = ''; try { raw = ($('#q') ? $('#q').value : '').trim(); } catch (e) { }
   if (!raw) return r;                            /* every other view is untouched */
   const o = parseQ(raw), k = t => rowWhen(t);
-  return r.slice().sort((a, b) => (srchRank(a, o) - srchRank(b, o)) || (k(b) - k(a)));
+  /* 27 Nov: ...and two mails sent in the same second are ordered by their Gmail id, so a
+     search result never swaps two rows between one redraw and the next. */
+  const tie = (a, b) => (typeof rowTie === 'function' ? rowTie(b, a) : 0);
+  return r.slice().sort((a, b) => (srchRank(a, o) - srchRank(b, o)) || (k(b) - k(a)) || tie(a, b));
 };
 
 /* ============================================================ 5 · folder tag = */
@@ -7968,3 +7977,27 @@ document.addEventListener('click', function (e) {
 })();
 /* __srch:end */
 </script>
+
+<script>/* __outlookrows:start 27 Nov 2026 - server/patch-outlook-rows.js */
+/* Two mails sent in the SAME SECOND compared equal on time alone, so their order was
+   whatever the sort happened to do and could change on the next redraw. A Gmail message id
+   rises with time, so it is the natural second key. Ascending here; the list comparator
+   multiplies by its own direction, and the search comparator calls it the other way round. */
+function rowGid(t){try{return (t&&t._one&&t.msgs&&t.msgs[t._mi]&&t.msgs[t._mi].gid)||(t&&t.msgs&&t.msgs.length?t.msgs[t.msgs.length-1].gid:'')||''}catch(e){return ''}}
+function rowTie(a,b){const x=String(rowGid(a)||''),y=String(rowGid(b)||'');
+ if(!x||!y||x===y)return 0;
+ if(x.length!==y.length)return x.length<y.length?-1:1;   /* a Gmail id is hex and grows in length */
+ return x<y?-1:1}
+
+/* the row-HTML cache has to hold what is on the screen, or it is cleared on every draw and
+   every row is built again. ~700 rows for a full Inbox window with one row per mail, so the
+   ceiling follows the real count (about 2 KB a row, so the top of this is ~4 MB). */
+function rhcTune(nRows){try{
+ const want=Math.min(2000,Math.max(600,(Number(nRows)||0)+300));
+ if(want>(window.__rhcMax||0))window.__rhcMax=want;
+}catch(e){}}
+if(typeof capRows==='function'){const _crTune=capRows;capRows=function(rows){const r=_crTune.apply(this,arguments);try{rhcTune(r&&r.length)}catch(e){}return r}}
+
+/* what rzMem() reports, so the caps can be read off a real screen */
+if(typeof window.rzMem==='function'){const _mem=window.rzMem;window.rzMem=function(){const r=_mem.apply(this,arguments);try{console.log('row HTML cache: '+(typeof RHC!=='undefined'?RHC.size:'?')+' of '+(window.__rhcMax||600))}catch(e){}return r}}
+/* __outlookrows:end */</script>

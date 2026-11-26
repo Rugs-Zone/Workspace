@@ -1,6 +1,6 @@
 # The rules that are LIVE right now — file your bugs against this
 
-App build **2026-11-26-22**. Checked against the shipped code, not from memory.
+App build **2026-11-27-2**. Checked against the shipped code, not from memory.
 Three lists: **A** what is live, **B** what is agreed but deliberately NOT live tonight,
 **C** what changed this evening that is not a rule.
 
@@ -35,7 +35,7 @@ Three lists: **A** what is live, **B** what is agreed but deliberately NOT live 
 | R14 | A conversation we wrote in is in Sent, answered or not |
 | R15 | "Mine" = sent from Rugs Email by me, or from Outlook under my own name, or from my own address / alias |
 | R16 | Sent under a name that is **nobody's** ("Team Pulse") — stays with the whole team |
-| R17 | **One row per conversation** (per-mail rows are NOT live — see list B) |
+| R17 | **One row per mail** — every mail in a conversation has its own row, sender and time (LOCKED ON, 26/27 Nov; it is a switch on Admin → 📜 Mail rules). Two mails sent in the same second are ordered by their Gmail id, so they never swap |
 | R18 | A Sent row shows **our** words, our time, and "To: …" |
 
 ### Needs owner / To assign
@@ -115,21 +115,21 @@ build.
 
 | | Rule | Where it is |
 |---|---|---|
-| **R17** | One row per mail, each with its own time | `patch-lock-row-per-mail.js` |
 | **C1** | Unassigned mail leaves a member's Inbox after **30 minutes** (clock 10:00–18:00, stopped Sundays and holidays) and lives under Needs owner | `patch-locked-rules-1.js` |
 | **C2** | Replying takes a conversation nobody owns; a manager replying takes it over | same |
-| **C5** | Transfer for everybody, and a member may assign to a colleague | same |
+| **C5** | Transfer for everybody, and a member may assign to a colleague | now a **switch** on Admin → 📜 Mail rules (off) |
 | **R16q** | Mail sent under nobody's name becomes manager-only | same |
 | **O4** | Every critical mail in a team is in that manager's My work | same |
 
 Still to build, nothing written yet: **C3** (a manager is asked "should your team see this?"
-on every reply), **C4** ("Leave this conversation", leaving a frozen copy), **S1–S16** (the
-Admin → Mail rules switch page), and **C6** (Priya out, Neha in — parked, you said later).
+on every reply), **C4** ("Leave this conversation", leaving a frozen copy), and **C6**
+(Priya out, Neha in — parked, you said later). **S1–S16, the Admin → Mail rules switch page,
+is DONE** — see section A+ above.
 
 ---
 
 ## C · Not rules, but new this evening
 
-* **Memory is capped.** Loaded mail on the conversations 35 MB, cache of opened mail 15 MB, attachments 10 MB, thumbnails 4 MB, compose attachments 15 MB, row HTML 600 rows. Oldest first, never the conversation on screen. Type `rzMem()` in the browser console to see what the page is holding.
+* **Memory is capped.** Loaded mail on the conversations 35 MB, cache of opened mail 15 MB, attachments 10 MB, thumbnails 4 MB, compose attachments 15 MB, and the row-HTML cache follows the rows really drawn (600 to 2,000 — one row per mail draws about 700). Oldest first, never the conversation on screen. Type `rzMem()` in the browser console to see what the page is holding.
 * **Maintenance window.** Rugs Email closes for everyone at **18:52** today and opens again **by itself at 09:30 tomorrow**. You keep access — by your own id, through **Switch ID as anybody**, or with `localStorage.setItem('rugs-maint-ok','1')` in the console if anything ever locks you out.
 * The notice board carries it as a pinned bulletin for every Workspace user; it removes itself tomorrow at 09:35.
