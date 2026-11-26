@@ -3849,7 +3849,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-12';
+const APP_BUILD='2026-11-26-13';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -4693,10 +4693,29 @@ function mgrFirst(d){try{const x=dept(d);return !!x&&mgrFirstBoxes().indexOf(Str
    Deleted and Junk take mail out, and those are a person's choice. The single exception is a
    department deliberately set to manager-first, where mail nobody has taken is the manager's
    to hand out - that is off for everyone by default now. __teamsee:end */
+/* __memberinbox 26 Nov 2026: mail nobody has been given yet is not in a member's Inbox -
+   it lives under "Needs owner" and behind the "Unassigned" chip, so it can still be
+   picked up. Every team except Designing, which is left as it is. */
+const UNASSIGNED_TEAM_INBOX=['designer@rugscreation.com'];   /* teams where it still shows to everyone */
+function needsOwnerView(){try{
+ if(typeof filt!=='undefined'&&filt==='needs')return true;      /* the Unassigned chip */
+ return !!(view&&view.type==='fav'&&(view.id==='needs'||view.id==='assign'));
+}catch(e){return false}}
+function hideUnowned(t){try{
+ /* mailOf() is d.box+DOMAIN, so `box` holds only the local part - match on that, which is
+    right whichever form the department carries. */
+ const d=dept(t&&t.dept),loc=x=>String(x||'').toLowerCase().split('@')[0];
+ const a=loc(d&&mailOf(d)),b=loc(d&&d.box);
+ if(UNASSIGNED_TEAM_INBOX.some(x=>{const k=loc(x);return !!k&&(k===a||k===b)}))return false;   /* Designing: unchanged */
+ return !needsOwnerView();
+}catch(e){return false}}
 function seeMine(t){const p=who(ME);
  if(!p||!t)return true;
  if(p.role==='Admin'||['Manager','Lead','CRM'].includes(p.role))return true;
- if(!t.owner)return !mgrFirst(t.dept);        /* nobody has taken it: the whole team can pick it up */
+ /* __memberinbox: nobody has taken it. It is NOT in a member's Inbox any more - it shows
+    under "Needs owner" and behind the "Unassigned" chip, so it can still be picked up.
+    The manager / lead / CRM / admin returned true above, so they are unaffected. */
+ if(!t.owner)return !mgrFirst(t.dept)&&!hideUnowned(t);
  if(t.owner===ME)return true;                 /* mine */
  /* 26 Nov 2026 (second pass): a conversation somebody has TAKEN is theirs - a colleague does
     not see it in the shared mailbox. The people who worked it (owner, repliers, forwarders,
