@@ -861,9 +861,22 @@ function rowWho(t){return rowName(t);   /* __backtoyesterday: the newest sender,
   const k=nm.toLowerCase();if(seen.has(k))continue;seen.add(k);out.push(nm)}
  if(!out.length)return rowName(t);
  return out.join(', ')+' '+ms.length}
+/* 26 Nov 2026: Sent rows show the real recipient (from that mail's To/Cc), not our own shared mailbox */
+let _sentCt={at:0,m:null};
+function sentTo(t){try{const ms=t.msgs||[];const m=(t._one&&ms[t._mi])||[...ms].reverse().find(x=>x.ours||x.by);
+ if(!m)return t.email||'';
+ if(!_sentCt.m||Date.now()-_sentCt.at>30000){_sentCt={at:Date.now(),m:new Map((contacts()||[]).map(c=>[String(c.email||'').toLowerCase(),c.name]))}}
+ const skip=new Set([String(m.email||'').toLowerCase(),String(t.mailbox||'').toLowerCase()]);
+ const pick=raw=>{const out=[];(String(raw||'').match(/(?:"[^"]*"|[^,;])+/g)||[]).forEach(p=>{
+   const em=((p.match(/<([^>]+)>/)||[])[1]||p).replace(/["']/g,'').trim().toLowerCase();if(!em||skip.has(em))return;
+   let nm=((p.match(/^\s*"?([^"<]+?)"?\s*</)||[])[1]||'').trim();if(!nm||nm.toLowerCase()===em)nm=_sentCt.m.get(em)||em;
+   if(!out.includes(nm))out.push(nm)});return out};
+ let out=pick(m.to);if(!out.length)out=pick(m.cc);
+ if(!out.length)return String(m.to||t.email||'').replace(/<[^>]*>/g,'').trim()||t.email||'';
+ return out.slice(0,3).join(', ')+(out.length>3?' +'+(out.length-3):'')}catch(e){return t.email||''}}
 function rowHTML(t){const s=st(t),[l,c]=TAG[s],o=who(t.owner),priv=isPrivate(t),x=t.hist.find(h=>h.t==='x');
  return `<div draggable="true" class="m ${t.unread?'unread':''} ${openId===t.id?'open':''}" data-open="${t.id}" role="button" tabindex="0">
- <span>${av(rowName(t))}</span><div class="body"><div class="r1"><span class="who">${view.type==='box'&&view.folder==='sent'?'To: '+esc(t.email):esc(rowWho(t))}</span><span class="time" title="${tLong(t.last)}">${tShort(rowWhen(t))}</span></div>
+ <span>${av(rowName(t))}</span><div class="body"><div class="r1"><span class="who">${view.type==='box'&&view.folder==='sent'?'To: '+esc(sentTo(t)):esc(rowWho(t))}</span><span class="time" title="${tLong(t.last)}">${tShort(rowWhen(t))}</span></div>
  <div class="sub">${priv?ico('lock')+' Private — login code':esc(cleanSub(t.sub))}</div><div class="pre">${priv?'Hidden from the team. Only the account owner can open it.':esc(rowPre(t))}</div>
  <div class="tags">${critChips(t)}${viaTags(t)}${lbHTML(t)}${!t.owner&&s!=='done'&&isGeneric(t)?'<span class="tag t-done">Generic</span>':''}${t.promise&&s!=='done'?`<span class="tag ${s==='late'?'t-late':'t-prom'}">${s==='late'?ico('clock')+' ':''}${dueTxt(t)}</span>`:`<span class="tag ${c}">${l}</span>`}${x?`<span class="tag t-xfer" title="${!t.owner&&s!=='done'?'Owner to be chosen by '+esc(decTxt(t.dept)):''}">${ico('fwd')} Transferred${!t.owner&&s!=='done'?' · '+esc(deciders(t.dept).map(p=>p.name.split(' ')[0]).join(', ')||'admin')+' to assign':''}</span>`:''}${o?`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted)">${av(o.name,'sm')}${esc(o.name.split(' ')[0])}</span>`:''}${t.att?'<span class="tag t-asg" title="Has attachment">'+ico('clip','Has attachment')+'</span>':''}${t.flag?'<span class="tag t-flag" title="Flagged">'+ico('flag','Flagged')+'</span>':''}</div></div>
  <div class="qa"><button data-qdone="${t.id}" title="Mark done" aria-label="Mark done">${ico('check')}</button><button data-qflag="${t.id}" title="Flag" aria-label="Flag">${ico('flag')}</button><button data-xfer="${t.id}" title="Transfer to department" aria-label="Transfer">${ico('fwd')}</button><button data-qarch="${t.id}" title="Archive" aria-label="Archive">${ico('archive')}</button>${t.folder==='deleted'?`<button data-restore="${t.id}" title="Restore" aria-label="Restore">↺</button>`:`<button data-qdel="${t.id}" title="Delete from Rugs Email (original stays in the company mailbox)" aria-label="Delete">${ico('trash')}</button>`}</div></div>`}
@@ -3849,7 +3862,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-15';
+const APP_BUILD='2026-11-26-16';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
