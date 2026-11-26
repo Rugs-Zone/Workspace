@@ -84,6 +84,29 @@ folders, "Ignore conversation", snooze, blocked senders, changes made in Gmail, 
 
 ---
 
+## A+ · THIS LIST IS NOW A PAGE INSIDE RUGS EMAIL
+
+Since build **2026-11-26-23** every rule above is in the app itself, not only in this file:
+
+* **Admin → 📜 Mail rules** — the whole list with the switches, for the admin.
+* **Menu under your own name → 📜 Mail rules** — the same list, read-only, for everybody.
+
+**Eight of them are real switches** (R1, R3, R7, R10, R11, R17, R27, C5) plus the
+manager-first list (R32) and a shortcut to "Hide mail from before Go live". Every other rule
+is shown with a badge saying **Built in**, **Server** or **Not live**, so nobody is offered a
+control that does nothing. **Nothing changed when the page shipped** — every switch starts on
+the behaviour described above.
+
+Moving a switch **asks first**, and the question carries: what happens the moment you press it
+(counted from the mail actually loaded, e.g. *"1,062 of the 1,480 conversations in the Inbox
+are marked Done and would leave it at once"*), the **conflicts** with the rest of the app, what
+it will **cost**, and who it affects. A change with a conflict needs the "I have read the
+conflict — change it anyway" button. Every change is recorded with the name of who made it.
+
+The page also has a **Checks right now** panel which flags the three things that hide mail
+without being rules: the Go-live tick, anybody whose View ▾ "Show" filter is set, and any
+manager-first team.
+
 ## B · AGREED, TESTED, BUT NOT LIVE TONIGHT
 
 These were built this evening and rolled back with the outage. **Do not file bugs against

@@ -581,8 +581,8 @@ async function deletedUsers() {
   const { data } = await sb.from("rm_settings").select("value").eq("key", "deleted_users").maybeSingle();
   return data?.value && typeof data.value === "object" ? data.value : {};
 }
-var SHARED_KEYS = ["circulars", "folders", "alerts", "templates", "cats", "rules", "blocked", "contacts_extra", "mgr_first_boxes"];
-var ADMIN_KEYS = ["rules", "blocked", "cats", "folders", "templates", "circulars"];
+var SHARED_KEYS = ["circulars", "folders", "alerts", "templates", "cats", "rules", "blocked", "contacts_extra", "mgr_first_boxes", "mail_rules"];
+var ADMIN_KEYS = ["rules", "blocked", "cats", "folders", "templates", "circulars", "mgr_first_boxes", "mail_rules"];
 async function log(box, tid, uid, kind, text) {
   await sb.from("rm_activity").insert({ mailbox: box, gmail_thread_id: tid, user_id: uid, kind, text });
 }

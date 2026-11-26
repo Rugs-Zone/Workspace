@@ -8,12 +8,13 @@
 import fs from "node:fs";
 const src = fs.readFileSync(".tmp/email.html", "utf8");
 /* 26 Nov 2026: this file describes the ONE ROW PER MAIL model. It was reverted the same day
-   (server/patch-back-to-yesterday.js) back to one row per conversation, so these checks do
-   not apply while that is the case. Everything they test is still in the app and still
-   works - turn conv:false back on in LV() and this suite becomes live again. */
-if (/\{conv:true\}/.test(src)) {
+   (server/patch-back-to-yesterday.js) back to one row per conversation. Since the Mail rules
+   page it is rule R17, so the row model is now a switch an admin moves rather than a line of
+   code: these checks apply only while R17 is on. Everything they test is still in the app. */
+if (/R17:\s*false/.test(src) || /\{conv:true\}/.test(src)) {
   console.log("SKIPPED - one row per conversation is on, so the per-mail row rules do not apply.");
-  console.log("          (turn conv:false back on in LV() to run these 22 checks)");
+  console.log("          (switch rule R17 on in Admin -> Mail rules, or set R17 true in RDEF,");
+  console.log("           to run these 22 checks)");
   process.exit(0);
 }
 

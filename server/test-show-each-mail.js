@@ -4,9 +4,10 @@
 /* 26 Nov 2026: this suite describes the ONE ROW PER MAIL model, reverted the same day
    (server/patch-back-to-yesterday.js). While one row per conversation is on, these
    checks do not apply - the code they test is still present and still works. */
-if (/\{conv:true\}/.test(require('fs').readFileSync(__dirname + '/../mail-app.html','utf8'))) {
+const _app = require('fs').readFileSync(__dirname + '/../mail-app.html','utf8');
+if (/R17:\s*false/.test(_app) || /\{conv:true\}/.test(_app)) {
   console.log('SKIPPED - one row per conversation is on, so "each mail its own row" does not apply.');
-  console.log('          (turn conv:false back on in LV() to run these 11 checks)');
+  console.log('          (switch rule R17 on in Admin -> Mail rules to run these 11 checks)');
   process.exit(0);
 }
 const path = require('path');

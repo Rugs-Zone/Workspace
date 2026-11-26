@@ -224,8 +224,8 @@ async function deletedUsers(): Promise<Record<string, any>> {
   const { data } = await sb.from("rm_settings").select("value").eq("key", "deleted_users").maybeSingle();
   return data?.value && typeof data.value === "object" ? data.value : {};
 }
-const SHARED_KEYS = ["circulars", "folders", "alerts", "templates", "cats", "rules", "blocked", "contacts_extra"];
-const ADMIN_KEYS = ["rules", "blocked", "cats", "folders", "templates", "circulars"];   // only role Admin may change these
+const SHARED_KEYS = ["circulars", "folders", "alerts", "templates", "cats", "rules", "blocked", "contacts_extra", "mgr_first_boxes", "mail_rules"];
+const ADMIN_KEYS = ["rules", "blocked", "cats", "folders", "templates", "circulars", "mgr_first_boxes", "mail_rules"];   // only role Admin may change these
 async function log(box: string, tid: string, uid: string | null, kind: string, text: string) {
   await sb.from("rm_activity").insert({ mailbox: box, gmail_thread_id: tid, user_id: uid, kind, text });
 }
