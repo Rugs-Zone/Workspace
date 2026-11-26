@@ -6,6 +6,16 @@
 */
 import fs from "node:fs";
 const src = fs.readFileSync(".tmp/email.html", "utf8");
+/* 26 Nov 2026: this suite describes the rule that takes unassigned mail OUT of a member's
+   Inbox. It was reverted the same day (server/patch-restore-team-inbox.js) back to the
+   25 Nov rule, where the whole team sees unassigned mail. The helpers are still in the app,
+   so putting `&&!hideUnowned(t)` back in seeMine makes this suite live again. */
+if (!src.includes("!mgrFirst(t.dept)&&!hideUnowned(t)")) {
+  console.log("SKIPPED - the whole team sees unassigned mail (25 Nov rule), so this rule does not apply.");
+  console.log("          (put `&&!hideUnowned(t)` back in seeMine to run these 17 checks)");
+  process.exit(0);
+}
+
 const cut = (a, b) => { const i = src.indexOf(a); if (i < 0) throw new Error("not found: " + a.slice(0, 50)); const j = src.indexOf(b, i); if (j < 0) throw new Error("end not found: " + b.slice(0, 40)); return src.slice(i, j); };
 
 const srcSee = cut("const UNASSIGNED_TEAM_INBOX=", "/* 20 Nov 2026: a mailbox somebody sees ONLY the critical");

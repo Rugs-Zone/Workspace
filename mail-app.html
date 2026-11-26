@@ -3849,7 +3849,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-14';
+const APP_BUILD='2026-11-26-15';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -4720,7 +4720,10 @@ function seeMine(t){const p=who(ME);
     and the line below hid it from their own Inbox the moment they replied. */
  const _worked=(typeof isMyWork==='function')?isMyWork(t):(t.msgs||[]).some(m=>msgMine(m,t));
  if(_worked)return true;                      /* mine, or I have written in it */
- if(!t.owner)return !mgrFirst(t.dept)&&!hideUnowned(t);
+ /* __teaminboxback 26 Nov 2026: back to the 25 Nov rule - the whole team sees mail
+    nobody has taken, so anyone can pick it up. To hide it from members again and put
+    it under "Needs owner" instead, add `&&!hideUnowned(t)` back here. */
+ if(!t.owner)return !mgrFirst(t.dept);        /* nobody has taken it: the whole team can pick it up */
  if(t.owner===ME)return true;                 /* mine */
  /* 26 Nov 2026 (second pass): a conversation somebody has TAKEN is theirs - a colleague does
     not see it in the shared mailbox. The people who worked it (owner, repliers, forwarders,
