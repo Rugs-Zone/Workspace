@@ -756,7 +756,7 @@ function listRows(){const q=$('#q').value.trim().toLowerCase();
  let r=S.threads.filter(inView);
  if(view.type==='box'&&view.folder==='inbox')r=r.filter(t=>tab==='other'?othTab(t):!othTab(t));
  if(lfilt)r=r.filter(t=>t.label===lfilt);
- if(filt!=='all')r=r.filter(t=>filt==='unread'?t.unread:filt==='mine'?t.owner===ME:filt==='open'?st(t)!=='done':filt==='alias'?!!viaOf(t):true);
+ if(filt!=='all')r=r.filter(t=>filt==='unread'?t.unread:filt==='mine'?t.owner===ME:filt==='open'?st(t)!=='done':filt==='alias'?!!viaOf(t):filt==='needs'?!t.owner:true);
  if(q)r=S.threads.filter(t=>[t.from,t.email,t.sub,t.pre,t.promise,who(t.owner)?.name].join(' ').toLowerCase().includes(q));
  const isSent=view.type==='box'&&view.folder==='sent';return r.sort((a,b)=>isSent?lastOut(b)-lastOut(a):b.last-a.last)}
 const lastOut=t=>Math.max(0,...t.msgs.filter(m=>m.by||m.ours).map(m=>m.at));
@@ -823,7 +823,7 @@ function renderList(){const el=document.querySelector('.list');if(!el)return;
  const rows=special?[]:listRows();const isInbox=view.type==='box'&&view.folder==='inbox';
  try{window.LCNT={n:special?S.drafts.length:rows.length,u:0}}catch(e){}   /* 19 Nov 2026: for the bottom status bar */
  let h=`<div class="lhead">${mobilePicker()}<h2>${esc(title())} <small>${special?S.drafts.length:rows.length}</small></h2><div class="lsync"><button class="btn" data-sync title="Fetch new mail for Inbox and Sent">⟳ Sync</button><span>${syncing?'Syncing…':S.lastSync?'Synced '+new Date(S.lastSync).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):'Not synced yet'}</span>${special?'':`<button class="lbtog" data-lbtog style="margin-left:auto">Topics ${S.ui.hideTopics?'▸':'▾'}</button>`}</div>`;
- if(!special){h+=`<div class="seg">${isInbox?`<button class="chip" data-tab="focused" aria-pressed="${tab==='focused'}">Focused</button><button class="chip" data-tab="other" aria-pressed="${tab==='other'}">Other</button><span style="width:1px;background:var(--line)"></span>`:''}${[['all','All'],['unread','Unread'],['mine','Mine'],['open','Open'],['alias','Alias']].map(([k,l])=>`<button class="chip" data-filt="${k}" aria-pressed="${filt===k}">${l}</button>`).join('')}</div><div class="lbrow ${S.ui.hideTopics?'hide':''}" role="toolbar" aria-label="Topic"><button class="lchip" style="--lc:var(--fg)" data-lf="" aria-pressed="${!lfilt}">All topics</button>${LABELS.map(l=>`<button class="lchip" style="--lc:${l.c}" data-lf="${l.id}" aria-pressed="${lfilt===l.id}">${l.name}</button>`).join('')}</div>`}
+ if(!special){h+=`<div class="seg">${[['all','Inbox'],['unread','Unread'],['needs','Needs owner']].map(([k,l])=>`<button class="chip" data-filt="${k}" aria-pressed="${filt===k}">${l}</button>`).join('')}</div><div class="lbrow ${S.ui.hideTopics?'hide':''}" role="toolbar" aria-label="Topic"><button class="lchip" style="--lc:var(--fg)" data-lf="" aria-pressed="${!lfilt}">All topics</button>${LABELS.map(l=>`<button class="lchip" style="--lc:${l.c}" data-lf="${l.id}" aria-pressed="${lfilt===l.id}">${l.name}</button>`).join('')}</div>`}
  h+=`</div><div class="msgs">`;
  if(special){const arr=S.drafts;h+=arr.length?arr.map((m,i)=>`<div class="m" ${view.folder==='drafts'?`data-draft="${i}"`:''}><span>${av(m.by||who(ME).name)}</span><div class="body"><div class="r1"><span class="who">To: ${esc(m.to)}</span><span class="time">${tShort(m.at)}</span></div><div class="sub">${esc(m.sub||'(no subject)')}</div><div class="pre">${view.folder==='drafts'?'<b style="color:var(--red)">Draft</b> · '+esc(m.body||''):'Sent by '+esc(m.by)}</div></div></div>`).join(''):`<div class="empty"><b>Nothing here</b></div>`}
  else if(!rows.length)h+=`<div class="empty"><b>${typeof loadingNote==='function'&&loadingNote()?loadingNote():'All clear'}</b><span>${view.id==='needs'?'Every email has an owner.':'No mail here.'}</span></div>`;
@@ -2484,7 +2484,7 @@ listRows=function(){const raw=$('#q').value.trim();let r;
   const special=view.type==='fav'&&['snoozed','remind'].includes(view.id);if(!special)r=r.filter(t=>!snoozed(t));
   if(view.type==='box'&&view.folder==='inbox')r=r.filter(t=>tab==='other'?othTab(t):!othTab(t));
   if(lfilt)r=r.filter(t=>t.label===lfilt);if(catFilt)r=r.filter(t=>(t.cats||[]).includes(catFilt));
-  if(filt!=='all')r=r.filter(t=>filt==='unread'?t.unread:filt==='mine'?t.owner===ME:filt==='open'?st(t)!=='done':filt==='alias'?!!viaOf(t):true)}
+  if(filt!=='all')r=r.filter(t=>filt==='unread'?t.unread:filt==='mine'?t.owner===ME:filt==='open'?st(t)!=='done':filt==='alias'?!!viaOf(t):filt==='needs'?!t.owner:true)}
  const isSent=view.type==='box'&&view.folder==='sent',k=t=>isSent?lastOut(t):t.last;
  return r.sort((a,b)=>(b.pinned-a.pinned)||(k(b)-k(a)))};
 let catFilt='';
@@ -3816,7 +3816,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-2';
+const APP_BUILD='2026-11-26-3';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -6327,3 +6327,31 @@ function srvLook() {
   .then(function () { if (app === 'admin' && adminTab === 'srv') render(); });
 }
 /* __findconvui:end */</script>
+
+<script>/* __chips3:start  26 Nov 2026: three chips, darker text */
+/* The Focused/Other buttons are gone, so nothing may be filtered out by the tab any more -
+   otherwise automatic mail would be invisible instead of merely on another tab. */
+if (typeof othTab === 'function') { const _ot = othTab; othTab = function () { return false; }; }
+tab = 'focused';
+(function () {
+ /* mail-v2.js and the Outlook pack inject their styles AFTER this one, so these need
+    !important and a second pass once everything else has loaded. */
+ const CSS3 =
+  /* darker text in light mode; dark mode keeps exactly what it had */
+  ':root{--fg:#0b0a09!important;--muted:#45403b!important}' +
+  '@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--fg:#f2eeeb;--muted:#9c948e}}' +
+  ':root[data-theme="dark"]{--fg:#f2eeeb;--muted:#9c948e}' +
+  /* every row: the name and the subject in full strength */
+  '.m .who,.m .sub{color:var(--fg)!important}' +
+  '.m .pre{color:color-mix(in srgb,var(--fg) 74%,transparent)!important}' +
+  /* unread: heavier, blacker, and a faint tint so the eye finds it */
+  '.m.unread{background:color-mix(in srgb,var(--brand) 10%,transparent)!important}' +
+  '.m.unread .who,.m.unread .sub{font-weight:800!important;color:var(--fg)!important}' +
+  '.m.unread .pre{color:color-mix(in srgb,var(--fg) 88%,transparent)!important}' +
+  '.m.unread{border-left-width:4px!important}' +
+  /* the open mail itself, a shade blacker */
+  '.mail .mbody,.mail .msnip{color:var(--fg)!important}';
+ const put = function () { const st = document.createElement('style'); st.id = 'chips3css'; st.textContent = CSS3; document.head.appendChild(st); };
+ put(); setTimeout(put, 1500); setTimeout(put, 5000);
+})();
+/* __chips3:end */</script>
