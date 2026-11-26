@@ -1352,7 +1352,15 @@ const _tbCid=trailBlock;trailBlock=function(){let h=_tbCid.apply(this,arguments)
 function trailEditHTML(t){const tr=trailOf(t);return tr.map((q,i)=>trailBlock(q,i)).reverse().join('')}
 function sendReply(t,txt,p,dv,fwd,noTrail,html,withSig=true){
  const tr=noTrail?[]:trailOf(t);t.msgs.push({from:who(ME).name,by:ME,email:dept(t.dept).box+'rugscreation.com',at:Date.now(),body:txt,html:html||'',sig:withSig?pickSig():'',trail:tr,fwd:!!fwd});t.last=Date.now();
- if(!t.owner&&t.dept===who(ME).dept){t.owner=ME;if(t.status==='new')t.status='open'}
+ /* __noautotake:start 26 Nov 2026: REPLYING NEVER CHANGES THE OWNER. This line used to take an
+    unassigned conversation - but it judged "unassigned" from the copy in THIS browser, so a
+    stale copy (loaded before a colleague took it) silently wrote the replier's name over the
+    real owner on the server, with no history line to show for it. That is how Gulab's
+    conversation became Jagjit's. The owner now changes only when a person assigns, transfers
+    or presses Take; replying makes you a participant, which already keeps it in My work. */
+ if(t.status==='new'&&!t.owner)t.status='open';   /* answered - a status, not an owner */
+ try{t.parts=Array.isArray(t.parts)?t.parts:[];if(t.parts.indexOf(ME)<0)t.parts.push(ME)}catch(e){}
+ /* __noautotake:end */
  if(p&&dv){t.promise=p;t.due=new Date(dv+'T17:00').getTime();t.status='promised';hist(t,'p',`Promise: ${p} — ${dShort(t.due)}`)}
  (openMsgs[t.id]=openMsgs[t.id]||new Set()).add(t.msgs.length-1);save();if(typeof liveSend==='function')liveSend(t,t.msgs[t.msgs.length-1],fwd);toast(p?'Sent · reminder set 🤝':'Sent ✓');render()}
 
@@ -3816,7 +3824,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-5';
+const APP_BUILD='2026-11-26-6';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
