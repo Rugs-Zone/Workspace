@@ -1549,7 +1549,9 @@ async function handle(a, p, t0) {
             throw new E((ow.name || "That person") + " is not in " + ((tm && tm.name) || "that team") + ". Move the conversation to their team first.", 403);
           }
         }
-        if (patch.folder === "deleted" && !can(u, "delete")) throw new E("You can't delete mail", 403);
+        /* __purgeright 27 Nov 2026: 'purged' is what "Empty Deleted" writes - it needs the same
+           right as a delete, or anyone could empty somebody's Deleted folder. */
+        if ((patch.folder === "deleted" || patch.folder === "purged") && !can(u, "delete")) throw new E("You can't delete mail", 403);
         if ("topic" in patch && patch.topic_ai === false) patch.topic_checked = true;
         if ("dept_id" in patch && patch.dept_id && !can(u, "transfer")) throw new E("You can't transfer mail", 403);
         if ("dept_id" in patch && patch.dept_id === d.id) patch.dept_id = null;

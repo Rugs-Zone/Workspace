@@ -3889,7 +3889,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-27-11';
+const APP_BUILD='2026-11-27-12';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -6764,17 +6764,21 @@ const MAINT_FROM=1795699357493;
 const MAINT_UNTIL=1795752000000;
 const MAINT_LABEL='18:52';
 const MAINT_BACK='9:30 tomorrow morning';
-const MAINT_IDS=['adm'];
 
-/* who keeps working: Priyanshu, any switched session (only he can start one), and the
-   escape hatch localStorage['rugs-maint-ok']='1' */
+/* __maintadmin 27 Nov 2026 (bug 12): who keeps working during the window - an ADMIN, and
+   nobody else. "Admin" is the role the SERVER sent with this session (boot fills PEOPLE and
+   ME from the session token), so it cannot be claimed by the browser.
+   What was here before: localStorage['rugs-maint-ok']='1' was checked FIRST and on its own,
+   so anyone who set one value in their own browser was straight past the window. That value
+   is now ignored unless the session is an admin's, and the id list and the "marketing@"
+   login test are gone with it - a role is the thing to check, not an address. */
 function maintMe(){
  try{
-  if(localStorage.getItem('rugs-maint-ok')==='1')return true;
-  if(typeof swOn==='function'&&swOn())return true;
-  if(MAINT_IDS.indexOf(ME)>=0)return true;
-  const p=(typeof who==='function'&&who(ME))||{};
-  if(/^marketing@/i.test(String(p.login||'')))return true;
+  if(!ME)return false;                                  /* nobody is signed in */
+  const p=(typeof who==='function'&&who(ME))||null;
+  if(!p||p.active===false)return false;
+  if(p.role!=='Admin')return false;                     /* the only way past the window */
+  return true;
  }catch(e){}
  return false;
 }

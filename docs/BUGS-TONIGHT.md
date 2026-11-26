@@ -197,3 +197,16 @@ As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha, and as
 - [ ] a Turner mail in **Junk or Deleted** is left exactly where it is
 - [ ] sign out and in again: the rules are still there (they are saved on your own user row)
 
+## Bug 12 (security: Empty Deleted, and the maintenance bypass) - what the tester should check
+
+- [ ] as somebody **with** the delete right: Junk and Deleted still show the dustbin and
+      **Empty Deleted** still works, with its 10-second Undo
+- [ ] as somebody **without** it: no dustbin, and if the action is forced anyway the server
+      answers **"You can't delete mail"** (it now checks the right for 'purged' as well as
+      'deleted' - this needs the office server on version **2026-11-27-d** or later)
+- [ ] during a maintenance window: a **member** and a **manager** are held on the
+      maintenance screen even if `rugs-maint-ok` is set in their browser; only a signed-in
+      **Admin** keeps working, and a deactivated admin does not
+- [ ] nothing about the window changed for an admin: the countdown bar still says
+      "(you keep access)"
+
