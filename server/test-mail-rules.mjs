@@ -121,7 +121,7 @@ ck("R3  a taken conversation is private", A.RON('R3'), true);
 ck("R7  Done mail stays in the Inbox", A.RON('R7'), true);
 ck("R10 a login code is shown to everyone", A.RON('R10'), true);
 ck("R11 Workspace notifications keep their own folder", A.RON('R11'), true);
-ck("R17 one row per MAIL is off (so: one row per conversation)", A.RON('R17'), false);
+ck("R17 one row per MAIL is ON (26/27 Nov, plan P1)", A.RON('R17'), true);
 ck("R27 replying does NOT take ownership", A.RON('R27'), false);
 ck("C5  transfer/assign still follow the per-person ticks", A.RON('C5'), false);
 
@@ -264,11 +264,13 @@ ck("C5 on: it does NOT hand out dashboards", A.can('dashboards', 'imran'), false
 A.clear();
 
 console.log("\n=== B6 · R17 really switches the row model ===");
-ck("R17 off (shipped): one row per conversation", A.LV().conv, true);
+ck("R17 on (shipped since the night of 26/27 Nov): one row per mail", A.LV().conv, false);
+A.set('R17', false);
+ck("R17 off: back to one row per conversation, with no build", A.LV().conv, true);
 A.set('R17', true);
-ck("R17 on: one row per mail", A.LV().conv, false);
+ck("R17 on again: one row per mail", A.LV().conv, false);
 A.clear();
-ck("back to the shipped model when the rule is cleared", A.LV().conv, true);
+ck("clearing the rule returns to the shipped model", A.LV().conv, false);
 
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);

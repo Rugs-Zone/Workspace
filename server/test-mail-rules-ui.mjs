@@ -124,9 +124,11 @@ await page.locator('#rltest .rsw[data-rtog="R17"]').click();
 await page.waitForTimeout(350);
 const d2 = await page.locator(".scrim .dlg").textContent();
 ck("R17 has no hard conflict", d2.includes("This conflicts with how the rest of the app works"), false);
+/* R17 ships ON since the night of 26/27 Nov, so clicking its switch proposes OFF */
 ck("...so the button just says what it will do",
-  (await page.locator(".scrim .dlg footer [data-ryes]").textContent()).includes("Change it to ON"), true);
-ck("...and it still says how many rows the list would build", /rows instead of/.test(d2), true);
+  (await page.locator(".scrim .dlg footer [data-ryes]").textContent()).includes("Change it to OFF"), true);
+ck("...and it still says what the list would look like afterwards", /one row per conversation/.test(d2), true);
+ck("...and warns that a single mail then has no row of its own", /no row of its own/.test(d2), true);
 await page.locator(".scrim .dlg [data-rno]").click();
 await page.waitForTimeout(250);
 

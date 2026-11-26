@@ -24,8 +24,11 @@
 /* ---------------------------------------------------------------- state ---- */
 const RULES_KEY = 'mail_rules';
 const RULES_BUILD = (typeof APP_BUILD !== 'undefined' ? APP_BUILD : '');
-/* the shipped behaviour of 26 Nov 2026 - a switch with no saved value behaves like this */
-const RDEF = { R1: true, R3: true, R7: true, R10: true, R11: true, R17: false, R27: false, C5: false };
+/* The shipped behaviour - a switch with no saved value behaves like this.
+   R17 went true on the night of 26/27 Nov (plan P1): every mail in a conversation gets its
+   own row, its own sender and its own time. It is a switch now, so turning it back off is
+   one click on this page and needs no build. */
+const RDEF = { R1: true, R3: true, R7: true, R10: true, R11: true, R17: true, R27: false, C5: false };
 
 function rulesObj() {
   try { const o = (S.settings && S.settings[RULES_KEY]) || null; return (o && typeof o === 'object') ? o : {}; }

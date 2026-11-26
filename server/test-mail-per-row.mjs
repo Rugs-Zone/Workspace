@@ -47,7 +47,10 @@ const srcLVdef    = line("const LV=()=>Object.assign({},LV_DEF");
 const harness = `
 const LV_DEF={sort:'date',dir:'desc',vf:'all',pane:'right',conv:true,lines:1};
 ${srcLVdef}
-const S={prefs:{}};
+const S={settings:{},prefs:{}};
+/* 26/27 Nov: the row model is rule R17 now, so LV() asks RON('R17'). Bring the real rule
+   state in rather than stubbing it - then this suite reads the SHIPPED default. */
+${cut("const RULES_KEY = 'mail_rules'", "/* the gate the app's own can() asks")}
 let view={type:'box',dept:'tp',folder:'inbox'};
 let ME='ashok';
 const USERS={ashok:{name:'Ashok'}};
