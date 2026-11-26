@@ -77,12 +77,14 @@ Three lists: **A** what is live, **B** what is agreed but deliberately NOT live 
 | R33 | **Critical-only** — Priya's narrow view of Vinay's mailbox. Priya has left, so nobody holds it |
 | R34 | **Switch ID** — shows exactly what that person sees |
 
+| R13i | **"Ignore conversation" → Archive, and a new mail brings it back** (27 Nov) — ignoring moves the conversation to **Archive** (it used to go to Deleted), tags it "ignored", marks it done and writes "Ignored by ‹name› — moved to Archive"; Undo puts it all back. A **new incoming mail** in it goes to the **Inbox** like any new mail, the tag comes off and the trail says "New mail - back in Inbox" (office-server trigger `rm_ignore_trg`, replaced — it used to send every later mail straight to Deleted for ever). A mail **we** send in it leaves it ignored. "Stop ignoring" takes the tag off at once |
+
 ### Things that hide mail which are not ownership rules
 
 `Hide mail from before Go live` (Admin → Old mail — **must stay unticked**), the **View ▾ → Show**
 filter (saved per person, the most common cause of "my mail is missing"), the three chips
 (Inbox / Unread / Unassigned), the Topics menu, Search, Archive / Junk / Deleted / personal
-folders, "Ignore conversation", snooze, blocked senders, changes made in Gmail, and the first
+folders, "Ignore conversation" (now R13i above — it no longer hides mail for ever), snooze, blocked senders, changes made in Gmail, and the first
 150 rows being drawn with the rest on scroll. Full list with numbers in `MAIL-RULES.md`, H1–H25.
 
 ---

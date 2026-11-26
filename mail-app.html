@@ -3889,7 +3889,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-27-7';
+const APP_BUILD='2026-11-27-8';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -4022,7 +4022,7 @@ function cmOpen(t,x,y,row){cmClose();_cmT=t;_cmBack=row;const full=canSee(t.dept
  m.innerHTML=it('reply','↩ Reply',full?'':'View only')+it('replyall','↩↩ Reply all',full?'':'View only')+it('fwd','↪ Forward')+it('fwdatt','📎 Forward as attachment')+'<hr>'
   +it('mine','👤 Assign to me',!full?'View only':t.owner===ME?'Already yours':'')+'<div class="cmsub"><button type="button" role="menuitem" aria-haspopup="menu" data-cm="move"'+(full?'':' disabled')+'>📁 Move to… ▸</button><div class="cmlist" role="menu" aria-label="Move to">'+mv.map(([k,l])=>'<button type="button" role="menuitem" data-cm="to:'+esc(k)+'">'+esc(l)+'</button>').join('')+'</div></div>'
   +it('flag',t.flag?'⚑ Clear flag':'⚑ Flag')+it('unread',t.unread?'✉ Mark read':'✉ Mark unread')+'<hr>'
-  +it('ignore',ign?'🔔 Stop ignoring':'🔕 Ignore conversation',full?'':'View only')+it('del','🗑 Delete',!full||!can('delete')?"You can't delete this mail":'')+'<hr>'+it('report','\u{1F6E0} Report a problem');
+  +it('ignore',ign?'🔔 Stop ignoring':'🔕 Ignore conversation (to Archive)',full?'':'View only')+it('del','🗑 Delete',!full||!can('delete')?"You can't delete this mail":'')+'<hr>'+it('report','\u{1F6E0} Report a problem');
  document.body.appendChild(m);
  const W=m.offsetWidth,H=m.offsetHeight;m.style.left=Math.max(4,Math.min(x,innerWidth-W-4))+'px';m.style.top=Math.max(4,Math.min(y,innerHeight-H-4))+'px';
  const sub=m.querySelector('.cmlist');if(sub&&x+W+180>innerWidth)sub.classList.add('left');
@@ -4046,9 +4046,16 @@ document.addEventListener('click',e=>{const m=document.querySelector('.cmenu');i
  else if(a==='flag'){t.flag=!t.flag;save();render()}
  else if(a==='unread'){t.unread=!t.unread;save();render()}
  else if(a.startsWith('to:')){const to=a.slice(3),from=t.folder,prev=t.prev;t.prev=from;t.folder=to;hist(t,'n',`Moved to ${to} by ${who(ME).name}`);save();if(openId===t.id)openId=null;render();if(typeof undoToast==='function')undoToast('Moved to '+to,()=>{t.folder=from;t.prev=prev;hist(t,'n',`Move undone by ${who(ME).name}`);save();render()})}
- else if(a==='ignore'){const c=t.cats||[];if(c.includes('ignored')){t.cats=c.filter(x=>x!=='ignored');hist(t,'n',`Ignore turned off by ${who(ME).name} — new mails stay in the Inbox again`);save();toast('Conversation no longer ignored');render();return}
-  const from=t.folder,prev=t.prev;t.cats=[...c,'ignored'];t.prev=from;t.folder='deleted';hist(t,'n',`Conversation ignored by ${who(ME).name} — new mails in it go straight to Deleted`);save();if(openId===t.id)openId=null;render();
-  if(typeof undoToast==='function')undoToast('Conversation ignored — new mails go to Deleted',()=>{t.cats=(t.cats||[]).filter(x=>x!=='ignored');t.folder=from;t.prev=prev;hist(t,'n',`Ignore undone by ${who(ME).name}`);save();render()})}
+ else if(a==='ignore'){const c=t.cats||[];if(c.includes('ignored')){t.cats=c.filter(x=>x!=='ignored');hist(t,'n',`Ignore turned off by ${who(ME).name}`);save();toast('Conversation no longer ignored');render();return}
+  /* __r13i 27 Nov 2026: ignoring ARCHIVES the conversation. It used to go to Deleted, and a
+     trigger on the office server then sent every later mail in it to Deleted as well. A new mail
+     in it now comes back to the Inbox by itself and the tag is taken off (see rm_ignore_trg).
+     It is still marked done, so it leaves the work lists exactly as it did in Deleted. */
+  const from=t.folder,prev=t.prev,was=t.status,wasAt=t.doneAt;
+  t.cats=[...c,'ignored'];t.prev=from;t.folder='archive';
+  if(t.status!=='done'){t.status='done';t.doneAt=Date.now()}
+  hist(t,'n',`Ignored by ${who(ME).name} — moved to Archive`);save();if(openId===t.id)openId=null;render();
+  if(typeof undoToast==='function')undoToast('Conversation ignored — moved to Archive',()=>{t.cats=(t.cats||[]).filter(x=>x!=='ignored');t.folder=from;t.prev=prev;t.status=was;t.doneAt=wasAt;hist(t,'n',`Ignore undone by ${who(ME).name}`);save();render()})}
  else if(a==='del'){const tmp=document.createElement('button');tmp.dataset.qdel=t.id;tmp.hidden=true;document.body.appendChild(tmp);tmp.click();tmp.remove()}},true);
 window.addEventListener('resize',()=>{cmClose();if(_vmOpen)vmClose()});
 (function(){const st=document.createElement('style');st.textContent=[
@@ -7165,10 +7172,10 @@ const RULES = [
     brk: ['Before 25 November the Open chip and even a stale search came back after a reload, which is what emptied Mala\'s Inbox.']
   },
   {
-    id: 'IGNORE', g: 'Things that hide mail', k: 'srv', n: '"Ignore conversation" sends every later mail straight to Deleted',
-    now: () => 'On, as a trigger on the office server. "Stop ignoring" from the same menu undoes it.',
-    who: 'Whoever ignored it - but it affects the whole team, because the mail is moved for everybody.',
-    brk: ['It is the one person-made setting that hides mail from colleagues as well. Worth checking when a whole conversation seems to stop arriving.']
+    id: 'IGNORE', g: 'Things that hide mail', k: 'srv', n: 'R13i - "Ignore conversation" moves it to Archive, and a new mail brings it back',
+    now: () => 'On (27 November). Ignoring moves the conversation to ARCHIVE, tags it "ignored" and marks it done, so it leaves the Inbox and the work lists. A NEW mail in it goes to the INBOX like any other new mail and the tag comes off by itself ("New mail - back in Inbox" in the Activity trail) - the office-server trigger that used to send every later mail straight to Deleted is gone. "Stop ignoring" from the same menu takes the tag off at once.',
+    who: 'Whoever ignored it - the conversation is archived for the whole team, until the next mail arrives in it.',
+    brk: ['Until 27 November it went to Deleted and a trigger kept EVERY later mail out of the Inbox for ever - the one person-made setting that silently hid a whole correspondence from colleagues. Nothing hides for ever now, so this is no longer the first thing to check when a conversation seems to have stopped arriving.']
   },
   {
     id: 'DRAW', g: 'Things that hide mail', k: 'fx', n: 'Only the first 150 rows are drawn, the rest arrive as you scroll',

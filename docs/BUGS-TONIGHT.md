@@ -129,3 +129,18 @@ As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha, and as
 - [ ] **"Show all N mails"** and a **search hit** still show the whole conversation, no bar
 - [ ] as **Ashok in Sent**: clicking his 5:08 row puts his mail on top with Mia behind the bar
 
+## Bug 8 (R13i - Ignore conversation) - what the tester should check
+
+- [ ] right-click a conversation → **"🔕 Ignore conversation (to Archive)"**; it leaves the Inbox
+      and is in **Archive**, **not** Deleted, with the tag and the trail line **"Ignored by ‹you› -
+      moved to Archive"**; the toast offers **Undo** for 10 seconds
+- [ ] press Undo - it is back in the Inbox with the tag gone and its old status
+- [ ] ignore it again, then **send a reply into it from Gmail**: within a minute it is back in the
+      **Inbox**, unread, the **"ignored" tag is gone**, and the Activity trail says **"New mail -
+      back in Inbox"** (it used to go straight to Deleted for ever)
+- [ ] a mail **you** send in an ignored conversation leaves it ignored and archived
+- [ ] **"Stop ignoring"** from the same menu takes the tag off at once
+- [ ] Admin → 📜 Mail rules: the IGNORE entry now reads R13i
+- [ ] Admin → 🖥 Server → One-time jobs: **ignore-to-archive-2026-11-27** says how many old
+      ignored conversations were moved out of Deleted, and that the trigger was replaced
+

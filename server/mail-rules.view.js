@@ -323,10 +323,10 @@ const RULES = [
     brk: ['Before 25 November the Open chip and even a stale search came back after a reload, which is what emptied Mala\'s Inbox.']
   },
   {
-    id: 'IGNORE', g: 'Things that hide mail', k: 'srv', n: '"Ignore conversation" sends every later mail straight to Deleted',
-    now: () => 'On, as a trigger on the office server. "Stop ignoring" from the same menu undoes it.',
-    who: 'Whoever ignored it - but it affects the whole team, because the mail is moved for everybody.',
-    brk: ['It is the one person-made setting that hides mail from colleagues as well. Worth checking when a whole conversation seems to stop arriving.']
+    id: 'IGNORE', g: 'Things that hide mail', k: 'srv', n: 'R13i - "Ignore conversation" moves it to Archive, and a new mail brings it back',
+    now: () => 'On (27 November). Ignoring moves the conversation to ARCHIVE, tags it "ignored" and marks it done, so it leaves the Inbox and the work lists. A NEW mail in it goes to the INBOX like any other new mail and the tag comes off by itself ("New mail - back in Inbox" in the Activity trail) - the office-server trigger that used to send every later mail straight to Deleted is gone. "Stop ignoring" from the same menu takes the tag off at once.',
+    who: 'Whoever ignored it - the conversation is archived for the whole team, until the next mail arrives in it.',
+    brk: ['Until 27 November it went to Deleted and a trigger kept EVERY later mail out of the Inbox for ever - the one person-made setting that silently hid a whole correspondence from colleagues. Nothing hides for ever now, so this is no longer the first thing to check when a conversation seems to have stopped arriving.']
   },
   {
     id: 'DRAW', g: 'Things that hide mail', k: 'fx', n: 'Only the first 150 rows are drawn, the rest arrive as you scroll',
