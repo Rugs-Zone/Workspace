@@ -1536,6 +1536,19 @@ async function handle(a, p, t0) {
         const patch = {};
         for (const k of META_COLS) if (k in (c.patch || {})) patch[k] = c.patch[k];
         if ("owner_id" in patch && patch.owner_id && patch.owner_id !== u.id && !can(u, "assign")) throw new E("You can't assign mail to others", 403);
+        /* __r29a_owner 27 Nov 2026 (R29a): a conversation can only belong to somebody in the
+           team that owns that mailbox. The Owner box stopped offering anyone else, and this
+           is the same rule on the server, so a crafted request cannot do it either.
+           Clearing the owner is always allowed - that is "back to unassigned". */
+        if ("owner_id" in patch && patch.owner_id) {
+          const teamId = ("dept_id" in patch && patch.dept_id) ? patch.dept_id : d.id;
+          const { data: ow } = await sb.from("rm_users").select("id,name,dept_id,active").eq("id", patch.owner_id).maybeSingle();
+          if (!ow || ow.active === false) throw new E("That person is not an active user", 400);
+          if (String(ow.dept_id || "") !== String(teamId || "")) {
+            const { data: tm } = await sb.from("rm_departments").select("name").eq("id", teamId).maybeSingle();
+            throw new E((ow.name || "That person") + " is not in " + ((tm && tm.name) || "that team") + ". Move the conversation to their team first.", 403);
+          }
+        }
         if (patch.folder === "deleted" && !can(u, "delete")) throw new E("You can't delete mail", 403);
         if ("topic" in patch && patch.topic_ai === false) patch.topic_checked = true;
         if ("dept_id" in patch && patch.dept_id && !can(u, "transfer")) throw new E("You can't transfer mail", 403);

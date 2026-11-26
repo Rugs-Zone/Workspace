@@ -1,6 +1,6 @@
 # The rules that are LIVE right now — file your bugs against this
 
-App build **2026-11-27-2**. Checked against the shipped code, not from memory.
+App build **2026-11-27-4**. Checked against the shipped code, not from memory.
 Three lists: **A** what is live, **B** what is agreed but deliberately NOT live tonight,
 **C** what changed this evening that is not a rule.
 
@@ -63,6 +63,7 @@ Three lists: **A** what is live, **B** what is agreed but deliberately NOT live 
 | R27 | **Replying does not give you the mail** |
 | R28 | **Auto-assign**, first hit wins: alias → buyer's domain → "Hi \<name\>" → who replied last → buddy. Only ever on mail nobody owns |
 | R29 | **Take / assign / transfer** — a person's choice; an auto rule can never overwrite it |
+| R29a | **A conversation can only belong to somebody in the team that owns that mailbox.** The Owner / Assign list is that team only — for everybody, admins included; a one-person mailbox shows the name with no picker; the server refuses a cross-team owner; an Admin moves a conversation with **"Move to team…"**, which leaves it unassigned in the new team |
 | R30 | Mail older than the team's go-live never counts as work and never reaches Needs owner |
 
 ### Everyone else

@@ -931,6 +931,12 @@ function canAssignOut(){const p=who(ME);return !!p&&(p.role==='Admin'||['CRM','M
    Transfer does - so it reaches his Inbox and his My work. */
 const _ownBase=ownerSelect;ownerSelect=function(t){
  const base=_ownBase(t);
+ /* __r29a: 27 Nov 2026 - the Owner box lists this mailbox's OWN TEAM only, for everybody
+    including admins. It used to add every other team as an optgroup (83 people), and
+    picking one moved the conversation across. An admin moves a conversation with
+    "Move to team…" in the conversation menu instead, which leaves it unassigned there.
+    The lines below are kept, unreachable, so the old behaviour is easy to read back. */
+ return base;
  if(!canAssignOut())return base;
  /* 23 Nov 2026: a manager-first team (Team Designing) hands work out inside its own team only */
  if(mgrFirst(t.dept))return base;
@@ -3883,7 +3889,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-27-3';
+const APP_BUILD='2026-11-27-4';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -8116,3 +8122,114 @@ newInOpenBanner=function(){
  document.head.appendChild(st);
 })();
 /* __readanchor:end */</script>
+
+<script>/* __ownerteam:start 27 Nov 2026 - server/patch-owner-team.js */
+/* everybody a conversation in this mailbox may belong to: the team's own people, which
+   already includes its Manager and its Lead. Deactivated people are left out; an Admin is
+   left out unless that team really is their own. */
+function teamPeople(did){try{
+ return PEOPLE.filter(p=>p.dept===did&&p.active!==false&&(p.role!=='Admin'||p.dept===did));
+}catch(e){return []}}
+function canOwn(pid,did){return teamPeople(did).some(p=>p.id===pid)}
+
+/* The picker is BUILT from teamPeople(), so exactly one list decides who may own a
+   conversation - the same list the assign guard and the server check against. The old base
+   picker filtered on p.dept===d plus a role test and never looked at 'active', so a
+   DEACTIVATED colleague was still offered as an owner; the test caught that. */
+const _ownOne=ownerSelect;
+ownerSelect=function(t){
+ const ppl=teamPeople(t.dept);
+ /* 2 · a mailbox with ONE person: show the name, no picker */
+ if(ppl.length===1){
+  const only=ppl[0];
+  return '<b class="ownone" title="'+esc(only.name)+' is the only person in '+esc(dept(t.dept).name)+', so this mail is theirs">'+esc(only.name)+'</b>';
+ }
+ if(!ppl.length)return '<b class="ownone" title="Nobody has been put in this mailbox yet">Nobody in this mailbox yet</b>';
+ const opt=p=>'<option value="'+esc(p.id)+'"'+(t.owner===p.id?' selected':'')+'>'+esc(p.name)+(p.role==='CRM'?' (CRM)':'')+(onLeave(p.id)?' · on leave':'')+'</option>';
+ let out=(t.owner?'':'<option value="">Assign to…</option>')+ppl.map(opt).join('');
+ /* somebody who owned it before they left the team still has to be shown, or the box would
+    quietly look as if it belonged to the first person on the list */
+ if(t.owner&&!ppl.some(p=>p.id===t.owner)){const o=who(t.owner);
+  if(o)out+='<option value="'+esc(o.id)+'" selected>'+esc(o.name)+' · not in this team any more</option>'}
+ return '<select data-own="'+esc(t.id)+'" aria-label="Owner">'+out+'</select>';
+};
+
+/* 1 · and the same rule where an owner is actually set, so a stale picker or a keyboard
+   shortcut cannot set somebody from another team either */
+const _asgTeam=assign;
+assign=function(t,pid){
+ try{
+  if(t&&pid&&!canOwn(pid,t.dept)){
+   const p=who(pid);
+   toast((p?p.name:'That person')+' is not in '+esc(dept(t.dept).name)+'. Use "Move to team…" to send the whole conversation there.',true);
+   return;
+  }
+ }catch(e){}
+ return _asgTeam.apply(this,arguments);
+};
+
+/* 4 · Admin only: move the whole conversation to another team, unassigned */
+function moveTeamDlg(t){
+ if(!t||who(ME).role!=='Admin')return;
+ const others=DEPTS.filter(d=>d.id!==t.dept);
+ if(!others.length){toast('There is only one team set up');return}
+ const L=dlg('Move to team',
+  '<p style="margin:0 0 10px;color:var(--muted);font-size:13px">“'+esc(cleanSub(t.sub))+'” moves to the team you pick and waits there with <b>no owner</b>, so anyone in that team can take it. Nothing is deleted and the whole trail goes with it.</p>'+
+  '<div class="mtlist">'+others.map(d=>{
+    const np=PEOPLE.filter(p=>p.dept===d.id&&p.active!==false).length;
+    return '<button type="button" class="btn mtrow" data-mtpick="'+esc(d.id)+'"><span class="ddot" style="background:'+esc(d.color)+'"></span><b>'+esc(d.name)+'</b><span class="sub">'+esc(mailOf(d))+' · '+np+' '+(np===1?'person':'people')+'</span></button>';
+  }).join('')+'</div>',
+  '<button class="btn" data-c>Cancel</button>',true);
+ const c=L.querySelector('[data-c]');if(c)c.onclick=()=>{L.innerHTML=''};
+ L.querySelectorAll('[data-mtpick]').forEach(b=>b.onclick=()=>{
+  const to=dept(b.dataset.mtpick),from=dept(t.dept);
+  if(!to)return;
+  t.dept=to.id;t.owner='';t.status='new';t.folder='inbox';t.unread=true;
+  hist(t,'x','Moved from '+from.name+' to '+to.name+' by '+who(ME).name+' — waiting for an owner in '+to.name);
+  save();L.innerHTML='';openId=null;toast('Moved to '+to.name+' — nobody owns it yet');render();
+ });
+}
+
+/* the item in the conversation menu (right-click, and "More actions" opens the same menu) */
+const _cmTeam=cmOpen;
+cmOpen=function(t,x,y,row){
+ const r=_cmTeam.apply(this,arguments);
+ try{
+  if(who(ME).role!=='Admin')return r;
+  const m=document.querySelector('.cmenu');if(!m||m.querySelector('[data-moveteam]'))return r;
+  const del=m.querySelector('[data-cm="del"]');
+  const b=document.createElement('button');
+  b.type='button';b.setAttribute('role','menuitem');b.setAttribute('data-moveteam','');
+  b.innerHTML='🏢 Move to team…';
+  b.title='Admin only — send the whole conversation to another team, with no owner';
+  m.insertBefore(b,del||null);
+  /* the menu is positioned on the size it had when it was built */
+  const W=m.offsetWidth,H=m.offsetHeight;
+  m.style.left=Math.max(4,Math.min(x,innerWidth-W-4))+'px';
+  m.style.top=Math.max(4,Math.min(y,innerHeight-H-4))+'px';
+ }catch(e){}
+ return r;
+};
+document.addEventListener('click',function(e){
+ const b=e.target.closest&&e.target.closest('[data-moveteam]');
+ if(!b)return;
+ e.preventDefault();e.stopPropagation();
+ const t=(typeof _cmT!=='undefined'&&_cmT)||(openId&&T_(openId));
+ try{cmClose()}catch(e2){}
+ if(t)moveTeamDlg(t);
+},true);
+
+/* ------------------------------------------------------------------ CSS --- */
+(function otCSS(){
+ if(document.getElementById('otCSS'))return;
+ const st=document.createElement('style');st.id='otCSS';
+ st.textContent=[
+  '.ownone{font-weight:700}',
+  '.mtlist{display:flex;flex-direction:column;gap:6px}',
+  '.mtrow{display:flex;gap:9px;align-items:center;justify-content:flex-start;text-align:left;padding:9px 11px;width:100%}',
+  '.mtrow .sub{margin-left:auto;font-size:11.5px;opacity:.7;font-weight:500}',
+  '.mtrow .ddot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}'
+ ].join('');
+ document.head.appendChild(st);
+})();
+/* __ownerteam:end */</script>
