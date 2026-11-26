@@ -144,3 +144,20 @@ As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha, and as
 - [ ] Admin → 🖥 Server → One-time jobs: **ignore-to-archive-2026-11-27** says how many old
       ignored conversations were moved out of Deleted, and that the trigger was replaced
 
+## Bug 9 (Show in Inbox, from a quoted mail) - what the tester should check
+
+- [ ] open a mail you sent, open **"Mail trail - N earlier mails"**: every quoted mail has a
+      **⋯** button on the right of its From / Sent / To block
+- [ ] press it on a mail that really came to the mailbox - the menu says **"📍 Show in
+      Inbox"** (or Sent / Archive / Junk / Deleted / your own folder - whichever it is in)
+- [ ] pressing it jumps to that mail's **own row**: the folder switches, the chips, topic
+      filter and search box clear, the row scrolls into the middle, **flashes for 3 seconds**
+      and stays selected - and the mail is **not opened**
+- [ ] a mail that was **only quoted** says **"Only quoted here - this mail never came to this
+      mailbox"**; a mail in a mailbox you cannot see says **"Not in your mailboxes"**; one a
+      colleague owns says **"This mail belongs to ‹name›"** (R3 and R15 are unchanged)
+- [ ] the same item is in each mail's own **⋯ More** menu in the reading pane, so it works on
+      the mails **"Show all N mails"** opens
+- [ ] keyboard: Tab to the ⋯, Enter opens the menu, the item is focused, **Esc** closes it
+- [ ] on a phone it leaves the reading pane so the list and the flashing row can be seen
+

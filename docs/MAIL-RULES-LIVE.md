@@ -79,6 +79,8 @@ Three lists: **A** what is live, **B** what is agreed but deliberately NOT live 
 
 | R13i | **"Ignore conversation" → Archive, and a new mail brings it back** (27 Nov) — ignoring moves the conversation to **Archive** (it used to go to Deleted), tags it "ignored", marks it done and writes "Ignored by ‹name› — moved to Archive"; Undo puts it all back. A **new incoming mail** in it goes to the **Inbox** like any new mail, the tag comes off and the trail says "New mail - back in Inbox" (office-server trigger `rm_ignore_trg`, replaced — it used to send every later mail straight to Deleted for ever). A mail **we** send in it leaves it ignored. "Stop ignoring" takes the tag off at once |
 
+| R17b | **"Show in ‹folder›" from a quoted mail** (27 Nov) — every mail in "Mail trail" and every mail in the reading pane has it in its ⋯ menu. It matches the quoted mail to a real message (Message-ID first, else same sender + within 2 minutes + same subject), asks the server when it is not loaded, then switches folder, clears the chips / topic / search / View ▾ Show filter, draws the row even past the 150-row window, flashes it 3 s and leaves it selected — **without opening it**. It never bends R3 or R15: when they hide the mail it says "This mail belongs to ‹name›", "Not in your mailboxes" or "Only quoted here — this mail never came to this mailbox" |
+
 ### Things that hide mail which are not ownership rules
 
 `Hide mail from before Go live` (Admin → Old mail — **must stay unticked**), the **View ▾ → Show**
