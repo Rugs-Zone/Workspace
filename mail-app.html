@@ -3849,7 +3849,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-11';
+const APP_BUILD='2026-11-26-12';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3923,8 +3923,11 @@ const _lrV=listRows;listRows=function(){let r=_lrV();const v=LV();
  if(!v.conv)r=explode(r);
  const sent=view.type==='box'&&view.folder==='sent',dk=t=>t._one?t.last:(sent?lastOut(t):t.last),sg=v.dir==='asc'?1:-1;
  const key=v.sort==='from'?t=>String(t.from||'').toLowerCase():v.sort==='subject'?t=>cleanSub(t.sub).toLowerCase().replace(/^((re|fw|fwd)\s*:\s*)+/i,''):v.sort==='size'?sizeOf:dk;
- return r.sort((a,b)=>{const pn=(b.pinned?1:0)-(a.pinned?1:0);if(pn)return pn;   /* __mailperrow: pinned first - this wrapper used to undo the pinned sort above */
-  const x=key(a),y=key(b);const c=typeof x==='string'?x.localeCompare(y):x-y;return (c||dk(a)-dk(b))*sg})};
+ /* __nopinsort 26 Nov 2026: back to 25 Nov - this sort does NOT lift pinned mail to the
+    top. It did for a few hours this morning, which pushed a pinned Tuesday conversation
+    above today's mail in the Inbox and in Sent. The pin itself is untouched and the row
+    still shows its tag; only the ordering ignores it again. */
+ return r.sort((a,b)=>{const x=key(a),y=key(b);const c=typeof x==='string'?x.localeCompare(y):x-y;return (c||dk(a)-dk(b))*sg})};
 /* __oneRowConv 25 Nov 2026: never two rows for one conversation; row time = newest mail; open = newest mail */
 function convDedupe(){const seen=new Map();let drop=false;S.threads.forEach((t,i)=>{const nw=t.msgs&&t.msgs.length?Math.max(...t.msgs.map(m=>m.at||0)):0;if(nw>t.last)t.last=nw;const j=seen.get(t.id);if(j==null)seen.set(t.id,i);else{drop=true;const a=S.threads[j];if((t.last||0)>(a.last||0)||((t.last||0)===(a.last||0)&&t.msgs.length>a.msgs.length))seen.set(t.id,i)}});
  if(drop){const keep=new Set(seen.values());S.threads=S.threads.filter((t,i)=>keep.has(i))}}
