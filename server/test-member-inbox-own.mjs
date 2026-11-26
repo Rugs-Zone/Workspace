@@ -62,6 +62,14 @@ ck("a conversation he is having with the buyer - yes", api.seeMine(iReplied), tr
 ck("a colleague's assigned mail - no", api.seeMine(arunsOwn), false);
 ck("MAIL NOBODY HAS BEEN GIVEN YET - no (this is the change)", api.seeMine(unowned), false);
 
+/* the case that broke on the first attempt: replying does NOT set an owner (26 Nov rule),
+   so a conversation a member answers stays "unassigned" - and the unassigned rule was
+   deciding first, which hid it from their own Inbox the moment they replied. */
+const unownedIReplied = { id: "e", dept: "tp", owner: null, msgs: [{ at: 1, from: "Buyer", email: "b@x.com" }, { at: 2, from: "Ashish Deshwal", by: "ashish", ours: true }] };
+ck("UNASSIGNED BUT HE REPLIED IN IT - yes (it must not vanish when he answers)", api.seeMine(unownedIReplied), true);
+const unownedOutlook = { id: "f", dept: "tp", owner: null, msgs: [{ at: 1, from: "Buyer", email: "b@x.com" }, { at: 2, from: "Ashish Deshwal", fname: "Ashish Deshwal", email: "merchandiser9@rugscreation.com", ours: true }] };
+ck("   ...the same when he replied from Outlook, not the app", api.seeMine(unownedOutlook), true);
+
 console.log("\n=== the same member, under Needs owner ===");
 api.setView(NEEDS);
 ck("unassigned mail IS there, so it can still be picked up", api.seeMine(unowned), true);
