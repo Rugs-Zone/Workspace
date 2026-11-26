@@ -833,7 +833,8 @@ function renderList(){const el=document.querySelector('.list');if(!el)return;
    Our own person's name when we answered last (e.g. "Ashok"), the buyer's name when they wrote
    last. Also covers rows that used to show nothing, because an internal thread has no outside
    party to name. The Sent folder still shows "To: ...". */
-function rowName(t){const ms=(t&&t.msgs)||[],last=ms[ms.length-1];
+function rowName(t){if(t&&t._one)return String(t.from||t.email||'(unknown)');   /* __mailperrow: one mail, one sender */
+ const ms=(t&&t.msgs)||[],last=ms[ms.length-1];
  const u=last&&last.by?who(last.by):null;
  return (u&&u.name)||(last&&last.from)||t.from||t.email||'(unknown)'}
 /* __rowpeople 26 Nov 2026: with ONE row per conversation the row used to name only the
@@ -842,7 +843,8 @@ function rowName(t){const ms=(t&&t.msgs)||[],last=ms[ms.length-1];
  8:21 pm", who wrote after him). The row now names the conversation's people, newest
  first, like Gmail and Outlook. rowName() is untouched - the avatar still follows the
  newest sender - and the Sent folder keeps its own "To: ..." line. */
-function rowWho(t){const ms=(t&&t.msgs)||[];if(ms.length<2)return rowName(t);
+function rowWho(t){if(t&&t._one)return rowName(t);   /* __mailperrow: a per-mail row names that mail's sender, not the conversation's people */
+ const ms=(t&&t.msgs)||[];if(ms.length<2)return rowName(t);
  const out=[],seen=new Set();
  for(let i=ms.length-1;i>=0&&out.length<3;i--){const m=ms[i];let nm='';
   if(m&&m.by)nm=(m.by===ME?'me':String(((who(m.by)||{}).name)||''));
@@ -3839,7 +3841,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-7';
+const APP_BUILD='2026-11-26-8';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3887,7 +3889,9 @@ function viaTags(t){const v=viaOf(t),f=t.forOwner&&who(t.forOwner);
 /* --- each person's view choices (saved in their prefs, so they follow them to every device) --- */
 const LV_DEF={sort:'date',dir:'desc',vf:'all',pane:'right',conv:true,lines:1};
 /* 25 Nov 2026: conv is fixed at TRUE - one row per conversation, Outlook way (patch-one-row-per-conv.js) */
-const LV=()=>Object.assign({},LV_DEF,(S.prefs&&S.prefs.lv)||{},{conv:true});
+/* __mailperrow 26 Nov 2026: back to one row per MAIL (the 24 Nov request). A mail must
+   never be invisible because somebody else wrote after it in the same conversation. */
+const LV=()=>Object.assign({},LV_DEF,(S.prefs&&S.prefs.lv)||{},{conv:false});
 function setLV(k,v){const x={...LV(),[k]:v};S.prefs={...S.prefs,lv:x};api('savePrefs',{prefs:{lv:x}}).catch(e=>toast('Not saved: '+e.message));applyLV();render()}
 function applyLV(){const v=LV(),b=document.body;['rp-right','rp-bottom','rp-off','pl0','pl1','pl2'].forEach(c=>b.classList.remove(c));b.classList.add('rp-'+v.pane,'pl'+v.lines)}
 const myAddrs=()=>{const me=who(ME);if(!me)return[];return[String(me.login||'').toLowerCase(),...String(me.perm?.aliases||'').toLowerCase().split(/[\s,;]+/)].filter(x=>x.includes('@'))};
@@ -3908,7 +3912,8 @@ const _lrV=listRows;listRows=function(){let r=_lrV();const v=LV();
  if(!v.conv)r=explode(r);
  const sent=view.type==='box'&&view.folder==='sent',dk=t=>t._one?t.last:(sent?lastOut(t):t.last),sg=v.dir==='asc'?1:-1;
  const key=v.sort==='from'?t=>String(t.from||'').toLowerCase():v.sort==='subject'?t=>cleanSub(t.sub).toLowerCase().replace(/^((re|fw|fwd)\s*:\s*)+/i,''):v.sort==='size'?sizeOf:dk;
- return r.sort((a,b)=>{const x=key(a),y=key(b);const c=typeof x==='string'?x.localeCompare(y):x-y;return (c||dk(a)-dk(b))*sg})};
+ return r.sort((a,b)=>{const pn=(b.pinned?1:0)-(a.pinned?1:0);if(pn)return pn;   /* __mailperrow: pinned first - this wrapper used to undo the pinned sort above */
+  const x=key(a),y=key(b);const c=typeof x==='string'?x.localeCompare(y):x-y;return (c||dk(a)-dk(b))*sg})};
 /* __oneRowConv 25 Nov 2026: never two rows for one conversation; row time = newest mail; open = newest mail */
 function convDedupe(){const seen=new Map();let drop=false;S.threads.forEach((t,i)=>{const nw=t.msgs&&t.msgs.length?Math.max(...t.msgs.map(m=>m.at||0)):0;if(nw>t.last)t.last=nw;const j=seen.get(t.id);if(j==null)seen.set(t.id,i);else{drop=true;const a=S.threads[j];if((t.last||0)>(a.last||0)||((t.last||0)===(a.last||0)&&t.msgs.length>a.msgs.length))seen.set(t.id,i)}});
  if(drop){const keep=new Set(seen.values());S.threads=S.threads.filter((t,i)=>keep.has(i))}}
