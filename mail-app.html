@@ -821,13 +821,13 @@ function mobilePicker(){const my=who(ME).dept;const opts=[['fav:mine','★ My wo
 function renderList(){const el=document.querySelector('.list');if(!el)return;
  const special=view.type==='box'&&view.folder==='drafts';const sentV=view.type==='box'&&view.folder==='sent';
  const rows=special?[]:listRows();const isInbox=view.type==='box'&&view.folder==='inbox';
- try{window.LCNT={n:special?S.drafts.length:rows.length,u:0}}catch(e){}   /* 19 Nov 2026: for the bottom status bar */
+ try{window.LCNT={n:special?S.drafts.length:convCount(rows),u:0}}catch(e){}   /* 19 Nov 2026: for the bottom status bar */
  let h=`<div class="lhead">${mobilePicker()}<h2>${esc(title())} <small>${special?S.drafts.length:rows.length}</small></h2><div class="lsync"><button class="btn" data-sync title="Fetch new mail for Inbox and Sent">⟳ Sync</button><span>${syncing?'Syncing…':S.lastSync?'Synced '+new Date(S.lastSync).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):'Not synced yet'}</span>${special?'':`<button class="lbtog" data-lbtog style="margin-left:auto">Topics ${S.ui.hideTopics?'▸':'▾'}</button>`}</div>`;
  if(!special){h+=`<div class="seg">${[['all','Inbox'],['unread','Unread'],['needs','Unassigned']].map(([k,l])=>`<button class="chip" data-filt="${k}" aria-pressed="${filt===k}">${l}</button>`).join('')}</div><div class="lbrow ${S.ui.hideTopics?'hide':''}" role="toolbar" aria-label="Topic"><button class="lchip" style="--lc:var(--fg)" data-lf="" aria-pressed="${!lfilt}">All topics</button>${LABELS.map(l=>`<button class="lchip" style="--lc:${l.c}" data-lf="${l.id}" aria-pressed="${lfilt===l.id}">${l.name}</button>`).join('')}</div>`}
  h+=`</div><div class="msgs">`;
  if(special){const arr=S.drafts;h+=arr.length?arr.map((m,i)=>`<div class="m" ${view.folder==='drafts'?`data-draft="${i}"`:''}><span>${av(m.by||who(ME).name)}</span><div class="body"><div class="r1"><span class="who">To: ${esc(m.to)}</span><span class="time">${tShort(m.at)}</span></div><div class="sub">${esc(m.sub||'(no subject)')}</div><div class="pre">${view.folder==='drafts'?'<b style="color:var(--red)">Draft</b> · '+esc(m.body||''):'Sent by '+esc(m.by)}</div></div></div>`).join(''):`<div class="empty"><b>Nothing here</b></div>`}
  else if(!rows.length)h+=`<div class="empty"><b>${typeof loadingNote==='function'&&loadingNote()?loadingNote():'All clear'}</b><span>${view.id==='needs'?'Every email has an owner.':'No mail here.'}</span></div>`;
- else{let lastDay='';const _cap=capRows(rows);rows.slice(0,_cap).forEach(t=>{const day=dayLabel(sentV?lastOut(t):t.last);if(day!==lastDay){h+=`<div class="day">${day}</div>`;lastDay=day}h+=rowHTML(t)});if(rows.length>_cap)h+=`<div class="listmore" data-listmore>Showing ${_cap} of ${rows.length} — scroll for more</div>`}
+ else{let lastDay='';const _cap=capRows(rows);rows.slice(0,_cap).forEach(t=>{const day=dayLabel(sentV?lastOut(t):t.last);if(day!==lastDay){h+=`<div class="day">${day}</div>`;lastDay=day}h+=rowHTML(t)});if(rows.length>_cap)h+=`<div class="listmore" data-listmore>Showing ${convCount(rows,_cap).toLocaleString('en-IN')} of ${convCount(rows).toLocaleString('en-IN')} conversations — scroll for more</div>`}
  h+='</div>';el.innerHTML=h}
 /* 16 Nov 2026: the name on a row = who sent the NEWEST mail in that conversation, like Outlook.
    Our own person's name when we answered last (e.g. "Ashok"), the buyer's name when they wrote
@@ -3841,7 +3841,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-9';
+const APP_BUILD='2026-11-26-10';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -4559,6 +4559,16 @@ const LIST_PAGE=window.SLOW_PC?60:150;let _capKey='',_cap=LIST_PAGE;
    stall a slow PC while 'scroll for more' always keeps making progress - a fixed ceiling
    stopped the pager dead as soon as it was reached. */
 const CAP_ROW_PER=window.SLOW_PC?6:12;
+/* __convcount 26 Nov 2026: with one row per mail, counting rows made the Inbox look as if
+   it were hiding most of itself ("Items: 46,264"). These numbers always meant
+   conversations - a row simply used to be one. */
+function convCount(rows,upto){
+ if(!rows||!rows.length)return 0;
+ const end=upto==null?rows.length:Math.min(upto,rows.length);
+ let perMail=false;for(let i=0;i<rows.length&&i<40;i++){if(rows[i]&&rows[i]._one){perMail=true;break}}
+ if(!perMail)return end;
+ const seen=new Set();for(let i=0;i<end;i++){const id=rows[i]&&rows[i].id;if(id!=null)seen.add(id)}
+ return seen.size}
 function capRows(rows){
  if(!rows||!rows.length)return 0;
  const cap=listCap(rows.length);
@@ -4595,7 +4605,7 @@ function inboxUnreadN(deptId){return S.threads.filter(t=>t.unread&&(deptId?t.dep
 // Inbox list header: "Inbox · 1,547 unread" (hover shows how many conversations in total)
 const _rlU=renderList;renderList=function(){_rlU();try{if(!((view.type==='box'&&view.folder==='inbox')||view.type==='all'))return;
  const sm=document.querySelector('.list .lhead h2 small');if(!sm)return;const rows=listRows(),u=view.type==='all'?inboxUnreadN():inboxUnreadN(view.dept);
- try{(window.LCNT=window.LCNT||{}).u=u;window.LCNT.n=rows.length}catch(e){}   /* 19 Nov 2026: bottom status bar */
+ try{(window.LCNT=window.LCNT||{}).u=u;window.LCNT.n=convCount(rows)}catch(e){}   /* 19 Nov 2026: bottom status bar */
  sm.textContent=u?u.toLocaleString('en-IN')+' unread':rows.length.toLocaleString('en-IN');sm.title=rows.length.toLocaleString('en-IN')+' conversations, '+u.toLocaleString('en-IN')+' unread'}catch(e){}};
 
 /* ================= Nov 2026: delete drafts ================= */

@@ -1188,7 +1188,7 @@ async function amanShow(j, attempt) {
       /* c) into view. No last_msg_at and no to_addrs here, so neither trigger fires. */
       await pool.query(
         "update public.rm_threads" +
-        "   set folder = 'inbox', unread = true, pinned = true," +
+        "   set folder = 'inbox', unread = true," +     /* __unpinaman: no pin - the mail has its own row now */
         "       status = case when coalesce(status,'new') = 'done' then (case when owner_id is null then 'new' else 'open' end) else coalesce(status,'new') end," +
         "       done_at = case when coalesce(status,'new') = 'done' then null else done_at end," +
         "       prev_folder = null, updated_at = now()" +
@@ -1202,7 +1202,7 @@ async function amanShow(j, attempt) {
       /* e) READ IT BACK - this, not the update, is what decides success */
       const after = await amanThread(w.box, msg.gmail_thread_id);
       B.after = after;
-      B.verified = !!(after && after.folder === "inbox" && after.unread && after.pinned);
+      B.verified = !!(after && after.folder === "inbox" && after.unread);   /* __unpinaman: a pin is no longer part of being visible */
       B.result = B.verified ? "in the Inbox, unread, pinned to the top" : "the update did not stick";
       if (!B.verified && j.must.includes(w.box)) allOk = false;
       if (B.verified) {
@@ -1245,6 +1245,44 @@ if (process.env.ONETIME_OFF !== "1") {
   setTimeout(go, 14000);
 }
 /* __showaman:end */
+
+/* ---- 26 Nov 2026: take the pin back off   __unpinaman:start -------------------------- */
+const UNPIN_AMAN = { id: "unpin-aman-2026-11-26c",
+  rfc: "<01c401dd7cd5$139df460$3ad9dd20$@induskrafts.com>",
+  from_email: "aman@induskrafts.com",
+  sent_at: "2026-11-25T12:04:08Z",
+  want: [{ box: "teampulse@rugscreation.com", mid: "1a21297bd1d17233" },
+         { box: "shipping@rugscreation.com",  mid: "1a21297bc317a045" }] };
+async function unpinAman(j) {
+  const mark = "job_" + j.id;
+  if ((await pool.query("select 1 from public.rm_settings where key = $1", [mark])).rowCount) return;
+  const out = { at: new Date().toISOString(), boxes: {}, unpinned: 0 };
+  try {
+    for (const w of j.want) {
+      const msg = await amanFind(j, w.box, w.mid);
+      if (!msg) { out.boxes[w.box] = "the mail is not in the database here"; continue; }
+      /* ONLY the pinned column. Nothing else is named, so no trigger can fire and the
+         folder, owner, status, read state and dates are all left exactly as they are. */
+      const r = await pool.query(
+        "update public.rm_threads set pinned = false, updated_at = now()" +
+        " where mailbox = $1 and gmail_thread_id = $2 and pinned is true",
+        [w.box, msg.gmail_thread_id]);
+      out.boxes[w.box] = { thread: msg.gmail_thread_id, unpinned: r.rowCount };
+      out.unpinned += r.rowCount;
+      log("unpin aman", w.box.split("@")[0], "-", r.rowCount ? "pin removed" : "was not pinned");
+    }
+    out.summary = "pin removed from " + out.unpinned + " conversation(s) - the mail keeps its own row at 25 Nov 5:34 pm, and the Inbox opens on today again";
+    await put(pool, "undo_" + j.id, { at: new Date().toISOString(), note: "to undo: set pinned = true on the conversations listed in boxes", boxes: out.boxes });
+    await put(pool, mark, out);
+    log("one-time job", j.id, "- done:", out.summary);
+  } catch (e) {
+    log("one-time job", j.id, "FAILED:", e.message);
+  }
+}
+/* late enough that show-aman-mail-2026-11-26b has had its first go */
+if (process.env.ONETIME_OFF !== "1") setTimeout(() => unpinAman(UNPIN_AMAN).catch((e) => log("one-time job", UNPIN_AMAN.id, "error:", e.message)), 75000);
+/* __unpinaman:end */
+
 
 
 /* ---- 25 Nov 2026: what the Server page reads   __srvview:start ----------------------
