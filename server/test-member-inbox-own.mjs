@@ -11,8 +11,10 @@ const src = fs.readFileSync(".tmp/email.html", "utf8");
    25 Nov rule, where the whole team sees unassigned mail. The helpers are still in the app,
    so putting `&&!hideUnowned(t)` back in seeMine makes this suite live again. */
 if (!src.includes("!mgrFirst(t.dept)&&!hideUnowned(t)")) {
-  console.log("SKIPPED - the whole team sees unassigned mail (25 Nov rule), so this rule does not apply.");
-  console.log("          (put `&&!hideUnowned(t)` back in seeMine to run these 17 checks)");
+  console.log("SKIPPED - this suite tests the version where a member NEVER sees unassigned mail.");
+  console.log("          Superseded on 26 Nov by C1: the whole team sees it for 30 working minutes,");
+  console.log("          then it leaves a member's Inbox for \"Needs owner\". That rule is tested in");
+  console.log("          server/test-locked-rules-1.mjs (43 checks), which is the live one.");
   process.exit(0);
 }
 
