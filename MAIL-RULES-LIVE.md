@@ -1,6 +1,6 @@
 # The rules that are LIVE right now — file your bugs against this
 
-App build **2026-11-27-4**. Checked against the shipped code, not from memory.
+App build **2026-11-27-6**. Checked against the shipped code, not from memory.
 Three lists: **A** what is live, **B** what is agreed but deliberately NOT live tonight,
 **C** what changed this evening that is not a rule.
 
@@ -20,6 +20,7 @@ Three lists: **A** what is live, **B** what is agreed but deliberately NOT live 
 | R6 | A colleague wrote into the team mailbox, nobody has taken it — the whole team sees it |
 | R7 | **Marked Done — it stays in the Inbox** (there is no filter hiding it) |
 | R8 | Mail we sent that nobody has answered — **Sent only**, not the Inbox |
+| R8m | **A team MANAGER also sees his own team members' sent mail as rows in his Inbox**, at each mail's own time, as well as in Sent — tagged "Sent by &lt;name&gt;", arriving read, never work (no Needs owner, no My work, no Done) and never changing the owner. The sender himself and the other members are unchanged (R8), the manager's own sent mail stays in his Sent, and an Admin is not included |
 | R9 | Mail we sent to our own mailbox — Inbox **and** Sent |
 | R10 | A **login code (OTP)** — shown to the whole team even if owned, tagged, never counts as work |
 | R11 | **Workspace notifications** — their own folder, never in the Inbox or any work list |

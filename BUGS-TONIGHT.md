@@ -8,6 +8,7 @@ people adding lines on the same night can never stop the auto-push.
 
 | # | Bug | Who | Rule | Status | Build |
 |---|-----|-----|------|--------|-------|
+| 7 | A team manager could not see his members' replies in his Inbox, only in Sent | manager | **R8m** | **fixed, not yet click-tested** | 2026-11-27-6 |
 | 6 | REGRESSION from bug 1: the "Narrow it:" bar was added again on every list redraw, so it showed 2, 3, 4, 5 times above the Inbox | everyone | - | **fixed, not yet click-tested** | 2026-11-27-5 |
 | 5 | The Owner picker listed every one of the 83 people in the company, and picking one moved the conversation to their team | everyone | **R29a** | **fixed, not yet click-tested** | 2026-11-27-4 |
 | 4 | Clicking a mail (or a trail, or "Show all N mails") jumped the screen down to the Activity trail instead of opening it in place | everyone | - | **fixed, not yet click-tested** | 2026-11-27-3 |
@@ -99,3 +100,16 @@ As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha, and as
 - [ ] the **X shows only when there is text** in the search box
 - [ ] change folder while a search is on: the search ends and the bar goes
 - [ ] check it on a phone and in dark mode
+
+## Bug 7 (R8m - the manager sees his team's replies) - what the tester should check
+
+- [ ] as **Shubham (Team Pulse manager)**: open AW27 Spec - **Mia 5:20 pm AND Ashok 5:08 pm**
+      are both rows in his Inbox, each at its own time; Ashok's carries **"Sent by Ashok"**
+- [ ] Ashok's reply is **also** still in Sent
+- [ ] as **Ashok**: his 5:08 reply is in **Sent only**, not in his Inbox
+- [ ] as **another member**: nothing changed
+- [ ] as the **admin**: no "Sent by" rows at all
+- [ ] a "Sent by" row has **no Done button**, is **read** (no unread count change), and is
+      **not** in Needs owner or My work
+- [ ] the manager's **own** sent mail is still in his Sent only
+- [ ] `rzMem()`: the caps still hold with the extra rows

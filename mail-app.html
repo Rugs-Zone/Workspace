@@ -748,7 +748,7 @@ function inView(t){if(view.type==='crit')return t.folder!=='deleted'&&inScope(t)
   if(view.id==='late')return st(t)==='late';
   if(view.id==='today')return st(t)==='today';
   if(view.id==='flag')return t.flag}
- if(view.type==='box'){if(t.dept!==view.dept)return false;if(view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||m.ours);   /* 23 Nov 2026: Sent = anything we wrote in, answered or not */if(view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));   /* 23 Nov 2026: it stays in the Inbox after we reply */return t.folder===view.folder}
+ if(view.type==='box'){if(t.dept!==view.dept)return false;if(view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||m.ours);   /* 23 Nov 2026: Sent = anything we wrote in, answered or not */if(view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&(t.msgs.some(m=>recvMsg(m,t))||mgrHasSent(t));   /* __r8m: ...and, for a manager, mail his own team members sent */   /* 23 Nov 2026: it stays in the Inbox after we reply */return t.folder===view.folder}
  if(view.type==='person')return t.owner===view.id&&t.folder==='inbox';
  if(view.type==='folder')return t.folder===view.folder;
  return false}
@@ -3889,7 +3889,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-27-5';
+const APP_BUILD='2026-11-27-6';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -4276,11 +4276,11 @@ const colleagueIn=(m,t)=>!!m&&m.ours&&!m.by&&!!m.email&&String(m.email).toLowerC
 const toThisBox=(m,t)=>{const b=String((t&&t.box)||'').toLowerCase();return !!b&&!!m&&((String(m.to||'')+' '+String(m.cc||'')).toLowerCase().includes(b))};
 const recvMsg=(m,t)=>!(m.by||m.ours)||colleagueIn(m,t)||toThisBox(m,t)||(!!m&&!m.by&&isOtp(t));   /* 20 Nov 2026: a login code is always received mail - our Wizone codes are sent from marketing@ */
 const _ivC=inView;inView=function(t){
- if(view.type==='box'&&t.dept===view.dept&&view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));   /* 23 Nov 2026: anything somebody sent us stays in the Inbox, answered or not */
+ if(view.type==='box'&&t.dept===view.dept&&view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&(t.msgs.some(m=>recvMsg(m,t))||mgrHasSent(t));   /* __r8m: ...and, for a manager, mail his own team members sent */   /* 23 Nov 2026: anything somebody sent us stays in the Inbox, answered or not */
  /* 20 Nov 2026: Sent = what we sent and nobody has answered yet. The moment a mail comes in, the
     conversation belongs to the Inbox (it is the same conversation, with our mail inside it). */
  if(view.type==='box'&&t.dept===view.dept&&view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||(m.ours&&!colleagueIn(m,t)));   /* 23 Nov 2026: Sent = anything we wrote in; the Inbox keeps its own copy of the conversation */
- if(view.type==='all')return inScope(t)&&t.folder==='inbox'&&in60(t)&&t.msgs.some(m=>recvMsg(m,t));   /* 23 Nov 2026: same rule for All inboxes */
+ if(view.type==='all')return inScope(t)&&t.folder==='inbox'&&in60(t)&&(t.msgs.some(m=>recvMsg(m,t))||mgrHasSent(t));   /* __r8m: ...and, for a manager, mail his own team members sent */   /* 23 Nov 2026: same rule for All inboxes */
  return _ivC(t)};
 // a conversation with only colleague mail is shown under the colleague's name (not "(unknown)")
 const _mrC=mapRow;mapRow=function(){const t=_mrC.apply(this,arguments);try{if(t&&(!t.email||t.from==='(unknown)')){const m=[...t.msgs].reverse().find(x=>colleagueIn(x,t));if(m){t.from=m.from||m.email;t.email=m.email}}}catch(e){}return t};
@@ -8317,3 +8317,96 @@ document.addEventListener('click',function(e){
  document.head.appendChild(st);
 })();
 /* __ownerteam:end */</script>
+
+<script>/* __mgrsent:start 27 Nov 2026 - server/patch-mgr-sees-sent.js (rule R8m) */
+/* which team am I the manager of? Admins are deliberately left out (rule 5), and so is
+   anyone who is not a Manager or a Lead. */
+function mgrTeam(){try{
+ const p=who(ME);
+ if(!p||p.role==='Admin')return '';
+ return (p.role==='Manager'||p.role==='Lead')?(p.dept||''):'';
+}catch(e){return ''}}
+
+/* was this message sent by one of MY team members (not me)? sentWho() already knows how to
+   name the sender of a mail written here or sent from Outlook under their own name, and it
+   forgives spelling (Jagjeet = Jagjit). */
+function mgrSent(m,t){try{
+ if(!m||!t)return false;
+ const team=mgrTeam();
+ if(!team||t.dept!==team)return false;
+ if(!(m.by||m.ours))return false;                 /* only mail WE sent */
+ if(typeof colleagueIn==='function'&&colleagueIn(m,t))return false;   /* a colleague writing IN is received mail */
+ const who_=(typeof sentWho==='function')?sentWho(m,t):null;
+ if(!who_||who_===ME)return false;                /* unnamed, or my own - rule 3 */
+ const p=who(who_);
+ return !!p&&p.dept===team&&p.active!==false&&p.role!=='Admin';
+}catch(e){return false}}
+function mgrHasSent(t){try{
+ if(!t||!t.msgs||!mgrTeam())return false;
+ for(let i=0;i<t.msgs.length;i++)if(mgrSent(t.msgs[i],t))return true;
+ return false;
+}catch(e){return false}}
+
+/* 1 · the rows themselves. explode() builds one row per mail; for the Inbox it keeps only
+   received mail, so the member's reply is added here afterwards - which also keeps the
+   ordinary path untouched for everybody who is not a manager. */
+const _expMgr=explode;
+explode=function(rows){
+ const out=_expMgr.apply(this,arguments);
+ try{
+  if(!mgrTeam())return out;
+  const inb=view.type==='all'||(view.type==='box'&&view.folder==='inbox');
+  if(!inb)return out;
+  const have={};out.forEach(p=>{if(p&&p._one)have[p.id+'|'+p._mi]=1});
+  const add=[];
+  (rows||[]).forEach(t=>{
+   (t.msgs||[]).forEach((m,i)=>{
+    if(!mgrSent(m,t)||have[t.id+'|'+i])return;
+    const p=Object.create(t);
+    p.last=m.at;p.from=m.from||t.from;p.email=m.email||t.email;
+    p.pre=String(m.body||'').replace(/\s+/g,' ').slice(0,200);
+    p.unread=false;                                /* 4 · it arrives read */
+    p.att=((m.atts&&m.atts.length)||(m.files&&m.files.length))?'1':'';
+    p._one=true;p._mi=i;p._mgrSent=(typeof sentWho==='function')?sentWho(m,t):'';
+    add.push(p);
+   });
+  });
+  if(add.length){
+   /* explode() pushes the whole conversation as ONE row when it has no mail of its own to
+      show ("if(!ms.length)"). A Sent-only conversation now reaches the Inbox through R8m,
+      so that fallback row and our per-mail row were both drawn - the same mail twice.
+      Take the fallback away for exactly the conversations we have given real rows. */
+   const did={};add.forEach(p=>{did[p.id]=1});
+   const keep=out.filter(p=>!(p&&!p._one&&did[p.id]));
+   return keep.concat(add);
+  }
+ }catch(e){}
+ return out;
+};
+
+/* 4 · the row says who sent it, and offers no Done button - it is not work, it is a copy of
+   what somebody on the team answered */
+const _rhMgr=rowHTML;
+rowHTML=function(t){
+ let h=_rhMgr.apply(this,arguments);
+ try{
+  if(t&&t._mgrSent){
+   const p=who(t._mgrSent),nm=p?p.name.split(' ')[0]:'a teammate';
+   h=h.replace('<div class="tags">','<div class="tags"><span class="tag t-asg mgrsent" title="'+esc((p?p.name:'A teammate'))+' sent this from '+esc(dept(t.dept).name)+' — it is here so you can see what your team answered">↳ Sent by '+esc(nm)+'</span>');
+   h=h.replace(/<button data-qdone="[^"]*"[^>]*>.*?<\/button>/,'');   /* no Done on a copy */
+  }
+ }catch(e){}
+ return h;
+};
+
+/* ------------------------------------------------------------------ CSS --- */
+(function msCSS(){
+ if(document.getElementById('msCSS'))return;
+ const st=document.createElement('style');st.id='msCSS';
+ st.textContent=[
+  '.tag.mgrsent{background:rgba(60,110,200,.14);color:#2b4f93;font-weight:650}',
+  'body.v-sent .list .m .tags .tag.mgrsent{display:none}'
+ ].join('');
+ document.head.appendChild(st);
+})();
+/* __mgrsent:end */</script>
