@@ -7,7 +7,7 @@ PROGRESS.md merge=union
 
 # Same reasoning for the night's bug log: two terminals (builder and tester) both append to it
 # on the same night, and a conflict there would stop the auto-push for everything else.
-BUGS-TONIGHT.md merge=union
+docs/BUGS-TONIGHT.md merge=union
 
 # Never union-merge these: they hold one enormous base64 line each (the modules), so keeping both
 # sides would produce two copies of a module and a broken page. They must be resolved properly -
