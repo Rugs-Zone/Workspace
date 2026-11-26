@@ -307,3 +307,60 @@ empty a person's list on its own:
 
 * **H4** - Admin -> Old mail -> "Hide mail from before Go live" must stay **unticked**.
 * **H11** - View -> **Show**, saved per person. A stale "Unread" or "Flagged" there filters that person's list for ever and looks exactly like missing mail.
+
+---
+
+# Part 4 — The rules page inside Rugs Email (Admin -> Mail rules)
+
+You sent the page from the last chat and said it should sit in the Rugs Email module so the
+rules can be controlled from there. I have read it: it is the same 34 rules as `MAIL-RULES.md`,
+nothing extra. So here is what the page would actually be.
+
+**How it would work:** one new tab, **Admin -> Mail rules**, visible to Admins only. Each row is
+a rule in plain words with a switch. The setting is saved on the **server** (`rm_settings`, the
+same shared-list route that already carries the Go-live and Old-mail settings), so one change
+moves every person at once and nobody has to wait for a new build. Every change writes a line
+saying **who changed which rule, from what to what, and when** - without that, a rule moving
+behaviour for 83 people cannot be traced.
+
+## Rules that can become switches
+
+| # | Rule, in plain words | Choices | Today |
+|---|---|---|---|
+| S1 | Mail **nobody has taken** | whole team / whole team for **N minutes** then Needs owner / manager only | whole team (C1 changes this) |
+| S2 | The minutes in S1 | a number | — (C1 says 30) |
+| S3 | **Replying takes the mail** | never / only when nobody owns it / always | never (C2 changes this) |
+| S4 | When a **Manager** replies to mail nobody owns, ask "should your team see this?" | off / ask once per conversation / ask every reply | off (C3 adds it) |
+| S5 | **"Leave this conversation"** button | off / on | off (C4 adds it) |
+| S6 | Mail marked **Done** | stays in the Inbox / moves to its own Done view | stays (R7) |
+| S7 | The mail list | one row per **conversation** / one row per **mail** | per conversation (R17) |
+| S8 | Mail sent under the **mailbox's own name** ("Team Pulse") | whole team / manager only | whole team (R16) |
+| S9 | **Login codes** | whole team / owner only | whole team (R10) |
+| S10 | **Manager hands the work out**, per team | off / on, per mailbox | off everywhere (already a server setting) |
+| S11 | **Who may transfer**, and **who may assign to a colleague** | per person / everybody in the team | per person (C5) |
+| S12 | **Critical mail only** in another team's mailbox, per person | a list | Priya -> Vinay's box (C6 moves this to Neha) |
+| S13 | **Auto-assign**, each rule on its own | alias / buyer domain / "Hi <name>" / last replier / buddy, each off or on | all five on (R28) |
+
+## Already switches today, just moved onto this page so they are in one place
+
+| # | Rule | Where it is now |
+|---|---|---|
+| S14 | **Hide mail from before Go live** | Admin -> Old mail (must stay **unticked**) |
+| S15 | **How far back mail is loaded** (365 days) | Admin -> Old mail |
+| S16 | **Work counting starts** (Go live) | Admin -> Overview |
+
+## Deliberately NOT switches
+
+These are the shape of the app, not a preference, and a switch on them would only create new
+ways for mail to go missing:
+
+* **Inbox needs a received message, Sent needs a sent one** (H2, R8) - the definition of the two folders.
+* **Workspace notification mail** has its own folder and never counts as work (R11).
+* **Admin / Manager / Lead / CRM see everything** in a mailbox they may open (R31) - that is the role, not a setting.
+* **Which mailboxes a person may open** (H1) - that is the department, set in Admin -> Users.
+
+## Order of work
+
+The switches are worth building **after** the answers in Part 1 and Part 3, not before -
+otherwise S1, S3, S4, S5, S6, S7 would be switches for rules we are still deciding, and I would
+build each one twice.
