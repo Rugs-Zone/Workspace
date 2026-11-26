@@ -3816,7 +3816,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-4';
+const APP_BUILD='2026-11-26-5';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -4622,8 +4622,12 @@ function mgrFirst(d){try{const x=dept(d);return !!x&&mgrFirstBoxes().indexOf(Str
 function seeMine(t){const p=who(ME);
  if(!p||!t)return true;
  if(p.role==='Admin'||['Manager','Lead','CRM'].includes(p.role))return true;
- if(!t.owner&&mgrFirst(t.dept))return false;   /* manager-first department: unclaimed mail waits for the manager */
- return true}
+ if(!t.owner)return !mgrFirst(t.dept);        /* nobody has taken it: the whole team can pick it up */
+ if(t.owner===ME)return true;                 /* mine */
+ /* 26 Nov 2026 (second pass): a conversation somebody has TAKEN is theirs - a colleague does
+    not see it in the shared mailbox. The people who worked it (owner, repliers, forwarders,
+    whoever it was assigned to) keep it, and the manager, the CRM and the admin see everything. */
+ return (typeof isMyWork==='function')?isMyWork(t):(t.msgs||[]).some(m=>msgMine(m,t))}
 /* 20 Nov 2026: a mailbox somebody sees ONLY the critical mail of. Priya is CRM for the whole company
    but Vinay's ordinary mail is not hers to read - the critical ones are, because there is nobody
    else in that mailbox to catch them. person id -> the departments this applies to. */
