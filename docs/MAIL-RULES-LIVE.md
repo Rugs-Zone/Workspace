@@ -81,6 +81,8 @@ Three lists: **A** what is live, **B** what is agreed but deliberately NOT live 
 
 | R17b | **"Show in ‹folder›" from a quoted mail** (27 Nov) — every mail in "Mail trail" and every mail in the reading pane has it in its ⋯ menu. It matches the quoted mail to a real message (Message-ID first, else same sender + within 2 minutes + same subject), asks the server when it is not loaded, then switches folder, clears the chips / topic / search / View ▾ Show filter, draws the row even past the 150-row window, flashes it 3 s and leaves it selected — **without opening it**. It never bends R3 or R15: when they hide the mail it says "This mail belongs to ‹name›", "Not in your mailboxes" or "Only quoted here — this mail never came to this mailbox" |
 
+| R19a | **Every folder shows its unread count** (27 Nov) — Inbox, Archive, Junk, Deleted, "All inboxes", the shared mailboxes and a person's own folders; hidden at 0, **grey for Junk and Deleted**, and the folder **name goes bold** while it holds mail that arrived since it was last opened. The Inbox number is still `inboxUnreadN()`, so the five Inbox counts stay equal; the other folders use the same test with the folder swapped, so R1/R3 and Switch ID are followed. Favourites keep their own list size and only go bold |
+
 ### Things that hide mail which are not ownership rules
 
 `Hide mail from before Go live` (Admin → Old mail — **must stay unticked**), the **View ▾ → Show**

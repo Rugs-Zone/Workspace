@@ -161,3 +161,21 @@ As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha, and as
 - [ ] keyboard: Tab to the ⋯, Enter opens the menu, the item is focused, **Esc** closes it
 - [ ] on a phone it leaves the reading pane so the list and the flashing row can be seen
 
+## Bug 10 (folder counts, like Outlook) - what the tester should check
+
+- [ ] the left pane: **Inbox, Archive, Junk, Deleted, your own folders, the shared mailboxes
+      and "All inboxes"** each show the number of **unread** mails, and nothing at all when
+      it is 0; **Drafts still shows its own draft count**
+- [ ] the Inbox number is the same as the one in the Inbox header and the Mail badge
+- [ ] **Junk and Deleted are grey and not bold**; the others are bold
+- [ ] a folder holding mail that arrived since you last opened it has its **name in bold**;
+      opening the folder clears it, and new mail in it bolds it again
+- [ ] mark one read / unread, or move one to another folder: the numbers change at once and
+      the page does not flicker
+- [ ] as a **member**, a conversation a colleague owns is not in your count (R3); as the
+      **manager / admin** it is
+- [ ] **Switch ID** into somebody: the counts are theirs, not yours
+- [ ] on a **phone** the folder picker at the top of the list shows the counts in brackets
+- [ ] **dark mode**: the counts (and the mail list) are readable - this also fixes text that
+      had been near-black on a near-black page since 26 November
+
