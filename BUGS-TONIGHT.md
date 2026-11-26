@@ -8,6 +8,7 @@ people adding lines on the same night can never stop the auto-push.
 
 | # | Bug | Who | Rule | Status | Build |
 |---|-----|-----|------|--------|-------|
+| 6 | REGRESSION from bug 1: the "Narrow it:" bar was added again on every list redraw, so it showed 2, 3, 4, 5 times above the Inbox | everyone | - | **fixed, not yet click-tested** | 2026-11-27-5 |
 | 5 | The Owner picker listed every one of the 83 people in the company, and picking one moved the conversation to their team | everyone | **R29a** | **fixed, not yet click-tested** | 2026-11-27-4 |
 | 4 | Clicking a mail (or a trail, or "Show all N mails") jumped the screen down to the Activity trail instead of opening it in place | everyone | - | **fixed, not yet click-tested** | 2026-11-27-3 |
 | 3 | Mails arriving minute by minute were not each shown: two mails sent in the SAME SECOND could swap places on every redraw, "Expand all" did not read as "the other mails are here", a poll bringing 2+ mails only opened the newest, and the row cache (600) was too small for per-mail rows | everyone | R17 | **fixed, not yet click-tested** | 2026-11-27-2 |
@@ -87,3 +88,14 @@ As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha, and as
       member do not
 - [ ] "Move to team..." moves it to the chosen team with **no owner**, and the Activity trail
       says who moved it and where it went
+
+## Bug 6 (the stacking "Narrow it:" bar) - what the tester should check
+
+- [ ] search for something: **one** "Narrow it:" bar, never two
+- [ ] leave it on screen for a minute (several polls): still one, and it does not jump about
+- [ ] clear with the **X in the search box**, with **Esc**, and with the **Clear** chip -
+      each time the bar disappears and the whole folder is listed again
+- [ ] do that ten times: still never more than one bar
+- [ ] the **X shows only when there is text** in the search box
+- [ ] change folder while a search is on: the search ends and the bar goes
+- [ ] check it on a phone and in dark mode

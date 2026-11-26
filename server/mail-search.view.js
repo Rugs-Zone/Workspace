@@ -257,10 +257,13 @@ const SQ_CHIPS = [
   ['date', 'Date range', 'after:YYYY-MM-DD and before:YYYY-MM-DD — edit the dates once they are in the box'],
   ['folder', 'Folder', 'in:inbox — also sent, archive, junk, deleted, or one of your own folders']
 ];
-function srchChipsHTML() {
-  return '<div class="schips" role="group" aria-label="Search filters"><span class="lbl">Narrow it:</span>' +
+/* only what goes INSIDE the bar - the bar itself is one element with a fixed id, made by
+   srchBarSync(). Returning the wrapper here as well is how the bar ended up nested in
+   itself, which read as two bars. */
+function srchChipsInner() {
+  return '<span class="lbl">Narrow it:</span>' +
     SQ_CHIPS.map(c => '<button type="button" class="btn" data-sq="' + esc(c[0]) + '" title="' + esc(c[2]) + '">' + esc(c[1]) + '</button>').join('') +
-    '<button type="button" class="btn" data-sqclear title="Empty the search box">Clear</button></div>';
+    '<button type="button" class="btn" data-sqclear title="Empty the search box and show the folder again">Clear</button>';
 }
 function srchChipText(code) {
   if (code === 'date') {
@@ -270,26 +273,100 @@ function srchChipText(code) {
   if (code === 'folder') return 'in:inbox';
   return code;
 }
+/* ONE bar, with a fixed id, created once and UPDATED afterwards.
+   This used to be `h.insertAdjacentHTML('afterbegin', ...)` on every renderList, which was
+   written when the list header was rebuilt on every draw. Since the row-level redraw
+   (25 Nov) a redraw that only changes a row leaves the header alone, so the bar was added
+   again and again - measured at 1, 2 and 5 bars after three redraws of the same search. */
+const SRCH_BAR_ID = 'srchbar', SRCH_MORE_ID = 'srchmore';
+let SRCH_VIEW = '';
+
+function srchText() { try { return ($('#q') ? $('#q').value : '').trim(); } catch (e) { return ''; } }
+function srchActive() { return !!srchText(); }   /* a chip writes its filter INTO the box, so this covers both */
+function srchViewKey() { try { return JSON.stringify([view.type, view.dept || '', view.folder || '', view.id || '']); } catch (e) { return ''; } }
+
+/* create it if it is missing, update it if it is there, take it away when it should not show */
+function srchBarSync() {
+  const head = document.querySelector('.list .lhead');
+  let bar = document.getElementById(SRCH_BAR_ID);
+  if (!srchActive() || !head) { if (bar) bar.remove(); return; }
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = SRCH_BAR_ID; bar.className = 'schips';
+    bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Search filters');
+    head.insertBefore(bar, head.firstChild);
+  } else if (bar.parentNode !== head) head.insertBefore(bar, head.firstChild);
+  const html = srchChipsInner();
+  if (bar.innerHTML !== html) bar.innerHTML = html;   /* only when it really changed, so a poll moves nothing */
+}
+/* the same treatment for the "Show the next 500" line */
+function srchMoreSync() {
+  const head = document.querySelector('.list .lhead');
+  let el = document.getElementById(SRCH_MORE_ID);
+  const show = srchActive() && FND.q === srchText() && FND.more && !FND.busy;
+  if (!show || !head) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = SRCH_MORE_ID; el.className = 'shelp'; head.appendChild(el); }
+  else if (el.parentNode !== head) head.appendChild(el);
+  const n = FND.ids ? FND.ids.size : 0;
+  const html = '<span>\u{1F50E} Showing the first ' + n + ' from the server — there are more.</span>' +
+    '<button class="btn" data-sqmore>Show the next 500</button>';
+  if (el.innerHTML !== html) el.innerHTML = html;
+}
+
+/* 4 · the clear button inside the search box */
+function qxEnsure() {
+  const q = $('#q'); if (!q || !q.parentNode) return null;
+  let x = document.getElementById('qclear');
+  if (!x) {
+    x = document.createElement('button');
+    x.id = 'qclear'; x.type = 'button'; x.className = 'qx';
+    x.title = 'Clear search'; x.setAttribute('aria-label', 'Clear search');
+    x.textContent = '✕';
+    q.parentNode.appendChild(x);
+    x.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); srchClear(true); try { q.focus(); } catch (e2) { } });
+  }
+  return x;
+}
+function qxSync() { const q = $('#q'), x = qxEnsure(); if (!q || !x) return; x.style.display = q.value.trim() ? 'flex' : 'none'; }
+
+/* the one way out of a search: the clear button, Esc, the Clear chip, or changing folder */
+function srchClear(doRender) {
+  const q = $('#q'); if (q) q.value = '';
+  try { fndClear(); } catch (e) { }
+  try { SEARCH_HITS = null; SEARCH_Q = ''; } catch (e) { }
+  const bar = document.getElementById(SRCH_BAR_ID); if (bar) bar.remove();
+  const more = document.getElementById(SRCH_MORE_ID); if (more) more.remove();
+  try { qxSync(); } catch (e) { }
+  if (doRender) { try { render(); } catch (e) { } }
+}
+
 const _rlSrch = renderList;
 renderList = function () {
+  /* 2 · changing folder ends the search, so the bar can never outlive it. Done BEFORE the
+     list is built, or the new folder would still be drawn through the old query. */
+  const vk = srchViewKey();
+  if (SRCH_VIEW && vk !== SRCH_VIEW && srchActive()) srchClear(false);
+  SRCH_VIEW = vk;
   _rlSrch.apply(this, arguments);
-  const h = document.querySelector('.list .lhead'); if (!h) return;
-  let raw = '', focus = false;
-  try { raw = ($('#q') ? $('#q').value : '').trim(); focus = document.activeElement === $('#q'); } catch (e) { }
-  if (!raw && !focus) return;
-  h.insertAdjacentHTML('afterbegin', srchChipsHTML());
-  /* "Show more" - only when the server said there really is a next page */
-  if (raw && FND.q === raw && FND.more && !FND.busy) {
-    const n = FND.ids ? FND.ids.size : 0;
-    h.insertAdjacentHTML('beforeend', '<div class="shelp"><span>🔎 Showing the first ' + n +
-      ' from the server — there are more.</span><button class="btn" data-sqmore>Show the next 500</button></div>');
-  }
+  try { srchBarSync(); srchMoreSync(); qxSync(); } catch (e) { }
 };
+
+/* the clear button follows what is TYPED, not only what is drawn; Esc empties the box */
+try {
+  const q0 = $('#q');
+  if (q0) {
+    q0.addEventListener('input', () => { try { qxSync(); } catch (e) { } });
+    q0.addEventListener('keydown', e => {
+      if (e.key === 'Escape' || e.key === 'Esc') { e.preventDefault(); e.stopPropagation(); srchClear(true); }
+    });
+    qxSync();
+  }
+} catch (e) { }
 document.addEventListener('click', function (e) {
   const b = e.target.closest ? e.target.closest('[data-sq],[data-sqclear],[data-sqmore]') : null;
   if (!b) return;
   const box = $('#q'); if (!box) return;
-  if (b.hasAttribute('data-sqclear')) { box.value = ''; fndClear(); render(); box.focus(); return; }
+  if (b.hasAttribute('data-sqclear')) { srchClear(true); try { box.focus(); } catch (e) { } return; }
   if (b.hasAttribute('data-sqmore')) {
     const raw = box.value.trim();
     serverFind(raw, true, (FND.off || 0) + 500);
@@ -314,6 +391,13 @@ document.addEventListener('click', function (e) {
     '.schips .lbl{font-size:11.5px;opacity:.6;font-weight:600}',
     '.schips .btn{padding:3px 9px;font-size:11.5px;border-radius:99px}',
     'mark.shl{background:#ffe08a;color:inherit;padding:0 1px;border-radius:2px}',
+    /* the clear button sits inside the search pill on the dark top bar, so it follows the
+       text colour there and is readable in both themes. 32px of click area, as asked. */
+    '.qx{display:none;align-items:center;justify-content:center;width:32px;height:32px;margin-right:-8px;',
+    ' flex:0 0 auto;border:0;border-radius:50%;background:transparent;color:currentColor;opacity:.75;',
+    ' font-size:14px;line-height:1;cursor:pointer;padding:0}',
+    '.qx:hover,.qx:focus-visible{opacity:1;background:#ffffff26}',
+    '@media (max-width:620px){.qx{width:34px;height:34px}}',
     ':root[data-theme="dark"] mark.shl,html.dark mark.shl{background:#7a5d00;color:#fff}',
     '.tag.sfold{background:rgba(60,110,200,.14);color:#2b4f93;font-weight:650}',
     '@media (max-width:620px){.schips{padding:6px 8px 2px}.schips .lbl{display:none}}'
