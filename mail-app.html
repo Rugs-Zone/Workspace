@@ -3103,7 +3103,12 @@ setTimeout(()=>{if(S.ui.zoom&&S.ui.zoom!==1)setZoom(S.ui.zoom)},0);
 
 /* ================= Nov 2026 batch: inbox 60 days, sound, undo, drag & drop, compact header, cache, daily report, compose ================= */
 let HIST_DAYS=365;   // Nov 2026: follows rm_settings.history_days (sent by the server)
-const in60=t=>(t.last||0)>=Date.now()-HIST_DAYS*D;   // (12) Inbox always shows the last 60 days — search still finds older mail
+/* __nodatecut:start 26 Nov 2026: the Inbox has NO date cut any more. A conversation that
+   holds a mail somebody sent us stays in the Inbox whatever its age, whoever replied and
+   whether it is Done; only Archive, Deleted, Junk and a person's own folders take it out
+   (that is the t.folder test at each of the five call sites). Kept as a function so those
+   five places did not have to change and this is one line to put back. __nodatecut:end */
+const in60=t=>true;
 /* (8) a short "ding" when new mail arrives */
 let _ac=null;
 function playDing(){if(S.ui&&S.ui.mute)return;try{_ac=_ac||new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume();const t0=_ac.currentTime;
@@ -3376,7 +3381,8 @@ function mergeList(r){const by={},ac={};(r.messages||[]).forEach(m=>{const k=m.m
 const RECENT_DAYS=30;
 let MORE_PAGE=null,MORE_DL=0;   // progress hook and deadline - used by the sign-in screen only
 async function loadMoreBox(deptId,phase){const d=dept(deptId);if(!d||!window.__liveReady)return;const box=mailOf(d).toLowerCase(),st=MORE[box]||(MORE[box]={busy:false,done:false,recent:false});if(st.busy||st.done)return;
- const all=phase==='all',lim=Date.now()-(all?HIST_DAYS:Math.min(RECENT_DAYS,HIST_DAYS))*D;st.busy=true;
+ const onePage=phase==='page';   /* 26 Nov 2026: one page of older mail, asked for by scrolling */
+ const all=phase==='all'||onePage,lim=Date.now()-(all?HIST_DAYS:Math.min(RECENT_DAYS,HIST_DAYS))*D;st.busy=true;
  DLS.busy=true;DLS.phase=all?'all':'recent';try{stbarPaint()}catch(e){}
  /* 24 Nov 2026: walk backwards on a cursor the SERVER's answers move, NOT on the oldest
     conversation in memory - one stray old mail in the device copy used to make this loader
@@ -3392,6 +3398,7 @@ async function loadMoreBox(deptId,phase){const d=dept(deptId);if(!d||!window.__l
    if(got.length){const back=Math.min(...got.map(x=>Date.parse(x.last_msg_at)||Date.now()));st.cur=back<st.cur?back:st.cur-D}   /* never stand still */
    if(app==='mail')renderListKeep();renderFolders();if(MORE_PAGE)try{MORE_PAGE(deptId)}catch(e){}
    if(got.length<500){st.done=true;st.recent=true;break}   /* a short page is the real end of the mailbox */
+   if(onePage)break;   /* 26 Nov 2026: scrolling asks for ONE page, not the whole year */
    if(all)await new Promise(go=>setTimeout(go,window.SLOW_PC?900:250))}}   // gentle on a small server and an old PC
  catch(e){if(!all)toast('Could not load older mail: '+e.message)}
  finally{st.busy=false;DLS.busy=false;if(st.done)DLS.doneAt=Date.now();try{stbarPaint()}catch(e){}if(app==='mail')renderListKeep()}}
@@ -3401,7 +3408,9 @@ const _rlM=renderList;renderList=function(){_rlM();if(!(view.type==='box'&&view.
  if(m)m.insertAdjacentHTML('beforeend',st&&st.done
   ?'<div class="inb60">✓ All mail from the last '+HIST_DAYS+' days is shown — older mail: use Search</div>'
   :'<div class="inb60 quiet">Older mail is still arriving in the background — everything new is already here, and Search finds anything older</div>');
- if(!S.loadingMail&&!(st&&st.busy)){if(!(st&&st.recent))setTimeout(()=>loadMoreBox(view.dept,'recent'),50);else if(!st.done)setTimeout(()=>loadMoreBox(view.dept,'all'),50)}};
+ /* 26 Nov 2026: the newest 30 days still load by themselves; the REST now waits to be
+    scrolled to, so opening an Inbox no longer pulls a year of mail in the background. */
+ if(!S.loadingMail&&!(st&&st.busy)&&!(st&&st.recent))setTimeout(()=>loadMoreBox(view.dept,'recent'),50)};
 /* 19 Nov 2026: the two buttons on a mail that did not go out. Try again sends the same mail again;
    Remove takes it off the conversation (it never reached anybody). */
 document.addEventListener('click',e=>{const b=e.target.closest('[data-resend],[data-dropmsg]');if(!b)return;
@@ -3807,7 +3816,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-25-11';
+const APP_BUILD='2026-11-26-1';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -6244,3 +6253,19 @@ document.addEventListener('click', function (e) {
  try { loadCidPics(t); } catch (x) {}
 }, true);
 /* __heavyrule:end */</script>
+
+<script>/* __scrollpage:start  26 Nov 2026: reaching the end of the list fetches one more page */
+document.addEventListener('scroll', function (e) {
+ try {
+  const m = e.target;
+  if (!m || !m.classList || !m.classList.contains('msgs')) return;
+  if (m.scrollTop + m.clientHeight < m.scrollHeight - 600) return;
+  if (document.querySelector('.list [data-listmore]')) return;      /* rows still undrawn: the app's own pager handles it */
+  if (!(view.type === 'box' && view.folder === 'inbox')) return;
+  const d = dept(view.dept); if (!d) return;
+  const st = MORE[mailOf(d).toLowerCase()];
+  if (!st || st.busy || st.done) return;
+  loadMoreBox(view.dept, 'page');                                    /* one page of 500, from the server */
+ } catch (x) {}
+}, true);
+/* __scrollpage:end */</script>
