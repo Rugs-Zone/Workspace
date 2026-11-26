@@ -677,12 +677,7 @@ const who=id=>PEOPLE.find(p=>p.id===id)||(id&&GONE[id]?{id,name:GONE[id].name+' 
 const onLeave=pid=>{const v=S.leaves?.[pid];return v===undefined?!!who(pid)?.leave:v};
 /* what a person may do: 'full' = work the mailbox, 'view' = read only, '' = hidden */
 const canSee=(deptId,pid=ME)=>{const p=who(pid);if(!p)return'';if(p.role==='Admin')return'full';if(p.dept===deptId)return'full';return p.access?.[deptId]||''};
-const can=(k,pid=ME)=>{const p=who(pid);if(!p)return false;
- /* __c5 26 Nov 2026: C5 "Both" - everybody may transfer, and a member may assign to a
-    colleague. Per-person ticks in Admin -> Users no longer decide these two; every other
-    right (delete, dashboards, buddy) still reads its own tick. */
- if((k==='assign'||k==='transfer')&&p.active!==false)return true;
- return p.role==='Admin'||!!p.perm?.[k]};
+const can=(k,pid=ME)=>{const p=who(pid);return !!p&&(p.role==='Admin'||!!p.perm?.[k])};
 const isWorker=p=>!['CRM','Admin'].includes(p.role);
 const ini=n=>n.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
 const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
@@ -1404,21 +1399,6 @@ function sendReply(t,txt,p,dv,fwd,noTrail,html,withSig=true){
  if(t.status==='new'&&!t.owner)t.status='open';   /* answered - a status, not an owner */
  try{t.parts=Array.isArray(t.parts)?t.parts:[];if(t.parts.indexOf(ME)<0)t.parts.push(ME)}catch(e){}
  /* __noautotake:end */
- /* __c2:start 26 Nov 2026: C2 - REPLYING TAKES THE CONVERSATION.
-    - nobody owns it  -> the replier becomes the owner;
-    - a MANAGER (or Lead / CRM / Admin) replies to somebody else's -> he takes it over
-      completely (the user's own choice of the three options). The member who had it
-      still SEES it, because he worked in it, but it becomes the manager's work;
-    - a member replying to a colleague's conversation changes nothing.
-    Every take writes a history line. The 26 Nov reason for switching this off was that
-    it happened SILENTLY from a stale browser copy and nobody could see who had done it;
-    the line below is what makes that traceable. */
- try{const _me=who(ME)||{},_mgr=_me.role==='Admin'||['Manager','Lead','CRM'].includes(_me.role);
-  if(!t.owner){t.owner=ME;hist(t,'a',`Taken by ${_me.name||'somebody'} — replied`)}
-  else if(_mgr&&t.owner!==ME){const _was=who(t.owner);t.owner=ME;
-   hist(t,'a',`Taken over by ${_me.name||'the manager'} — replied. Was ${(_was&&_was.name)||'somebody'}`)}
-  if(t.status==='new')t.status='open'}catch(e){}
- /* __c2:end */
  if(p&&dv){t.promise=p;t.due=new Date(dv+'T17:00').getTime();t.status='promised';hist(t,'p',`Promise: ${p} — ${dShort(t.due)}`)}
  (openMsgs[t.id]=openMsgs[t.id]||new Set()).add(t.msgs.length-1);save();if(typeof liveSend==='function')liveSend(t,t.msgs[t.msgs.length-1],fwd);toast(p?'Sent · reminder set 🤝':'Sent ✓');render()}
 
@@ -3077,9 +3057,11 @@ function attCachePut(box,gid,name,u8,mime){
   caches.open(ATT_CACHE).then(c=>c.put(attKeyURL(box,gid,name),new Response(u8,{headers:{'Content-Type':mime||'application/octet-stream'}}))).catch(()=>null)}catch(e){}}
 function attBytes(box,gid,name){const k=box+'|'+gid+'|'+name;
  if(ATTB[k])return ATTB[k];
+ /* __mem 26 Nov 2026: remember how big it was, for the memory sweeper */
  return ATTB[k]=attCacheGet(box,gid,name).then(hit=>hit||api('attachment',{mailbox:box,gmailId:gid,name})
    .then(r=>{const u8=b64Bytes(r.b64),mime=fileMime(name,r.mime);attCachePut(box,gid,name,u8,mime);return{u8,mime}}))
-  .catch(e=>{delete ATTB[k];throw e})}
+  .then(r=>{try{ATT_SZ[k]=((r&&(r.b64||r.data))||'').length||0}catch(e){}return r})
+  .catch(e=>{delete ATTB[k];delete ATT_SZ[k];throw e})}
 window.rzAttBytes=attBytes;                       // mail-v2.js shares the same memory
 /* when a mail is opened, bring its small files in quietly so the first click is instant too */
 function attPrefetch(t){
@@ -3882,7 +3864,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-18';
+const APP_BUILD='2026-11-26-20';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3928,14 +3910,14 @@ function viaTags(t){const v=viaOf(t),f=t.forOwner&&who(t.forOwner);
 
 /* ================= Nov 2026: View menu · All inboxes · right-click menu · Ignore conversation ================= */
 /* --- each person's view choices (saved in their prefs, so they follow them to every device) --- */
-const LV_DEF={sort:'date',dir:'desc',vf:'all',pane:'right',conv:false,lines:1};
+const LV_DEF={sort:'date',dir:'desc',vf:'all',pane:'right',conv:true,lines:1};
 /* 25 Nov 2026: conv is fixed at TRUE - one row per conversation, Outlook way (patch-one-row-per-conv.js) */
 /* __mailperrow 26 Nov 2026: back to one row per MAIL (the 24 Nov request). A mail must
    never be invisible because somebody else wrote after it in the same conversation. */
 /* __backtoyesterday 26 Nov 2026: one row per conversation, as it was on 25 Nov. Turning
    this to false gives every mail its own row again (explode()); everything that supports
    that is still in place and tested, so it is a one-word change either way. */
-const LV=()=>Object.assign({},LV_DEF,(S.prefs&&S.prefs.lv)||{},{conv:false});   /* __rowpermail 26 Nov 2026: R17 locked - one row per mail for everyone. Forced, not a preference, because the Conversations choice was taken out of the View menu on 24 Nov. One word (true) puts conversation rows back. */
+const LV=()=>Object.assign({},LV_DEF,(S.prefs&&S.prefs.lv)||{},{conv:true});
 function setLV(k,v){const x={...LV(),[k]:v};S.prefs={...S.prefs,lv:x};api('savePrefs',{prefs:{lv:x}}).catch(e=>toast('Not saved: '+e.message));applyLV();render()}
 function applyLV(){const v=LV(),b=document.body;['rp-right','rp-bottom','rp-off','pl0','pl1','pl2'].forEach(c=>b.classList.remove(c));b.classList.add('rp-'+v.pane,'pl'+v.lines)}
 const myAddrs=()=>{const me=who(ME);if(!me)return[];return[String(me.login||'').toLowerCase(),...String(me.perm?.aliases||'').toLowerCase().split(/[\s,;]+/)].filter(x=>x.includes('@'))};
@@ -6107,7 +6089,7 @@ rowHTML=function(t){
   (function(m){return m?((m.light?'L':'')+(m.failed?'F':'')+(m.sending?'S':'')+String(m.body||'').length+'/'+String(m.from||'').length):''})((t.msgs||[])[(t.msgs||[]).length-1])].join('|')}catch(e){key=null}
  if(key){const hit=RHC.get(key);if(hit!==undefined)return hit}
  const h=_rhSpd.apply(this,arguments);
- if(key){if(RHC.size>6000)RHC.clear();RHC.set(key,h)}
+ if(key){if(RHC.size>1200)RHC.clear();RHC.set(key,h)}   /* __mem: 6000 was ~12 MB; only ~450 rows are ever drawn */
  return h};
 /* __listspeed:end */</script>
 
@@ -6551,104 +6533,74 @@ renderFolders = function () {
 };
 /* __mywork:end */</script>
 
-<script>/* __locked1:start 26 Nov 2026 — C1, R16q, O4. See server/patch-locked-rules-1.js */
+<script>/* __mem:start 26 Nov 2026 — keep the page's memory bounded. server/patch-page-memory.js */
 
-/* ===== the guard: these rules never touch mail that is already in a mailbox =====
-   The user's instruction was "please dont disturb on earlier emails". Every rule below
-   asks newMail(t) first, and a conversation whose newest mail is older than this moment
-   is left exactly as it is today. Moving this forward re-arms the rules for later mail;
-   it is the one number to change if they are ever switched on for history as well. */
-const RULES_FROM=Date.parse('2026-11-26T18:30:00+05:30');
-function newMail(t){try{return !!t&&(t.last||0)>=RULES_FROM}catch(e){return false}}
+/* Budgets, in bytes. A data: URL and a base64 string are plain ASCII, so a string's
+   length is its size. Sized for the office PCs (4 GB, several tabs open all day). */
+const MEM_RAWC   = 40*1024*1024;   /* opened mail, with its pasted pictures */
+const MEM_ATTB   = 25*1024*1024;   /* attachment bytes fetched this session */
+const MEM_THUMB  =  8*1024*1024;   /* attachment thumbnails */
+const MEM_EVERY  = 5000;           /* sweep at most this often (ms) */
+const ATT_SZ={};                   /* ATTB key -> bytes, filled when the file arrives */
+let MEM_AT=0, MEM_LAST={};
 
-/* ===== the working-day clock (C1) =====
-   10:00 to 18:00 IST, nothing on a Sunday, nothing on a holiday. Worked out in IST on
-   purpose (ms+19800000 read with the getUTC* methods gives IST wall-clock), so a laptop
-   left on another time zone cannot shift the office day. */
-const WORK_OPEN=10*60, WORK_CLOSE=18*60, WINDOW_MINS=30, DAY_MS=86400000, IST=19800000;
-const HOLIDAYS_FALLBACK=[];   /* 'YYYY-MM-DD'. Empty until the server sends the company list */
-function holidays(){try{const v=S.settings&&S.settings.holidays;
- return Array.isArray(v)?v.map(x=>String(x).slice(0,10)):HOLIDAYS_FALLBACK}catch(e){return HOLIDAYS_FALLBACK}}
-function offDay(ist){try{
- if(ist.getUTCDay()===0)return true;                       /* Sunday */
- const k=ist.toISOString().slice(0,10);
- return holidays().indexOf(k)>=0;
-}catch(e){return false}}
-function workMins(from,to){try{
- if(!(to>from))return 0;
- let total=0,cur=from;
- for(let guard=0;cur<to&&guard<500;guard++){
-  const ist=new Date(cur+IST);
-  const mid=Date.UTC(ist.getUTCFullYear(),ist.getUTCMonth(),ist.getUTCDate())-IST;  /* IST midnight */
-  if(!offDay(ist)){
-   const a=Math.max(cur,mid+WORK_OPEN*60000),b=Math.min(to,mid+WORK_CLOSE*60000);
-   if(b>a)total+=(b-a)/60000;
-  }
-  cur=mid+DAY_MS;
- }
- return total;
-}catch(e){return 1e9}}                                      /* on any doubt, do not hide it */
-
-/* Has the shared half hour run out for this conversation? Cached for 30 seconds per
-   conversation, because seeMine is asked about every row on every draw. */
-function sharedWindowOver(t){try{
- if(!newMail(t))return false;                               /* earlier mail: untouched */
- const now=Date.now();
- if(t._winAt&&now-t._winAt<30000)return !!t._winOver;
- const over=workMins(t.last||0,now)>=WINDOW_MINS;
- t._winAt=now;t._winOver=over;
- return over;
-}catch(e){return false}}
-
-/* ===== C1: mail nobody has taken leaves a member's Inbox after the half hour ===== */
-const _smWin=seeMine;
-seeMine=function(t){
- const base=_smWin.apply(this,arguments);
- if(base!==true)return base;
+/* the Gmail ids of the conversation on screen - never evicted */
+function memPinned(){
+ const keep={};
  try{
-  if(!t||t.owner)return true;                               /* only mail nobody has taken */
-  const p=who(ME)||{};
-  if(p.role==='Admin'||['Manager','Lead','CRM'].includes(p.role))return true;
-  if(typeof isMyWork==='function'&&isMyWork(t))return true; /* I have worked in it */
-  if(typeof isOtp==='function'&&isOtp(t))return true;       /* a login code is never hidden */
-  if(!hideUnowned(t))return true;                           /* Needs owner / the Unassigned chip */
-  return !sharedWindowOver(t);
- }catch(e){return true}
-};
-
-/* ===== R16q: sent under nobody's name is manager-only =====
-   Only that one case changes. A mail I sent, or one that can be traced to a person, is
-   decided exactly as before. Everyone sends from Rugs Email now, so this is really about
-   mail arriving from Outlook under the mailbox's own name. */
-const _ssUntraced=sentSeen;
-sentSeen=function(t){
- try{
-  const p=who(ME)||{};
-  if(p.role==='Admin'||['Manager','Lead','CRM'].includes(p.role))return true;
-  if(newMail(t)){
-   const out=(t.msgs||[]).filter(m=>m.by||(m.ours&&!colleagueIn(m,t)));
-   if(out.length&&!out.some(m=>msgMine(m,t))&&!out.some(m=>sentWho(m,t)))return false;
-  }
+  const t=(typeof openId!=='undefined'&&openId&&typeof T_==='function')?T_(openId):null;
+  ((t&&t.msgs)||[]).forEach(m=>{if(m&&m.gid)keep[m.gid]=1});
  }catch(e){}
- return _ssUntraced.apply(this,arguments);
-};
+ return keep;
+}
 
-/* ===== O4: critical mail is the manager's work =====
-   A manager already SAW everything in his team; this puts the critical ones (claim,
-   shipment delay, cancellation...) on his plate as well, so one is never only a
-   member's problem. It is on two plates at once by design. The My work view itself still
-   drops anything Done and anything with nothing received, so the old swept history
-   cannot appear. Admins are left out on purpose - nine mailboxes of critical mail is
-   not one person's plate. */
-const _imwCrit=isMyWork;
-isMyWork=function(t){
- if(_imwCrit.apply(this,arguments))return true;
+/* Evict oldest-first until the store is inside its budget. Object keys keep their
+   insertion order, so the oldest entry is simply the first key. */
+function memTrim(store,budget,sizeOf,pinned){
+ let total=0,keys;
+ try{keys=Object.keys(store)}catch(e){return 0}
+ for(let i=0;i<keys.length;i++)total+=sizeOf(store[keys[i]],keys[i]);
+ if(total<=budget)return 0;
+ let freed=0;
+ for(let i=0;i<keys.length&&total>budget;i++){
+  const k=keys[i];
+  if(pinned&&pinned[k])continue;
+  const sz=sizeOf(store[k],k);
+  delete store[k];
+  if(store===ATTB)delete ATT_SZ[k];
+  total-=sz;freed+=sz;
+ }
+ return freed;
+}
+
+function memSweep(force){
+ const now=Date.now();
+ if(!force&&now-MEM_AT<MEM_EVERY)return;
+ MEM_AT=now;
  try{
-  if(!t||!newMail(t))return false;
-  const p=who(ME)||{};
-  if(!['Manager','Lead'].includes(p.role))return false;
-  if(!p.dept||p.dept!==t.dept)return false;                 /* his own team only */
-  return (typeof critOf==='function')&&critOf(t).length>0;
- }catch(e){return false}
+  const pin=memPinned();
+  const f1=memTrim(RAWC,MEM_RAWC,v=>v?((v.raw||'').length+(v.body||'').length):0,pin);
+  const f2=memTrim(ATTB,MEM_ATTB,(v,k)=>ATT_SZ[k]||0,null);
+  const f3=memTrim(ATHUMB,MEM_THUMB,v=>String(v||'').length,null);
+  if(f1||f2||f3)MEM_LAST={at:now,mail:f1,files:f2,thumbs:f3};
+ }catch(e){}
+}
+
+/* run it after a draw, and once a minute even if nobody is clicking */
+const _rdMem=render;
+render=function(){const r=_rdMem.apply(this,arguments);try{memSweep()}catch(e){}return r};
+try{setInterval(()=>{try{memSweep(true)}catch(e){}},60000)}catch(e){}
+
+/* what the page is holding right now, for checking on a real screen:
+   paste  rzMem()  into the browser console */
+window.rzMem=function(){
+ const mb=n=>Math.round(n/104857.6)/10+' MB';
+ let mail=0,files=0,thumbs=0,rows=0;
+ try{Object.keys(RAWC).forEach(k=>{const v=RAWC[k];mail+=((v&&v.raw)||'').length+((v&&v.body)||'').length})}catch(e){}
+ try{Object.keys(ATT_SZ).forEach(k=>{files+=ATT_SZ[k]||0})}catch(e){}
+ try{Object.keys(ATHUMB).forEach(k=>{thumbs+=String(ATHUMB[k]||'').length})}catch(e){}
+ try{RHC.forEach(v=>{rows+=String(v||'').length})}catch(e){}
+ return {openedMail:mb(mail),attachments:mb(files),thumbnails:mb(thumbs),rowHtml:mb(rows),
+  total:mb(mail+files+thumbs+rows),conversations:(S.threads||[]).length,lastSweep:MEM_LAST};
 };
-/* __locked1:end */</script>
+/* __mem:end */</script>
