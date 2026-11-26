@@ -3862,7 +3862,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-16';
+const APP_BUILD='2026-11-26-17';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3908,14 +3908,14 @@ function viaTags(t){const v=viaOf(t),f=t.forOwner&&who(t.forOwner);
 
 /* ================= Nov 2026: View menu · All inboxes · right-click menu · Ignore conversation ================= */
 /* --- each person's view choices (saved in their prefs, so they follow them to every device) --- */
-const LV_DEF={sort:'date',dir:'desc',vf:'all',pane:'right',conv:true,lines:1};
+const LV_DEF={sort:'date',dir:'desc',vf:'all',pane:'right',conv:false,lines:1};
 /* 25 Nov 2026: conv is fixed at TRUE - one row per conversation, Outlook way (patch-one-row-per-conv.js) */
 /* __mailperrow 26 Nov 2026: back to one row per MAIL (the 24 Nov request). A mail must
    never be invisible because somebody else wrote after it in the same conversation. */
 /* __backtoyesterday 26 Nov 2026: one row per conversation, as it was on 25 Nov. Turning
    this to false gives every mail its own row again (explode()); everything that supports
    that is still in place and tested, so it is a one-word change either way. */
-const LV=()=>Object.assign({},LV_DEF,(S.prefs&&S.prefs.lv)||{},{conv:true});
+const LV=()=>Object.assign({},LV_DEF,(S.prefs&&S.prefs.lv)||{},{conv:false});   /* __rowpermail 26 Nov 2026: R17 locked - one row per mail for everyone. Forced, not a preference, because the Conversations choice was taken out of the View menu on 24 Nov. One word (true) puts conversation rows back. */
 function setLV(k,v){const x={...LV(),[k]:v};S.prefs={...S.prefs,lv:x};api('savePrefs',{prefs:{lv:x}}).catch(e=>toast('Not saved: '+e.message));applyLV();render()}
 function applyLV(){const v=LV(),b=document.body;['rp-right','rp-bottom','rp-off','pl0','pl1','pl2'].forEach(c=>b.classList.remove(c));b.classList.add('rp-'+v.pane,'pl'+v.lines)}
 const myAddrs=()=>{const me=who(ME);if(!me)return[];return[String(me.login||'').toLowerCase(),...String(me.perm?.aliases||'').toLowerCase().split(/[\s,;]+/)].filter(x=>x.includes('@'))};

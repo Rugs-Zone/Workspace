@@ -128,11 +128,16 @@ ck("every row of this conversation has a different trail position",
 ck("the row HTML cache key differs per mail (t.id + t._mi)",
   new Set(rows.filter(r => r.id === thread.id).map(r => r.id + "|" + r._mi)).size, 5);
 
-console.log("\n=== pinned really reaches the top now ===");
-ck("the pinned conversation outranks today's newer mail", A.rowWho(rows[0]), (g) => g !== "Megan Walsh");
-ck("the unpinned newer mail is pushed below", A.rowWho(rows[rows.length - 1]), "Megan Walsh");
+console.log("\n=== a pin does NOT reorder the list (locked 26 Nov) ===");
+/* This block used to assert the opposite. On 26 Nov the pinned sort was reverted on the
+   user's instruction ("why is the Tuesday mail coming on top in Sent") - a pinned Tuesday
+   conversation was jumping above today's mail in both folders. Pins are still kept and
+   still show their tag; they simply do not move a row. server/test-no-pin-sort.mjs owns
+   that rule; these two checks guard it from the per-mail side. */
+ck("today's newest mail is first even though an older conversation is pinned", A.rowWho(rows[0]), "Megan Walsh");
+ck("the pinned older conversation stays below it", A.rowWho(rows[rows.length - 1]), (g) => g !== "Megan Walsh");
 const B = mk([{ ...thread, pinned: false }, other]);
-ck("without the pin, today's mail is first again", B.rowWho(B.listRows()[0]), "Megan Walsh");
+ck("without the pin, today's mail is first too - the pin changed nothing", B.rowWho(B.listRows()[0]), "Megan Walsh");
 
 console.log("\n=== the Sent folder is the mirror image ===");
 /* inView decides which conversations reach the list BEFORE explode runs, and for Sent it
