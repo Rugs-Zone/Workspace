@@ -262,6 +262,25 @@ const RULES = [
     brk: ['Off would put a year of history into Needs owner.']
   },
   {
+    /* __r30arule 27 Nov 2026 (bug 16): per-team, and its own shape (a list of teams), so it is
+       a 'set' with its own chooser like manager-first - not a single On/Off. */
+    id: 'R30a', g: 'Ownership', k: 'set', n: 'Old mail (from before go-live) is open to the whole team',
+    now: () => {
+      try {
+        const on = DEPTS.filter(d => typeof r30aTeam === 'function' && r30aTeam(d.id));
+        return on.length
+          ? 'ON for ' + on.map(d => d.name).join(', ') + ' - in those teams a conversation whose mails are ALL older than go-live is visible to every member whatever its owner, in the Inbox, in Sent, in Search and through "Show in Inbox". It is never work. Every other team follows R3.'
+          : 'OFF everywhere - old mail follows R3 like any other conversation, so a colleague's old conversation is hidden from you.';
+      } catch (e) { return 'Per team.'; }
+    },
+    who: 'Team members. The Manager, Lead, CRM and Admin see everything anyway.',
+    brk: [
+      'It is a hole in R3 on purpose: in a team where it is ON, every member can read every old conversation, including a colleague's. That is wanted for history nobody is working any more - it is not wanted for live mail, which is why it stops at the team's go-live date.',
+      'It never makes old mail work: it stays out of Needs owner and out of My work, it has no Done button and its owner never changes.',
+      'Switch it on for a team and that team's whole history becomes readable by everyone in it. Switch it off and members go back to seeing only their own old conversations.'
+    ]
+  },
+  {
     id: 'C5', g: 'Ownership', k: 'sw', n: 'Everybody may transfer and assign',
     now: v => v ? 'Every active person can transfer a conversation to another team and give it to a colleague.'
       : 'Only a person with the Assign / Transfer tick in Admin -> Users, and every Admin.',
@@ -599,6 +618,7 @@ function rRowHTML(r, canEdit) {
   else if (r.k === 'off') { act = '<em style="font-size:11.5px;opacity:.6">not in this build</em>'; }
   else if (r.id === 'HIDEOLD') { act = canEdit ? '<button class="btn" data-rold>Open 🗂 Old mail</button>' : ''; }
   else if (r.id === 'R32') { act = canEdit ? '<button class="btn" data-rmgr>Choose teams</button>' : ''; }
+  else if (r.id === 'R30a') { act = canEdit ? '<button class="btn" data-r30a>Choose teams</button>' : ''; }   /* __r30arule */
 
   const exp = RLOPEN[r.id] ? ('<div class="rlexp"><b>What it changes if you touch it</b><ul>' + (r.brk || []).map(x => '<li>' + esc(x) + '</li>').join('') +
     '</ul><em>Who it affects: ' + esc(r.who || '-') + '</em></div>') : '';
@@ -670,7 +690,8 @@ function rSet(id, next) {
   const was = RV(id);
   vals[id] = next;
   log.push({ id: id, from: was ? 'On' : 'Off', to: next ? 'On' : 'Off', by: ME, at: Date.now() });
-  const body = { v: 1, vals: vals, log: log.slice(-200) };
+  /* __r30akeep: keep every other key in mail_rules (r30a lives in here too) */
+  const body = Object.assign({}, rulesObj(), { v: 1, vals: vals, log: log.slice(-200) });
   S.settings = S.settings || {}; const back = S.settings[RULES_KEY];
   S.settings[RULES_KEY] = body; render();
   api('saveSetting', { key: RULES_KEY, value: body })
@@ -685,7 +706,7 @@ function rSet(id, next) {
 function rReset() {
   const o = rulesObj(), log = rLog().slice();
   RULES.filter(r => r.k === 'sw').forEach(r => { if (RV(r.id) !== RDEF[r.id]) log.push({ id: r.id, from: RV(r.id) ? 'On' : 'Off', to: RDEF[r.id] ? 'On' : 'Off', by: ME, at: Date.now() }); });
-  const body = { v: 1, vals: {}, log: log.slice(-200) };
+  const body = Object.assign({}, rulesObj(), { v: 1, vals: {}, log: log.slice(-200) });   /* __r30akeep */
   S.settings = S.settings || {}; S.settings[RULES_KEY] = body; render();
   api('saveSetting', { key: RULES_KEY, value: body }).then(() => { toast('Every rule is back to how it shipped on 26 November'); render(); })
     .catch(e => toast('Not saved: ' + (e.message || ''), true));

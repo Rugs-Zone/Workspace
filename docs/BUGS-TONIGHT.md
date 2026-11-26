@@ -210,3 +210,34 @@ As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha, and as
 - [ ] nothing about the window changed for an admin: the countdown bar still says
       "(you keep access)"
 
+
+## Bug 13 (design / UI / UX / theme pass) - what the tester should check
+
+No rule, no ownership and no server change: this only changes how the app looks.
+Build **2026-11-27-13**. `server/patch-design-13.js`, `server/test-design-13.mjs` (89 checks).
+
+- [ ] open a mail that came with a pasted screenshot or a rewritten link: the **row preview**
+      and the **folded-mail one-liner** no longer read `[cid:image001.png@01DC...]` or
+      `<https://linkprotect.cudasvc.com/...>` - they read the buyer's words
+- [ ] open that same mail: the **mail itself is untouched** - the picture still shows and the
+      link still works. Nothing was taken out of a real mail, only out of the preview text
+- [ ] **Admin -> Switch ID** into somebody: the orange "You are using X's ID · Back to my ID"
+      bar is now a **slim bar with its own space** above the Items/Unread bar - the bottom of
+      the mail list and the Items/Unread bar are both fully visible. Same on a phone, where
+      its **Back to my ID** button is 40px tall
+- [ ] the list, the folder pane, the reading pane and the buttons are all **one typeface**;
+      the list reads at 13-14px, a mail body at 14.5px, and nothing with words in it is
+      under 12px (the folder group labels "Favourites / Topics / Organise" and the
+      "View mail ↑" link in the Activity trail were 11px and are now 12px)
+- [ ] a **buyer's mail keeps its own look** (its own font, colours and layout) but a huge
+      pasted picture is now held inside the pane and the reading pane never scrolls sideways
+- [ ] **dark mode and light mode**: every sender, subject, preview, time, day heading, chip
+      and tag is readable (measured at 4.5:1 or better in both); an **unread row** is
+      noticeably bolder with its 4px orange bar
+- [ ] on a **phone (390px)**: every button on the list and in the reading pane is at least
+      40px tall, and nothing scrolls sideways (the two invisible pane-drag handles that
+      stuck 3px off the right edge are gone on a phone)
+- [ ] an **empty list now says something useful**: "No mail needs an owner", "Inbox is clear",
+      "Nothing sent from here yet", "Deleted is empty", "Nothing on your plate",
+      "Nothing is late", "“Claims” is empty - drag a mail onto this folder…",
+      "Nothing unread", and a search with no hits names the words you searched for
