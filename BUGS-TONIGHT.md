@@ -8,6 +8,7 @@ people adding lines on the same night can never stop the auto-push.
 
 | # | Bug | Who | Rule | Status | Build |
 |---|-----|-----|------|--------|-------|
+| 4 | Clicking a mail (or a trail, or "Show all N mails") jumped the screen down to the Activity trail instead of opening it in place | everyone | - | **fixed, not yet click-tested** | 2026-11-27-3 |
 | 3 | Mails arriving minute by minute were not each shown: two mails sent in the SAME SECOND could swap places on every redraw, "Expand all" did not read as "the other mails are here", a poll bringing 2+ mails only opened the newest, and the row cache (600) was too small for per-mail rows | everyone | R17 | **fixed, not yet click-tested** | 2026-11-27-2 |
 | 2 | Search hides mail: it ranked by date, a number matched inside a longer number (4815 found 24815), the filters never reached the server and a 400-row subquery had no ORDER BY | everyone | - | **fixed, not yet click-tested** | 2026-11-27-1 |
 | 1 | A mail in a conversation has no row of its own — the row shows whoever wrote last (e.g. Aman Singh Verma 25 Nov 17:34 showed as "Manfred Mui, 8:21 pm") | everyone | R17 | **fixed, not yet click-tested** | 2026-11-26-24 |
@@ -57,3 +58,17 @@ As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha:
 - [ ] the bar at the top says **"Show all N mails"** and pressing it opens all of them
 - [ ] leave it open for a few minutes - when new mail lands, EVERY new mail appears as its own row
 - [ ] `rzMem()` in the console: the stores are inside their caps and it now also prints the row-cache size
+
+## Bug 4 (the screen jumps to Activity trail) - what the tester should check
+
+As **Switch ID -> admin, Jagjit (manager) and one member**, on a laptop AND on a phone:
+
+- [ ] open a conversation with several mails, scroll half way, click a folded mail -> it opens
+      **exactly where it is**; the screen does not move
+- [ ] the same for "Mail trail - N earlier mails" and for "Show all N mails"
+- [ ] the **Activity trail starts closed**; open it and it stays open while you click other
+      mails in the SAME conversation; another conversation opens with it closed again
+- [ ] inside the Activity trail, **"View mail up"** is the only thing that moves the screen,
+      and it moves to that mail
+- [ ] leave a conversation open while new mail lands: the screen does **not** move and a small
+      blue **"1 new mail down"** pill appears in the bottom corner; clicking it shows the mail
