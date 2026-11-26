@@ -823,7 +823,7 @@ function renderList(){const el=document.querySelector('.list');if(!el)return;
  const rows=special?[]:listRows();const isInbox=view.type==='box'&&view.folder==='inbox';
  try{window.LCNT={n:special?S.drafts.length:rows.length,u:0}}catch(e){}   /* 19 Nov 2026: for the bottom status bar */
  let h=`<div class="lhead">${mobilePicker()}<h2>${esc(title())} <small>${special?S.drafts.length:rows.length}</small></h2><div class="lsync"><button class="btn" data-sync title="Fetch new mail for Inbox and Sent">⟳ Sync</button><span>${syncing?'Syncing…':S.lastSync?'Synced '+new Date(S.lastSync).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit'}):'Not synced yet'}</span>${special?'':`<button class="lbtog" data-lbtog style="margin-left:auto">Topics ${S.ui.hideTopics?'▸':'▾'}</button>`}</div>`;
- if(!special){h+=`<div class="seg">${[['all','Inbox'],['unread','Unread'],['needs','Needs owner']].map(([k,l])=>`<button class="chip" data-filt="${k}" aria-pressed="${filt===k}">${l}</button>`).join('')}</div><div class="lbrow ${S.ui.hideTopics?'hide':''}" role="toolbar" aria-label="Topic"><button class="lchip" style="--lc:var(--fg)" data-lf="" aria-pressed="${!lfilt}">All topics</button>${LABELS.map(l=>`<button class="lchip" style="--lc:${l.c}" data-lf="${l.id}" aria-pressed="${lfilt===l.id}">${l.name}</button>`).join('')}</div>`}
+ if(!special){h+=`<div class="seg">${[['all','Inbox'],['unread','Unread'],['needs','Unassigned']].map(([k,l])=>`<button class="chip" data-filt="${k}" aria-pressed="${filt===k}">${l}</button>`).join('')}</div><div class="lbrow ${S.ui.hideTopics?'hide':''}" role="toolbar" aria-label="Topic"><button class="lchip" style="--lc:var(--fg)" data-lf="" aria-pressed="${!lfilt}">All topics</button>${LABELS.map(l=>`<button class="lchip" style="--lc:${l.c}" data-lf="${l.id}" aria-pressed="${lfilt===l.id}">${l.name}</button>`).join('')}</div>`}
  h+=`</div><div class="msgs">`;
  if(special){const arr=S.drafts;h+=arr.length?arr.map((m,i)=>`<div class="m" ${view.folder==='drafts'?`data-draft="${i}"`:''}><span>${av(m.by||who(ME).name)}</span><div class="body"><div class="r1"><span class="who">To: ${esc(m.to)}</span><span class="time">${tShort(m.at)}</span></div><div class="sub">${esc(m.sub||'(no subject)')}</div><div class="pre">${view.folder==='drafts'?'<b style="color:var(--red)">Draft</b> · '+esc(m.body||''):'Sent by '+esc(m.by)}</div></div></div>`).join(''):`<div class="empty"><b>Nothing here</b></div>`}
  else if(!rows.length)h+=`<div class="empty"><b>${typeof loadingNote==='function'&&loadingNote()?loadingNote():'All clear'}</b><span>${view.id==='needs'?'Every email has an owner.':'No mail here.'}</span></div>`;
@@ -1716,7 +1716,7 @@ function mapRow(r,ms,acts,old,home){
   status:r.status||(r.owner_id?'open':'new'),promise:r.promise||'',due:r.due_at?Date.parse(r.due_at):null,folder:r.folder||'inbox',prev:r.prev_folder||'',
   other:isOther(r.counterpart_email),att,label:r.topic||'',ai:r.topic_ai!==false,conf:r.topic_conf||0,msgs,hist,_hn:hist.length,full:false,cc:'',
   firstReply:r.first_reply_at?Date.parse(r.first_reply_at):null,doneAt:r.done_at?Date.parse(r.done_at):null,
-  pinned:!!r.pinned,snooze:r.snooze_until?Date.parse(r.snooze_until):null,remind:r.remind_at?Date.parse(r.remind_at):null,cats:Array.isArray(r.cats)?r.cats:[],to:Array.isArray(r.to_addrs)?r.to_addrs:[],forOwner:r.for_owner||''};
+  pinned:!!r.pinned,snooze:r.snooze_until?Date.parse(r.snooze_until):null,remind:r.remind_at?Date.parse(r.remind_at):null,cats:Array.isArray(r.cats)?r.cats:[],to:Array.isArray(r.to_addrs)?r.to_addrs:[],forOwner:r.for_owner||'',parts:Array.isArray(r.participants)?r.participants:[]};
  if(!r.topic&&!r.topic_checked){const c=classify(t);t.label=c?c.id:'';t.ai=true;t.conf=c?c.conf:0}
  if(old&&old.full&&msgs.every(m=>m.full))t.full=true;
  return t}
@@ -3816,7 +3816,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-3';
+const APP_BUILD='2026-11-26-4';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -4608,14 +4608,22 @@ const _imO=isInboxMail;isInboxMail=function(t){return !beforeLive(t)&&_imO(t)};
 /* 20 Nov 2026: a "manager first" team - mail nobody has taken is the manager's to hand out, and a
    member sees it only once it is his. Listed by mailbox so renaming the team changes nothing; put
    another address in here to do the same for another team. */
-const MGR_FIRST=['designer@rugscreation.com'];
-function mgrFirst(d){try{const x=dept(d);return !!x&&MGR_FIRST.indexOf(String(mailOf(x)||'').toLowerCase())>=0}catch(e){return false}}
+/* 26 Nov 2026: a per-department setting now, default OFF for everyone. The server keeps the
+   list in rm_settings.mgr_first_boxes; if it sends none, nobody is manager-first. */
+const MGR_FIRST=[];
+function mgrFirstBoxes(){try{const v=S.settings&&S.settings.mgr_first_boxes;
+  return Array.isArray(v)?v.map(x=>String(x).toLowerCase()):MGR_FIRST}catch(e){return MGR_FIRST}}
+function mgrFirst(d){try{const x=dept(d);return !!x&&mgrFirstBoxes().indexOf(String(mailOf(x)||'').toLowerCase())>=0}catch(e){return false}}
+/* __teamsee:start 26 Nov 2026: OWNERSHIP NEVER HIDES A CONVERSATION. Everybody who can open a
+   mailbox sees every received conversation in it, whoever owns it or replied; only Archive,
+   Deleted and Junk take mail out, and those are a person's choice. The single exception is a
+   department deliberately set to manager-first, where mail nobody has taken is the manager's
+   to hand out - that is off for everyone by default now. __teamsee:end */
 function seeMine(t){const p=who(ME);
  if(!p||!t)return true;
- if(p.role==='Admin'||['Manager','Lead','CRM'].includes(p.role))return true;   /* manager / CRM / admin: the whole team */
- if(!t.owner)return !mgrFirst(t.dept);                                         /* nobody has taken it yet: anyone may pick it up, except in a manager-first team */
- if(t.owner===ME)return true;                                                  /* mine */
- return (t.msgs||[]).some(m=>msgMine(m,t))}                                        /* I replied in it — keep it */
+ if(p.role==='Admin'||['Manager','Lead','CRM'].includes(p.role))return true;
+ if(!t.owner&&mgrFirst(t.dept))return false;   /* manager-first department: unclaimed mail waits for the manager */
+ return true}
 /* 20 Nov 2026: a mailbox somebody sees ONLY the critical mail of. Priya is CRM for the whole company
    but Vinay's ordinary mail is not hers to read - the critical ones are, because there is nobody
    else in that mailbox to catch them. person id -> the departments this applies to. */
@@ -6355,3 +6363,49 @@ tab = 'focused';
  put(); setTimeout(put, 1500); setTimeout(put, 5000);
 })();
 /* __chips3:end */</script>
+
+<script>/* __mywork:start  26 Nov 2026: My work = the owner AND everyone who replied */
+/* The people who have worked a conversation: whoever the server recorded (t.parts - repliers,
+   forwarders and anyone it was assigned to) plus anyone whose reply is in the mail we hold. */
+function partsOf(t) {
+ const out = [];
+ try {
+  (t && t.parts || []).forEach(function (x) { if (x && out.indexOf(x) < 0) out.push(x); });
+  (t && t.msgs || []).forEach(function (m) {
+   const who_ = m && (m.by || (typeof sentWho === 'function' ? sentWho(m, t) : ''));
+   if (who_ && out.indexOf(who_) < 0) out.push(who_);
+  });
+  if (t && t.owner && out.indexOf(t.owner) < 0) out.push(t.owner);
+ } catch (e) {}
+ return out;
+}
+function isMyWork(t) { try { return !!t && (t.owner === ME || partsOf(t).indexOf(ME) >= 0); } catch (e) { return false; } }
+/* the My work view, its count and the Mine filter all follow the same rule */
+const _ivWork = inView;
+inView = function (t) {
+ try {
+  if (t && view && view.type === 'fav' && view.id === 'mine')
+   return isMyWork(t) && st(t) !== 'done' && hasRecv(t);
+ } catch (e) {}
+ return _ivWork.apply(this, arguments);
+};
+const _lrWork = listRows;
+listRows = function () {
+ const r = _lrWork.apply(this, arguments);
+ try { if (filt === 'mine') return r.filter(isMyWork); } catch (e) {}
+ return r;
+};
+const _rfWork = renderFolders;
+renderFolders = function () {
+ const r = _rfWork.apply(this, arguments);
+ try {
+  const b = document.querySelector('#folders [data-fav="mine"] .c');
+  const n = S.threads.filter(function (t) { return isMyWork(t) && st(t) !== 'done' && hasRecv(t); }).length;
+  if (b) b.textContent = n; else {
+   const row = document.querySelector('#folders [data-fav="mine"]');
+   if (row && n) row.insertAdjacentHTML('beforeend', '<span class="c">' + n + '</span>');
+  }
+ } catch (e) {}
+ return r;
+};
+/* __mywork:end */</script>

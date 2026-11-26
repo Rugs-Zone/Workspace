@@ -831,6 +831,25 @@ async function restoreInboxJob(j) {
 if (process.env.ONETIME_OFF !== "1") setTimeout(() => restoreInboxJob(RESTORE_IN).catch((e) => log("one-time job", RESTORE_IN.id, "error:", e.message)), 29000);
 /* __restoreinbox:end */
 
+/* ---- 26 Nov 2026: manager-first off everywhere   __mgrfirstoff:start ---------------- */
+const MGRFIRST_OFF = { id: "manager-first-off-2026-11-26" };
+async function mgrFirstOffJob(j) {
+  const mark = "job_" + j.id, undo = "undo_" + j.id;
+  if ((await pool.query("select 1 from public.rm_settings where key = $1", [mark])).rowCount) return;
+  try {
+    const cur = (await pool.query("select value from public.rm_settings where key = 'mgr_first_boxes'")).rows[0];
+    const was = cur ? cur.value : null;
+    await put(pool, undo, { at: new Date().toISOString(), was: was,
+      note: "to put it back: update rm_settings set value = <was> where key = 'mgr_first_boxes'" });
+    await put(pool, "mgr_first_boxes", []);
+    const summary = "manager-first switched off everywhere (was " + JSON.stringify(was) + "); every member of a team now sees its unassigned mail, and the auto-assign rules hand designer@ mail out again";
+    await put(pool, mark, { at: new Date().toISOString(), ran: true, was: was, summary: summary, undo_key: undo });
+    log("one-time job", j.id, "- done:", summary);
+  } catch (e) { log("one-time job", j.id, "FAILED, nothing was changed:", e.message); }
+}
+if (process.env.ONETIME_OFF !== "1") setTimeout(() => mgrFirstOffJob(MGRFIRST_OFF).catch((e) => log("one-time job", MGRFIRST_OFF.id, "error:", e.message)), 33000);
+/* __mgrfirstoff:end */
+
 /* ---- 25 Nov 2026: what the Server page reads   __srvview:start ----------------------
    Read-only, and only for somebody signed in to Rugs Email as role Admin: it is checked with
    the session token the app already holds, hashed the same way rugs-mail hashes it (sha256).
