@@ -827,7 +827,7 @@ function renderList(){const el=document.querySelector('.list');if(!el)return;
  h+=`</div><div class="msgs">`;
  if(special){const arr=S.drafts;h+=arr.length?arr.map((m,i)=>`<div class="m" ${view.folder==='drafts'?`data-draft="${i}"`:''}><span>${av(m.by||who(ME).name)}</span><div class="body"><div class="r1"><span class="who">To: ${esc(m.to)}</span><span class="time">${tShort(m.at)}</span></div><div class="sub">${esc(m.sub||'(no subject)')}</div><div class="pre">${view.folder==='drafts'?'<b style="color:var(--red)">Draft</b> · '+esc(m.body||''):'Sent by '+esc(m.by)}</div></div></div>`).join(''):`<div class="empty"><b>Nothing here</b></div>`}
  else if(!rows.length)h+=`<div class="empty"><b>${typeof loadingNote==='function'&&loadingNote()?loadingNote():'All clear'}</b><span>${view.id==='needs'?'Every email has an owner.':'No mail here.'}</span></div>`;
- else{let lastDay='';const _cap=listCap(rows.length);rows.slice(0,_cap).forEach(t=>{const day=dayLabel(sentV?lastOut(t):t.last);if(day!==lastDay){h+=`<div class="day">${day}</div>`;lastDay=day}h+=rowHTML(t)});if(rows.length>_cap)h+=`<div class="listmore" data-listmore>Showing ${_cap} of ${rows.length} — scroll for more</div>`}
+ else{let lastDay='';const _cap=capRows(rows);rows.slice(0,_cap).forEach(t=>{const day=dayLabel(sentV?lastOut(t):t.last);if(day!==lastDay){h+=`<div class="day">${day}</div>`;lastDay=day}h+=rowHTML(t)});if(rows.length>_cap)h+=`<div class="listmore" data-listmore>Showing ${_cap} of ${rows.length} — scroll for more</div>`}
  h+='</div>';el.innerHTML=h}
 /* 16 Nov 2026: the name on a row = who sent the NEWEST mail in that conversation, like Outlook.
    Our own person's name when we answered last (e.g. "Ashok"), the buyer's name when they wrote
@@ -3841,7 +3841,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-8';
+const APP_BUILD='2026-11-26-9';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3918,7 +3918,10 @@ const _lrV=listRows;listRows=function(){let r=_lrV();const v=LV();
 function convDedupe(){const seen=new Map();let drop=false;S.threads.forEach((t,i)=>{const nw=t.msgs&&t.msgs.length?Math.max(...t.msgs.map(m=>m.at||0)):0;if(nw>t.last)t.last=nw;const j=seen.get(t.id);if(j==null)seen.set(t.id,i);else{drop=true;const a=S.threads[j];if((t.last||0)>(a.last||0)||((t.last||0)===(a.last||0)&&t.msgs.length>a.msgs.length))seen.set(t.id,i)}});
  if(drop){const keep=new Set(seen.values());S.threads=S.threads.filter((t,i)=>keep.has(i))}}
 const _lrOne=listRows;listRows=function(){try{convDedupe()}catch(e){}return _lrOne()};
-const _openOne=open;open=function(id){if(id!==openId){const t=T_(id);if(t&&t.msgs&&t.msgs.length)openMsgs[t.id]=new Set(t.msgs.map((_,i)=>i).slice(-3))}return _openOne(id)};   /* 25 Nov 2026: the newest THREE bodies (heavy-thread rule step 3) - was the newest one only */
+/* __openonemail 26 Nov 2026: `&&!window.__openOneMail` - when a per-mail row names the mail
+   it wants (see __rowmail), opening the newest three on top of it is what put the mail
+   above the clicked one on screen. A click that names no mail is unchanged. */
+const _openOne=open;open=function(id){if(id!==openId&&!window.__openOneMail){const t=T_(id);if(t&&t.msgs&&t.msgs.length)openMsgs[t.id]=new Set(t.msgs.map((_,i)=>i).slice(-3))}return _openOne(id)};   /* 25 Nov 2026: the newest THREE bodies (heavy-thread rule step 3) - was the newest one only */
 /* --- the View menu (above the mail list) --- */
 const VM_GROUPS=()=>[
  ['sort','Sort by',[['date','Date'],['from','From'],['subject','Subject'],['size','Size']]],
@@ -4548,6 +4551,25 @@ const _rfW=renderFolders;renderFolders=function(){_rfW();if(app!=='mail')return;
 
 /* ================= Nov 2026: speed — draw the mail list in pages of 150 rows ================= */
 const LIST_PAGE=window.SLOW_PC?60:150;let _capKey='',_cap=LIST_PAGE;
+/* __caprows 26 Nov 2026: the drawing window counts CONVERSATIONS, not rows. It always meant
+   to - a row used to BE a conversation - but with one row per mail the same 150-row window
+   reached about four times less far down the Inbox, so mail people expected to see fell
+   outside it and looked missing (while still showing in the much shorter My work list).
+   The ceiling GROWS with the window (cap x CAP_ROW_PER), so one enormous mailbox cannot
+   stall a slow PC while 'scroll for more' always keeps making progress - a fixed ceiling
+   stopped the pager dead as soon as it was reached. */
+const CAP_ROW_PER=window.SLOW_PC?6:12;
+function capRows(rows){
+ if(!rows||!rows.length)return 0;
+ const cap=listCap(rows.length);
+ let perMail=false;for(let i=0;i<rows.length&&i<40;i++){if(rows[i]&&rows[i]._one){perMail=true;break}}
+ if(!perMail)return cap;                      /* one row per conversation: exactly as before */
+ const seen=new Set();let i=0;
+ const max=cap*CAP_ROW_PER;
+ for(;i<rows.length&&i<max;i++){const id=rows[i]&&rows[i].id;
+  if(id==null)continue;
+  if(!seen.has(id)){if(seen.size>=cap)break;seen.add(id)}}
+ return i}
 function listCap(n){const k=JSON.stringify([app,view,tab,filt,typeof lfilt==='undefined'?'':lfilt,($('#q')||{}).value||'']);if(k!==_capKey){_capKey=k;_cap=LIST_PAGE}return Math.min(n,_cap)}
 function hasRecv(t){return t.msgs.some(m=>recvMsg(m,t))}   /* 20 Nov 2026: one rule, so the Inbox list and every Inbox count agree (and a login code counts as received) */
 let _moreBusy=false;
@@ -5939,7 +5961,10 @@ open=function(id){
  if(t&&want!=null&&t.msgs&&t.msgs[want]){
   openMsgs[id]=new Set([want]);          /* open the mail that was clicked, not the newest */
  }
- const r=_openRow.apply(this,arguments);
+ const oneMail=!!(t&&want!=null&&t.msgs&&t.msgs[want]);
+ if(oneMail)window.__openOneMail=true;                 /* __openonemail: just this mail */
+ let r;try{r=_openRow.apply(this,arguments)}finally{window.__openOneMail=false}
+ if(oneMail&&t&&t.msgs&&t.msgs[want]){openMsgs[id]=new Set([want])}   /* last word, whatever ran underneath */
  if(t&&want!=null&&t.msgs&&t.msgs[want]){
   try{if(t.msgs[want].light)openLight(t,[t.msgs[want]])}catch(e){}   /* not read from Gmail yet */
   setTimeout(()=>{try{
@@ -6137,7 +6162,7 @@ renderList = function () {
   const msgs = document.querySelector('.list .msgs');
   const special = view.type==='box' && view.folder==='drafts';
   if (special) throw 0;
-  rows = listRows(); cap = listCap(rows.length); sig = rpState(rows, cap);   /* worked out ONCE */
+  rows = listRows(); cap = capRows(rows); sig = rpState(rows, cap);   /* worked out ONCE */
   if (!msgs || sig !== RP_SIG || !RP_HTML) throw 0;    /* the list itself changed: draw it properly */
   want = [];
   for (let i = 0; i < Math.min(rows.length, cap); i++) want.push(rowHTML(rows[i]));
@@ -6155,7 +6180,7 @@ renderList = function () {
  } catch (e) { /* fall through to the full draw */ }
  const r = _rlPatch.apply(this, arguments);
  try {
-  if (!rows) { rows = listRows(); cap = listCap(rows.length); }
+  if (!rows) { rows = listRows(); cap = capRows(rows); }
   RP_SIG = sig || rpState(rows, cap);                 /* reuse what was already worked out */
   if (!want) { want = []; for (let i = 0; i < Math.min(rows.length, cap); i++) want.push(rowHTML(rows[i])); }
   RP_HTML = want;
