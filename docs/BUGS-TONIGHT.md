@@ -179,3 +179,21 @@ As **Switch ID -> admin, Jagjit (manager) and one member** in Team Alpha, and as
 - [ ] **dark mode**: the counts (and the mail list) are readable - this also fixes text that
       had been near-black on a near-black page since 26 November
 
+## Bug 11 (R35 - My rules) - what the tester should check
+
+- [ ] menu under your own name → **📋 My rules** → **New rule**: from domain
+      `turner-bianca.com`, "…or a new folder" **Turner**, Save
+- [ ] that buyer's mail is now in **your Turner folder**, out of **your** Inbox, the folder shows
+      a **count** and its name is **bold**
+- [ ] ask a colleague (or Switch ID into one): **their Inbox still has it** and they have no
+      Turner folder - a rule is yours alone, a manager's rule included
+- [ ] the mail is still in **Needs owner** (if nobody owns it) and in **My work** (if you own it),
+      and its folder in the conversation is still the Inbox
+- [ ] the other actions: **set topic** shows that topic on the row and in the Topics filter,
+      **flag** puts it in Flagged, **mark as read** takes it out of your unread count only
+- [ ] **order**: two rules, first match wins; **stop here** ends the list; **off** does nothing;
+      ↑ ↓ change which one wins; delete offers **Undo**
+- [ ] **Run now on existing mail** says how many match before you press Apply
+- [ ] a Turner mail in **Junk or Deleted** is left exactly where it is
+- [ ] sign out and in again: the rules are still there (they are saved on your own user row)
+

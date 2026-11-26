@@ -47,3 +47,6 @@ Rules 1–4 assign through `rm_auto_give()`, which applies the **leave rule** (`
 A handed-over thread keeps `for_owner` and shows the tag "for <name> (on leave)".
 
 Helper functions: `rm_addrs(text)`, `rm_open_count(user)`, `rm_greet_name(text)`, `rm_kw_topic(text)`.
+
+**Personal mail rules (R35, 27 Nov 2026)** — `rm_users.prefs.mr35`: an array of `{id, by, name, on, stop, c:{from,dom,sub,to,att}, a:{move,topic,flag,read}}` on the person’s own row, written only through the `savePrefs` action, which updates the signed-in user’s row and no other (so a person can read and write only their own rules). A rule is never written to `rm_threads` or `rm_messages`: it is applied as a filter in that person’s own browser, so no rule can move mail for the team.
+

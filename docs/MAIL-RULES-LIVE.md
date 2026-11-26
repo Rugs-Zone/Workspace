@@ -83,6 +83,8 @@ Three lists: **A** what is live, **B** what is agreed but deliberately NOT live 
 
 | R19a | **Every folder shows its unread count** (27 Nov) — Inbox, Archive, Junk, Deleted, "All inboxes", the shared mailboxes and a person's own folders; hidden at 0, **grey for Junk and Deleted**, and the folder **name goes bold** while it holds mail that arrived since it was last opened. The Inbox number is still `inboxUnreadN()`, so the five Inbox counts stay equal; the other folders use the same test with the folder swapped, so R1/R3 and Switch ID are followed. Favourites keep their own list size and only go bold |
 
+| R35 | **Personal mail rules — Settings → 📋 My rules** (27 Nov) — anybody (member, manager, admin) can make rules that change **only their own view**: conditions from address / from domain / subject contains / sent to / has attachment, actions move to one of **my** folders, set topic, flag, mark read; in order, first match wins per action, with a "stop here" tick, on/off, up/down and "Run now on existing mail" with a count first. A rule is a **filter, never a move** — nothing is written to the mail, so the conversation stays in the team Inbox for everyone else and in **Needs owner / My work** until it is owned or done, a manager’s rule has no team-wide power, and **Junk, Deleted and Drafts are never touched**. Stored per person in `rm_users.prefs.mr35` |
+
 ### Things that hide mail which are not ownership rules
 
 `Hide mail from before Go live` (Admin → Old mail — **must stay unticked**), the **View ▾ → Show**
