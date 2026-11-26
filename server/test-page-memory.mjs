@@ -1,6 +1,10 @@
 /* 26 Nov 2026 — proves the page's memory stays bounded. Runs the real sweeper cut
    verbatim out of the shipped app (.tmp/email.html, the __mem block).
 
+   Budgets were tightened the same evening by patch-page-memory-2.js (15 / 10 / 4 MB and 600
+   rows), because the real store turned out to be the mail held ON the conversations -
+   that half is tested in server/test-page-memory-2.mjs.
+
    The three stores it guards were all unbounded before today:
      RAWC   every mail opened this session, its pasted screenshots inlined as data: URLs
      ATTB   every attachment fetched this session (up to 25 MB each)
@@ -50,18 +54,18 @@ const thumbBytes = () => Object.keys(A.ATHUMB).reduce((n, k) => n + String(A.ATH
 const clear = (o) => Object.keys(o).forEach((k) => delete o[k]);
 
 console.log("\n=== the budgets the app ships with ===");
-ck("opened mail", A.MEM_RAWC, 40 * MB);
-ck("attachments", A.MEM_ATTB, 25 * MB);
-ck("thumbnails", A.MEM_THUMB, 8 * MB);
-ck("the row-HTML cache is capped at 1200, not 6000", /RHC.size>1200/.test(src), true);
+ck("opened mail", A.MEM_RAWC, 15 * MB);
+ck("attachments", A.MEM_ATTB, 10 * MB);
+ck("thumbnails", A.MEM_THUMB, 4 * MB);
+ck("the row-HTML cache is capped at 600, not 6000", /RHC.size>600/.test(src), true);
 
 console.log("\n=== RAWC · opened mail with pasted screenshots ===");
 clear(A.RAWC); A.noConv();
 for (let k = 0; k < 60; k++) A.RAWC["m" + k] = { raw: big(1), body: "" };   /* 60 MB */
 ck("60 opened mails of 1 MB = 60 MB before the sweep", Math.round(rawcBytes() / MB), 60);
 A.memSweep(true);
-ck("...swept down inside the 40 MB budget", rawcBytes() <= A.MEM_RAWC, true);
-ck("...and it kept as much as it could (over 35 MB)", rawcBytes() > 35 * MB, true);
+ck("...swept down inside the 15 MB budget", rawcBytes() <= A.MEM_RAWC, true);
+ck("...and it kept as much as it could (over 12 MB)", rawcBytes() > 12 * MB, true);
 ck("...the OLDEST went first (m0 gone)", A.RAWC.m0 === undefined, true);
 ck("...the newest is still there (m59)", !!A.RAWC.m59, true);
 
@@ -83,7 +87,7 @@ clear(A.ATTB); clear(A.ATT_SZ);
 for (let k = 0; k < 8; k++) { A.ATTB["f" + k] = Promise.resolve(1); A.ATT_SZ["f" + k] = 5 * MB; }
 ck("8 files of 5 MB = 40 MB before the sweep", Math.round(attBytes() / MB), 40);
 A.memSweep(true);
-ck("...swept down inside the 25 MB budget", attBytes() <= A.MEM_ATTB, true);
+ck("...swept down inside the 10 MB budget", attBytes() <= A.MEM_ATTB, true);
 ck("...the oldest file went first", A.ATTB.f0 === undefined, true);
 ck("...the newest file is still there", !!A.ATTB.f7, true);
 ck("...and its remembered size went with it", A.ATT_SZ.f0 === undefined, true);
@@ -92,7 +96,7 @@ console.log("\n=== ATHUMB · thumbnails ===");
 clear(A.ATHUMB);
 for (let k = 0; k < 20; k++) A.ATHUMB["t" + k] = big(0.6);                 /* 12 MB */
 A.memSweep(true);
-ck("swept down inside the 8 MB budget", thumbBytes() <= A.MEM_THUMB, true);
+ck("swept down inside the 4 MB budget", thumbBytes() <= A.MEM_THUMB, true);
 ck("...and some are kept", Object.keys(A.ATHUMB).length > 0, true);
 
 console.log("\n=== a page that is not over the budget is left alone ===");

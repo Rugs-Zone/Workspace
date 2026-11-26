@@ -3864,7 +3864,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-20';
+const APP_BUILD='2026-11-26-21';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -4167,7 +4167,7 @@ const MAIL_MAX = 15 * 1024 * 1024;
    hands back new File objects each time. */
 const PRE_B64 = new Map();
 const preKey = f => (f && f.name) + '|' + (f && f.size) + '|' + (f && f.lastModified || 0);
-function preRead(f){ const k = preKey(f); if(!PRE_B64.has(k)) PRE_B64.set(k, fileB64(f).catch(()=>null)); return PRE_B64.get(k); }
+function preRead(f){ const k = preKey(f); if(!PRE_B64.has(k)) PRE_B64.set(k, fileB64(f).then(r=>{try{const p=PRE_B64.get(k);if(p)p.__len=String((r&&(r.b64||r))||'').length}catch(e){}return r}).catch(()=>null)); return PRE_B64.get(k); }
 const preDone = f => { const p = PRE_B64.get(preKey(f)); return !!(p && p.__done); };
 function preWatch(f, after){ const p = preRead(f); p.then(v=>{ p.__done = v != null; if(after) after(); }); }
 function cfKind(n,m){n=String(n||'');return /\.pdf$/i.test(n)||/pdf/.test(m||'')?['PDF','#c50f1f']:/\.(docx?|rtf)$/i.test(n)?['W','#185abd']:/\.(xlsx?|csv)$/i.test(n)?['X','#107c41']:/\.(pptx?)$/i.test(n)?['P','#c43e1c']:/^image\//.test(m||'')?['IMG','#8764b8']:/\.(zip|rar|7z)$/i.test(n)?['ZIP','#986f0b']:['FILE','#616161']}
@@ -6089,7 +6089,7 @@ rowHTML=function(t){
   (function(m){return m?((m.light?'L':'')+(m.failed?'F':'')+(m.sending?'S':'')+String(m.body||'').length+'/'+String(m.from||'').length):''})((t.msgs||[])[(t.msgs||[]).length-1])].join('|')}catch(e){key=null}
  if(key){const hit=RHC.get(key);if(hit!==undefined)return hit}
  const h=_rhSpd.apply(this,arguments);
- if(key){if(RHC.size>1200)RHC.clear();RHC.set(key,h)}   /* __mem: 6000 was ~12 MB; only ~450 rows are ever drawn */
+ if(key){if(RHC.size>600)RHC.clear();RHC.set(key,h)}   /* __mem2: ~450 rows are ever drawn */
  return h};
 /* __listspeed:end */</script>
 
@@ -6537,12 +6537,13 @@ renderFolders = function () {
 
 /* Budgets, in bytes. A data: URL and a base64 string are plain ASCII, so a string's
    length is its size. Sized for the office PCs (4 GB, several tabs open all day). */
-const MEM_RAWC   = 40*1024*1024;   /* opened mail, with its pasted pictures */
-const MEM_ATTB   = 25*1024*1024;   /* attachment bytes fetched this session */
-const MEM_THUMB  =  8*1024*1024;   /* attachment thumbnails */
+const MEM_RAWC   = 15*1024*1024;   /* opened mail, with its pasted pictures */
+const MEM_ATTB   = 10*1024*1024;   /* attachment bytes fetched this session */
+const MEM_THUMB  =  4*1024*1024;   /* attachment thumbnails */
 const MEM_EVERY  = 5000;           /* sweep at most this often (ms) */
 const ATT_SZ={};                   /* ATTB key -> bytes, filled when the file arrives */
 let MEM_AT=0, MEM_LAST={};
+try{window.__memAt=0}catch(e){}
 
 /* the Gmail ids of the conversation on screen - never evicted */
 function memPinned(){
@@ -6604,3 +6605,117 @@ window.rzMem=function(){
   total:mb(mail+files+thumbs+rows),conversations:(S.threads||[]).length,lastSweep:MEM_LAST};
 };
 /* __mem:end */</script>
+
+<script>/* __mem2:start 26 Nov 2026 — the loaded mail on the conversations themselves.
+   server/patch-page-memory-2.js */
+
+const MEM_LOADED = 35*1024*1024;   /* full mail held on S.threads, with its pictures */
+const MEM_PREB64 = 15*1024*1024;   /* compose attachments, already encoded */
+const MEM_KEEP   = 3;              /* the last N conversations looked at are never stripped */
+
+/* when each conversation was last opened, so the oldest goes first */
+const _opSeen=open;
+open=function(id){try{const t=(typeof T_==='function')?T_(id):null;if(t)t._seenAt=Date.now()}catch(e){}
+ return _opSeen.apply(this,arguments)};
+
+function msgBytes(m){try{return ((m&&m.raw)||'').length+((m&&m.body)||'').length+((m&&m.html)||'').length}catch(e){return 0}}
+function loadedBytes(t){let b=0;try{((t&&t.msgs)||[]).forEach(m=>{if(m&&(m.raw||m.html))b+=msgBytes(m)})}catch(e){}return b}
+
+/* Put a conversation back to "not loaded": the preview stays, the heavy text goes, and
+   opening it fetches it again (t.full=false is the app's own flag for that). */
+function stripLoaded(t){
+ let freed=0;
+ try{
+  ((t&&t.msgs)||[]).forEach(m=>{
+   if(!m)return;
+   freed+=msgBytes(m);
+   if(m.raw)delete m.raw;
+   if(m.html)delete m.html;
+   if(m.trail)delete m.trail;
+   if(typeof m.body==='string'&&m.body.length>1500)m.body=m.body.slice(0,1500);
+   m.full=false;
+   try{if(m.gid&&RAWC[m.gid])delete RAWC[m.gid]}catch(e){}
+   freed-=msgBytes(m);
+  });
+  t.full=false;
+  try{if(typeof LD!=='undefined'&&LD&&LD[t.id])delete LD[t.id]}catch(e){}
+ }catch(e){}
+ return freed>0?freed:0;
+}
+
+function memTrimLoaded(){
+ try{
+  const list=(typeof S!=='undefined'&&S.threads)||[];
+  let total=0;const cand=[];
+  for(let i=0;i<list.length;i++){
+   const t=list[i],b=loadedBytes(t);
+   if(b>0){total+=b;cand.push({t:t,b:b,at:t._seenAt||0})}
+  }
+  if(total<=MEM_LOADED)return 0;
+  cand.sort((a,b)=>a.at-b.at);                      /* longest ago first */
+  const keep={};
+  cand.slice(-MEM_KEEP).forEach(c=>{keep[c.t.id]=1});   /* the last few looked at */
+  try{if(typeof openId!=='undefined'&&openId)keep[openId]=1}catch(e){}
+  let freed=0;
+  for(let i=0;i<cand.length&&total>MEM_LOADED;i++){
+   const c=cand[i];
+   if(keep[c.t.id])continue;
+   const f=stripLoaded(c.t);
+   total-=f;freed+=f;
+  }
+  return freed;
+ }catch(e){return 0}
+}
+
+function memTrimCompose(){
+ try{
+  if(typeof PRE_B64==='undefined'||!PRE_B64||!PRE_B64.size)return 0;
+  let total=0;const keys=[];
+  PRE_B64.forEach((v,k)=>{keys.push(k);total+=(v&&v.__len)||0});
+  if(total<=MEM_PREB64)return 0;
+  let freed=0;
+  for(let i=0;i<keys.length&&total>MEM_PREB64;i++){
+   const v=PRE_B64.get(keys[i]),sz=(v&&v.__len)||0;
+   PRE_B64.delete(keys[i]);total-=sz;freed+=sz;
+  }
+  return freed;
+ }catch(e){return 0}
+}
+
+/* hang the two new sweeps off the one from last night */
+const _msBase=memSweep;
+memSweep=function(force){
+ const now=Date.now();
+ const due=force||!window.__memAt||now-window.__memAt>=5000;
+ _msBase.apply(this,arguments);
+ if(!due)return;
+ window.__memAt=now;
+ try{
+  const f1=memTrimLoaded(),f2=memTrimCompose();
+  if(f1||f2)window.__memFreed={at:now,mailOnList:f1,composeFiles:f2};
+ }catch(e){}
+};
+
+/* what the page is holding right now. In the browser console: rzMem() */
+window.rzMem=function(){
+ const mb=x=>Math.round(x/104857.6)/10;
+ let onList=0,cache=0,files=0,thumbs=0,rows=0,pre=0,loadedConvs=0;
+ try{((S&&S.threads)||[]).forEach(t=>{const b=loadedBytes(t);if(b){onList+=b;loadedConvs++}})}catch(e){}
+ try{Object.keys(RAWC).forEach(k=>{const v=RAWC[k];cache+=((v&&v.raw)||'').length+((v&&v.body)||'').length})}catch(e){}
+ try{Object.keys(ATT_SZ).forEach(k=>{files+=ATT_SZ[k]||0})}catch(e){}
+ try{Object.keys(ATHUMB).forEach(k=>{thumbs+=String(ATHUMB[k]||'').length})}catch(e){}
+ try{RHC.forEach(v=>{rows+=String(v||'').length})}catch(e){}
+ try{PRE_B64.forEach(v=>{pre+=(v&&v.__len)||0})}catch(e){}
+ /* the cache and the conversations share the same text, so they are counted once */
+ return {
+  mailLoaded:mb(onList)+' MB in '+loadedConvs+' conversations',
+  attachments:mb(files)+' MB', thumbnails:mb(thumbs)+' MB',
+  rowHtml:mb(rows)+' MB', composeFiles:mb(pre)+' MB',
+  heldByRugsEmail:mb(onList+files+thumbs+rows+pre)+' MB',
+  conversations:((S&&S.threads)||[]).length,
+  lastSweep:window.__memFreed||'nothing to free yet',
+  note:'the browser\'s own use (page, pictures on screen, Chrome itself) is on top of this'
+ };
+};
+window.rzMemTrim=function(){memSweep(true);return window.rzMem()};
+/* __mem2:end */</script>
