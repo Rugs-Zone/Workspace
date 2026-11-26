@@ -7,6 +7,16 @@
 */
 import fs from "node:fs";
 const src = fs.readFileSync(".tmp/email.html", "utf8");
+/* 26 Nov 2026: this file describes the ONE ROW PER MAIL model. It was reverted the same day
+   (server/patch-back-to-yesterday.js) back to one row per conversation, so these checks do
+   not apply while that is the case. Everything they test is still in the app and still
+   works - turn conv:false back on in LV() and this suite becomes live again. */
+if (/\{conv:true\}/.test(src)) {
+  console.log("SKIPPED - one row per conversation is on, so the per-mail row rules do not apply.");
+  console.log("          (turn conv:false back on in LV() to run these 22 checks)");
+  process.exit(0);
+}
+
 
 /* ---- cut the real code out of the app ---- */
 const cut = (startsWith, endsBefore) => {

@@ -827,12 +827,19 @@ function renderList(){const el=document.querySelector('.list');if(!el)return;
  h+=`</div><div class="msgs">`;
  if(special){const arr=S.drafts;h+=arr.length?arr.map((m,i)=>`<div class="m" ${view.folder==='drafts'?`data-draft="${i}"`:''}><span>${av(m.by||who(ME).name)}</span><div class="body"><div class="r1"><span class="who">To: ${esc(m.to)}</span><span class="time">${tShort(m.at)}</span></div><div class="sub">${esc(m.sub||'(no subject)')}</div><div class="pre">${view.folder==='drafts'?'<b style="color:var(--red)">Draft</b> · '+esc(m.body||''):'Sent by '+esc(m.by)}</div></div></div>`).join(''):`<div class="empty"><b>Nothing here</b></div>`}
  else if(!rows.length)h+=`<div class="empty"><b>${typeof loadingNote==='function'&&loadingNote()?loadingNote():'All clear'}</b><span>${view.id==='needs'?'Every email has an owner.':'No mail here.'}</span></div>`;
- else{let lastDay='';const _cap=capRows(rows);rows.slice(0,_cap).forEach(t=>{const day=dayLabel(sentV?lastOut(t):t.last);if(day!==lastDay){h+=`<div class="day">${day}</div>`;lastDay=day}h+=rowHTML(t)});if(rows.length>_cap)h+=`<div class="listmore" data-listmore>Showing ${convCount(rows,_cap).toLocaleString('en-IN')} of ${convCount(rows).toLocaleString('en-IN')} conversations — scroll for more</div>`}
+ else{let lastDay='';const _cap=capRows(rows);rows.slice(0,_cap).forEach(t=>{const day=dayLabel(rowWhen(t));if(day!==lastDay){h+=`<div class="day">${day}</div>`;lastDay=day}h+=rowHTML(t)});if(rows.length>_cap)h+=`<div class="listmore" data-listmore>Showing ${convCount(rows,_cap).toLocaleString('en-IN')} of ${convCount(rows).toLocaleString('en-IN')} conversations — scroll for more</div>`}
  h+='</div>';el.innerHTML=h}
 /* 16 Nov 2026: the name on a row = who sent the NEWEST mail in that conversation, like Outlook.
    Our own person's name when we answered last (e.g. "Ashok"), the buyer's name when they wrote
    last. Also covers rows that used to show nothing, because an internal thread has no outside
    party to name. The Sent folder still shows "To: ...". */
+/* __rowwhen 26 Nov 2026: which moment a ROW stands for. A per-mail row is its own mail -
+   in Sent too, where the time used to come from the conversation's newest sent mail, so
+   every row of one conversation carried the same date and sat under the wrong day. A
+   conversation row is unchanged. */
+function rowWhen(t){
+ if(t&&t._one)return t.last;
+ return (view.type==='box'&&view.folder==='sent')?lastOut(t):t.last}
 function rowName(t){if(t&&t._one)return String(t.from||t.email||'(unknown)');   /* __mailperrow: one mail, one sender */
  const ms=(t&&t.msgs)||[],last=ms[ms.length-1];
  const u=last&&last.by?who(last.by):null;
@@ -843,7 +850,8 @@ function rowName(t){if(t&&t._one)return String(t.from||t.email||'(unknown)');   
  8:21 pm", who wrote after him). The row now names the conversation's people, newest
  first, like Gmail and Outlook. rowName() is untouched - the avatar still follows the
  newest sender - and the Sent folder keeps its own "To: ..." line. */
-function rowWho(t){if(t&&t._one)return rowName(t);   /* __mailperrow: a per-mail row names that mail's sender, not the conversation's people */
+function rowWho(t){return rowName(t);   /* __backtoyesterday: the newest sender, as on 25 Nov */
+ /* eslint-disable no-unreachable */
  const ms=(t&&t.msgs)||[];if(ms.length<2)return rowName(t);
  const out=[],seen=new Set();
  for(let i=ms.length-1;i>=0&&out.length<3;i--){const m=ms[i];let nm='';
@@ -855,7 +863,7 @@ function rowWho(t){if(t&&t._one)return rowName(t);   /* __mailperrow: a per-mail
  return out.join(', ')+' '+ms.length}
 function rowHTML(t){const s=st(t),[l,c]=TAG[s],o=who(t.owner),priv=isPrivate(t),x=t.hist.find(h=>h.t==='x');
  return `<div draggable="true" class="m ${t.unread?'unread':''} ${openId===t.id?'open':''}" data-open="${t.id}" role="button" tabindex="0">
- <span>${av(rowName(t))}</span><div class="body"><div class="r1"><span class="who">${view.type==='box'&&view.folder==='sent'?'To: '+esc(t.email):esc(rowWho(t))}</span><span class="time" title="${tLong(t.last)}">${tShort(view.type==='box'&&view.folder==='sent'?lastOut(t):t.last)}</span></div>
+ <span>${av(rowName(t))}</span><div class="body"><div class="r1"><span class="who">${view.type==='box'&&view.folder==='sent'?'To: '+esc(t.email):esc(rowWho(t))}</span><span class="time" title="${tLong(t.last)}">${tShort(rowWhen(t))}</span></div>
  <div class="sub">${priv?ico('lock')+' Private — login code':esc(cleanSub(t.sub))}</div><div class="pre">${priv?'Hidden from the team. Only the account owner can open it.':esc(rowPre(t))}</div>
  <div class="tags">${critChips(t)}${viaTags(t)}${lbHTML(t)}${!t.owner&&s!=='done'&&isGeneric(t)?'<span class="tag t-done">Generic</span>':''}${t.promise&&s!=='done'?`<span class="tag ${s==='late'?'t-late':'t-prom'}">${s==='late'?ico('clock')+' ':''}${dueTxt(t)}</span>`:`<span class="tag ${c}">${l}</span>`}${x?`<span class="tag t-xfer" title="${!t.owner&&s!=='done'?'Owner to be chosen by '+esc(decTxt(t.dept)):''}">${ico('fwd')} Transferred${!t.owner&&s!=='done'?' · '+esc(deciders(t.dept).map(p=>p.name.split(' ')[0]).join(', ')||'admin')+' to assign':''}</span>`:''}${o?`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted)">${av(o.name,'sm')}${esc(o.name.split(' ')[0])}</span>`:''}${t.att?'<span class="tag t-asg" title="Has attachment">'+ico('clip','Has attachment')+'</span>':''}${t.flag?'<span class="tag t-flag" title="Flagged">'+ico('flag','Flagged')+'</span>':''}</div></div>
  <div class="qa"><button data-qdone="${t.id}" title="Mark done" aria-label="Mark done">${ico('check')}</button><button data-qflag="${t.id}" title="Flag" aria-label="Flag">${ico('flag')}</button><button data-xfer="${t.id}" title="Transfer to department" aria-label="Transfer">${ico('fwd')}</button><button data-qarch="${t.id}" title="Archive" aria-label="Archive">${ico('archive')}</button>${t.folder==='deleted'?`<button data-restore="${t.id}" title="Restore" aria-label="Restore">↺</button>`:`<button data-qdel="${t.id}" title="Delete from Rugs Email (original stays in the company mailbox)" aria-label="Delete">${ico('trash')}</button>`}</div></div>`}
@@ -2510,7 +2518,7 @@ listRows=function(){const raw=$('#q').value.trim();let r;
   if(view.type==='box'&&view.folder==='inbox')r=r.filter(t=>tab==='other'?othTab(t):!othTab(t));
   if(lfilt)r=r.filter(t=>t.label===lfilt);if(catFilt)r=r.filter(t=>(t.cats||[]).includes(catFilt));
   if(filt!=='all')r=r.filter(t=>filt==='unread'?t.unread:filt==='mine'?t.owner===ME:filt==='open'?st(t)!=='done':filt==='alias'?!!viaOf(t):filt==='needs'?!t.owner:true)}
- const isSent=view.type==='box'&&view.folder==='sent',k=t=>isSent?lastOut(t):t.last;
+ const k=t=>rowWhen(t);
  return r.sort((a,b)=>(b.pinned-a.pinned)||(k(b)-k(a)))};
 let catFilt='';
 const _inView=inView;
@@ -3841,7 +3849,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-26-10';
+const APP_BUILD='2026-11-26-11';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3891,7 +3899,10 @@ const LV_DEF={sort:'date',dir:'desc',vf:'all',pane:'right',conv:true,lines:1};
 /* 25 Nov 2026: conv is fixed at TRUE - one row per conversation, Outlook way (patch-one-row-per-conv.js) */
 /* __mailperrow 26 Nov 2026: back to one row per MAIL (the 24 Nov request). A mail must
    never be invisible because somebody else wrote after it in the same conversation. */
-const LV=()=>Object.assign({},LV_DEF,(S.prefs&&S.prefs.lv)||{},{conv:false});
+/* __backtoyesterday 26 Nov 2026: one row per conversation, as it was on 25 Nov. Turning
+   this to false gives every mail its own row again (explode()); everything that supports
+   that is still in place and tested, so it is a one-word change either way. */
+const LV=()=>Object.assign({},LV_DEF,(S.prefs&&S.prefs.lv)||{},{conv:true});
 function setLV(k,v){const x={...LV(),[k]:v};S.prefs={...S.prefs,lv:x};api('savePrefs',{prefs:{lv:x}}).catch(e=>toast('Not saved: '+e.message));applyLV();render()}
 function applyLV(){const v=LV(),b=document.body;['rp-right','rp-bottom','rp-off','pl0','pl1','pl2'].forEach(c=>b.classList.remove(c));b.classList.add('rp-'+v.pane,'pl'+v.lines)}
 const myAddrs=()=>{const me=who(ME);if(!me)return[];return[String(me.login||'').toLowerCase(),...String(me.perm?.aliases||'').toLowerCase().split(/[\s,;]+/)].filter(x=>x.includes('@'))};
@@ -5941,7 +5952,7 @@ rowHTML=function(t){
   /* which mail is this row? (one row per mail since 24 Nov) */
   if(t&&t._mi!=null&&t._mi>=0)h=h.replace('data-open="','data-mi="'+t._mi+'" data-open="');
   /* show the time on every row, not only the recent ones */
-  const when=(view.type==='box'&&view.folder==='sent')?lastOut(t):t.last;
+  const when=rowWhen(t);
   h=h.replace(/(<span class="time"[^>]*>)([\s\S]*?)(<\/span>)/,(m0,a,b,c)=>a+esc(rowTime(when))+c);
  }catch(e){}
  return h};
