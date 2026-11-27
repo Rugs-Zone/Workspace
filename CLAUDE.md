@@ -10,6 +10,7 @@
 - Speed rules (27 Nov 2026): read only the last 40 lines of `PROGRESS.md` unless asked; older history is in `docs/PROGRESS-ARCHIVE.md` (open it only when asked). Keep `PROGRESS.md` under 200 KB: when it grows past that, move the oldest days to the archive.
 - For each bug run ONLY that bug's own test plus `server/check-scripts.js`. Run the full test suites only when the user types "full test".
 - Do not re-read docs you already read in this chat. Reply in one line.
+- PROGRESS.md entries: ONE line, max 300 characters (what changed + build). Long explanations go in docs/ (e.g. docs/BUGS-TONIGHT.md), never in PROGRESS.md. Keep PROGRESS.md under 50 KB; when bigger, move the oldest lines to docs/PROGRESS-ARCHIVE.md.
 
 ## Who may give orders
 

@@ -327,3 +327,28 @@ Click through as a **member of Team Alpha** (Admin → Switch ID):
 8. As an **admin**: Admin → 📜 Mail rules → **R30a → Choose teams** — Alpha and Pulse On, the rest Off;
    pressing one asks first and counts the real conversations.
 9. `rzMemCap()` in the console — still under 250 MB (rule M1).
+
+## Bug 14 — classic-blue header / footer / left pane / reading pane (build 2026-11-27-17)
+
+UI only — no rule, no ownership, no count, no server change, and the centre mail list is untouched.
+`server/patch-ui-14.js`, `server/test-ui-14.mjs` (77 checks).
+
+1. Sign in and look at the top: the header is **blue**, the logo and every icon are white and readable.
+2. Every control you had before is still there, in the same order — folder toggle, logo, search, mailbox pill,
+   **Send / Receive**, A− 100% A+, full screen, bell, your name (and Switch ID if you are the admin).
+3. Hover each one — every single one shows a tooltip.
+4. Press **Send / Receive** — only the circular icon spins while it is checking, and stops when it is done.
+5. In the search box press **“All mailboxes ▾”** → pick **This folder** → search a word that exists in two
+   mailboxes: only this folder's mail is found. Put it back to **All mailboxes** → both are found again.
+   (All mailboxes is the default, which is what Rugs Email always did.)
+6. Left pane: light grey, the folder you are in is **light blue with a blue bar down its left edge**, and the
+   other rows do not shift sideways when you click between them.
+7. Open a mail: the **subject is first**, then **one toolbar** (Quick steps / Read aloud / Immersive now sit
+   under it, not above the subject), then each mail **in its own white card**. **Reply is blue.**
+8. Bottom bar: **Items · Unread** on the left, **● Connected · All folders are up to date · HH:MM** on the right.
+   Pull the network out for a moment — it says **Not connected** with a red dot, and goes back by itself.
+9. On a phone: A−/A+ and full screen are inside one **⋯** button — open it, make the text bigger, put it back,
+   and try Full screen. Nothing scrolls sideways.
+10. The middle list must look **exactly as it did yesterday** — same row spacing, same lines, same type.
+11. Dark mode (your name → theme): header dark blue, panes dark, every word readable.
+12. `rzMemCap()` in the console — still under 250 MB (rule M1).
