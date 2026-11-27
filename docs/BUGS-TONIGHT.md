@@ -273,3 +273,36 @@ Tested: **54 checks** (`server/test-mem-cap-m1.mjs`) — the guard cut verbatim 
 against a tab deliberately stuffed to 300 MB, plus the page itself in real headless Edge at laptop and phone
 width; and **90 + 36** on the rules registry and the rules screen. `server/patch-mem-cap-m1.js`,
 `server/patch-mail-rule-m1-row.js`.
+
+---
+
+## URGENT (the user, 27 Nov): "tab reaches 410 MB and freezes for staff"
+
+Fixed in build **2026-11-27-15**. Measured first, as a member in Team Alpha:
+the five budgeted stores were **1.2 MB** (9 MB with ten heavy mails open) and the list drew 452 rows
+into 20,000 DOM nodes — **neither was the cause, so no virtualisation and no lazy images were needed**.
+What nothing counted was **`S.threads` itself**: 15,000 conversations is **123 MB** of conversation and
+message objects, every search merged up to **400** more in and every scroll **500**, and nothing ever
+dropped any. And M1 could not see its own work — it read `performance.memory`, which Edge quantises,
+so it re-ran the emergency every four seconds: **trim → refetch → trim**, the freeze.
+
+### What to click
+
+- [ ] work a full morning in a big mailbox (Team Pulse / Team Alpha), then in the console: **`rzMemCap()`**
+      → `nowMB` must stay **under 250**, and `conversationsInMemory` shows "N (cap 2500)"
+- [ ] open 20 mails one after another, scroll the Inbox a long way down, run 3 searches — the tab must
+      **not** climb past 250 MB and must **not** go sluggish
+- [ ] scroll back up and down again: older conversations that were dropped **come back** (they are fetched
+      again), the list is in the right order and nothing is missing
+- [ ] the conversation **you are reading stays open and readable** the whole time
+- [ ] start writing a mail with attachments, leave it a few minutes while you work elsewhere — **the
+      attachments and the draft are still there**
+- [ ] `rzMemCap().lastCaps` shows what it dropped; `rzMem()` still shows the per-store detail
+- [ ] nothing changes about who sees which mail — folders, owners, unread and Done are untouched
+
+Tested: **25 checks** (`server/test-mem-410.mjs`) in real headless Edge on a 15,000-conversation mailbox,
+driving the brief's own run (20 mails + 4,000 conversations paged in by scrolling + 3 searches merging
+1,200 more): **202 MB at every step, 2,500 conversations held, the guard acts once and then stops**, the
+open conversation keeps its mail, an unsent mail is never dropped, and every drawn row still has its
+conversation. Plus M1 54, page memory 27 + 30, mail rules 90, folder counts 42, My rules 51, design-13 89,
+search bar 47, inbox-stays 20/20. `server/patch-mem-410.js`, `server/measure-mem-live.mjs`.
