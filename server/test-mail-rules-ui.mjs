@@ -80,7 +80,21 @@ ck("the rules screen is in the built app and draws", ready, "ok");
 
 /* ---------------------------------------------------------------- the page */
 console.log("\n=== the page ===");
-ck("every group has a box of its own", await page.evaluate(() => RGROUPS.filter(g => [...document.querySelectorAll('#rltest .box h3')].some(h => h.textContent.indexOf(g) === 0)).length), 8);
+ck("every group has a box of its own", await page.evaluate(() => RGROUPS.filter(g => [...document.querySelectorAll('#rltest .box h3')].some(h => h.textContent.indexOf(g) === 0)).length), await page.evaluate(() => RGROUPS.length));
+/* 27 Nov 2026: rule M1 (mandatory) - this tab stays under 250 MB */
+const m1ui = await page.evaluate(() => {
+  const row = [...document.querySelectorAll('#rltest .rlrow')].find(x => (x.querySelector('.rlid') || {}).textContent === 'M1');
+  if (!row) return { there: false };
+  return { there: true, badge: (row.querySelector('.rlbadge') || {}).textContent || '',
+    switches: row.querySelectorAll('[data-rtog]').length,
+    act: (row.querySelector('.rlact em') || {}).textContent || '',
+    says: (row.querySelector('.rlnow') || {}).textContent || '' };
+});
+ck("rule M1 is drawn on the real page", m1ui.there, true);
+ck("...with the Mandatory badge", m1ui.badge, "Mandatory");
+ck("...no switch an admin could press", m1ui.switches, 0);
+ck("...and it says so where the switch would be", m1ui.act, "cannot be switched off");
+ck("...and it names the ceiling", /250 MB/.test(m1ui.says), true);
 ck("one row per rule is drawn", await page.locator("#rltest .rlrow").count(), await page.evaluate(() => RULES.length));
 ck("8 working switches", await page.locator("#rltest .rsw[data-rtog]").count(), 8);
 ck("none of them is disabled for an admin", await page.locator("#rltest .rsw[data-rtog][disabled]").count(), 0);

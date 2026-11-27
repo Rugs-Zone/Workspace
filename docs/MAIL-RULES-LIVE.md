@@ -85,6 +85,14 @@ Three lists: **A** what is live, **B** what is agreed but deliberately NOT live 
 
 | R35 | **Personal mail rules — Settings → 📋 My rules** (27 Nov) — anybody (member, manager, admin) can make rules that change **only their own view**: conditions from address / from domain / subject contains / sent to / has attachment, actions move to one of **my** folders, set topic, flag, mark read; in order, first match wins per action, with a "stop here" tick, on/off, up/down and "Run now on existing mail" with a count first. A rule is a **filter, never a move** — nothing is written to the mail, so the conversation stays in the team Inbox for everyone else and in **Needs owner / My work** until it is owned or done, a manager’s rule has no team-wide power, and **Junk, Deleted and Drafts are never touched**. Stored per person in `rm_users.prefs.mr35` |
 
+### Speed and memory
+
+* **M1 — Rugs Email keeps this tab under 250 MB. MANDATORY: there is no switch, for an admin or anybody else.** Over **200 MB** the page clears its copies early; over **250 MB** it drops every stored mail, attachment, thumbnail and drawn row **except the conversation on screen and the last one you looked at**, and fetches them again when you next need them. It is the ceiling over the five budgets underneath it (loaded mail 35 MB, opened mail 15 MB, attachments 10 MB, thumbnails 4 MB, files being attached 15 MB, drawn rows up to 2,000), and it is measured on the **whole tab** (`performance.memory` in Chrome and Edge), so raising one of those in a later build still cannot take the tab past 250 MB.
+  * It touches **no mail**: not a folder, not an owner, not read/unread, nothing on the server. What it drops are copies the browser was holding to be quick — a stripped conversation keeps its row and its preview.
+  * Files on a mail somebody is **writing** are never thrown away while that mail is open.
+  * Read it on any screen: **Admin → 📜 Mail rules → Speed and memory**, which shows the live figure and how often the guard has had to act, or `rzMemCap()` in the browser console. The page's **Checks right now** panel flags a tab at 80% of the ceiling or over it.
+  * Why it is mandatory and not a setting: a tab that grew all day is what stopped mail on 26 November ("mail has been stopped on all places, pages are under waiting"), so the ceiling is not something anyone can raise by mistake.
+
 ### Things that hide mail which are not ownership rules
 
 `Hide mail from before Go live` (Admin → Old mail — **must stay unticked**), the **View ▾ → Show**
@@ -141,6 +149,6 @@ is DONE** — see section A+ above.
 
 ## C · Not rules, but new this evening
 
-* **Memory is capped.** Loaded mail on the conversations 35 MB, cache of opened mail 15 MB, attachments 10 MB, thumbnails 4 MB, compose attachments 15 MB, and the row-HTML cache follows the rows really drawn (600 to 2,000 — one row per mail draws about 700). Oldest first, never the conversation on screen. Type `rzMem()` in the browser console to see what the page is holding.
+* **Memory is capped — and since 27 November the 250 MB ceiling over it is rule M1 in list A above, mandatory and with no switch.** Loaded mail on the conversations 35 MB, cache of opened mail 15 MB, attachments 10 MB, thumbnails 4 MB, compose attachments 15 MB, and the row-HTML cache follows the rows really drawn (600 to 2,000 — one row per mail draws about 700). Oldest first, never the conversation on screen. Type `rzMem()` in the browser console to see what the page is holding.
 * **Maintenance window.** Rugs Email closes for everyone at **18:52** today and opens again **by itself at 09:30 tomorrow**. You keep access — by your own id, through **Switch ID as anybody**, or with `localStorage.setItem('rugs-maint-ok','1')` in the console if anything ever locks you out.
 * The notice board carries it as a pinned bulletin for every Workspace user; it removes itself tomorrow at 09:35.

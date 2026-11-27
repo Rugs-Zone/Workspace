@@ -3889,7 +3889,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-27-13';
+const APP_BUILD='2026-11-27-14';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -7217,10 +7217,43 @@ const RULES = [
   {
     id: 'C4', g: 'Built but not switched on', k: 'off', n: '"Leave this conversation" leaves a frozen copy at the date you left',
     now: () => 'Agreed, nothing written yet.', who: 'Everybody.', brk: ['Nothing to switch - it does not exist.']
+  },
+  /* ------------------------------------------------- speed and memory ---- */
+  /* __m1row 27 Nov 2026, asked for in these words: "make mandatory rule in setting that
+     rugs email keep tab under 250 mb". k:'req' = MANDATORY - no switch, here or anywhere. */
+  {
+    id: 'M1', g: 'Speed and memory', k: 'req', n: 'Rugs Email keeps this tab under 250 MB',
+    now: () => {
+      const m = rMemNow();
+      return 'The ceiling is 250 MB and it cannot be switched off. This tab is holding '
+        + (m.mb === null ? 'an amount this browser does not report' : m.mb + ' MB (' + m.pc + '% of 250 MB)')
+        + '. Over 200 MB the page clears its copies early; over 250 MB it drops every stored mail, '
+        + 'attachment, thumbnail and drawn row except the conversation on screen and the last one you '
+        + 'looked at, and fetches them again when you next need them.'
+        + (m.hits ? ' It has had to do that ' + rPlural(m.hits, 'time') + ' since this page was opened.' : '');
+    },
+    who: 'Everybody, on every PC and phone. Nothing on the server and no mail is touched - only the copies this browser is holding.',
+    brk: [
+      'There is deliberately no switch. A tab that grows all day is what stopped mail on 26 November ("mail has been stopped on all places, pages are under waiting"), so the ceiling is not something an admin can raise by mistake.',
+      'What it drops are copies, never mail: a stripped conversation keeps its row and preview and is fetched again when it is opened. Nothing is deleted on the server, no folder, owner or read/unread state is changed, and files on a mail being written are never thrown away.',
+      'It is the ceiling over the five budgets underneath it - loaded mail 35 MB, opened mail 15 MB, attachments 10 MB, thumbnails 4 MB, files being attached 15 MB, drawn rows up to 2,000. Raising one of those in a later build cannot take the tab past 250 MB, because this rule is measured on the whole tab.',
+      'Check it on any screen: paste rzMemCap() into the browser console, or read the number in this row.'
+    ]
   }
 ];
+/* M1: the live number, read from the guard that enforces it. If that block is not in the
+   build, say so plainly rather than print a reassuring zero. */
+function rMemNow() {
+  try {
+    const f = window.rzMemCap;
+    if (typeof f !== 'function') return { mb: null, pc: null, hits: 0, live: false };
+    const r = f() || {};
+    const mb = (typeof r.nowMB === 'number') ? r.nowMB : null;
+    return { mb: mb, pc: mb === null ? null : Math.round(mb / 250 * 100), hits: r.timesItHadToAct || 0, live: true };
+  } catch (e) { return { mb: null, pc: null, hits: 0, live: false }; }
+}
 function rById(id) { for (let i = 0; i < RULES.length; i++) if (RULES[i].id === id) return RULES[i]; return null; }
-const RGROUPS = ['Inbox', 'Sent', 'Needs owner', 'My work', 'Ownership', 'Roles', 'Things that hide mail', 'Built but not switched on'];
+const RGROUPS = ['Inbox', 'Sent', 'Needs owner', 'My work', 'Ownership', 'Roles', 'Things that hide mail', 'Speed and memory', 'Built but not switched on'];
 
 /* ======================================================= CONFLICT ENGINE === */
 /* rChk(id,next) -> {hard:[],warn:[],eff:[]}
@@ -7376,6 +7409,15 @@ function rHealth() {
     const b = (typeof listRows === 'function') ? 0 : 0;
     if (a === 0 && rInbox().length > 0) out.push({ bad: true, t: 'The Inbox counts say zero while the Inbox has mail', d: 'Something is filtering the counts but not the list, or the other way round. Tell the terminal: "the counts and the list disagree".' });
   } catch (e) { }
+  /* __m1row M1 (mandatory): this tab stays under 250 MB */
+  try {
+    const m = rMemNow();
+    if (!m.live) out.push({ bad: true, t: 'Rule M1 cannot be checked on this page', d: 'The memory guard is not in this build, so nothing is holding the tab under 250 MB. Tell the terminal: "M1 is not running".' });
+    else if (m.mb === null) out.push({ bad: false, t: 'Rule M1 is running, but this browser does not report the tab\'s memory', d: 'The ceiling is still enforced from what Rugs Email is holding. Chrome and Edge report the real figure.' });
+    else if (m.mb > 250) out.push({ bad: true, t: 'This tab is over the 250 MB ceiling (' + m.mb + ' MB)', d: 'The guard is clearing copies now. If it stays over, reload the page and tell the terminal: "M1 is being breached".' });
+    else if (m.pc >= 80) out.push({ bad: true, t: 'This tab is at ' + m.pc + '% of the 250 MB ceiling (' + m.mb + ' MB)', d: 'The page is clearing its copies early. Nothing is lost - a conversation it drops is fetched again when you open it.' });
+    else out.push({ bad: false, t: 'Rule M1 is holding: ' + m.mb + ' MB of 250 MB (' + m.pc + '%)', d: 'Mandatory, with no switch. ' + (m.hits ? 'It has had to clear copies ' + rPlural(m.hits, 'time') + ' since this page was opened.' : 'It has not had to clear anything since this page was opened.') });
+  } catch (e) { }
   if (!rulesSaveable()) out.push({ bad: false, t: 'The office server has not picked up the Mail rules setting yet', d: 'Until it does, a switch on this page cannot be saved for everybody. It updates itself within ten minutes of a push; look at Admin -> 🖥 Server for the version it is running.' });
   return out;
 }
@@ -7409,6 +7451,7 @@ function rulesCSS() {
     '.rlb-fx{background:rgba(60,110,200,.14);color:#2b4f93}',
     '.rlb-srv{background:rgba(140,90,200,.14);color:#5a3b8c}',
     '.rlb-nl{background:rgba(255,160,0,.16);color:#8a5a00}',
+    '.rlb-req{background:rgba(200,40,40,.13);color:#9b2226}',
     '.rlact{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end}',
     '.rsw{border:1px solid rgba(128,128,128,.4);background:transparent;border-radius:99px;padding:4px 12px;font-size:12px;font-weight:650;cursor:pointer;min-width:74px}',
     '.rsw[aria-pressed="true"]{background:#148c5a;border-color:#148c5a;color:#fff}',
@@ -7439,6 +7482,7 @@ function rBadge(r) {
   if (r.k === 'fx') return '<span class="rlbadge rlb-fx">Built in</span>';
   if (r.k === 'srv') return '<span class="rlbadge rlb-srv">Server</span>';
   if (r.k === 'off') return '<span class="rlbadge rlb-nl">Not live</span>';
+  if (r.k === 'req') return '<span class="rlbadge rlb-req">Mandatory</span>';
   return '<span class="rlbadge rlb-fx">Setting</span>';
 }
 
@@ -7451,6 +7495,7 @@ function rRowHTML(r, canEdit) {
   } else if (r.k === 'fx') { act = '<em style="font-size:11.5px;opacity:.6">no switch</em>'; }
   else if (r.k === 'srv') { act = '<em style="font-size:11.5px;opacity:.6">office server</em>'; }
   else if (r.k === 'off') { act = '<em style="font-size:11.5px;opacity:.6">not in this build</em>'; }
+  else if (r.k === 'req') { act = '<em style="font-size:11.5px;opacity:.6">cannot be switched off</em>'; }
   else if (r.id === 'HIDEOLD') { act = canEdit ? '<button class="btn" data-rold>Open 🗂 Old mail</button>' : ''; }
   else if (r.id === 'R32') { act = canEdit ? '<button class="btn" data-rmgr>Choose teams</button>' : ''; }
 
@@ -9447,3 +9492,122 @@ function emptyBox(){
  put();setTimeout(put,2000);setTimeout(put,6000);
 })();
 /* __design13:end */</script>
+<script>/* __memcap:start  27 Nov 2026 - RULE M1 (mandatory): this tab stays under 250 MB.
+   server/patch-mem-cap-m1.js. There is no setting that switches this off. */
+(function(){
+ /* the ceiling, in megabytes. Mandatory: read from no setting and from no URL. */
+ const MEM_CAP_MB=250;
+ const CAP=MEM_CAP_MB*1024*1024;
+ const WARN=Math.round(CAP*0.8);        /* 200 MB - sweep early, before it is a problem */
+ const EVERY=4000;                      /* do not measure more often than this (ms) */
+ let AT=0, HITS=[], SWEPT=0;
+
+ /* What the TAB is holding. performance.memory is Chrome/Edge only, which is what the
+    office PCs run; where it is missing we fall back to what Rugs Email itself holds. */
+ function held(){
+  try{
+   const m=window.performance&&window.performance.memory;
+   if(m&&m.usedJSHeapSize>0)return {b:m.usedJSHeapSize,how:"tab"};
+  }catch(e){}
+  let b=0;
+  try{((window.S&&S.threads)||[]).forEach(function(t){b+=loadedBytes(t)})}catch(e){}
+  try{Object.keys(RAWC).forEach(function(k){var v=RAWC[k];b+=((v&&v.raw)||"").length+((v&&v.body)||"").length})}catch(e){}
+  try{Object.keys(ATT_SZ).forEach(function(k){b+=ATT_SZ[k]||0})}catch(e){}
+  try{Object.keys(ATHUMB).forEach(function(k){b+=String(ATHUMB[k]||"").length})}catch(e){}
+  try{RHC.forEach(function(v){b+=String(v||"").length})}catch(e){}
+  try{PRE_B64.forEach(function(v){b+=(v&&v.__len)||0})}catch(e){}
+  return {b:b,how:"stores"};
+ }
+ window.__memHeld=held;
+
+ /* is somebody writing a mail right now? then the files they attached are not ours to drop */
+ function composing(){
+  try{return !!document.querySelector(".dlg .editor, .inline textarea")}catch(e){return false}
+ }
+
+ /* The emergency trim. Nothing here is mail: every one of these is a COPY the page kept
+    to be quick, and dropping it only means fetching it again when it is next needed. */
+ function emergency(){
+  var freed=0;
+  var keep={};
+  try{if(typeof openId!=="undefined"&&openId)keep[openId]=1}catch(e){}
+  try{
+   var last=null,lat=0;
+   ((window.S&&S.threads)||[]).forEach(function(t){var a=t&&t._seenAt||0;if(a>lat){lat=a;last=t}});
+   if(last)keep[last.id]=1;
+  }catch(e){}
+  try{
+   ((window.S&&S.threads)||[]).forEach(function(t){
+    if(!t||keep[t.id])return;
+    if(typeof stripLoaded==="function")freed+=stripLoaded(t)||0;
+   });
+  }catch(e){}
+  /* the opened-mail cache, minus the conversation on screen */
+  try{
+   var pin=(typeof memPinned==="function")?memPinned():{};
+   Object.keys(RAWC).forEach(function(k){
+    if(pin[k])return;
+    var v=RAWC[k];freed+=((v&&v.raw)||"").length+((v&&v.body)||"").length;delete RAWC[k];
+   });
+  }catch(e){}
+  try{Object.keys(ATTB).forEach(function(k){freed+=ATT_SZ[k]||0;delete ATTB[k];delete ATT_SZ[k]})}catch(e){}
+  try{Object.keys(ATHUMB).forEach(function(k){freed+=String(ATHUMB[k]||"").length;delete ATHUMB[k]})}catch(e){}
+  try{RHC.forEach(function(v){freed+=String(v||"").length});RHC.clear()}catch(e){}
+  if(!composing()){try{PRE_B64.forEach(function(v){freed+=(v&&v.__len)||0});PRE_B64.clear()}catch(e){}}
+  return freed;
+ }
+
+ /* The guard itself. Mandatory means it is not asked for permission and cannot be
+    skipped: it runs after a draw and on its own timer for as long as the tab is open. */
+ function memGuard(force){
+  var now=Date.now();
+  if(!force&&now-AT<EVERY)return null;
+  AT=now;
+  var h=held(),act="";
+  try{
+   if(h.b>CAP){
+    act="emergency";
+    if(typeof memSweep==="function")memSweep(true);
+    var f=emergency();
+    SWEPT++;
+    HITS.push({at:now,was:Math.round(h.b/1048576),freed:Math.round(f/1048576),how:h.how});
+    if(HITS.length>20)HITS.shift();
+    h=held();
+   }else if(h.b>WARN){
+    act="sweep";
+    if(typeof memSweep==="function")memSweep(true);
+    h=held();
+   }
+  }catch(e){}
+  return {mb:Math.round(h.b/104857.6)/10,act:act,how:h.how};
+ }
+ window.__memGuard=memGuard;
+
+ /* after every draw, and on a timer so a page left open all day is still held down */
+ try{
+  var _rdCap=window.render;
+  if(typeof _rdCap==="function"){
+   window.render=function(){var r=_rdCap.apply(this,arguments);try{memGuard()}catch(e){}return r};
+  }
+ }catch(e){}
+ try{setInterval(function(){try{memGuard(true)}catch(e){}},20000)}catch(e){}
+
+ /* so the rule can be read off a real screen: rzMemCap() in the browser console,
+    and the same numbers on Admin -> Mail rules, rule M1. */
+ window.MEM_CAP_MB=MEM_CAP_MB;
+ window.rzMemCap=function(){
+  var h=held();
+  var mb=Math.round(h.b/104857.6)/10;
+  return {
+   rule:"M1 (mandatory) - this tab stays under "+MEM_CAP_MB+" MB",
+   capMB:MEM_CAP_MB,
+   nowMB:mb,
+   percent:Math.round(mb/MEM_CAP_MB*100)+"%",
+   measured:h.how==="tab"?"the tab's own JavaScript memory":"what Rugs Email is holding (this browser does not report the tab)",
+   timesItHadToAct:SWEPT,
+   lastActions:HITS.slice(-5),
+   switchable:false
+  };
+ };
+})();
+/* __memcap:end */</script>

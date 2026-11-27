@@ -241,3 +241,35 @@ Build **2026-11-27-13**. `server/patch-design-13.js`, `server/test-design-13.mjs
       "Nothing sent from here yet", "Deleted is empty", "Nothing on your plate",
       "Nothing is late", "“Claims” is empty - drag a mail onto this folder…",
       "Nothing unread", and a search with no hits names the words you searched for
+
+---
+
+## M1 (the user, 27 Nov): "make mandatory rule in setting that rugs email keep tab under 250 mb"
+
+Live in build **2026-11-27-14**. It is a **rule**, not an option: **Admin → 📜 Mail rules → Speed and
+memory → M1**, badge **Mandatory**, and where every other rule has an On/Off button this one says
+**"cannot be switched off"** — for an admin too. Everybody can read it from the menu under their own name.
+
+### What to click
+
+- [ ] **Admin → 📜 Mail rules**: a new **Speed and memory** section, one row, **M1**, red **Mandatory** badge,
+      **no On/Off button**, and the row shows the live figure — e.g. "This tab is holding 62.4 MB (25% of 250 MB)"
+- [ ] **"What breaks if this changes?"** on that row explains why there is no switch, and that what it drops
+      are copies and never mail
+- [ ] **Checks right now** (top of the same page) has a line for M1: "Rule M1 is holding: N MB of 250 MB"
+- [ ] the menu under your own name → **📜 Mail rules**: the same row, same badge, still no switch
+- [ ] **↺ Put every rule back to how it shipped** does not touch M1 (it is not a switch)
+- [ ] in the browser console: **`rzMemCap()`** → capMB 250, nowMB the live figure, `switchable: false`,
+      and `timesItHadToAct` counting any time it had to clear copies
+- [ ] work heavily for a while (open several big claim trails, download a few attachments, write a mail with
+      files) and watch `rzMemCap().nowMB` — it must never settle above 250; `rzMem()` still shows the
+      per-store detail
+- [ ] after it has had to act: the conversation **on screen is still open and readable**, the list is unchanged,
+      and an older conversation reopens normally (it is fetched again)
+- [ ] nothing is lost: no folder, owner, read/unread or Done state changes, and a mail being **written** keeps
+      its attachments
+
+Tested: **54 checks** (`server/test-mem-cap-m1.mjs`) — the guard cut verbatim out of the shipped app and run
+against a tab deliberately stuffed to 300 MB, plus the page itself in real headless Edge at laptop and phone
+width; and **90 + 36** on the rules registry and the rules screen. `server/patch-mem-cap-m1.js`,
+`server/patch-mail-rule-m1-row.js`.

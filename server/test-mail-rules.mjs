@@ -51,6 +51,10 @@ let inView=()=>true;
 const msgMine=(m,t)=>!!(m&&m.by===ME);
 const APP_BUILD='test';
 const S={settings:{},threads:[],lvOf:{},prefs:{}};
+/* 27 Nov: rule M1 reads the memory guard (server/patch-mem-cap-m1.js). The harness gives it
+   the same shape the real one returns, and MEMCAP lets a test push the tab over the ceiling. */
+let MEMCAP={nowMB:62.4,timesItHadToAct:0};
+const window={rzMemCap:()=>Object.assign({capMB:250,switchable:false},MEMCAP)};
 let MGR_FIRST=[];
 function mgrFirstBoxes(){const v=S.settings&&S.settings.mgr_first_boxes;return Array.isArray(v)?v.map(x=>String(x).toLowerCase()):MGR_FIRST}
 function mgrFirst(d){const x=dept(d);return !!x&&mgrFirstBoxes().indexOf(String(mailOf(x)||'').toLowerCase())>=0}
@@ -77,6 +81,7 @@ const A = new Function(env + `; return {
   setME:v=>{ME=v}, setView:v=>{view=v}, setFilt:v=>{filt=v},
   setThreads:v=>{S.threads=v}, setMgr:v=>{S.settings.mgr_first_boxes=v},
   setOld:v=>{OLDMAIL=Object.assign(OLDMAIL,v)}, setLv:v=>{S.lvOf=v},
+  setMem:v=>{MEMCAP=v}, rMemNow,
   dropManager:()=>{PEOPLE=PEOPLE.filter(p=>p.id!=='jagjit')},
   addManager:()=>{PEOPLE.push({id:'jagjit',name:'Jagjit Singh',login:'merchandiser2@rugscreation.com',dept:'ta',role:'Manager',active:true,perm:{}})}
 }`)();
@@ -103,7 +108,7 @@ A.setThreads(THREADS);
 console.log("=== A1 · the registry is complete and honest ===");
 ck("every rule has an id, a group, a name, a 'what it does now' and a 'who'",
   A.RULES.every(r => r.id && r.g && r.n && r.now && r.who && Array.isArray(r.brk) && r.brk.length), true);
-ck("every rule's kind is one we draw", A.RULES.every(r => ['sw', 'fx', 'srv', 'off', 'set'].includes(r.k)), true);
+ck("every rule's kind is one we draw", A.RULES.every(r => ['sw', 'fx', 'srv', 'off', 'set', 'req'].includes(r.k)), true);
 ck("every rule's group is in the group list", A.RULES.every(r => A.RGROUPS.includes(r.g)), true);
 ck("no two rules share an id", new Set(A.RULES.map(r => r.id)).size === A.RULES.length, true);
 ck("every group has at least one rule", A.RGROUPS.every(g => A.RULES.some(r => r.g === g)), true);
@@ -191,10 +196,33 @@ A.addManager();
 c = A.rChkMgr('teamalpha@rugscreation.com', false);
 has("manager-first off: says the automatic rules start again", c.eff, "handing it out again");
 
+/* 27 Nov 2026 - rule M1 (mandatory): this tab stays under 250 MB. It is a rule on this page
+   with no switch at all, and the page must read the real figure rather than promise one. */
+console.log("\n=== A4b · M1 is mandatory, and has no switch ===");
+const m1 = A.rById("M1");
+ck("M1 is in the registry", !!m1, true);
+ck("...as a mandatory rule, not a switch", m1 && m1.k, "req");
+ck("...so it is not one of the switchable defaults", "M1" in A.RDEF, false);
+ck("...and 'put every rule back' cannot reach it", A.RULES.filter(r => r.id === "M1" && r.k === "sw").length, 0);
+ck("...and it lives in its own section", m1 && m1.g, "Speed and memory");
+A.setMem({ nowMB: 62.4, timesItHadToAct: 0 });
+has("it shows the live figure, not a promise", [m1.now()], "62.4 MB (25% of 250 MB)");
+A.setMem({ nowMB: 240, timesItHadToAct: 3 });
+has("a tab near the ceiling says so", [m1.now()], "240 MB (96% of 250 MB)");
+has("...and says how often it has had to clear copies", [m1.now()], "3 times");
+ck("the figure comes straight from the guard", A.rMemNow().mb, 240);
+
 console.log("\n=== A5 · the checks at the top of the page ===");
+A.setMem({ nowMB: 62.4, timesItHadToAct: 0 });
 A.clear(); A.setMgr([]); A.setLv({}); A.setOld({ hide_before_live: false, live_at: null });
 let hz = A.rHealth();
 ck("a healthy app flags nothing that hides mail", hz.filter(x => x.bad).length, 0);
+has("it says in plain words that M1 is holding", hz.map(x => x.t), "Rule M1 is holding: 62.4 MB of 250 MB");
+A.setMem({ nowMB: 268, timesItHadToAct: 2 });
+has("a tab over the ceiling is flagged", A.rHealth().filter(x => x.bad).map(x => x.t), "over the 250 MB ceiling (268 MB)");
+A.setMem({ nowMB: 210, timesItHadToAct: 1 });
+has("...and so is one at 80% of it", A.rHealth().filter(x => x.bad).map(x => x.t), "84% of the 250 MB ceiling");
+A.setMem({ nowMB: 62.4, timesItHadToAct: 0 });
 A.setOld({ hide_before_live: true, live_at: Date.now() });
 has("it flags 'Hide mail from before Go live'", A.rHealth().map(x => x.t), "Go live");
 A.setOld({ hide_before_live: false, live_at: null });

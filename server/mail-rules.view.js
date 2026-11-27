@@ -270,14 +270,14 @@ const RULES = [
         const on = DEPTS.filter(d => typeof r30aTeam === 'function' && r30aTeam(d.id));
         return on.length
           ? 'ON for ' + on.map(d => d.name).join(', ') + ' - in those teams a conversation whose mails are ALL older than go-live is visible to every member whatever its owner, in the Inbox, in Sent, in Search and through "Show in Inbox". It is never work. Every other team follows R3.'
-          : 'OFF everywhere - old mail follows R3 like any other conversation, so a colleague's old conversation is hidden from you.';
+          : 'OFF everywhere - old mail follows R3 like any other conversation, so a colleague\'s old conversation is hidden from you.';
       } catch (e) { return 'Per team.'; }
     },
     who: 'Team members. The Manager, Lead, CRM and Admin see everything anyway.',
     brk: [
-      'It is a hole in R3 on purpose: in a team where it is ON, every member can read every old conversation, including a colleague's. That is wanted for history nobody is working any more - it is not wanted for live mail, which is why it stops at the team's go-live date.',
+      'It is a hole in R3 on purpose: in a team where it is ON, every member can read every old conversation, including a colleague\'s. That is wanted for history nobody is working any more - it is not wanted for live mail, which is why it stops at the team\'s go-live date.',
       'It never makes old mail work: it stays out of Needs owner and out of My work, it has no Done button and its owner never changes.',
-      'Switch it on for a team and that team's whole history becomes readable by everyone in it. Switch it off and members go back to seeing only their own old conversations.'
+      'Switch it on for a team and that team\'s whole history becomes readable by everyone in it. Switch it off and members go back to seeing only their own old conversations.'
     ]
   },
   {
@@ -382,10 +382,45 @@ const RULES = [
   {
     id: 'C4', g: 'Built but not switched on', k: 'off', n: '"Leave this conversation" leaves a frozen copy at the date you left',
     now: () => 'Agreed, nothing written yet.', who: 'Everybody.', brk: ['Nothing to switch - it does not exist.']
+  },
+  /* ------------------------------------------------- speed and memory ---- */
+  /* 27 Nov 2026, asked for in these words: "make mandatory rule in setting that rugs email
+     keep tab under 250 MB". k:'req' = MANDATORY - no switch, here or anywhere else. */
+  {
+    id: 'M1', g: 'Speed and memory', k: 'req', n: 'Rugs Email keeps this tab under 250 MB',
+    now: () => {
+      const m = rMemNow();
+      return 'The ceiling is 250 MB and it cannot be switched off. This tab is holding '
+        + (m.mb === null ? 'an amount this browser does not report' : m.mb + ' MB (' + m.pc + '% of 250 MB)')
+        + '. Over 200 MB the page clears its copies early; over 250 MB it drops every stored mail, '
+        + 'attachment, thumbnail and drawn row except the conversation on screen and the last one you '
+        + 'looked at, and fetches them again when you next need them.'
+        + (m.hits ? ' It has had to do that ' + rPlural(m.hits, 'time') + ' since this page was opened.' : '');
+    },
+    who: 'Everybody, on every PC and phone. Nothing on the server and no mail is touched - only the copies this browser is holding.',
+    brk: [
+      'There is deliberately no switch. A tab that grows all day is what stopped mail on 26 November ("mail has been stopped on all places, pages are under waiting"), so the ceiling is not something an admin can raise by mistake.',
+      'What it drops are copies, never mail: a stripped conversation keeps its row and preview and is fetched again when it is opened. Nothing is deleted on the server, no folder, owner or read/unread state is changed, and files on a mail being written are never thrown away.',
+      'It is the ceiling over the five budgets underneath it - loaded mail 35 MB, opened mail 15 MB, attachments 10 MB, thumbnails 4 MB, files being attached 15 MB, drawn rows up to 2,000. Raising one of those in a future build cannot take the tab past 250 MB, because this rule is measured on the whole tab.',
+      'Check it on any screen: paste rzMemCap() into the browser console, or read the number in this row.'
+    ]
   }
 ];
 function rById(id) { for (let i = 0; i < RULES.length; i++) if (RULES[i].id === id) return RULES[i]; return null; }
-const RGROUPS = ['Inbox', 'Sent', 'Needs owner', 'My work', 'Ownership', 'Roles', 'Things that hide mail', 'Built but not switched on'];
+const RGROUPS = ['Inbox', 'Sent', 'Needs owner', 'My work', 'Ownership', 'Roles', 'Things that hide mail', 'Speed and memory', 'Built but not switched on'];
+
+/* ----------------------------------------------------- M1: the live number -- */
+/* read from the guard the app runs (server/patch-mem-cap-m1.js). If that block is not in
+   the build, say so plainly rather than print a reassuring zero. */
+function rMemNow() {
+  try {
+    const f = window.rzMemCap;
+    if (typeof f !== 'function') return { mb: null, pc: null, hits: 0, live: false };
+    const r = f() || {};
+    const mb = (typeof r.nowMB === 'number') ? r.nowMB : null;
+    return { mb: mb, pc: mb === null ? null : Math.round(mb / 250 * 100), hits: r.timesItHadToAct || 0, live: true, how: r.measured || '' };
+  } catch (e) { return { mb: null, pc: null, hits: 0, live: false }; }
+}
 
 /* ======================================================= CONFLICT ENGINE === */
 /* rChk(id,next) -> {hard:[],warn:[],eff:[]}
@@ -541,6 +576,15 @@ function rHealth() {
     const b = (typeof listRows === 'function') ? 0 : 0;
     if (a === 0 && rInbox().length > 0) out.push({ bad: true, t: 'The Inbox counts say zero while the Inbox has mail', d: 'Something is filtering the counts but not the list, or the other way round. Tell the terminal: "the counts and the list disagree".' });
   } catch (e) { }
+  /* M1 (mandatory): this tab stays under 250 MB */
+  try {
+    const m = rMemNow();
+    if (!m.live) out.push({ bad: true, t: 'Rule M1 cannot be checked on this page', d: 'The memory guard is not in this build, so nothing is holding the tab under 250 MB. Tell the terminal: "M1 is not running".' });
+    else if (m.mb === null) out.push({ bad: false, t: 'Rule M1 is running, but this browser does not report the tab\'s memory', d: 'The ceiling is still enforced from what Rugs Email is holding. Chrome and Edge report the real figure.' });
+    else if (m.mb > 250) out.push({ bad: true, t: 'This tab is over the 250 MB ceiling (' + m.mb + ' MB)', d: 'The guard is clearing copies now. If it stays over, reload the page and tell the terminal: "M1 is being breached".' });
+    else if (m.pc >= 80) out.push({ bad: true, t: 'This tab is at ' + m.pc + '% of the 250 MB ceiling (' + m.mb + ' MB)', d: 'The page is clearing its copies early. Nothing is lost - a conversation it drops is fetched again when you open it.' });
+    else out.push({ bad: false, t: 'Rule M1 is holding: ' + m.mb + ' MB of 250 MB (' + m.pc + '%)', d: 'Mandatory, with no switch. ' + (m.hits ? 'It has had to clear copies ' + rPlural(m.hits, 'time') + ' since this page was opened.' : 'It has not had to clear anything since this page was opened.') });
+  } catch (e) { }
   if (!rulesSaveable()) out.push({ bad: false, t: 'The office server has not picked up the Mail rules setting yet', d: 'Until it does, a switch on this page cannot be saved for everybody. It updates itself within ten minutes of a push; look at Admin -> 🖥 Server for the version it is running.' });
   return out;
 }
@@ -574,6 +618,7 @@ function rulesCSS() {
     '.rlb-fx{background:rgba(60,110,200,.14);color:#2b4f93}',
     '.rlb-srv{background:rgba(140,90,200,.14);color:#5a3b8c}',
     '.rlb-nl{background:rgba(255,160,0,.16);color:#8a5a00}',
+    '.rlb-req{background:rgba(200,40,40,.13);color:#9b2226}',
     '.rlact{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;align-items:flex-end}',
     '.rsw{border:1px solid rgba(128,128,128,.4);background:transparent;border-radius:99px;padding:4px 12px;font-size:12px;font-weight:650;cursor:pointer;min-width:74px}',
     '.rsw[aria-pressed="true"]{background:#148c5a;border-color:#148c5a;color:#fff}',
@@ -604,6 +649,7 @@ function rBadge(r) {
   if (r.k === 'fx') return '<span class="rlbadge rlb-fx">Built in</span>';
   if (r.k === 'srv') return '<span class="rlbadge rlb-srv">Server</span>';
   if (r.k === 'off') return '<span class="rlbadge rlb-nl">Not live</span>';
+  if (r.k === 'req') return '<span class="rlbadge rlb-req">Mandatory</span>';
   return '<span class="rlbadge rlb-fx">Setting</span>';
 }
 
@@ -616,6 +662,7 @@ function rRowHTML(r, canEdit) {
   } else if (r.k === 'fx') { act = '<em style="font-size:11.5px;opacity:.6">no switch</em>'; }
   else if (r.k === 'srv') { act = '<em style="font-size:11.5px;opacity:.6">office server</em>'; }
   else if (r.k === 'off') { act = '<em style="font-size:11.5px;opacity:.6">not in this build</em>'; }
+  else if (r.k === 'req') { act = '<em style="font-size:11.5px;opacity:.6">cannot be switched off</em>'; }
   else if (r.id === 'HIDEOLD') { act = canEdit ? '<button class="btn" data-rold>Open 🗂 Old mail</button>' : ''; }
   else if (r.id === 'R32') { act = canEdit ? '<button class="btn" data-rmgr>Choose teams</button>' : ''; }
   else if (r.id === 'R30a') { act = canEdit ? '<button class="btn" data-r30a>Choose teams</button>' : ''; }   /* __r30arule */
