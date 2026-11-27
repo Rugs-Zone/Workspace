@@ -973,7 +973,7 @@ function _renderRead(){const el=$('#read');if(!el)return;const t=S.threads.find(
  ${!priv&&t.label&&s!=='done'?(()=>{const L=LB(t.label),tgt=null;return `<div class="aihint"><span>✦</span><b>${esc(L.hint)}<small>${t.ai?`AI tagged this conversation as <span style="color:color-mix(in srgb,${L.c} 62%,var(--fg));font-weight:700">${L.name}</span> · ${t.conf}% sure — it only describes the topic, it doesn't move the mail`:`Topic set to ${L.name} by the team`}</small></b>${tgt?`<button class="btn vio" data-xferto="${t.id}" data-dto="${tgt.id}">↪ Send to ${esc(tgt.name)}</button>`:''}</div>`})():''}
  ${priv?'<p style="color:var(--muted);margin:0">This email holds a login code. Rugs Email keeps it hidden from the team and shows it only to the account owner.</p>':`
  ${t.promise&&s!=='done'?`<div class="promise ${s==='late'?'late':''}"><span>${s==='late'?ico('clock'):ico('promise')}</span><b>${esc(t.promise)}<br><span class="sub">${esc(who(t.owner)?.name||'')} · ${dueTxt(t)}</span></b><button class="btn" data-promise="${t.id}">Edit</button></div>`:s!=='done'?`<button class="btn" style="width:fit-content" data-promise="${t.id}">${ico('promise')} Add a promise + due date</button>`:''}
- ${t.msgs.map((m,mi)=>({m,mi})).reverse().map(({m,mi})=>`<article class="mail ${os.has(mi)?'':'collapsed'}" id="msg-${t.id}-${mi}" data-mtog="${mi}"><header>${av(m.from)}<div class="w"><b>${esc(m.from)}${m.by?`<span class="via">via ${esc(m.email.split('@')[0])}@</span>`:''}</b><span>${m.by?esc(m.email)+' → '+esc(t.email):esc(m.email)+' → '+esc(d.box)+'rugscreation.com'}</span></div><time>${tLong(m.at)}</time></header><div class="msnip">${esc(pvClean(m.body).slice(0,140))}</div>${m.failed?`<div class="notsent"><b>\u26a0 Not sent</b> \u2014 this mail is still only on your screen.${m.failErr?` <span class="sub">${esc(m.failErr)}</span>`:''}${m.hadFiles?' Write it again and attach the files, they are not kept here.':''}<span class="sp"></span>${m.hadFiles?'':`<button class="btn" data-resend="${t.id}|${mi}">\u21bb Try again</button>`}<button class="btn" data-dropmsg="${t.id}|${mi}">Remove</button></div>`:m.sending?'<div class="notsent snd">\u23f3 Sending\u2026</div>':''}<div class="mbody">${!os.has(mi)?'':m.light?(m.lfail&&!m.loading?`<p style="color:var(--muted)">\u26a0 Could not open this mail. <button class="btn" data-lretry="${mi}">\u21bb Try again</button></p>`:`<p style="color:var(--muted)">\u23f3 Opening this mail\u2026</p>`):(!m.by&&!isInternal(m.email))||m.raw?`${inviteBar(m,mi,t)}${picBar(m,mi)}<div class="raw"><iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" title="Original email from ${esc(m.from)}" data-pics="${picsOk(m)?1:0}" srcdoc="${esc(picHTML(m,m.raw||originalHTML(m)))}"></iframe></div><span class="rawnote">${ico('mail')} Shown exactly as received — formatting, logo, signature and banners untouched</span>${attHTML(m,t)}`:`${m.html?`<div class="rich">${m.html}</div>`:`<p>${esc(m.body)}</p>`}${m.sig&&!/data-sig=/.test(m.html||'')?`<div class="sig ${m.by?'ours':''}"><small>${m.by?'Signature · '+esc(who(m.by).name.split(' ')[0]):'Signature'}</small>${sigView(m.sig)}</div>`:''}${trailHTML(m.trail)}${attHTML(m,t)}`}</div></article>`).join('')}
+ ${t.msgs.map((m,mi)=>({m,mi})).reverse().map(({m,mi})=>`<article class="mail ${os.has(mi)?'':'collapsed'}" id="msg-${t.id}-${mi}" data-mtog="${mi}"><header>${av(m.from)}<div class="w"><b>${esc(m.from)}${m.by?`<span class="via">via ${esc(m.email.split('@')[0])}@</span>`:''}</b><span>${m.by?esc(m.email)+' → '+esc(t.email):esc(m.email)+' → '+esc(d.box)+'rugscreation.com'}</span></div><time>${tLong(m.at)}</time></header><div class="msnip">${esc(pvClean(m.body).slice(0,140))||(m.light?'Click to read this mail':'(no text)')}</div>${m.failed?`<div class="notsent"><b>\u26a0 Not sent</b> \u2014 this mail is still only on your screen.${m.failErr?` <span class="sub">${esc(m.failErr)}</span>`:''}${m.hadFiles?' Write it again and attach the files, they are not kept here.':''}<span class="sp"></span>${m.hadFiles?'':`<button class="btn" data-resend="${t.id}|${mi}">\u21bb Try again</button>`}<button class="btn" data-dropmsg="${t.id}|${mi}">Remove</button></div>`:m.sending?'<div class="notsent snd">\u23f3 Sending\u2026</div>':''}<div class="mbody">${!os.has(mi)?'':m.light?`${pvClean(m.body)?`<p style="white-space:pre-wrap">${esc(pvClean(m.body).slice(0,1200))}</p>`:''}${m.lfail&&!m.loading?`<p style="color:var(--muted)">\u26a0 Couldn\u2019t load \u2014 <button class="btn" data-lretry="${mi}">\u21bb Retry</button></p>`:`<p style="color:var(--muted)">\u23f3 Opening this mail\u2026</p>`}`:(!m.by&&!isInternal(m.email))||m.raw?`${inviteBar(m,mi,t)}${picBar(m,mi)}<div class="raw"><iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" title="Original email from ${esc(m.from)}" data-pics="${picsOk(m)?1:0}" srcdoc="${esc(picHTML(m,m.raw||originalHTML(m)))}"></iframe></div><span class="rawnote">${ico('mail')} Shown exactly as received — formatting, logo, signature and banners untouched</span>${attHTML(m,t)}`:`${m.html?`<div class="rich">${m.html}</div>`:`<p>${esc(m.body)}</p>`}${m.sig&&!/data-sig=/.test(m.html||'')?`<div class="sig ${m.by?'ours':''}"><small>${m.by?'Signature · '+esc(who(m.by).name.split(' ')[0]):'Signature'}</small>${sigView(m.sig)}</div>`:''}${trailHTML(m.trail)}${attHTML(m,t)}`}</div></article>`).join('')}
  ${ro?'':`<div class="inline"><div class="to">Quick reply to ${esc(t.email)}</div><textarea id="qr" placeholder="Write a reply…" aria-label="Quick reply"></textarea><footer><input type="text" id="qrP" placeholder="Promise (optional)" aria-label="Promise"><input type="date" id="qrD" aria-label="Due date"><span class="grow"></span><button class="btn" data-full="${t.id}" title="Open the full editor with fonts, colours, pictures">⤢ Full editor</button><button class="btn pri" data-qsend="${t.id}">Send</button></footer></div>`}
  ${atrailHTML(t)}`}
  </div>`}
@@ -1993,18 +1993,18 @@ const _lcpAtt=loadCidPics;loadCidPics=function(t,o){try{attPrefetch(t)}catch(e){
 const LD1={};
 function openLight(t,list){
  if(!t||!t.msgs)return Promise.resolve();
- const ids=[...new Set((list||[]).filter(m=>m&&m.light&&m.gid).map(m=>m.gid))].filter(g=>!LD1[t.id+'|'+g]);
+ const ids=[...new Set((list||[]).filter(m=>m&&m.light&&m.gid&&!m.loading).map(m=>m.gid))].filter(g=>!LD1[t.id+'|'+g]);
  if(!ids.length)return Promise.resolve();
- ids.forEach(g=>{LD1[t.id+'|'+g]=1});
- t.msgs.forEach(m=>{if(ids.indexOf(m.gid)>=0)m.loading=true});redrawRead(t);
+ ids.forEach(g=>{LD1[t.id+'|'+g]=Date.now()});
+ t.msgs.forEach(m=>{if(ids.indexOf(m.gid)>=0){m.loading=true;m.lfail=false}});redrawRead(t);
  const batch=[];for(let i=0;i<ids.length;i+=5)batch.push(ids.slice(i,i+5));
  let bi=0;
  const one=async()=>{while(bi<batch.length){const b=batch[bi++];
   try{const r=await _tmo(api('thread',{mailbox:t.box,threadId:gidOf(t),ids:b}),45000,'Gmail took too long to send the mail');
    (r.messages||[]).forEach(q=>{if(q.light)return;const x=t.msgs.find(y=>y.gid===q.gmail_id);if(!x)return;
-    x.raw=fixMailImgs(q.body_html||'');x.body=(q.body_text||x.body||'').trim();x.full=true;x.light=false;
+    x.raw=fixMailImgs(q.body_html||'');x.body=(q.body_text||x.body||'').trim();x.full=true;x.light=false;x.wasLight=true;
     if(!x.ours)x.sig=sigFromText(q.body_text);RAWC[q.gmail_id]={raw:x.raw,body:x.body,full:true}})}catch(e){}
-  b.forEach(g=>{const x=t.msgs.find(y=>y.gid===g);if(x){x.loading=false;x.lfail=!!x.light;if(x.light)delete LD1[t.id+'|'+g]}});
+  b.forEach(g=>{const x=t.msgs.find(y=>y.gid===g);if(x){x.loading=false;x.lfail=!!x.light}delete LD1[t.id+'|'+g]});
   redrawRead(t)}};
  return Promise.all([one(),one()]).then(()=>{try{loadCidPics(t)}catch(e){}})}
 /* 19 Nov 2026: the same treatment as the reading pane for a quoted mail - a picture that has not
@@ -3894,7 +3894,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-27-18';
+const APP_BUILD='2026-11-27-19';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -6222,7 +6222,7 @@ function readKey(){
   const os=openMsgs[t.id]?[...openMsgs[t.id]].sort().join(','):'';
   const ms=t.msgs||[];let m='';
   for(let i=0;i<ms.length;i++){const x=ms[i];
-   m+=(x.light?'L':'')+(x.failed?'F':'')+(x.sending?'S':'')
+   m+=(x.light?'L':'')+(x.loading?'g':'')+(x.lfail?'X':'')+(x.failed?'F':'')+(x.sending?'S':'')
      +String(x.raw||'').length+'.'+String(x.html||'').length+'.'+String(x.body||'').length
      +'.'+((x.atts&&x.atts.length)||(x.files&&x.files.length)||0)+';'}
   return [openId,os,ms.length,m,t.status,t.owner||'',t.flag?1:0,t.folder||'',t.unread?1:0,
@@ -10198,3 +10198,118 @@ if(typeof stbarPaint==="function"){
   return r};
  try{stbarPaint()}catch(e){}}
 /* __ui14:end */</script>
+<script>/* __openmail19:start  27 Nov 2026 URGENT - "every older mail shows Opening this mail for ever".
+   server/patch-open-mail-19.js. The two causes are fixed in the app above; this block makes sure the
+   fetch is always STARTED (whatever route opened the mail) and always ENDS (the mail, or
+   Couldn't load - Retry), and gives rule M1 its memory back when a mail is folded up again. */
+(function(){
+ var TRIES=3;          /* automatic goes per mail; after that the person presses Retry */
+ var NEAR=10;          /* mails fetched per pass, so a 50-mail trail stays polite */
+ var STUCK=50000;      /* a fetch still running after this long is a failure */
+ var KICK={}, FREED=0;
+
+ function thr(){try{return (typeof openId!=="undefined"&&openId&&typeof T_==="function")?T_(openId):null}catch(e){return null}}
+
+ /* ---- always START: every OPEN summary is fetched, the ones on screen first ---- */
+ /* Deliberately NOT "only when scrolled into view": a mail that is open and waiting must
+    never sit on a spinner with no request in flight - that is the bug being fixed. Being on
+    screen only decides the ORDER, and ten at a time keeps a 50-mail trail polite. */
+ function kickOpen(){
+  try{
+   var t=thr();if(!t||!t.msgs)return;
+   var os=openMsgs[t.id];if(!os)return;
+   var want=[];
+   t.msgs.forEach(function(m,i){
+    if(!os.has(i)||!m||!m.light||!m.gid)return;
+    if(m.loading||m.lfail)return;
+    var k=t.id+"|"+m.gid;if((KICK[k]||0)>=TRIES)return;
+    var el=document.getElementById("msg-"+t.id+"-"+i),d=1e9;
+    try{if(el){var r=el.getBoundingClientRect();d=r.top<0?-r.top:r.top}}catch(e){}
+    want.push({m:m,k:k,d:d});
+   });
+   if(!want.length)return;
+   want.sort(function(a,b){return a.d-b.d});           /* nearest the eye first */
+   var take=want.slice(0,NEAR);
+   take.forEach(function(o){KICK[o.k]=(KICK[o.k]||0)+1});
+   try{openLight(t,take.map(function(o){return o.m}))}catch(e){}
+   /* the rest follow: each batch redraws the pane, and a draw calls this again. A scroll
+      brings the next pass forward instead of waiting for the draw. */
+   if(want.length>take.length){
+    var box=document.querySelector("#read .rbody");
+    if(box&&!box.__ol19){box.__ol19=1;box.addEventListener("scroll",function(){setTimeout(kickOpen,0)},{passive:true})}
+    setTimeout(kickOpen,300);
+   }
+  }catch(e){}
+ }
+ /* every draw of the reading pane makes sure of it - whatever route opened the mail */
+ try{
+  if(typeof renderRead==="function"){
+   var _rrOL=renderRead;
+   renderRead=function(){var r=_rrOL.apply(this,arguments);try{setTimeout(kickOpen,0)}catch(e){}return r};
+  }
+ }catch(e){}
+
+ /* ---- always FINISH: nothing may spin for ever ---- */
+ try{setInterval(function(){try{
+  var t=thr();if(!t||!t.msgs)return;var now=Date.now(),ch=false;
+  t.msgs.forEach(function(m){
+   if(!m||!m.loading||!m.gid)return;
+   var k=t.id+"|"+m.gid,at=LD1[k];
+   if(!(at>1e12)){LD1[k]=now;return}            /* no start time: start the clock now */
+   if(now-at>STUCK){m.loading=false;m.lfail=true;delete LD1[k];ch=true}
+  });
+  if(ch)redrawRead(t);
+ }catch(e){}},8000)}catch(e){}
+
+ /* ---- the memory guard must never leave a mail locked or spinning ---- */
+ try{
+  if(typeof stripLoaded==="function"){
+   var _slOL=stripLoaded;
+   stripLoaded=function(t){
+    try{((t&&t.msgs)||[]).forEach(function(m){
+     if(!m)return;m.loading=false;m.lfail=false;
+     if(m.gid){try{delete LD1[t.id+"|"+m.gid]}catch(e){}delete KICK[t.id+"|"+m.gid]}
+    })}catch(e){}
+    return _slOL.apply(this,arguments);
+   };
+  }
+ }catch(e){}
+
+ /* ---- M1: folding a mail up frees what fetching it cost ---- */
+ function freeMsg(t,m){
+  if(!m||!m.wasLight)return 0;
+  if(!m.raw&&!m.html)return 0;
+  var f=0;
+  try{
+   f=String(m.raw||"").length+String(m.html||"").length;
+   delete m.raw;delete m.html;
+   if(typeof m.body==="string"&&m.body.length>1500)m.body=m.body.slice(0,1500);
+   m.full=false;m.light=true;m.loading=false;m.lfail=false;
+   if(m.gid){try{delete RAWC[m.gid]}catch(e){}try{delete LD1[t.id+"|"+m.gid]}catch(e){}delete KICK[t.id+"|"+m.gid]}
+  }catch(e){}
+  return f>0?f:0;
+ }
+ /* after the app has folded it (this listener is registered later, so it runs after) */
+ try{document.addEventListener("click",function(e){
+  var b=null;try{b=e.target.closest&&e.target.closest("[data-mtog],[data-mall]")}catch(x){}
+  if(!b)return;
+  setTimeout(function(){try{
+   var t=thr();if(!t||!t.msgs)return;var os=openMsgs[t.id];if(!os)return;
+   var f=0;t.msgs.forEach(function(m,i){if(!os.has(i))f+=freeMsg(t,m)});
+   if(f>0){FREED+=f;redrawRead(t)}
+  }catch(x){}},0);
+ })}catch(e){}
+
+ /* paste  rzOpenMails()  into the browser console */
+ window.rzOpenMails=function(){
+  var t=thr();if(!t)return "no conversation open";
+  var os=openMsgs[t.id]||new Set();
+  return {conversation:t.sub,mails:t.msgs.length,open:os.size,
+   summaries:t.msgs.filter(function(m){return m&&m.light}).length,
+   loadingNow:t.msgs.filter(function(m){return m&&m.loading}).length,
+   failed:t.msgs.filter(function(m){return m&&m.lfail}).length,
+   inFlightLocks:Object.keys(LD1).length,
+   freedByFolding:Math.round(FREED/1024)+" KB"};
+ };
+})();
+/* __openmail19:end */</script>
