@@ -3889,7 +3889,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-27-15';
+const APP_BUILD='2026-11-27-16';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -6893,6 +6893,20 @@ function RON(k) { return !!RV(k); }
 function rLog() { const l = rulesObj().log; return Array.isArray(l) ? l : []; }
 /* the gate the app's own can() asks: C5 gives transfer and assign to everybody */
 function RCAN(k) { return (k === 'transfer' || k === 'assign') && RON('C5'); }
+/* __r30apageon rule R30a: ask the APP's own helper, so the page can never disagree with
+   what the app actually does. The fallback repeats the shipped default (Alpha and Pulse). */
+function r30aPageList() {
+  try { if (typeof r30aList === 'function') return r30aList(); } catch (e) { }
+  try {
+    const v = (S.settings && S.settings[RULES_KEY] || {}).r30a;
+    if (Array.isArray(v)) return v.map(x => String(x).toLowerCase().split('@')[0]);
+  } catch (e) { }
+  return ['teamalpha', 'teampulse'];
+}
+function r30aPageOn(d) {
+  try { if (typeof r30aTeam === 'function') return !!r30aTeam(d.id); } catch (e) { }
+  try { return r30aPageList().indexOf(String(d.box || '').toLowerCase().split('@')[0]) >= 0; } catch (e) { return false; }
+}
 /* manager-first teams live in the shared setting the SERVER also reads (rm_auto_give) */
 function rMgrList() { try { const v = S.settings && S.settings.mgr_first_boxes; return Array.isArray(v) ? v.map(x => String(x).toLowerCase()) : []; } catch (e) { return []; } }
 
@@ -7116,6 +7130,25 @@ const RULES = [
     brk: ['Off would put a year of history into Needs owner.']
   },
   {
+    /* __r30arow 27 Nov 2026 (bug 16). Per team, and its own shape (a list of teams), so it
+       is a 'set' with its own chooser like manager-first - not one On/Off for everybody. */
+    id: 'R30a', g: 'Ownership', k: 'set', n: 'Old mail (every mail older than the team\'s go-live) is open to the whole team - in Search only',
+    now: () => {
+      try {
+        const on = DEPTS.filter(d => r30aPageOn(d));
+        if (!on.length) return 'OFF everywhere - old mail follows R3, so a colleague\'s old conversation cannot be found by a member at all.';
+        return 'ON for ' + on.map(d => d.name).join(', ') + ' - in those teams a conversation whose mails are ALL older than go-live can be found by every member whatever its owner, through Search and through "Show in <folder>". It does NOT appear in the Inbox list, it is never work, it has no Done button and its owner never changes.';
+      } catch (e) { return 'Per team.'; }
+    },
+    who: 'Team members. The Manager, Lead, CRM and Admin see everything anyway.',
+    brk: [
+      'It is a hole in R3 on purpose, and it is deliberately a narrow one: the mail is reachable through Search and "Show in <folder>", and nowhere else. A member\'s Inbox list, Sent, Needs owner, My work and every folder count are exactly what they were - the Inbox does not grow.',
+      'It stops at the team\'s own go-live date (the same date rule R30 uses), so no live mail is ever opened up by it. A conversation that gets one new mail after go-live leaves R30a at once and follows R3 again.',
+      'It never makes old mail work: it stays out of Needs owner and out of My work, it carries no Done button, and Take over / Assign / Transfer are taken off it, because those are the only things that could change its owner from a screen R30a opened.',
+      'Switch it on for a team and that team\'s whole history becomes findable by everyone in it, including a colleague\'s own buyer correspondence. Switch it off and members go back to finding only their own old conversations.'
+    ]
+  },
+  {
     id: 'C5', g: 'Ownership', k: 'sw', n: 'Everybody may transfer and assign',
     now: v => v ? 'Every active person can transfer a conversation to another team and give it to a colleague.'
       : 'Only a person with the Assign / Transfer tick in Admin -> Users, and every Admin.',
@@ -7219,8 +7252,8 @@ const RULES = [
     now: () => 'Agreed, nothing written yet.', who: 'Everybody.', brk: ['Nothing to switch - it does not exist.']
   },
   /* ------------------------------------------------- speed and memory ---- */
-  /* __m1row 27 Nov 2026, asked for in these words: "make mandatory rule in setting that
-     rugs email keep tab under 250 mb". k:'req' = MANDATORY - no switch, here or anywhere. */
+  /* 27 Nov 2026, asked for in these words: "make mandatory rule in setting that rugs email
+     keep tab under 250 MB". k:'req' = MANDATORY - no switch, here or anywhere else. */
   {
     id: 'M1', g: 'Speed and memory', k: 'req', n: 'Rugs Email keeps this tab under 250 MB',
     now: () => {
@@ -7236,24 +7269,26 @@ const RULES = [
     brk: [
       'There is deliberately no switch. A tab that grows all day is what stopped mail on 26 November ("mail has been stopped on all places, pages are under waiting"), so the ceiling is not something an admin can raise by mistake.',
       'What it drops are copies, never mail: a stripped conversation keeps its row and preview and is fetched again when it is opened. Nothing is deleted on the server, no folder, owner or read/unread state is changed, and files on a mail being written are never thrown away.',
-      'It is the ceiling over the five budgets underneath it - loaded mail 35 MB, opened mail 15 MB, attachments 10 MB, thumbnails 4 MB, files being attached 15 MB, drawn rows up to 2,000. Raising one of those in a later build cannot take the tab past 250 MB, because this rule is measured on the whole tab.',
+      'It is the ceiling over the five budgets underneath it - loaded mail 35 MB, opened mail 15 MB, attachments 10 MB, thumbnails 4 MB, files being attached 15 MB, drawn rows up to 2,000. Raising one of those in a future build cannot take the tab past 250 MB, because this rule is measured on the whole tab.',
       'Check it on any screen: paste rzMemCap() into the browser console, or read the number in this row.'
     ]
   }
 ];
-/* M1: the live number, read from the guard that enforces it. If that block is not in the
-   build, say so plainly rather than print a reassuring zero. */
+function rById(id) { for (let i = 0; i < RULES.length; i++) if (RULES[i].id === id) return RULES[i]; return null; }
+const RGROUPS = ['Inbox', 'Sent', 'Needs owner', 'My work', 'Ownership', 'Roles', 'Things that hide mail', 'Speed and memory', 'Built but not switched on'];
+
+/* ----------------------------------------------------- M1: the live number -- */
+/* read from the guard the app runs (server/patch-mem-cap-m1.js). If that block is not in
+   the build, say so plainly rather than print a reassuring zero. */
 function rMemNow() {
   try {
     const f = window.rzMemCap;
     if (typeof f !== 'function') return { mb: null, pc: null, hits: 0, live: false };
     const r = f() || {};
     const mb = (typeof r.nowMB === 'number') ? r.nowMB : null;
-    return { mb: mb, pc: mb === null ? null : Math.round(mb / 250 * 100), hits: r.timesItHadToAct || 0, live: true };
+    return { mb: mb, pc: mb === null ? null : Math.round(mb / 250 * 100), hits: r.timesItHadToAct || 0, live: true, how: r.measured || '' };
   } catch (e) { return { mb: null, pc: null, hits: 0, live: false }; }
 }
-function rById(id) { for (let i = 0; i < RULES.length; i++) if (RULES[i].id === id) return RULES[i]; return null; }
-const RGROUPS = ['Inbox', 'Sent', 'Needs owner', 'My work', 'Ownership', 'Roles', 'Things that hide mail', 'Speed and memory', 'Built but not switched on'];
 
 /* ======================================================= CONFLICT ENGINE === */
 /* rChk(id,next) -> {hard:[],warn:[],eff:[]}
@@ -7383,6 +7418,33 @@ function rChkMgr(box, on) {
   return { hard: hard, warn: warn, eff: eff };
 }
 
+/* __r30achk rule R30a, per team */
+function rChk30a(box, on) {
+  const hard = [], warn = [], eff = [];
+  const d = DEPTS.filter(x => String(x.box || '').toLowerCase().split('@')[0] === String(box).toLowerCase().split('@')[0])[0];
+  const nm = d ? d.name : box;
+  const mem = PEOPLE.filter(p => p.active !== false && d && p.dept === d.id && !['Manager', 'Lead', 'CRM', 'Admin'].includes(p.role)).length;
+  let old = 0, oldOwned = 0;
+  try {
+    const tf = d ? (S.trackFrom || {})[d.id] : 0;
+    if (tf) rMine().forEach(t => {
+      if (!d || t.dept !== d.id) return;
+      if (!(+(t.last || 0) > 0 && +(t.last || 0) < tf)) return;
+      old++; if (t.owner) oldOwned++;
+    });
+  } catch (e) { }
+  if (on) {
+    eff.push(old + ' conversation' + (old === 1 ? '' : 's') + ' of ' + nm + ' loaded in this browser are older than its go-live, and ' + oldOwned + ' of those already belong to somebody. Every one of the ' + mem + ' member' + (mem === 1 ? '' : 's') + ' would be able to FIND all of them by searching.');
+    eff.push('Nothing moves and no Inbox grows: they stay out of the Inbox list, out of Needs owner and out of My work, and they are reachable only through Search and "Show in <folder>".');
+    warn.push('It is a hole in R3: in ' + nm + ', a member will be able to read a colleague\'s old buyer correspondence. That is the point of the rule, and it is why it stops at go-live - but it is worth saying out loud before you press it.');
+    if (!(d && (S.trackFrom || {})[d.id])) hard.push(nm + ' has no go-live date set (Admin -> Departments -> Activate), so R30a has no date to stop at and will open NOTHING. Set the team live first.');
+  } else {
+    eff.push(nm + ' goes back to R3: a member will no longer find an old conversation that belongs to a colleague, not even by searching for it.');
+    warn.push('This is what people report as "search hides mail". Before 27 November it was the only behaviour there was.');
+  }
+  return { hard: hard, warn: warn, eff: eff };
+}
+
 /* ====================================================== THE HEALTH CHECKS == */
 /* what is wrong RIGHT NOW - the things that make people say "my mail is missing" */
 function rHealth() {
@@ -7409,7 +7471,7 @@ function rHealth() {
     const b = (typeof listRows === 'function') ? 0 : 0;
     if (a === 0 && rInbox().length > 0) out.push({ bad: true, t: 'The Inbox counts say zero while the Inbox has mail', d: 'Something is filtering the counts but not the list, or the other way round. Tell the terminal: "the counts and the list disagree".' });
   } catch (e) { }
-  /* __m1row M1 (mandatory): this tab stays under 250 MB */
+  /* M1 (mandatory): this tab stays under 250 MB */
   try {
     const m = rMemNow();
     if (!m.live) out.push({ bad: true, t: 'Rule M1 cannot be checked on this page', d: 'The memory guard is not in this build, so nothing is holding the tab under 250 MB. Tell the terminal: "M1 is not running".' });
@@ -7498,6 +7560,7 @@ function rRowHTML(r, canEdit) {
   else if (r.k === 'req') { act = '<em style="font-size:11.5px;opacity:.6">cannot be switched off</em>'; }
   else if (r.id === 'HIDEOLD') { act = canEdit ? '<button class="btn" data-rold>Open 🗂 Old mail</button>' : ''; }
   else if (r.id === 'R32') { act = canEdit ? '<button class="btn" data-rmgr>Choose teams</button>' : ''; }
+  else if (r.id === 'R30a') { act = canEdit ? '<button class="btn" data-r30a>Choose teams</button>' : ''; }   /* __r30abtn */
 
   const exp = RLOPEN[r.id] ? ('<div class="rlexp"><b>What it changes if you touch it</b><ul>' + (r.brk || []).map(x => '<li>' + esc(x) + '</li>').join('') +
     '</ul><em>Who it affects: ' + esc(r.who || '-') + '</em></div>') : '';
@@ -7569,7 +7632,9 @@ function rSet(id, next) {
   const was = RV(id);
   vals[id] = next;
   log.push({ id: id, from: was ? 'On' : 'Off', to: next ? 'On' : 'Off', by: ME, at: Date.now() });
-  const body = { v: 1, vals: vals, log: log.slice(-200) };
+  /* __r30akeep1: keep every other key in mail_rules - R30a's team list (r30a) is in there,
+     and a fresh object would switch the rule off for every team on the next toggle. */
+  const body = Object.assign({}, rulesObj(), { v: 1, vals: vals, log: log.slice(-200) });
   S.settings = S.settings || {}; const back = S.settings[RULES_KEY];
   S.settings[RULES_KEY] = body; render();
   api('saveSetting', { key: RULES_KEY, value: body })
@@ -7584,7 +7649,7 @@ function rSet(id, next) {
 function rReset() {
   const o = rulesObj(), log = rLog().slice();
   RULES.filter(r => r.k === 'sw').forEach(r => { if (RV(r.id) !== RDEF[r.id]) log.push({ id: r.id, from: RV(r.id) ? 'On' : 'Off', to: RDEF[r.id] ? 'On' : 'Off', by: ME, at: Date.now() }); });
-  const body = { v: 1, vals: {}, log: log.slice(-200) };
+  const body = Object.assign({}, rulesObj(), { v: 1, vals: {}, log: log.slice(-200) });   /* __r30akeep2 */
   S.settings = S.settings || {}; S.settings[RULES_KEY] = body; render();
   api('saveSetting', { key: RULES_KEY, value: body }).then(() => { toast('Every rule is back to how it shipped on 26 November'); render(); })
     .catch(e => toast('Not saved: ' + (e.message || ''), true));
@@ -7680,9 +7745,62 @@ function mailRulesDlg() {
   const g = L.querySelector('[data-rgo]'); if (g) g.onclick = () => { L.innerHTML = ''; app = 'admin'; adminTab = 'rules'; render(); };
 }
 
+/* ------------------------------------------------- R30a: the team chooser ----- */
+/* __r30adlg */
+function r30aDlg() {
+  const b = '<p style="font-size:13px;line-height:1.55;margin:0 0 10px">In a team where this is <b>on</b>, a conversation whose mails are <b>all older than that team\'s go-live</b> can be <b>found by every member</b>, whoever owns it. ' +
+    'It is reachable through <b>Search</b> and through <b>"Show in &lt;folder&gt;"</b> only - it does not appear in the Inbox list, it is never work, it has no Done button and its owner never changes.</p>' +
+    '<div>' + DEPTS.map(d => {
+      const box = String(d.box || '').toLowerCase().split('@')[0], on = r30aPageOn(d);
+      const tf = (S.trackFrom || {})[d.id] || 0;
+      let old = 0; try { if (tf) old = rMine().filter(t => t.dept === d.id && +(t.last || 0) > 0 && +(t.last || 0) < tf).length; } catch (e) { }
+      const mem = PEOPLE.filter(p => p.active !== false && p.dept === d.id && !['Manager', 'Lead', 'CRM', 'Admin'].includes(p.role)).length;
+      return '<div class="rlmb"><button class="rsw" data-r30at="' + esc(box) + '" aria-pressed="' + on + '">' + (on ? 'On' : 'Off') + '</button>' +
+        '<span><b>' + esc(d.name) + '</b> \u00b7 ' + esc(box) + '<br><span style="opacity:.75;font-size:12px">' +
+        (tf ? ('live since ' + esc(tLong(tf)) + ' \u00b7 ' + old + ' loaded conversation' + (old === 1 ? '' : 's') + ' older than that') : '<b style="color:#c22">no go-live date set</b>') +
+        ' \u00b7 ' + mem + ' member' + (mem === 1 ? '' : 's') + '</span></span></div>';
+    }).join('') + '</div>';
+  const L = dlg('Old mail open to the team (R30a)', b, '<button class="btn pri" data-x30a>Close</button>', true);
+  const x = L.querySelector('[data-x30a]'); if (x) x.onclick = () => { L.innerHTML = ''; render(); };
+}
+function r30aAsk(box, on) {
+  const c = rChk30a(box, on);
+  const d = DEPTS.filter(x => String(x.box || '').toLowerCase().split('@')[0] === String(box).toLowerCase().split('@')[0])[0];
+  const nm = d ? d.name : box;
+  let b = '<div class="rlcf">';
+  if (c.eff.length) b += '<div class="rlbox eff"><h4>What happens the moment you press it</h4><ul>' + c.eff.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>';
+  if (c.hard.length) b += '<div class="rlbox stop"><h4>\u26d4 This conflicts with how the rest of the app works</h4><ul>' + c.hard.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>';
+  if (c.warn.length) b += '<div class="rlbox warn"><h4>\u26a0\ufe0f What it will cost</h4><ul>' + c.warn.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>';
+  b += '<p style="font-size:12.5px;opacity:.8;margin:8px 0 0">Who it affects: every member of ' + esc(nm) + '. The Manager, Lead, CRM and Admin see everything anyway.</p></div>';
+  const L = dlg((on ? 'Open ' : 'Close ') + nm + '\u2019s old mail to the team?', b,
+    '<button class="btn pri" data-rno>Leave it as it is</button><button class="btn warn" data-ryes>' +
+    (c.hard.length ? 'I have read the conflict \u2014 change it anyway' : (on ? 'Open it to the team' : 'Switch it off')) + '</button>', true);
+  const no = L.querySelector('[data-rno]'); if (no) { no.focus(); no.onclick = () => { L.innerHTML = ''; r30aDlg(); }; }
+  const yes = L.querySelector('[data-ryes]');
+  if (yes) yes.onclick = () => {
+    const key = String(box).toLowerCase().split('@')[0];
+    const cur = r30aPageList().filter(x => x !== key);
+    if (on) cur.push(key);
+    const log = rLog().slice();
+    log.push({ id: 'R30a ' + key, from: on ? 'Off' : 'On', to: on ? 'On' : 'Off', by: ME, at: Date.now() });
+    const body = Object.assign({}, rulesObj(), { v: 1, vals: (rulesObj().vals || {}), log: log.slice(-200), r30a: cur });
+    S.settings = S.settings || {}; const back = S.settings[RULES_KEY];
+    S.settings[RULES_KEY] = body;
+    L.innerHTML = ''; render();
+    api('saveSetting', { key: RULES_KEY, value: body })
+      .then(() => { toast(nm + (on ? '\u2019s old mail is now open to the whole team' : '\u2019s old mail follows R3 again')); render(); })
+      .catch(e => {
+        S.settings[RULES_KEY] = back;
+        if (/unknown setting/i.test(e.message || '')) { RULES_NOSRV = true; toast('Not saved: the office server has not picked up the Mail rules setting yet. It updates itself within ten minutes \u2014 try again then.', true); }
+        else toast('Not saved: ' + (e.message || 'the server refused it'), true);
+        render();
+      });
+  };
+}
+
 /* one delegated listener of our own, so the app's big click handler is untouched */
 document.addEventListener('click', function (e) {
-  const b = e.target.closest ? e.target.closest('[data-rtog],[data-rmore],[data-rreset],[data-rold],[data-rmgr],[data-rmgrt],[data-rules]') : null;
+  const b = e.target.closest ? e.target.closest('[data-rtog],[data-rmore],[data-rreset],[data-rold],[data-rmgr],[data-rmgrt],[data-r30a],[data-r30at],[data-rules]') : null;   /* __r30aclick */
   if (!b) return;
   if (b.dataset.rmore !== undefined && b.dataset.rmore) { RLOPEN[b.dataset.rmore] = !RLOPEN[b.dataset.rmore]; render(); return; }
   if (b.hasAttribute('data-rules')) { mailRulesDlg(); return; }
@@ -7694,6 +7812,9 @@ document.addEventListener('click', function (e) {
   if (b.hasAttribute('data-rold')) { app = 'admin'; adminTab = 'overview'; render(); toast('🗂 Old mail is the panel at the top of Admin → Overview'); return; }
   if (b.hasAttribute('data-rmgr')) { if (who(ME) && who(ME).role === 'Admin') rMgrDlg(); return; }
   if (b.dataset.rmgrt) { if (who(ME) && who(ME).role === 'Admin') rMgrAsk(b.dataset.rmgrt, b.getAttribute('aria-pressed') !== 'true'); return; }
+  /* __r30ahandle */
+  if (b.hasAttribute('data-r30a')) { if (who(ME) && who(ME).role === 'Admin') r30aDlg(); else toast('Only an admin can change a rule', true); return; }
+  if (b.dataset.r30at) { if (who(ME) && who(ME).role === 'Admin') r30aAsk(b.dataset.r30at, b.getAttribute('aria-pressed') !== 'true'); return; }
 }, false);
 
 /* the entry in the menu under your own name. meMenu writes the pop straight into #layer,
@@ -9789,3 +9910,135 @@ function emptyBox(){
  };
 })();
 /* __mem410:end */</script>
+<script>/* __r30a:start 27 Nov 2026 - server/patch-r30a.js (rule R30a) */
+/* ==================== RULE R30a - old mail is open to the team ==================== */
+/* ON by default for Team Alpha and Team Pulse. An admin changes it per team on
+   Admin -> Mail rules; the chosen teams live in the shared setting mail_rules.r30a. */
+const R30A_DEF=['teamalpha','teampulse'];
+const r30aLocal=x=>String(x||'').toLowerCase().split('@')[0];
+function r30aList(){
+ try{const o=(S.settings&&S.settings.mail_rules)||{};const v=o.r30a;
+  if(Array.isArray(v))return v.map(r30aLocal);
+  return R30A_DEF.slice()}catch(e){return R30A_DEF.slice()}
+}
+/* is R30a on for this team? compare LOCAL PARTS - a department carries box WITHOUT the
+   domain, so comparing full addresses silently matched nothing (the 26 Nov lesson). */
+function r30aTeam(deptId){
+ try{const d=(typeof dept==='function')?dept(deptId):null;if(!d)return false;
+  return r30aList().indexOf(r30aLocal(d.box))>=0}catch(e){return false}
+}
+/* R17 is on, so a row is ONE MAIL: explode() builds it with Object.create(conversation)
+   and overwrites .last with that mail's own time. Asking a row therefore answers "is
+   THIS MAIL old", and a conversation with one old mail and one new one would have shown
+   its old row to the whole team - the exact opposite of "ALL of its mails are older".
+   So always climb back to the conversation first. (Found by server/test-r30a.mjs.) */
+function r30aConv(t){
+ try{if(t&&t._one){const p=Object.getPrototypeOf(t);if(p&&p.id===t.id)return p}}catch(e){}
+ return t;
+}
+/* every mail in it is older than that team's go-live */
+function r30aOld(t){
+ try{const c=r30aConv(t);
+  if(!c||!r30aTeam(c.dept))return false;
+  const tf=(S.trackFrom||{})[c.dept];if(!tf)return false;
+  /* the conversation's own last IS its newest mail's time (convDedupe keeps it true), so
+     this one comparison answers it and costs nothing on the 99% that are newer */
+  const last=+(c.last||0);if(!(last>0&&last<tf))return false;
+  /* belt: every mail this browser actually holds is older too, so a stale date can
+     never open up live mail */
+  const ms=c.msgs||[];
+  for(let i=0;i<ms.length;i++){if(+(ms[i].at||0)>=tf)return false}
+  return true}catch(e){return false}
+}
+let R30A_Q=false;          /* up only while the search branch of listRows is running */
+let R30A_SHOW='';          /* the one conversation somebody pressed "Show in Inbox" on */
+let R30A_SHOW_K='';        /* the mailbox+folder that jump landed in */
+function r30aAsking(t){return !!(R30A_Q||(R30A_SHOW&&t&&t.id===R30A_SHOW))}
+function r30aLets(t){return r30aAsking(t)&&r30aOld(t)}
+
+/* ---- the gate: outermost, so it is never served from the per-pass memo ---- */
+const _smR30a=seeMine;
+seeMine=function(t){if(r30aLets(t))return true;return _smR30a.apply(this,arguments)};
+/* "can I see this ONLY because of R30a?" - what decides the tag and the missing
+   buttons. Asked with both flags down, so it is the plain R3 answer. */
+function r30aOnly(t){
+ try{if(!t||!r30aOld(t))return false;
+  const q=R30A_Q,sh=R30A_SHOW;R30A_Q=false;R30A_SHOW='';
+  let base;try{base=_smR30a(t)}finally{R30A_Q=q;R30A_SHOW=sh}
+  return !base}catch(e){return false}
+}
+
+/* ---- 1 - search: the flag is up only while the search branch really runs ---- */
+const _lrR30a=listRows;
+listRows=function(){
+ /* the "Show in Inbox" row belongs to the mailbox and folder it was asked for */
+ try{const k=(view.dept||'')+'|'+(view.folder||'');
+  if(R30A_SHOW&&R30A_SHOW_K&&k!==R30A_SHOW_K){R30A_SHOW='';R30A_SHOW_K=''}}catch(e){}
+ let q='';try{const el=document.getElementById('q');q=el?el.value.trim():''}catch(e){}
+ if(!q)return _lrR30a.apply(this,arguments);
+ R30A_Q=true;
+ try{return _lrR30a.apply(this,arguments)}finally{R30A_Q=false}
+};
+/* the drawn-row cache must not be able to hide the row somebody just asked for */
+const _lkR30a=listKey;
+listKey=function(){return _lkR30a.apply(this,arguments)+'|r30a:'+R30A_SHOW};
+
+/* ---- 2 - "Show in Inbox" (rule R17b): let the jump through, remember which one ---- */
+if(typeof sibShow==='function'){
+ const _sibR30a=sibShow;
+ sibShow=function(t,mi){
+  const old=R30A_SHOW,oldK=R30A_SHOW_K;
+  if(t&&r30aOld(t)){R30A_SHOW=t.id;R30A_SHOW_K=''}
+  let r;
+  try{r=_sibR30a.apply(this,arguments)}
+  catch(e){R30A_SHOW=old;R30A_SHOW_K=oldK;throw e}
+  /* sibShow has moved the view by now, so this is where the jump landed */
+  try{if(t&&R30A_SHOW===t.id)R30A_SHOW_K=(view.dept||'')+'|'+(view.folder||'')}catch(e){}
+  return r};
+}
+
+/* ---- 3 - no Done tick on a row R30a opened, and a tag saying why it is there ---- */
+/* take one button out of a string of HTML, from its own <button to its own </button> */
+function r30aStrip(h,attr){
+ try{let out=String(h);
+  for(let g=0;g<8;g++){
+   let p=0,found=-1;
+   while((p=out.indexOf('<button',p))>=0){const e=out.indexOf('>',p);if(e<0)break;
+    if(out.slice(p,e).indexOf(attr)>=0){found=p;break}p=e+1}
+   if(found<0)break;
+   const close=out.indexOf('</button>',found);if(close<0)break;
+   out=out.slice(0,found)+out.slice(close+9)}
+  return out}catch(e){return h}
+}
+const R30A_TIP='Every mail in this conversation is older than this team\u2019s go-live, so the whole team may read it (rule R30a). It is nobody\u2019s work and its owner does not change.';
+const _rhR30a=rowHTML;
+rowHTML=function(t){
+ let h=_rhR30a.apply(this,arguments);
+ try{
+  if(!r30aOnly(t))return h;
+  h=r30aStrip(h,'data-qdone');
+  h=h.replace('<div class="tags">','<div class="tags"><span class="tag r30atag" title="'+R30A_TIP+'">\u{1F4DC} Old mail \u00b7 open to the team</span>');
+ }catch(e){}
+ return h};
+
+/* ---- 4 - the reading pane: no Done / Reopen, and nothing that changes the owner ---- */
+function r30aPaint(){
+ try{
+  const R=document.getElementById('read');if(!R)return;
+  const t=(typeof openId!=='undefined'&&openId)?(S.threads||[]).find(x=>x.id===openId):null;
+  if(!t||!r30aOnly(t)){const n=R.querySelector('.r30anote');if(n)n.remove();return}
+  R.querySelectorAll('[data-done],[data-reopen],[data-qdone],[data-take],[data-xfer],[data-assign]').forEach(b=>b.remove());
+  if(!R.querySelector('.r30anote')){
+   const d=document.createElement('div');
+   d.className='r30anote';d.setAttribute('role','note');
+   d.style.cssText='margin:0 0 8px;padding:7px 10px;border-radius:8px;font-size:12.5px;line-height:1.5;background:color-mix(in srgb,var(--brand) 9%,transparent);color:var(--fg)';
+   d.textContent='\u{1F4DC} Every mail here is older than this team\u2019s go-live, so the whole team may read it (rule R30a). It is nobody\u2019s work \u2014 there is no Done button, and its owner does not change.';
+   R.insertBefore(d,R.firstChild)}
+ }catch(e){}
+}
+const _rdR30a=render;
+render=function(){const r=_rdR30a.apply(this,arguments);try{r30aPaint()}catch(e){}return r};
+if(typeof renderRead==='function'){const _rrR30a=renderRead;
+ renderRead=function(){const r=_rrR30a.apply(this,arguments);try{r30aPaint()}catch(e){}return r}}
+/* __r30a:end */
+</script>

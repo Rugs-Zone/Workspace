@@ -67,6 +67,7 @@ Three lists: **A** what is live, **B** what is agreed but deliberately NOT live 
 | R29 | **Take / assign / transfer** — a person's choice; an auto rule can never overwrite it |
 | R29a | **A conversation can only belong to somebody in the team that owns that mailbox.** The Owner / Assign list is that team only — for everybody, admins included; a one-person mailbox shows the name with no picker; the server refuses a cross-team owner; an Admin moves a conversation with **"Move to team…"**, which leaves it unassigned in the new team |
 | R30 | Mail older than the team's go-live never counts as work and never reaches Needs owner |
+| R30a | **Old mail is open to the whole team — in Search only** (27 Nov, per team, ON for **Team Alpha** and **Team Pulse**). A conversation whose mails are **ALL older than that team's go-live** can be found by **every member whatever its owner** — but only through **Search** and through **"Show in ‹folder›"** (R17b). It is **NOT in the Inbox list**, so no Inbox and no folder count grows; it is **never work**, it carries **no Done button**, and Take over / Assign / Transfer are taken off it, so its **owner never changes**. One new mail after go-live and it leaves R30a at once and follows R3 again. A deliberate, narrow hole in R3; the switch is **Admin → 📜 Mail rules → R30a → Choose teams**, stored in the shared setting `mail_rules.r30a` |
 
 ### Everyone else
 

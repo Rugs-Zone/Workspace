@@ -306,3 +306,24 @@ driving the brief's own run (20 mails + 4,000 conversations paged in by scrollin
 open conversation keeps its mail, an unsent mail is never dropped, and every drawn row still has its
 conversation. Plus M1 54, page memory 27 + 30, mail rules 90, folder counts 42, My rules 51, design-13 89,
 search bar 47, inbox-stays 20/20. `server/patch-mem-410.js`, `server/measure-mem-live.mjs`.
+
+## Bug 16 — rule R30a: old mail open to the team, in Search only (build 2026-11-27-16)
+
+The half-written R30a another terminal left in `server/mail-rules.view.js` (marker `__r30arule`,
+a registry row whose helper and chooser button did not exist in the app) was **removed first** —
+nothing of it is reused. Built clean: `server/patch-r30a.js` (engine),
+`server/patch-mail-rule-r30a-row.js` (the page), `server/test-r30a.mjs` (82 checks).
+
+Click through as a **member of Team Alpha** (Admin → Switch ID):
+
+1. Search for a word in a conversation from **before 15 Nov** that a **colleague owns** — it is found.
+2. Search for the same word in one from **after go-live** that a colleague owns — still not found.
+3. Open the Inbox with the search box empty — neither is in the list, and the Inbox count has not moved.
+4. The found row carries **📜 Old mail · open to the team** and **no Done tick**.
+5. Open it — the pane says why it is readable and has **no Done, Reopen, Take over, Transfer or Assign**.
+6. In the Mail trail of any mail, press **⋯ → Show in ‹folder›** on an old colleague-owned mail —
+   it jumps to the row and flashes it, instead of saying "This mail belongs to somebody else".
+7. Change folder — the row is gone again (the Inbox does not keep it).
+8. As an **admin**: Admin → 📜 Mail rules → **R30a → Choose teams** — Alpha and Pulse On, the rest Off;
+   pressing one asks first and counts the real conversations.
+9. `rzMemCap()` in the console — still under 250 MB (rule M1).
