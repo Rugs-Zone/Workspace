@@ -32,5 +32,5 @@ Older history moved unchanged to `docs/PROGRESS-ARCHIVE.md` (last move: 27 Nov 2
 - 28 Nov 2026 (app 2026-11-28-12): Sent - mail you sent from a mailbox you cannot open (R36) that is newer than the top of the list now shows at the TOP, not at the bottom; looked up every 3 min (was 10). Not yet confirmed as the cause of Arun. server/patch-sent-newest-first.js
 
 - 28 Nov 2026 build -13: memory caps tightened (1500 conversations, 40 kept seen, 8 loaded) for the 250 MB rule; mock tests pass.
-- 28 Nov 2026 (app 2026-11-28-14): Arun's Gmail-sent mail missing from his Sent - From name 'Arun – Rugs Creation' never matched a person; company/team part of a sender name is now dropped before matching (cleanSender). server/patch-sender-suffix.js
+- 28 Nov 2026 (app 2026-11-28-14): Arun's Gmail-sent mail missing from his Sent - From name 'Arun â€“ Rugs Creation' never matched a person; company/team part of a sender name is now dropped before matching (cleanSender). server/patch-sender-suffix.js
 - 28 Nov 2026 (app 2026-11-28-15): finalised company signature for everyone (name, orange rule, ROLE - TEAM, T/E/W, hosted logo + tagline, Heimtextil Hall 11.0 / Stand B79 strip until 15 Jan 2027, confidentiality line). server/patch-sig-final.js
