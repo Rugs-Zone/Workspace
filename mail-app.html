@@ -772,7 +772,7 @@ function listRows(){const q=$('#q').value.trim().toLowerCase();
  if(view.type==='box'&&view.folder==='inbox')r=r.filter(t=>tab==='other'?othTab(t):!othTab(t));
  if(lfilt)r=r.filter(t=>mrLab(t)===lfilt/*__mr35lf*/);
  if(filt!=='all')r=r.filter(t=>filt==='unread'?mrUnread(t):/*__mr35u1*/filt==='mine'?t.owner===ME:filt==='open'?st(t)!=='done':filt==='alias'?!!viaOf(t):filt==='needs'?!t.owner:true);
- if(q)r=S.threads.filter(t=>[t.from,t.email,t.sub,t.pre,t.promise,who(t.owner)?.name].join(' ').toLowerCase().includes(q));
+ if(q)r=S.threads.filter(t=>[t.from,t.email,t.sub,t.pre,t.promise,who(t.owner)?.name,toCcOf(t)].join(' ').toLowerCase().includes(q));   /* __findto */
  const isSent=view.type==='box'&&view.folder==='sent';return r.sort((a,b)=>isSent?lastOut(b)-lastOut(a):b.last-a.last)}
 const lastOut=t=>Math.max(0,...t.msgs.filter(m=>m.by||m.ours).map(m=>m.at));
 /* 23 Nov 2026: in Sent, the row is about what WE wrote - the last mail that went out
@@ -3928,7 +3928,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-7';
+const APP_BUILD='2026-11-28-9';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -10527,3 +10527,101 @@ document.addEventListener('keydown',function(e){
 /* paste  rzMySent()  into the console */
 window.rzMySent=function(){return{mails:(FS36||[]).length,loadedFor:FS36who,lookedAt:FS36at?new Date(FS36at).toLocaleTimeString('en-IN'):'not yet',error:FS36err||'none'}};
 /* __mysent:end */</script>
+<script>/* __signoff:start  28 Nov 2026 - a name with a bar in it is a name, a sign-off never is,
+   and the search box looks at who we wrote to. server/patch-sent-names-search.js */
+const SIGNOFF=/^(?:(?:kind(?:est)?|best|warm(?:est)?|many|with|all|much)\s+)?(?:regards?|reg|wishes|thanks(?:\s+and\s+regards?)?|thank\s*you|rgds|brgds|b\.?r\.?|cheers|sincerely|respectfully|yours(?:\s+(?:sincerely|faithfully|truly))?|met\s+vriendelijke\s+groet(?:en)?|mit\s+freundlichen\s+gr(?:\u00fc|u)(?:\u00df|ss)en|freundliche\s+gr(?:\u00fc|u)(?:\u00df|ss)e|cordialement|bien\s+(?:\u00e0|a)\s+vous|salutations|saludos|atentamente|obrigad[oa]|grazie|merci|danke|gracias|looking\s+forward)$/i;
+/* "Robin Vos | Loods 5" is how Loods 5 write their names: the bar is a separator, not markup. */
+const _gnOld=goodName;
+goodName=function(x){
+ const v=String(x==null?'':x).trim();
+ if(!v)return false;
+ if(SIGNOFF.test(v.replace(/[,.!;:\u2013\u2014-]+$/,'').trim()))return false;   /* a sign-off is never a name */
+ if(/[|\u00b7\u2022]/.test(v)&&!/[<>\[\]{}@]|https?:|cid:|www\./i.test(v))return _gnOld(v.replace(/\s*[|\u00b7\u2022]\s*/g,' '));
+ return _gnOld(v)};
+try{window.goodName=goodName}catch(e){}
+/* who our own mails went to - memoised per conversation, so typing in the search box stays
+   cheap on a mailbox holding thousands of conversations. */
+function toCcOf(t){
+ try{
+  if(!t||!t.msgs)return '';
+  const n=t.msgs.length;
+  if(t._tcN===n&&typeof t._tc==='string')return t._tc;
+  let s='',k=0;
+  for(let i=n-1;i>=0&&k<6;i--){const m=t.msgs[i];if(!m||!(m.ours||m.by))continue;
+   s+=' '+String(m.to||'').slice(0,300)+' '+String(m.cc||'').slice(0,300);k++}
+  try{Object.defineProperty(t,'_tc',{value:s,writable:true,enumerable:false,configurable:true});
+      Object.defineProperty(t,'_tcN',{value:n,writable:true,enumerable:false,configurable:true})}catch(e){t._tc=s;t._tcN=n}
+  return s;
+ }catch(e){return ''}}
+try{window.toCcOf=toCcOf}catch(e){}
+/* __signoff:end */</script>
+<script>/* __fastdraw:start  28 Nov 2026 - do not rebuild a screen that has not changed.
+   What was measured first, and why: server/patch-fast-draw.js · server/measure-lag.mjs */
+(function(){
+ var ST={listSkipped:0,listDrawn:0,foldersSkipped:0,foldersDrawn:0};
+ try{window.rzDrawStats=function(){return JSON.parse(JSON.stringify(ST))}}catch(e){}
+ function g(f,d){try{var v=f();return v===undefined?d:v}catch(e){return d}}
+ function fp(){return g(function(){return typeof mailFp==='function'?mailFp():Math.random()},Math.random())}
+ /* ---------- the message list ---------- */
+ var lk=null,lastBox=null;
+ function listKey36(){
+  return JSON.stringify([
+   g(function(){return app},''),
+   g(function(){return view},null),
+   g(function(){return tab},''),
+   g(function(){return filt},''),
+   g(function(){return lfilt},''),
+   g(function(){return (($('#q')||{}).value)||''},''),
+   g(function(){return openId||''},''),
+   g(function(){return _cap},0),
+   fp(),
+   g(function(){return (S.drafts||[]).length},0),
+   g(function(){return !!syncing},false),
+   g(function(){return S.lastSync||0},0),
+   g(function(){return (FS36===null?'?':FS36.length)+'/'+FS36err+'/'+FS36at},''),
+   g(function(){return JSON.stringify(LV())},''),
+   g(function(){return typeof R30A_SHOW!=='undefined'?R30A_SHOW:''},''),
+   g(function(){return ME},'')
+  ])}
+ var _rl=renderList;
+ renderList=function(){
+  var box=null,k=null;
+  try{box=document.querySelector('.list .msgs');k=listKey36()}catch(e){box=null;k=null}
+  if(box&&k!==null&&k===lk&&box===lastBox&&box.children.length){
+   ST.listSkipped++;
+   try{if(typeof fs36Draw==='function')fs36Draw()}catch(e){}
+   return}
+  var r=_rl.apply(this,arguments);
+  try{lk=k;lastBox=document.querySelector('.list .msgs')}catch(e){lk=null;lastBox=null}
+  ST.listDrawn++;
+  return r};
+ try{window.renderList=renderList}catch(e){}
+ /* ---------- the folder pane ---------- */
+ var fk=null,lastPane=null;
+ function foldKey(){
+  return JSON.stringify([
+   g(function(){return app},''),
+   g(function(){return view},null),
+   fp(),
+   g(function(){return (S.drafts||[]).length},0),
+   g(function(){return JSON.stringify(S.folders||[])},''),
+   g(function(){return JSON.stringify(S.saved||[])},''),
+   g(function(){return JSON.stringify(S.ui||{})},''),
+   g(function(){return DEPTS.length},0),
+   g(function(){return ME},'')
+  ])}
+ var _rf=renderFolders;
+ renderFolders=function(){
+  var pane=null,k=null;
+  try{pane=document.querySelector('#folders')||document.querySelector('.folders');k=foldKey()}catch(e){pane=null;k=null}
+  if(pane&&k!==null&&k===fk&&pane===lastPane&&pane.children.length){
+   ST.foldersSkipped++;
+   try{if(typeof fcPaint==='function')fcPaint()}catch(e){}
+   return}
+  var r=_rf.apply(this,arguments);
+  try{fk=k;lastPane=document.querySelector('#folders')||document.querySelector('.folders')}catch(e){fk=null;lastPane=null}
+  ST.foldersDrawn++;
+  return r};
+ try{window.renderFolders=renderFolders}catch(e){}
+})();
+/* __fastdraw:end */</script>
