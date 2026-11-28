@@ -402,3 +402,45 @@ anything with `/rd-mail-sig/`) — an ordinary internet picture, a Drive picture
 - [ ] A buyer's mail with a real logo on the internet still shows it (Show pictures where asked).
 - [ ] An attached picture and a Drive picture still show.
 - [ ] `rzPrivPics()` in the console lists which mail had how many hidden.
+
+## 28 Nov 2026 — Ashish Deshwal's Sent folder (app 2026-11-28-3, server 2026-11-28-b/c)
+
+**What was wrong — the RULE, not the mail.** Measured on the live office database first (admin
+token, then a real Switch ID session as him, read only): **4,888** mails of his since **11 Mar 2026**
+across **10 mailboxes**, 4,566 of them already `direction='out'`, and **`sent_by` NULL on 4,803**
+because he writes in Gmail, not in Rugs Email. The app's rule was:
+
+```
+colleagueIn(m,t) = m.ours && !m.by && m.email && m.email !== t.box
+Sent shows a conversation when  t.msgs.some(m => m.by || (m.ours && !colleagueIn(m,t)))
+```
+
+His mail is "ours", has no `sent_by`, and its From (his own login `merchandiser9@`) is not the
+shared mailbox address — so `colleagueIn` said TRUE, "a colleague wrote in", and **his own mail
+counted as mail received**. Anybody writing from their own login into a shared mailbox had the
+same hole.
+
+**The rule now (permanent):** a mail whose From is a person's own **login or alias** was sent by
+that person, in whatever mailbox it lands — one helper, `sentByUs(m,t)`, used by the Sent folder,
+the per-mail rows (R17) and R15. `recvMsg`/`colleagueIn` are untouched, so the mail is *still*
+received mail for the mailbox: the team Inbox, Needs owner and the work lists do not move (proved
+by running the same fixture on the build before and after and comparing every list for four people).
+R15 still decides who sees it: the sender does, a colleague does not, manager/lead/CRM/admin do.
+
+**Data repaired by the one-time job `ashish-sent-2026-11-28`** (one transaction, undo saved in
+`rm_settings.undo_ashish-sent-2026-11-28`): **322** messages of his that were not `direction='out'`
+→ fixed (and `sent_by` set on those); **1** conversation with a stale `has_out` → rebuilt. The 4,803
+with no `sent_by` were deliberately **not** mass-written: `sent_by` turns off `colleagueIn`, which is
+what keeps a colleague's mail in the team INBOX, so a careless repair there could empty work out of
+Team Pulse's Inbox. The rule names the sender instead.
+
+**Robin (Robin Vos, Loods 5 — r.vos@loods5.nl):** 28 mails of his to/cc Robin in teampulse@,
+in 7 conversations, newest 13 Nov. In a search session: **7 of 7 now in his Sent (2 of 7 before)**.
+
+**Tester checklist**
+- [ ] As Ashish (or his ID through Switch ID): Sent now lists what he wrote — 19 of his 19 live
+      conversations in the loaded window (2 more are in Deleted, which is never in Sent).
+- [ ] Search `r.vos@loods5.nl` → those conversations are in his Sent, row reads "To: Robin Vos | Loods 5".
+- [ ] A colleague's Sent did NOT gain his mail; the manager sees everything.
+- [ ] The team Inbox, Needs owner and My work are unchanged.
+- [ ] `rzSentCheck()` in the console reports his counts.
