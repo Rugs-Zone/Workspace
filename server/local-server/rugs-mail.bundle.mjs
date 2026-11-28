@@ -1281,22 +1281,57 @@ async function outOfOffice(t0) {
   }
   return n;
 }
+var MISS_CACHE = /* __threadrescue */ new Map();   /* mailbox|stored id -> { at, id } ; id null = Gmail really does not have it */
+var MISS_TTL = 30 * 60 * 1e3;
+var gDay = (t) => { const d = new Date(t); return d.getUTCFullYear() + "/" + (d.getUTCMonth() + 1) + "/" + d.getUTCDate(); };
+/* 28 Nov 2026 (__threadrescue): a stored gmail_id Gmail answers 404 for. Look the same mail up
+   in the same mailbox by sender and time - an id can be stale rather than the mail gone. */
+async function rescueMsg(tok, box, x) {
+  const key = box + "|" + x.gmail_id;
+  const c = MISS_CACHE.get(key);
+  if (c && Date.now() - c.at < MISS_TTL) {
+    if (!c.id) return null;
+    try { return await gmail(tok, `messages/${c.id}?format=full`); } catch { return null; }
+  }
+  let found = null;
+  try {
+    const at = Date.parse(x.sent_at);
+    if (at) {
+      const q = [x.from_email ? "from:" + String(x.from_email).trim() : "", "in:anywhere",
+        "after:" + gDay(at - 864e5), "before:" + gDay(at + 864e5)].filter(Boolean).join(" ");
+      const j = await gmail(tok, `messages?maxResults=10&q=${encodeURIComponent(q)}&fields=messages(id)`);
+      const cand = (j.messages || []).map((y) => String(y.id)).slice(0, 5);
+      for (const id of cand) {
+        if (id === String(x.gmail_id)) continue;
+        let h = null;
+        try { h = await gmail(tok, `messages/${id}?format=minimal&fields=internalDate`); } catch { continue; }
+        if (Math.abs(Number(h && h.internalDate || 0) - at) <= 12e4) {
+          try { found = await gmail(tok, `messages/${id}?format=full`); } catch { found = null; }
+          if (found) { console.log("thread msg rescued", x.gmail_id, "->", id, "(the stored id was stale)"); break; }
+        }
+      }
+    }
+  } catch (e) { console.log("thread msg rescue failed", x.gmail_id, String(e && e.message || e).slice(0, 120)); }
+  MISS_CACHE.set(key, { at: Date.now(), id: found ? String(found.id) : null });
+  if (MISS_CACHE.size > 5e3) MISS_CACHE.clear();
+  return found;
+}
 async function threadFull(box, tid, ids) {
-  const { data: m } = await sb.from("rm_messages").select("gmail_id,direction,body_text,sent_at").eq("mailbox", box).eq("gmail_thread_id", tid).order("sent_at");
+  const { data: m } = await sb.from("rm_messages").select("gmail_id,direction,body_text,sent_at,from_email").eq("mailbox", box).eq("gmail_thread_id", tid).order("sent_at");
   const tok = await gToken(box, READ);
   const FULL_N = 3;   /* 25 Nov 2026: the pane opens the newest, a reply quotes the newest 3 - see server/patch-thread-full3.js */
   const rows = m || [];
   const want = Array.isArray(ids) && ids.length ? new Set(ids.slice(0, 20).map(String)) : null;
   const need = want ? rows.filter((x) => want.has(String(x.gmail_id))) : rows.slice(-FULL_N);
+  const asked = new Set(need.map((x) => String(x.gmail_id)));
+  const gone = new Set();     /* Gmail said 404 for this stored id - permanent, never retried */
   const getMsg = async (id) => {
     for (let i = 0; i < 2; i++) {
       try {
         return await gmail(tok, `messages/${id}?format=full`);
       } catch (e) {
-        if (i) {
-          console.log("thread msg miss", id, e.message);
-          return null;
-        }
+        if (e && e.code === 404) { gone.add(String(id)); console.log("thread msg miss", id, "- Gmail does not have this id (404), not retried"); return null; }
+        if (i) { console.log("thread msg miss", id, String(e && e.message || e).slice(0, 140)); return null; }
         await new Promise((r) => setTimeout(r, 300));
       }
     }
@@ -1304,15 +1339,31 @@ async function threadFull(box, tid, ids) {
   };
   const got = (await Promise.all(need.map((x) => getMsg(String(x.gmail_id))))).filter(Boolean);
   const byId = new Map(got.map((x) => [x.id, x]));
+  /* __threadrescue: only for the ones Gmail answered 404 for, at most four in a request */
+  const rescued = new Map();
+  const lost = need.filter((x) => gone.has(String(x.gmail_id))).slice(0, 4);
+  if (lost.length) {
+    const rs = await Promise.all(lost.map((x) => rescueMsg(tok, box, x)));
+    rs.forEach((r, i) => { if (r) rescued.set(String(lost[i].gmail_id), r); });
+  }
   const pool2 = [];
   for (const gm of got) for (const x of inlineParts(gm.payload)) pool2.push({ ...x, mid: gm.id, data: "" });
+  for (const gm of rescued.values()) for (const x of inlineParts(gm.payload)) pool2.push({ ...x, mid: gm.id, data: "" });
   const allIx = cidIndex(pool2);
   const out = await Promise.all(rows.map(async (x) => {
-    const gm = byId.get(x.gmail_id);
-    if (!gm) return { ...x, body_html: "", body_text: (x.body_text || "").slice(0, 4e3), light: true };
-    let html = gm ? partOf(gm.payload, "text/html") : "";
-    const text = gm ? partOf(gm.payload, "text/plain") || (html ? htmlToText(html.slice(0, 15e4)) : "") : x.body_text;
-    if (gm && html) html = withCidLinks(x.gmail_id, gm.payload, html, allIx);
+    const gm = byId.get(x.gmail_id) || rescued.get(String(x.gmail_id)) || null;
+    if (!gm) {
+      /* never asked for, or a transient failure: a one-line summary, exactly as before */
+      if (!asked.has(String(x.gmail_id)) || !gone.has(String(x.gmail_id)))
+        return { ...x, body_html: "", body_text: (x.body_text || "").slice(0, 4e3), light: true };
+      /* asked for, and Gmail really does not have it: send the copy we saved, so it can be read */
+      return { ...x, body_html: "", body_text: (x.body_text || "").slice(0, 6e4), light: false, saved: true,
+        why: "Google Mail no longer has this message, so Rugs Email is showing the copy it saved." };
+    }
+    /* the mail Gmail gave us. A rescued one keeps the id the app asked for on purpose. */
+    let html = partOf(gm.payload, "text/html");
+    const text = partOf(gm.payload, "text/plain") || (html ? htmlToText(html.slice(0, 15e4)) : "");
+    if (html) html = withCidLinks(x.gmail_id, gm.payload, html, allIx);
     return { ...x, body_html: html, body_text: (text || x.body_text || "").slice(0, 6e4) };
   }));
   return { messages: out };

@@ -734,6 +734,9 @@ async function threadFull(box: string, tid: string, ids?: any) {   // 19 Nov 202
     const allIx = cidIndex(pool);          // built once for the mails being sent, not once per mail
     const out = await Promise.all(rows.map(async (x: any) => {
       const gm = byId.get(x.gmail_id);
+      // __threadrescue 28 Nov 2026: this file has DRIFTED from the bundle the office server runs
+      // (server/local-server/rugs-mail.bundle.mjs, FULL_N there is 3 and it carries the rescue +
+      // saved-copy fix of 28 Nov). Patch the BUNDLE; see server/patch-thread-rescue.js.
       if (!gm) return { ...x, body_html: "", body_text: (x.body_text || "").slice(0, 4000), light: true };
       let html = gm ? partOf(gm.payload, "text/html") : "";
       const text = gm ? (partOf(gm.payload, "text/plain") || (html ? htmlToText(html.slice(0, 150000)) : "")) : x.body_text;

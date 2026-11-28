@@ -352,3 +352,31 @@ UI only — no rule, no ownership, no count, no server change, and the centre ma
 10. The middle list must look **exactly as it did yesterday** — same row spacing, same lines, same type.
 11. Dark mode (your name → theme): header dark blue, panes dark, every word readable.
 12. `rzMemCap()` in the console — still under 250 MB (rule M1).
+
+## 28 Nov 2026 — "Couldn't load — Retry" on older mails (Ashok, Team Pulse, "Very SS27 Po's")
+
+**Cause, proved against the live server (admin token, then a real Switch ID session as Ashok):**
+`thread` answered **200 to both**, with the same body — nothing was refused, so neither Switch ID nor
+bug 12's guards nor the lazy loader's ids were at fault. The office log said, for every older id:
+`thread msg miss <id> Gmail 404: Requested entity was not found` (twice, because of the retry).
+The app's own Gmail search then showed the thread `1a1cf9058bac590f` still exists in teampulse@ but
+holds mail **only from 23 Nov onwards** — every window up to 19 Nov, `in:anywhere` included (Trash and
+Spam), comes back without it. So Gmail no longer has those message ids; Rugs Email still has its own
+saved copy of their text, which is why the preview read and the body did not.
+
+**Fix:** server (`server/patch-thread-rescue.js`, bundle `2026-11-28-a`) + app (`server/patch-saved-copy-client.js`, build `2026-11-28-1`).
+A 404 is never retried; the mail is first looked for in the same mailbox by **sender + time** (an id can
+be stale rather than the mail gone) and the real original served if found, under the id the app asked for;
+otherwise the **saved copy** is sent (`saved:true`) and the pane reads it with one line saying so, instead
+of an error. A transient failure (502/timeout) still comes back as a summary so **Retry** still means something.
+
+**Tester checklist**
+- [ ] Ashok, Team Pulse, "Very SS27 Po's": every mail opens — the 12–19 Nov ones read with the line
+      "Google Mail no longer has the original…"; none shows "Couldn't load" for ever.
+- [ ] The same through **Switch ID** (admin → Ashok's ID) — identical.
+- [ ] A real member login (not switched) — identical.
+- [ ] "Show all 12 mails": nothing spins, nothing fails.
+- [ ] Fold them up and open one again: still reads, no spinner.
+- [ ] `rzMemCap()` stays under 250 MB.
+- [ ] Admin → 🖥 Server → log: look for `thread msg rescued` (the original was found under a new id)
+      vs `Gmail does not have this id (404), not retried`.
