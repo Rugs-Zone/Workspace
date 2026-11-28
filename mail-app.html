@@ -3933,7 +3933,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-19';
+const APP_BUILD='2026-11-28-20';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -10672,8 +10672,8 @@ function sigFinal(pid){
  if(Date.now()<FAIR_END)h+='<tr><td colspan="2" style="border-top:1px solid '+INK+';padding:12px 0">'
  +'<table cellpadding="0" cellspacing="0" border="0"><tr>'
  +'<td style="vertical-align:middle;padding-right:16px"><img src="'+IMG+'heimtextil-badge.png" alt="Heimtextil" width="90" height="60" style="display:block;border:0;width:90px;height:60px"></td>'
- +'<td style="vertical-align:middle;padding-right:22px"><div style="'+F+'font-size:10px;color:'+GR+'">HALL</div><div style="'+F+'font-size:24px;line-height:28px;font-weight:bold;color:'+INK+'">11.0</div></td>'
- +'<td style="vertical-align:middle;padding-right:22px"><div style="'+F+'font-size:10px;color:'+GR+'">STAND</div><div style="'+F+'font-size:24px;line-height:28px;font-weight:bold;color:'+OR+'">B79</div></td>'
+ +'<td style="vertical-align:middle;padding-right:22px"><div style="'+F+'font-size:10px;color:'+GR+'">HALL</div><div style="'+F+'font-size:24px;line-height:28px;font-weight:bold;white-space:nowrap;color:'+INK+'">11.0</div></td>'
+ +'<td style="vertical-align:middle;padding-right:22px"><div style="'+F+'font-size:10px;color:'+GR+'">STAND</div><div style="'+F+'font-size:24px;line-height:28px;font-weight:bold;white-space:nowrap;color:'+OR+'">B79</div></td>'
  +'<td style="vertical-align:middle"><div style="'+F+'font-size:14px;font-weight:bold;color:'+INK+'">Heimtextil 2027, Frankfurt</div>'
  +'<div style="'+F+'font-size:12px;color:'+GR+';padding-top:3px">12 \u2013 15 January 2027 &nbsp;\u00b7&nbsp; Come and see the new collection</div></td>'
  +'</tr></table></td></tr>';
@@ -10739,3 +10739,24 @@ function good(x){x=String(x||'').trim();var at=x.lastIndexOf('@');if(at<1)return
 normRcpt=function(v){var out=String(_n(v)||'').split(/,\s*/).filter(good);return out.slice(0,40).join(', ')};
 })();
 /* __ccclean:end */</script>
+
+<script>/* __stucksend:start 28 Nov 2026 - see server/patch-stuck-sending.js */
+(function(){
+var LIVE=new WeakMap();
+try{var _ls=liveSend;liveSend=function(t,m){try{if(m)LIVE.set(m,Date.now())}catch(e){}return _ls.apply(this,arguments)}}catch(e){}
+function sweep(){try{
+ var list=[];var ot=(typeof openId!=='undefined'&&openId)?T_(openId):null;if(ot)list.push(ot);
+ (S.threads||[]).forEach(function(t){var l=t&&t.msgs&&t.msgs[t.msgs.length-1];if(l&&l.sending&&t!==ot)list.push(t)});
+ var ch=false;
+ list.forEach(function(t){(t.msgs||[]).forEach(function(m){
+  if(!m||!m.sending||m.gid)return;
+  var st=LIVE.get(m);
+  if(st&&Date.now()-st<120000)return;
+  m.sending=false;m.failed=true;
+  m.failErr=st?'No answer from the mail server for 2 minutes - check Gmail Sent before trying again':'Sending was interrupted - check Gmail Sent before trying again';
+  ch=true})});
+ if(ch){try{save()}catch(e){}try{render()}catch(e){}}
+}catch(e){}}
+setTimeout(sweep,4000);setInterval(sweep,20000);
+})();
+/* __stucksend:end */</script>
