@@ -44,6 +44,13 @@ Each screen is built, tested, shown to you, and approved before the next.
 7. **Search** — Outlook-style search with filters (from, to, has attachment, date, PO number on top).
 8. **Admin** — users, departments, rules, Switch ID, server status.
 
+## 4a. Also as real software (like the Outlook app)
+
+- **Desktop app (Windows):** v2 installs from the browser as an app — its own window and taskbar icon with the Rugs Creation logo, opens full-screen without the browser bar, starts with Windows if wanted, desktop notifications for new mail. (Installable web app; a `mail-manifest.json` already exists to build on.)
+- **Later, if needed:** a packaged `.exe` installer (same code inside) for PCs where the browser install is not allowed.
+- **Android:** the same app installs on phones from the link; a Play Store app can come after v2 is stable.
+- Same data and same login in all three — nothing separate to keep in step.
+
 ## 5. Testing — "no bug comes"
 
 - **Test cases from today's real bugs** go in first: Arun's Sent (Gmail-written mail), Gmail trash, 24 MB quoted reply, `[cid:image001…]` and `@shadow.outlook.com` in Cc, stuck "Sending…", two people with the same first name.

@@ -49,3 +49,5 @@ Older history moved unchanged to `docs/PROGRESS-ARCHIVE.md` (last move: 27 Nov 2
 - 28 Nov 2026 (app 2026-11-28-21): Robin reply delivered but one Cc bounced (Outlook hidden id ...@shadow.outlook.com) - such routing ids are now dropped from Reply-all. server/patch-cc-clean.js
 
 - 28 Nov 2026 (app 2026-11-28-22, server 2026-11-28-f): Delete this mail only - new item in a mail ... menu; any team member with full access; Rugs Email only (Gmail keeps it); Undo 10 s; stored in rm_settings.hidden_msgs via new server action hideMsg. server/patch-hidemsg-app.js, server/patch-server-hidemsg.js
+
+- 28 Nov 2026: Rugs Email v2 rebuild APPROVED - Outlook look, per-person state, test gate, installable app; Claude builds/tests/designs; testers Claude + Priyanshu; Team Alpha + Pulse first; launch Sat 5 Dec 2026; v1 urgent fixes only. docs/REBUILD-PLAN.md
