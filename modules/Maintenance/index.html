@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Plant Electrical Portal</title>
+<style>
+:root{--bg:#070b16;--card:#0f1626;--card2:#131c31;--line:#1f2a44;--tx:#e8eefc;--mu:#8b97b8;--cyan:#22d3ee;--green:#34d399;--amber:#fbbf24;--red:#f87171;--violet:#a78bfa;color-scheme:dark}
+*{box-sizing:border-box;margin:0}
+html,body{overflow-x:hidden;-webkit-text-size-adjust:100%}
+body{font-family:Inter,"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--tx);min-height:100vh;background:radial-gradient(900px 500px at 10% -10%,#16264d 0,transparent 60%),radial-gradient(800px 500px at 100% 0,#2a1550 0,transparent 55%),var(--bg)}
+button,input,select{font-family:inherit}
+a{color:var(--cyan)}
+.wrap{max-width:1400px;margin:auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:23px;background:linear-gradient(135deg,var(--cyan),var(--violet));box-shadow:0 8px 30px #22d3ee44}
+h1{font-size:21px;font-weight:800;letter-spacing:-.3px}.sub{color:var(--mu);font-size:12.5px;margin-top:2px}
+h2{font-size:18px}h3{font-size:14px;margin-bottom:10px}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:12.5px;color:var(--mu)}
+.btn{background:var(--card2);color:var(--tx);border:1px solid var(--line);padding:9px 14px;border-radius:10px;font:600 13px/1.2 inherit;cursor:pointer;min-height:40px;touch-action:manipulation}
+.btn:hover{border-color:var(--cyan)}.btn.pri{background:linear-gradient(135deg,var(--cyan),var(--violet));border:0;color:#04101c}.btn:disabled{opacity:.45;cursor:not-allowed}
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:5px;width:max-content;max-width:100%;overflow:auto;margin-bottom:14px}
+.tab{padding:9px 16px;border-radius:10px;border:0;background:none;color:var(--mu);font:600 13px/1.2 inherit;cursor:pointer;white-space:nowrap;min-height:40px;touch-action:manipulation}
+.tab.on{background:linear-gradient(135deg,var(--cyan),var(--violet));color:#04101c}
+.pane,.spane,.rpane{display:none}.pane.on,.spane.on,.rpane.on{display:block}
+[hidden]{display:none!important}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:12px;min-width:0}
+.hint{font-size:12px;color:var(--mu);margin-top:3px}.card .hint{margin-bottom:10px}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.tile{cursor:pointer;background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-top:3px solid var(--c);border-radius:16px;padding:14px;transition:.15s}
+.tile:hover,.tile.on{transform:translateY(-2px);border-color:var(--c);box-shadow:0 8px 24px #0006}
+.tile .ic{font-size:26px}.tile b{display:block;margin:6px 0 4px}.tile small{display:block;color:var(--mu);font-size:11.5px;margin-top:6px}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:700}
+.pill.g{background:#34d39922;color:var(--green)}.pill.a{background:#fbbf2422;color:var(--amber)}.pill.r{background:#f8717125;color:var(--red)}.pill.n{background:#8b97b822;color:var(--mu)}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.fl{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.fld{display:block;border:1px solid var(--line);background:var(--card2);border-radius:12px;padding:9px 11px;transition:.15s}
+.fld .lb{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;margin-bottom:6px}
+.fld .lb em{font-style:normal;color:var(--cyan);font-weight:600;font-size:11px;white-space:nowrap}
+.fld input,.fld select,.f input,.f select{width:100%;background:#0a1020;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;font-weight:600;font-size:16px;min-height:44px}
+.fld input:focus,.fld select:focus,.fc input:focus,.fc select:focus{outline:2px solid var(--cyan);outline-offset:0}
+.fld small{display:block;font-size:11px;margin-top:5px;min-height:14px;color:var(--mu)}
+.fld .mg{font-weight:600}
+.fld.ok{border-color:#34d39966;background:#34d39910}.fld.ok .mg{color:var(--green)}
+.fld.bad{border-color:var(--red);background:#f8717120;animation:shake .3s}.fld.bad input,.fld.bad select{border-color:var(--red);color:#fecaca}.fld.bad .mg{color:var(--red)}
+.fld.warn{border-color:var(--amber);background:#fbbf2415}.fld.warn .mg{color:var(--amber)}
+.fld.miss{border-color:var(--red);background:#f8717115}.fld.miss .mg{color:var(--red)}
+.ftbl th{text-align:left}
+td.fc{text-align:left;vertical-align:top;padding:5px 6px}
+.fc input,.fc select{width:100%;min-width:78px;background:#0a1020;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-weight:600;font-size:14px;min-height:36px}
+.fc .mg{display:block;font-size:10.5px;min-height:13px;font-weight:600;color:var(--mu);white-space:normal}
+.fc .rg{display:block;font-size:10.5px;color:var(--cyan);min-height:13px}
+.fc.ok .mg{color:var(--green)}.fc.bad .mg,.fc.miss .mg{color:var(--red)}
+.fc.bad input,.fc.bad select,.fc.miss input,.fc.miss select{border-color:var(--red);background:#f8717120}
+.fc.warn input{border-color:var(--amber)}
+/* Excel-style reports */
+.xlw{background:#fff;color:#000;border-radius:8px;padding:8px;overflow:auto;max-height:78vh;margin-bottom:12px}
+table.xl{width:auto;table-layout:fixed;border-collapse:collapse;font:13px Calibri,Carlito,"Segoe UI",Arial,sans-serif;color:#000;background:#fff}
+table.xl th,table.xl td{border:1px solid #000;padding:2px 3px;text-align:center!important;color:#000;background:#fff;position:static;text-transform:none;letter-spacing:0;font-size:13px;white-space:nowrap;overflow:hidden}
+table.xl th{font-weight:700;white-space:normal}table.xl td{font-weight:400}
+table.xl.xd td,table.xl.xg td{font-weight:700}
+table.xl .tl{text-align:left!important;border:0;font-size:21px}
+table.xl .nb{border:0;background:transparent}table.xl tr.x35 td{border:0}
+table.xl .nbd{border:0;font-weight:400}
+table.xl tr.xt td{font-weight:700;font-size:14px}
+.xpg{margin-bottom:10px;page-break-after:always;break-after:page}
+/* admin review */
+.rvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.rvt{position:relative;cursor:pointer;border:2px solid var(--line);background:var(--card2);border-radius:12px;padding:6px;transition:.15s}
+.rvt img{width:100%;height:110px;object-fit:cover;border-radius:8px;background:#0a1020;display:block}
+.rvt b{display:block;font-size:12px;margin-top:5px}.rvt small{display:block;color:var(--mu);font-size:11px}
+.rvt .ck{display:none;position:absolute;top:10px;right:10px;background:var(--green);color:#04101c;border-radius:99px;padding:1px 8px;font-size:11px;font-weight:700;font-style:normal}
+.rvt.seen{border-color:var(--green)}.rvt.seen .ck{display:block}.rvt.bad{border-color:var(--red)}.rvt.bad.seen{border-color:var(--green)}
+.pbar{height:8px;background:#0a1020;border-radius:99px;overflow:hidden}.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--green));transition:.2s}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.banner{position:sticky;top:0;z-index:5;padding:11px 14px;border-radius:12px;margin-bottom:12px;font-size:13.5px;font-weight:600;border:1px solid var(--line);background:var(--card)}
+.banner.bad{background:#2a1215;border-color:var(--red);color:#fecaca}.banner.ok{background:#0e2a22;border-color:var(--green);color:#a7f3d0}.banner.wait{background:#2a2410;border-color:var(--amber);color:#fde68a}
+#err{z-index:90;line-height:1.5}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.f label{display:block;font-size:11px;color:var(--mu);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.f{min-width:150px}
+.tw{overflow:auto;border-radius:10px;max-height:520px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:7px 9px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{position:sticky;top:0;background:var(--card2);color:var(--mu);font-size:11px;text-transform:uppercase;letter-spacing:.4px;z-index:2}
+th small{display:block;color:var(--cyan);text-transform:none;letter-spacing:0;font-weight:600}
+td:first-child,th:first-child,td.l,th.l{text-align:left}
+td.bad{background:#f8717130;color:#fecaca;font-weight:700}td.warn{background:#fbbf2420;color:var(--amber);font-weight:700}
+tr.totrow td{font-weight:700;background:var(--card2)}
+#pa table.bk td:first-child,#pa table.bk th:first-child{position:static;background:#fff}#pa table.bk td.sep{border-left-color:#ccc}
+table.rep th{text-align:center;white-space:normal}
+table.rep td.sep,table.rep th.sep{border-left:1px solid var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 4px}
+.cp{background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-size:12px}.cp.bad{background:#f8717125;border-color:var(--red);color:#fecaca;font-weight:700}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+.cards .card{margin:0;padding:12px}.cards small{color:var(--mu);font-size:11px;text-transform:uppercase;letter-spacing:.6px}.cards b{font-size:24px;display:block;margin-top:4px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dgrid{display:grid;gap:12px;margin-bottom:12px}.d21{grid-template-columns:2fr 1fr}.d11{grid-template-columns:1fr 1fr}
+@media(max-width:900px){.g2,.d21,.d11{grid-template-columns:1fr}}
+.cb{position:relative;height:300px}
+details{margin-bottom:10px}summary{cursor:pointer;font-weight:700;padding:8px 2px}
+.msg{padding:24px;text-align:center;color:var(--mu)}.msg b{color:var(--red)}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--cyan);padding:10px 16px;border-radius:12px;font-size:13px;display:none;z-index:150}
+#toast.err{border-color:var(--red)}
+#busy{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--cyan),var(--violet));transition:width .6s;z-index:199}
+#edm{position:fixed;inset:0;background:#000b;display:none;place-items:center;z-index:185;padding:16px}#edm.on{display:grid}#edm .box{background:var(--card);border:1px solid var(--cyan);border-radius:16px;padding:18px;max-width:460px;width:100%;max-height:90vh;overflow:auto}#edF label{display:block;font-size:12px;color:var(--mu);margin:8px 0 3px}#edF input,#edF select{width:100%;background:#0a1020;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;font-size:15px;min-height:42px}
+#modal,#pin{position:fixed;inset:0;background:#000b;display:none;place-items:center;z-index:180;padding:16px}
+#modal.on,#pin.on{display:grid}
+#modal .box,#pin .box{background:var(--card);border:1px solid var(--amber);border-radius:16px;padding:18px;max-width:430px;width:100%}
+#pin .box{border-color:var(--cyan)}
+#modal p{margin:8px 0 16px;font-size:13.5px;line-height:1.5;color:var(--tx)}
+#pin input{width:100%;background:#0a1020;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:18px;letter-spacing:4px;margin:10px 0 14px;min-height:46px}
+body.saving #form .btn,body.saving .tile{pointer-events:none;opacity:.5}
+
+.phs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ph{position:relative}
+.phbox{display:grid;place-items:center;aspect-ratio:4/3;border:2px dashed var(--line);border-radius:12px;background:var(--card2);cursor:pointer;text-align:center;color:var(--mu);font-size:13px;font-weight:600;overflow:hidden;position:relative;line-height:1.5;padding:4px}
+.phbox img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.phacts{display:flex;gap:6px;margin-top:6px}.phc{position:relative;flex:1;text-align:center;cursor:pointer;padding:9px 6px;font-size:12.5px;overflow:hidden}.phc input{pointer-events:auto;position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;font-size:0}.phacts .phx{position:static;flex:0 0 auto;padding:9px 11px!important;font-size:13px!important}
+.phbox small{font-weight:500;font-size:11px}
+.phin{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.ph.ok .phbox{border-style:solid;border-color:var(--green)}
+.ph.need .phbox{border:2px dashed var(--amber);background:#fbbf2414;color:#fde68a}
+.ph.need .phbox::after{content:'COMPULSORY';position:absolute;top:6px;right:6px;background:var(--amber);color:#111;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 6px;border-radius:6px}
+.rq{color:var(--red);margin-left:3px}
+.ph.miss .phbox{border-color:var(--red);background:#f8717115;color:#fecaca}
+.ph .tag{position:absolute;left:6px;bottom:6px;background:#000a;color:#fff;border-radius:6px;padding:2px 7px;font-size:11px;z-index:1}
+.phx{position:absolute;top:6px;right:6px;min-height:0!important;padding:4px 9px!important;font-size:12px!important;z-index:2}
+.rph{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.rph img{width:130px;height:98px;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block;cursor:pointer}
+.phl{display:inline-flex;flex-wrap:wrap;gap:4px}
+.btn.phb{min-height:0;padding:3px 8px;font-size:11.5px;white-space:nowrap}
+#lb{position:fixed;inset:0;background:#000d;display:none;place-items:center;z-index:170;padding:12px}
+#lb.on{display:grid}
+#lb .lbx{max-width:min(96vw,1000px);width:100%;text-align:center}
+#lb img{max-width:100%;max-height:78vh;border-radius:10px;border:1px solid var(--line);background:#111}
+#lb .cap{margin:10px 0;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin:12px 0 14px}
+.num{text-align:right}
+.kpi.go{cursor:pointer}.kpi.go:hover{filter:brightness(1.15)}
+.ovl{position:fixed;inset:0;background:var(--bg);z-index:70;overflow:auto;padding:14px 14px 40px}.ovl .in{max-width:900px;margin:0 auto}
+.kpi{position:relative;overflow:hidden;background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-top:3px solid var(--c);border-radius:16px;padding:14px 14px 0;min-height:150px;display:flex;flex-direction:column}
+.kpi:before{content:"";position:absolute;inset:0;background:radial-gradient(220px 100px at 0 0,color-mix(in srgb,var(--c) 18%,transparent),transparent);pointer-events:none}
+.k-top{display:flex;align-items:center;gap:8px;color:var(--mu);font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.7px}.k-ic{font-size:17px}
+.k-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px}
+.k-val{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1.1}.k-val small{font-size:12px;color:var(--mu);font-weight:600;margin-left:4px;letter-spacing:0}
+.k-sub{font-size:12px;color:var(--mu);margin-top:6px}
+.k-spark{margin-top:auto;height:36px;margin-left:-14px;margin-right:-14px}.k-spark svg{width:100%;height:100%;display:block}
+.ring{flex:none;width:62px;height:62px;border-radius:50%;background:conic-gradient(var(--rc) calc(var(--p)*1%),#1a2440 0);display:grid;place-items:center;position:relative}
+.ring:before{content:"";position:absolute;inset:7px;background:var(--card);border-radius:50%}.ring b{position:relative;font-size:12px}
+.kpi.crit{border-top-color:var(--red);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #f8717155}70%{box-shadow:0 0 0 14px #f8717100}100%{box-shadow:0 0 0 0 #f8717100}}
+.sec-h{display:flex;align-items:center;gap:10px;margin:6px 2px 10px;font-size:15px;font-weight:700}
+.badge{background:var(--red);color:#fff;border-radius:99px;padding:2px 9px;font-size:12px}.badge.g{background:var(--green);color:#04201a}
+.alerts{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:10px;margin-bottom:18px}
+.al{display:flex;gap:11px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:12px;padding:11px 13px}
+.al .ic{font-size:21px}.al b{display:block;font-size:13.5px;margin-bottom:2px}.al span{font-size:12.5px;color:var(--mu);line-height:1.4}
+.al.crit{--c:var(--red);background:linear-gradient(90deg,#f8717122,var(--card));animation:pulse 1.6s infinite}
+.al.warn{--c:var(--amber);background:linear-gradient(90deg,#fbbf2415,var(--card))}.al.info{--c:var(--cyan)}.al.ok{--c:var(--green)}
+.donutwrap{position:relative;height:230px}
+.donut-c{position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none}
+.donut-c b{font-size:22px;font-weight:800}.donut-c span{font-size:11px;color:var(--mu)}
+.rank{display:flex;flex-direction:column;gap:9px;margin-top:8px;max-height:360px;overflow:auto}
+.rk .t{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:3px}.rk .t span{color:var(--mu)}
+.pb{height:9px;background:#1a2440;border-radius:9px;overflow:hidden}.pb i{display:block;height:100%;border-radius:9px}
+table.heat td{text-align:center;padding:6px 5px;min-width:38px;font-size:11.5px}
+table.heat td:first-child,table.heat th:first-child{text-align:left;min-width:150px;font-size:12.5px;position:sticky;left:0;background:var(--card2);z-index:1}
+table.heat td.na{color:#394565}table.heat td.tot{font-weight:700;background:var(--card2)}
+.fld input[readonly]{background:#0d1426;opacity:.85;cursor:not-allowed}
+.fl.inl{grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr))}
+.fld.inl{display:grid;grid-template-columns:minmax(110px,40%) 1fr;align-items:center;column-gap:12px;row-gap:4px}
+.fld.inl .lb{display:block;margin:0;font-size:13px}
+.fld.inl .lb em{display:block;margin-top:2px}
+.fld.inl .side{grid-column:1/-1;display:flex;justify-content:space-between;gap:8px;min-width:0}
+.fld.inl .side small{margin:0;min-height:14px}
+.qrs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.qrc{background:#fff;color:#111;border-radius:14px;padding:12px;text-align:center;break-inside:avoid;page-break-inside:avoid}
+.qrc b{display:block;margin-top:10px;font-size:17px;line-height:1.25}.qrc small{display:block;font-size:11px;color:#555;margin-top:6px}
+.qrbox{display:grid;place-items:center;min-height:168px}
+body.fm #main,body.fm .pane{display:none!important}
+body.fm #t-entry{display:block!important}
+body.fm #board{display:none}
+#pa .xlw{overflow:visible;max-height:none}
+#pa{display:none;--card:#fff;--card2:#f1f5f9;--line:#d5dbe5;--tx:#111827;--mu:#556070;--cyan:#0369a1;background:#fff;color:#111827;padding:14px}
+#pa h1{font-size:20px}#pa .card{background:#fff;border-color:#d5dbe5}#pa td.bad{background:#fecaca;color:#991b1b}#pa td.warn{background:#fde68a;color:#78350f}
+#pa .cp.bad{background:#fecaca;color:#991b1b}#pa .banner{position:static}#pa th{position:static}#pa .tw{max-height:none;overflow:visible}
+#pa .kpi,#pa .al{background:#fff}#pa .rank{max-height:none}#pa .phl{display:none}
+#pa table.wide{font-size:9px}#pa table.wide th,#pa table.wide td{padding:3px 4px}
+#pa .qrs.big{display:block}#pa .qrs.big .qrc{page-break-after:always;break-after:page;border:none;padding:40px 10px;text-align:center}#pa .qrs.big .qrc:last-child{page-break-after:auto;break-after:auto}#pa .qrs.big .qrbox{min-height:0}#pa .qrs.big .qrbox img,#pa .qrs.big .qrbox canvas{width:420px!important;height:420px!important;margin:0 auto}#pa .qrs.big .qrc b{font-size:40px;margin-top:24px;line-height:1.2}#pa .qrs.big .qrc small{font-size:16px;margin-top:14px;color:#444}
+#pa .qrs{grid-template-columns:repeat(3,1fr)}#pa .qrc{border:1px solid #ccc}
+@media print{.wrap,#toast,#busy,#modal,#lb,#pin{display:none!important}#pa{display:block!important}body{background:#fff}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:10mm}}
+@media(min-width:1800px){.wrap{max-width:1640px}}
+@media(max-width:1024px){
+  .wrap{padding:12px}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+  .fl{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+}
+@media(max-width:700px){
+  body{padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+  body.fm{padding-bottom:20px}
+  .wrap{padding:10px}
+  header .sub{display:none}
+  h1{font-size:18px}
+  .logo{width:40px;height:40px;font-size:20px}
+  .chip{font-size:11.5px;padding:5px 10px}
+  #main{position:fixed;left:0;right:0;bottom:0;z-index:60;width:auto;max-width:none;margin:0;border-radius:16px 16px 0 0;border-width:1px 0 0;padding:6px 6px calc(6px + env(safe-area-inset-bottom));justify-content:space-around;gap:2px;background:#0b1222ee;backdrop-filter:blur(8px)}
+  #main .tab{flex:1;padding:8px 2px;font-size:11px;text-align:center;white-space:normal;line-height:1.25}
+  #dtabs,#rtabs{width:100%}
+  #dtabs .tab,#rtabs .tab{padding:9px 12px}
+  .bar.f{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end}
+  .bar.f>div,.bar.f>.btn{min-width:0;width:100%}
+  .bar.f .btn{padding:10px 8px}
+  .meta{grid-template-columns:1fr 1fr}
+  .meta .fld:last-child{grid-column:1/-1}
+  .fl{grid-template-columns:1fr 1fr;gap:8px}
+  .fld{padding:8px 9px}
+  .fld .lb{flex-wrap:wrap;gap:2px 8px}
+  .board{grid-template-columns:1fr 1fr;gap:8px}
+  .tile{padding:11px}.tile .ic{font-size:22px}
+  .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{min-height:128px;padding:11px 11px 0}
+  .k-val{font-size:23px}.k-sub{font-size:11px}
+  .ring{width:48px;height:48px}.ring:before{inset:6px}.ring b{font-size:10px}
+  .alerts{grid-template-columns:1fr}
+  .cards{grid-template-columns:1fr 1fr}.cards b{font-size:20px}
+  .card{padding:12px;border-radius:14px}
+  .cb{height:250px}
+  .donutwrap{height:200px}
+  th,td{padding:6px 7px;font-size:12px}
+  .tw{max-height:420px}
+  .phs{grid-template-columns:1fr 1fr;gap:8px}
+  .qrs{grid-template-columns:1fr 1fr}
+  #toast{bottom:calc(86px + env(safe-area-inset-bottom));max-width:92vw;text-align:center}
+}
+@media(max-width:380px){
+  .fl,.meta,.kpis,.board{grid-template-columns:1fr}
+  .k-val{font-size:22px}
+}
+html,body{overflow-x:hidden}.phl{display:flex;flex-wrap:wrap;gap:4px}img,svg,canvas{max-width:100%}
+@media(hover:none){.tile:hover{transform:none;box-shadow:none}}
+</style>
+</head>
+<body>
+<div id="busy"></div>
+<div class="wrap">
+<div id="err" class="banner bad" style="display:none"></div>
+<header>
+  <div class="brand"><div class="logo">⚡</div><div><h1 id="ttl">Plant Electrical Portal</h1><div class="sub" id="subttl">Admin · dashboard · daily entry · log · reports · barcodes · build 11</div></div></div>
+  <div class="bar"><span class="chip" id="today">…</span><span class="chip" id="who">…</span></div>
+</header>
+<nav class="tabs" id="main">
+  <button class="tab on" data-t="dash">📊 Dashboard</button>
+  <button class="tab" data-t="entry">✍ New entry</button>
+  <button class="tab" data-t="log">📋 Entry log</button>
+  <button class="tab" data-t="rep">🧾 Reports</button>
+  <button class="tab" data-t="act" id="tabAct">🛠 Actions</button>
+  <button class="tab" data-t="rev" id="tabRev">✅ Daily review</button>
+  <button class="tab" data-t="qr">🔳 Barcodes</button>
+</nav>
+
+<div class="pane on" id="t-dash">
+  <div class="card"><div class="bar f">
+    <div><label>From</label><input type="date" id="dFrom"></div>
+    <div><label>To</label><input type="date" id="dTo"></div>
+    <button class="btn" onclick="preset(1,'d');loadDash()">Today</button>
+    <button class="btn" onclick="preset(7,'d');loadDash()">7 days</button>
+    <button class="btn" onclick="preset(0,'d');loadDash()">This month</button>
+    <button class="btn pri" onclick="loadDash(false,true)">⟳ Refresh</button>
+    <button class="btn" onclick="printDash()">⎙ Print</button>
+    <button class="btn" onclick="pdfDash()">⬇ PDF</button>
+  </div></div>
+  <div id="dBody">
+    <div class="hint" id="dSub">Loading page…</div>
+    <section class="kpis" id="kpis"><div class="msg">Loading…</div></section>
+    <div class="sec-h">🚨 Needs your attention <span class="badge" id="alCount">0</span></div>
+    <section class="alerts" id="alerts"></section>
+    <nav class="tabs noprint" id="dtabs">
+      <button class="tab on" data-d="overview">Overview</button>
+      <button class="tab" data-d="ht">HT Meter &amp; Solar</button>
+      <button class="tab" data-d="dept">Departments</button>
+      <button class="tab" data-d="dg">DG Set</button>
+      <button class="tab" data-d="eq">Servo, UPS, Compressor &amp; Solar unit checking</button>
+    </nav>
+    <div class="spane on" id="d-overview">
+      <div class="dgrid d21">
+        <div class="card"><h3>Daily consumption</h3><p class="hint">Grid import + solar + export (kWh), from meter reading differences</p><div class="cb" id="w-dDaily"></div></div>
+        <div class="card"><h3>Where the power goes</h3><p class="hint">Department share of units</p><div class="donutwrap" id="w-dShare"></div></div>
+      </div>
+      <div class="card"><h3>Department ranking</h3><p class="hint">Units and bill amount for the period</p><div class="rank" id="rank"></div></div>
+    </div>
+    <div class="spane" id="d-ht">
+      <div class="dgrid d11">
+        <div class="card"><h3>Maximum demand (MDI)</h3><p class="hint">Red line = limit</p><div class="cb" id="w-dMDI"></div></div>
+        <div class="card"><h3>Power factor</h3><p class="hint">Meter PF vs actual (kWh ÷ kVAh)</p><div class="cb" id="w-dPF"></div></div>
+      </div>
+      <div class="card"><h3>Solar vs grid import</h3><div class="cb" id="w-dSolar"></div></div>
+      <div class="card"><h3>Daily HT register</h3><div class="tw" id="htTable"></div></div>
+    </div>
+    <div class="spane" id="d-dept">
+      <div class="card"><h3>Heat map: department × day</h3><p class="hint">Colour is relative to each department's own peak. Red = heaviest days.</p><div class="tw" id="heat"></div></div>
+      <div class="card"><h3>Daily units by department</h3><div class="cb" id="w-dStack" style="height:340px"></div></div>
+    </div>
+    <div class="spane" id="d-dg">
+      <div class="cards" id="dgMini"></div>
+      <div class="dgrid d21">
+        <div class="card"><h3>DG running hours</h3><p class="hint">Bars = hours, line = units generated</p><div class="cb" id="w-dDG"></div></div>
+        <div class="card"><h3>Run log</h3><div class="tw" id="dgLog" style="max-height:310px"></div></div>
+      </div>
+    </div>
+    <div class="spane" id="d-eq"><div id="eqBody"></div></div>
+  </div>
+</div>
+
+<div class="pane" id="t-entry">
+  <div class="board" id="board"><div class="msg">Waiting for the server…</div></div>
+  <div id="sched"></div>
+  <div id="form"></div>
+</div>
+
+<div class="pane" id="t-log">
+  <div class="card"><div class="bar f">
+    <div><label>Form</label><select id="lForm"></select></div>
+    <div><label>From</label><input type="date" id="lFrom"></div>
+    <div><label>To</label><input type="date" id="lTo"></div>
+    <div><label>Doer name contains</label><input type="text" id="lQ" placeholder="search"></div>
+    <div><label>&nbsp;</label><label style="display:flex;gap:6px;align-items:center;text-transform:none;font-size:13px;color:var(--tx)"><input type="checkbox" id="lMine" style="width:auto;min-height:0"> Only my entries</label></div>
+    <button class="btn pri" onclick="loadLog()">Search</button>
+    <button class="btn" onclick="printLog()">⎙ Print</button>
+    <button class="btn" onclick="pdfLog()">⬇ PDF</button>
+    <button class="btn" onclick="csvLog()">⬇ CSV</button>
+  </div></div>
+  <div class="card"><p class="hint">Photos are kept for the last 7 days only (today and the 6 days before). Tap a photo button to view it in a pop-up.</p><div class="tw" id="logTbl"><div class="msg">Press Search</div></div></div>
+</div>
+
+
+<div class="pane" id="t-rep">
+  <div class="card"><div class="bar f">
+    <div><label>Month</label><input type="month" id="xMon"></div>
+    <button class="btn" onclick="xMonth(0)">This month</button><button class="btn" onclick="xMonth(-1)">Last month</button>
+    <button class="btn pri" onclick="loadXl()">Load report</button>
+    <button class="btn" onclick="printXl()">⎙ Print</button><button class="btn" onclick="pdfXl()">⬇ PDF</button><button class="btn" onclick="csvXl()">⬇ CSV</button>
+  </div><p class="hint">The same three sheets as the Excel file: HT METER, ELECTRIC CONSUMPTION and DG SET, with the same formulas. Only the conditional colours show. Pick a month and press “Load report”.</p></div>
+  <div id="repBody"><div class="msg">Choose the month and press “Load report”</div></div>
+</div>
+
+<div class="pane" id="t-act">
+  <div class="card"><div class="bar f"><div><label>Show</label><select id="aSel" onchange="renderActs()"><option value="OPEN">Waiting for action</option><option value="ALL">All alerts</option><option value="RESOLVED">Action taken</option></select></div>
+    <button class="btn pri" onclick="loadActs()">⟳ Refresh</button></div>
+    <p class="hint">This page shows only two things: <b>readings that were out of range</b>, and <b>entries or checks that are still not filled after their time</b>. An entry that was filled late is not listed, and a missed entry disappears from here the moment it is filled. Write what was done to fix it and press Save: the action is stored and e-mailed to the same people who received the alert.</p></div>
+  <div id="actList"><div class="msg">Loading…</div></div>
+</div>
+
+<div class="pane" id="t-rev">
+  <div class="card"><div class="bar f"><div><label>Date</label><input type="date" id="rvDate"></div><button class="btn pri" onclick="loadRev()">Load photos</button></div>
+    <p class="hint">Admin daily checklist: open every photo of the day, then confirm. The confirmation (your name, time and number of photos opened) is saved and shown on the dashboard.</p></div>
+  <div id="revBody"><div class="msg">Press “Load photos”</div></div>
+</div>
+
+<div class="pane" id="t-qr">
+  <div class="card"><h3>🔳 Barcodes (QR codes): one for every form</h3>
+    <p class="hint">Print and stick each code at its place. Scanning a code opens only that form, nothing else. Solar &amp; Dept has one code per meter, to stick at that department's meter. Paste the deployed web-app URL (ending in /exec) below.</p>
+    <div class="bar f"><div style="min-width:min(100%,360px)"><label>Web-app URL</label><input type="text" id="qUrl" autocomplete="off"></div>
+    <button class="btn pri" onclick="drawQR()">Create codes</button><button class="btn" onclick="printQR()">⎙ Print all (1 per page)</button></div></div>
+  <div class="qrs" id="qrs"></div>
+</div>
+</div>
+<div id="pa"></div>
+<div id="toast"></div>
+<div id="modal"><div class="box"><h3 id="mTitle"></h3><p id="mText"></p><div class="bar"><button class="btn pri" id="mYes">OK</button><button class="btn" id="mNo">Cancel</button></div></div></div>
+<div id="edm"><div class="box"><h3 id="edT">Correct entry</h3><p class="hint" id="edS"></p><div id="edF"></div><div class="bar"><button class="btn pri" id="edOk">Save correction</button><button class="btn" onclick="$('#edm').classList.remove('on')">Cancel</button></div></div></div>
+<div id="pin"><div class="box"><h3>🔒 Admin PIN</h3><p class="hint" id="pinMsg">Enter the admin PIN to open the dashboard.</p><input type="password" id="pinIn" inputmode="numeric" autocomplete="off"><div class="bar"><button class="btn pri" id="pinOk">Open</button></div></div></div>
+<div id="lb" onclick="if(event.target===this)lbClose()"><div class="lbx"><img id="lbImg" alt="" onerror="$('#lbCap').textContent='Photo no longer available (kept 7 days only)'"><div class="cap" id="lbCap"></div><div class="bar" style="justify-content:center"><button class="btn" onclick="lbStep(-1)">◀ Prev</button><button class="btn" onclick="lbStep(1)">Next ▶</button><button class="btn pri" onclick="lbClose()">✕ Close</button></div></div></div>
+
+<script>
+window.MODE=<?!= mode ?>;
+window.BOOT=<?!= boot ?>;
+function showErr(msg,retry){
+  const e=document.getElementById('err');if(!e)return;
+  e.style.display='block';
+  e.innerHTML='⚠ '+String(msg).replace(/[<>&]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;'}[c]})+(retry?' <button class="btn pri" style="margin-left:10px" onclick="start()">Try again</button>':'');
+  const b=document.getElementById('busy');if(b)b.style.width='0';
+}
+function hideErr(){const e=document.getElementById('err');if(e)e.style.display='none'}
+function setSub(t){const s=document.getElementById('dSub');if(s)s.textContent=t}
+window.addEventListener('error',function(e){showErr('Script error: '+(e.message||'unknown')+(e.lineno?' (line '+e.lineno+')':''),false)});
+window.addEventListener('unhandledrejection',function(e){showErr('Error: '+((e.reason&&e.reason.message)||e.reason),false)});
+setSub('Page script started…');
+
+const CLIENT_BUILD='13';
+const MODE=window.MODE||{f:'',m:''},FM=!!MODE.f;
+if(FM)document.body.classList.add('fm');
+const $=(s,r=document)=>r.querySelector(s);
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const PAL=['#22d3ee','#a78bfa','#fbbf24','#34d399','#f472b6','#60a5fa','#fb923c','#f87171','#2dd4bf','#c084fc','#a3e635','#fda4af','#93c5fd'];
+const TCOL={SERVO:'#22d3ee',UPS1:'#a78bfa',UPS2:'#f472b6',METER:'#fbbf24',SOLAR:'#34d399',DG:'#fb923c',PFP:'#2dd4bf',SCLEAN:'#a3e635',COMP:'#60a5fa',DSTOCK:'#f59e0b',FIRE:'#ef4444'};
+const COL={cyan:'#22d3ee',green:'#34d399',amber:'#fbbf24',red:'#f87171',violet:'#a78bfa'};
+const KV={'5':[5.5,6.5],'10':[11,13],'15':[17,19],'20':[23,26],'25':[31,33]};
+const PHC={r:'#f87171',y:'#fbbf24',b:'#60a5fa'};
+let B=null,G=null,FK=null,LOGROWS=[],receipt='',charts={},DT='overview',STALE=false,PENDING=0,ASKING=false,SUBMITTING=false,TRIED=false,PHOTOS=[],PIN='',URLB='',QRLIB=0,QRDONE=false;
+try{PIN=sessionStorage.getItem('pp_pin')||''}catch(e){}
+const LOAD={},SAVING={};
+function lockBar(sel,on){document.querySelectorAll(sel+' .btn').forEach(b=>{b.disabled=on})}
+function busy(){document.body.classList.toggle('saving',PENDING>0)}
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const TODAY=()=>B?B.today:iso(new Date());
+const fd=s=>{const p=s.split('-');return +p[2]+' '+MON[p[1]-1]};
+const nowHM=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const n0=n=>n==null||n===''||isNaN(n)?'–':Number.isInteger(+n)?Number(n).toLocaleString('en-IN',{maximumFractionDigits:0}):n2(n,2);
+const n2=(n,d=2)=>n==null||n===''||isNaN(n)?'–':Number(n).toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d});
+const big=n=>{if(n==null)return'–';const a=Math.abs(n);if(a>=1e7)return n2(n/1e7)+' Cr';if(a>=1e5)return n2(n/1e5)+' L';if(a>=1e3)return n2(n/1e3)+' k';return n0(n)};
+const rs=n=>'₹'+big(n);
+const fH=h=>h==null?'–':(Math.floor(h)+':'+String(Math.round((h-Math.floor(h))*60)).padStart(2,'0'));
+const ok=o=>o&&!o.error;
+function myName(){try{return localStorage.getItem('pp_name')||''}catch(e){return''}}
+function setName(n){try{localStorage.setItem('pp_name',n)}catch(e){}showWho()}
+function showWho(){const n=myName();$('#who').textContent=n?'👤 '+n:'👤 Name not set yet'}
+
+/* ---------- photo pop-up viewer (photos kept 7 days) ---------- */
+const LBR=[];let LBS={l:[],i:0};
+function regLB(l){LBR.push(l);return LBR.length-1}
+function lb(id,i){LBS={l:LBR[id],i:i,id:id};lbDraw();$('#lb').classList.add('on')}
+function lbDraw(){const x=LBS.l[LBS.i];if(!x)return;if(typeof revMark==='function'&&LBS.id!=null&&LBS.id===REVLB)revMark(LBS.i);$('#lbImg').onerror=()=>{$('#lbCap').textContent=x.cap+' – photo no longer available (older than 7 days or deleted)'};$('#lbCap').textContent=x.cap+' ('+(LBS.i+1)+'/'+LBS.l.length+')';$('#lbImg').src=x.src}
+function lbStep(d){if(!LBS.l.length)return;LBS.i=(LBS.i+d+LBS.l.length)%LBS.l.length;lbDraw()}
+function lbClose(){$('#lb').classList.remove('on');$('#lbImg').removeAttribute('src')}
+document.addEventListener('keydown',e=>{if(!$('#lb').classList.contains('on'))return;if(e.key==='Escape')lbClose();if(e.key==='ArrowRight')lbStep(1);if(e.key==='ArrowLeft')lbStep(-1)});
+function thumb(u){const m=/[?&]id=([\w-]+)/.exec(u)||/\/d\/([\w-]+)/.exec(u);return m?'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w1400':u}
+function minPh(){const t=new Date(TODAY()+'T00:00:00');t.setDate(t.getDate()-(((B&&B.photoDays)||7)-1));return iso(t)}
+function phLinks(a,date){
+  a=a||[];if(!a.length)return'–';
+  const id=regLB(a.map(x=>({src:thumb(x.u),cap:x.l})));
+  return '<span class="phl">'+a.map((x,i)=>`<button type="button" class="btn phb" onclick="lb(${id},${i})">📷 ${esc(x.l)}</button>`).join('')+'</span>';
+}
+function dayList(a,b){const o=[];let d=new Date(a+'T00:00:00');const e=new Date(b+'T00:00:00');while(d<=e){o.push(iso(d));d.setDate(d.getDate()+1)}return o}
+function chk(f,v,ctx){
+  if(v===''||v==null)return'empty';
+  if(f.t==='sel')return f.ok.map(String).includes(String(v))?'':'bad';
+  if(f.t==='time'||f.t==='text')return'';
+  v=+v;let lo=f.lo,hi=f.hi;
+  if(f.dyn){const r=KV[String((ctx||{})[f.dyn])];if(!r)return'';lo=r[0];hi=r[1]}
+  if(lo!=null&&v<lo)return'bad';
+  if(hi!=null&&(f.strict?v>=hi:v>hi))return'bad';
+  return'';
+}
+function ruleOf(f,ctx){if(f.dyn){const r=KV[String((ctx||{})[f.dyn])];return r?r[0]+'–'+r[1]+' A':'by rating'}return f.rule||''}
+function isReq(f,ctx){if(f.n10&&curDate()<B.eff)return false;if(f.per)return true;if(f.rp&&FK==='DG')return f.rp===DGP;if(f.t==='text')return !!f.req;if(f.needIf)return ctx[f.needIf]!==''&&ctx[f.needIf]!=null;return !f.opt}
+function toast(m,err){const t=$('#toast');t.textContent=m;t.className=err?'err':'';t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',err?7000:3500)}
+function fail(e){$('#busy').style.width='0';const m=(e&&e.message)||String(e);if(/LOCKED/.test(m)){PIN='';try{sessionStorage.removeItem('pp_pin')}catch(x){}askPin('Wrong or expired PIN. Try again.');return}toast(m,1);showErr('Server error: '+m,false)}
+function ask(title,text,yes){return new Promise(res=>{
+  $('#mTitle').textContent=title;$('#mText').textContent=text;$('#mYes').textContent=yes||'OK';
+  const m=$('#modal');m.classList.add('on');
+  const close=v=>{m.classList.remove('on');res(v)};
+  $('#mYes').onclick=()=>close(true);$('#mNo').onclick=()=>close(false);
+})}
+function askPin(msg){
+  $('#pinMsg').textContent=msg||'Enter the admin PIN to open the dashboard.';$('#pin').classList.add('on');$('#pinIn').value='';
+  setTimeout(()=>$('#pinIn').focus(),50);
+  const go=()=>{const v=$('#pinIn').value.trim();if(!v)return;PIN=v;try{sessionStorage.setItem('pp_pin',v)}catch(e){}$('#pin').classList.remove('on');start()};
+  $('#pinOk').onclick=go;$('#pinIn').onkeydown=e=>{if(e.key==='Enter')go()};
+}
+
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtTip=v=>Number(v).toLocaleString('en-IN',{maximumFractionDigits:2});
+function fmtAx(v){const a=Math.abs(v);if(a>=1e7)return +(v/1e7).toFixed(2)+'Cr';if(a>=1e5)return +(v/1e5).toFixed(2)+'L';if(a>=1e3)return +(v/1e3).toFixed(2)+'k';return String(+v.toFixed(2))}
+function niceStep(r,n){const raw=(r/n)||1,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;return(f<=1?1:f<=2?2:f<=5?5:10)*p}
+function mkScale(lo,hi,o){
+  if(!isFinite(lo))lo=0;if(!isFinite(hi))hi=1;if(hi<=lo)hi=lo+1;
+  const st=niceStep(hi-lo,5);let a=Math.floor(lo/st+1e-9)*st,b=Math.ceil(hi/st-1e-9)*st;
+  if(o.min!=null)a=o.min;if(o.max!=null)b=o.max;if(b<=a)b=a+st;
+  const t=[];for(let v=Math.ceil(a/st-1e-9)*st;v<=b+st/1e3;v+=st)t.push(+v.toFixed(10));
+  return{min:a,max:b,ticks:t};
+}
+function drawChart(id,sp){
+  const w=document.getElementById('w-'+id);if(!w||!w.clientWidth)return;
+  const W=w.clientWidth,H=Math.max(180,w.clientHeight||300),n=sp.labels.length,S=sp.series;
+  const bars=S.filter(s=>s.type==='bar'),stacked=bars.some(s=>s.stack),hasY1=S.some(s=>s.axis==='y1');
+  const leg=sp.legend===false?[]:S.filter(s=>s.name&&!s.noLegend);
+  let lx=0,ly=0;const li=[];
+  leg.forEach(s=>{const iw=String(s.name).length*6.3+26;if(lx+iw>W-16&&lx>0){lx=0;ly+=17}li.push({s,x:lx,y:ly});lx+=iw});
+  const legH=leg.length?ly+24:6;
+  const Lm=48,Rm=hasY1?48:12,Tm=10,Bm=22+legH,pw=W-Lm-Rm,ph=H-Tm-Bm;
+  if(pw<40||ph<40){w.innerHTML='';return}
+  function ext(ax){
+    let mx=-Infinity,mn=Infinity;
+    if(ax==='y'){
+      if(stacked){for(let i=0;i<n;i++){let p=0,q=0;bars.forEach(s=>{const v=s.data[i];if(v==null||!isFinite(v))return;v>=0?p+=v:q+=v});mx=Math.max(mx,p);mn=Math.min(mn,q)}}
+      else bars.forEach(s=>s.data.forEach(v=>{if(v!=null&&isFinite(v)){mx=Math.max(mx,v);mn=Math.min(mn,v)}}));
+    }
+    S.filter(s=>s.type==='line'&&(s.axis||'y')===ax).forEach(s=>s.data.forEach(v=>{if(v!=null&&isFinite(v)){mx=Math.max(mx,v);mn=Math.min(mn,v)}}));
+    if(!isFinite(mx)){mx=1;mn=0}
+    return[mn,mx];
+  }
+  const e0=ext('y'),sy=mkScale(sp.yMin!=null?sp.yMin:Math.min(0,e0[0]),sp.yMax!=null?sp.yMax:Math.max(e0[1],sp.ySug||-Infinity),{min:sp.yMin,max:sp.yMax});
+  const e1=hasY1?ext('y1'):null,sy1=hasY1?mkScale(Math.min(0,e1[0]),e1[1],{}):null;
+  const Y=(sc,v)=>Tm+ph-Math.max(0,Math.min(1,(v-sc.min)/(sc.max-sc.min)))*ph;
+  const gw=pw/Math.max(n,1),cx=i=>Lm+gw*i+gw/2;
+  let o='';
+  sy.ticks.forEach(t=>{const y=Y(sy,t);o+=`<line class="gl" x1="${Lm}" x2="${W-Rm}" y1="${y}" y2="${y}" stroke="#1f2a44"/><text class="ax" x="${Lm-6}" y="${y+3.5}" text-anchor="end" fill="#8b97b8" font-size="10">${fmtAx(t)}</text>`});
+  if(hasY1)sy1.ticks.forEach(t=>{o+=`<text class="ax" x="${W-Rm+6}" y="${Y(sy1,t)+3.5}" fill="#8b97b8" font-size="10">${fmtAx(t)}</text>`});
+  const ml=Math.max(1,...sp.labels.map(l=>String(l).length)),per=ml*5.8+10,step=Math.max(1,Math.ceil(n/Math.max(1,Math.floor(pw/per))));
+  sp.labels.forEach((l,i)=>{if(i%step===0)o+=`<text class="ax" x="${cx(i)}" y="${Tm+ph+14}" text-anchor="middle" fill="#8b97b8" font-size="10">${esc(l)}</text>`});
+  if(bars.length){
+    const k=stacked?1:bars.length,bw=Math.min(stacked?44:30,gw*(stacked?.74:.8)/k);
+    for(let i=0;i<n;i++){
+      let pos=0,neg=0;
+      bars.forEach((s,j)=>{
+        const v=s.data[i];if(v==null||!isFinite(v))return;
+        let y0,y1;
+        if(stacked){if(v>=0){y0=Y(sy,pos);pos+=v;y1=Y(sy,pos)}else{y0=Y(sy,neg);neg+=v;y1=Y(sy,neg)}}
+        else{y0=Y(sy,0);y1=Y(sy,v)}
+        const x=stacked?cx(i)-bw/2:cx(i)-bw*k/2+j*bw,hh=Math.abs(y0-y1);if(hh<.3)return;
+        const col=s.colors?s.colors[i]:s.color;
+        o+=`<rect x="${x.toFixed(1)}" y="${Math.min(y0,y1).toFixed(1)}" width="${(bw-(stacked?0:1)).toFixed(1)}" height="${hh.toFixed(1)}" rx="2" fill="${col}"><title>${esc(sp.labels[i])} · ${esc(s.name||'')}: ${fmtTip(v)}</title></rect>`;
+      });
+    }
+  }
+  S.filter(s=>s.type==='line').forEach(s=>{
+    const sc=s.axis==='y1'?sy1:sy;let d='',area='',seg=[];
+    const P=p=>p[0].toFixed(1)+' '+p[1].toFixed(1);
+    const flush=()=>{if(seg.length){d+='M'+seg.map(P).join('L');if(s.fill){const b=Y(sc,Math.max(sc.min,0)).toFixed(1);area+='M'+seg[0][0].toFixed(1)+' '+b+'L'+seg.map(P).join('L')+'L'+seg[seg.length-1][0].toFixed(1)+' '+b+'Z'}seg=[]}};
+    s.data.forEach((v,i)=>{if(v==null||!isFinite(v))flush();else seg.push([cx(i),Y(sc,v)])});flush();
+    if(area)o+=`<path d="${area}" fill="${s.color}" opacity=".16"/>`;
+    o+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"${s.dash?' stroke-dasharray="6 4"':''}/>`;
+    if(s.pts!==false&&n<=60)s.data.forEach((v,i)=>{if(v!=null&&isFinite(v))o+=`<circle cx="${cx(i).toFixed(1)}" cy="${Y(sc,v).toFixed(1)}" r="2.8" fill="${s.ptColors?s.ptColors[i]:s.color}"><title>${esc(sp.labels[i])} · ${esc(s.name||'')}: ${fmtTip(v)}</title></circle>`});
+  });
+  li.forEach(it=>{const x=8+it.x,y=H-legH+8+it.y;
+    o+=`<rect x="${x}" y="${y}" width="10" height="10" rx="3" fill="${it.s.color||(it.s.colors&&it.s.colors[0])||'#888'}"/><text class="ax" x="${x+14}" y="${y+9}" fill="#8b97b8" font-size="10.5">${esc(it.s.name)}</text>`});
+  w.innerHTML=`<svg xmlns="http:\/\/www.w3.org\/2000\/svg" viewBox="0 0 ${W} ${H}" width="100%" style="display:block;height:auto">${o}</svg>`;
+}
+function drawDonut(id,sp){
+  const w=document.getElementById('w-'+id);if(!w||!w.clientWidth)return;
+  const S=Math.min(w.clientWidth,w.clientHeight||230),r=S*.38,sw=S*.15,C=2*Math.PI*r,tot=sp.data.reduce((a,b)=>a+(b||0),0)||1;
+  let acc=0,o='';
+  sp.data.forEach((v,i)=>{const len=(v||0)/tot*C;
+    o+=`<circle cx="${S/2}" cy="${S/2}" r="${r}" fill="none" stroke="${sp.colors[i%sp.colors.length]}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${S/2} ${S/2})"><title>${esc(sp.labels[i])}: ${fmtTip(v)}</title></circle>`;acc+=len});
+  w.innerHTML=`<div style="display:grid;place-items:center;height:100%"><svg viewBox="0 0 ${S} ${S}" width="${S}" height="${S}">${o}</svg></div>`+(sp.center?`<div class="donut-c"><b>${esc(sp.center.big)}</b><span>${esc(sp.center.sub)}</span></div>`:'');
+}
+function redraw(id){const sp=charts[id];if(!sp)return;sp.donut?drawDonut(id,sp):drawChart(id,sp)}
+function mk(id,sp){charts[id]=sp;redraw(id)}
+function msgIn(id,m){delete charts[id];const w=$('#w-'+id);if(w)w.innerHTML='<div class="msg">'+m+'</div>'}
+let _rz;window.addEventListener('resize',()=>{clearTimeout(_rz);_rz=setTimeout(()=>Object.keys(charts).forEach(redraw),150)});
+const errTxt=o=>'<b>⚠ '+((o&&o.error)||'No data')+'</b>';
+window.addEventListener('beforeunload',e=>{if(PENDING>0){e.preventDefault();e.returnValue=''}});
+
+document.querySelectorAll('#main .tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#main .tab').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='t-'+b.dataset.t));
+  if(b.dataset.t==='dash'&&G){showDT(DT);if(STALE)loadDash(true)}
+  if(b.dataset.t==='rep'&&!XL)loadXl();
+  if(b.dataset.t==='act')loadActs();
+  if(b.dataset.t==='rev'&&!REV)loadRev();
+  if(b.dataset.t==='qr'&&!QRDONE)drawQR();
+});
+document.querySelectorAll('#dtabs .tab').forEach(b=>b.onclick=()=>showDT(b.dataset.d));
+
+function preset(n,p){
+  const t=new Date(TODAY()+'T00:00:00');let f=new Date(t),e=new Date(t);
+  if(n===0)f=new Date(t.getFullYear(),t.getMonth(),1);
+  else if(n===-1){f=new Date(t.getFullYear(),t.getMonth()-1,1);e=new Date(t.getFullYear(),t.getMonth(),0)}
+  else f.setDate(f.getDate()-(n-1));
+  $('#'+p+'From').value=iso(f);$('#'+p+'To').value=iso(e);
+}
+function init(){
+  preset(0,'d');showWho();
+  $('#lFrom').value=TODAY().slice(0,8)+'01';$('#lTo').value=TODAY();
+  if(!window.google||!google.script||!google.script.run){showErr('Open this page from the deployed Apps Script web-app URL (ending in /exec), not as a saved file.',false);return}
+  start();
+}
+function start(){
+  if(LOAD.start)return;
+  if(!FM&&!PIN){askPin('');return}
+  LOAD.start=1;
+  hideErr();setSub('Contacting the server…');$('#busy').style.width='40%';
+  const run=google.script.run,fn=FM?'getFormBoot':'getAdminStart';
+  if(typeof run[fn]!=='function'){LOAD.start=0;showErr('The live deployment is out of date (function '+fn+' not found). In Apps Script: Deploy > Manage deployments > pencil icon > Version: New version > Deploy. Then reload this page.',true);return}
+  const timer=setTimeout(()=>{LOAD.start=0;showErr('The server has not answered after 30 seconds. Check that setup() was run, then press Try again.',true)},30000);
+  const okh=s=>{
+    clearTimeout(timer);LOAD.start=0;hideErr();
+    try{
+      if(FM){if(!s||!s.forms)throw new Error('The server returned no data.');B=s;boot();openForm(MODE.f)}
+      else{
+        if(!s||!s.boot||!s.dash)throw new Error('The server returned no data.');
+        B=s.boot;G=s.dash;URLB=s.url||'';boot();
+        $('#dFrom').value=G.from;$('#dTo').value=G.to;renderDash();loadActs(true);
+      }
+      $('#busy').style.width='100%';setTimeout(()=>$('#busy').style.width='0',500);
+      if(B.build!==CLIENT_BUILD)showErr('The server code is older than this page (server build '+(B.build||'unknown')+', page build '+CLIENT_BUILD+'). In Apps Script: Deploy > Manage deployments > pencil > New version > Deploy, then reload.',false);
+    }catch(e){showErr('Page error while drawing: '+(e.message||e),true)}
+  };
+  const h=run.withSuccessHandler(okh).withFailureHandler(e=>{clearTimeout(timer);LOAD.start=0;const m=(e&&e.message)||String(e);if(/LOCKED/.test(m)){fail(e);return}showErr('Server error: '+m,true)});
+  if(FM&&window.BOOT&&window.BOOT.forms){const s=window.BOOT;window.BOOT=null;okh(s);return}
+  FM?h.getFormBoot(MODE.f):h.getAdminStart(PIN);
+}
+let _timer=0;
+function boot(){
+  showWho();$('#today').textContent=new Date(B.today+'T00:00:00').toDateString();
+  B.dates=B.dates||{};
+  if(FM){const F=B.forms[MODE.f];$('#ttl').textContent=F.icon+' '+F.title;$('#subttl').textContent='Daily entry form';board();return}
+  $('#ttl').textContent=B.title;
+  $('#lForm').innerHTML='<option value="">All forms</option>'+Object.keys(B.forms).map(k=>`<option value="${k}">${B.forms[k].title}</option>`).join('');
+  $('#lFrom').value=B.today.slice(0,8)+'01';$('#lTo').value=B.today;
+  board();
+  $('#xMon').value=B.today.slice(0,7);$('#rvDate').value=B.today;
+  if(!_timer)_timer=setInterval(()=>{if(document.visibilityState==='visible'&&$('#t-dash').classList.contains('on')&&$('#dTo').value===B.today)loadDash(true)},5*60*1000);
+}
+
+function loadDash(quiet,fresh){
+  if(LOAD.dash)return;
+  if(!B){if(!quiet)toast('Still loading, please wait a moment',1);return}
+  LOAD.dash=1;
+  if(!quiet){$('#busy').style.width='70%';lockBar('#t-dash .bar.f',true)}
+  const done=()=>{LOAD.dash=0;lockBar('#t-dash .bar.f',false)};
+  google.script.run.withSuccessHandler(d=>{
+    done();
+    try{G=d;STALE=false;renderDash()}
+    catch(e){showErr('Page error while drawing: '+(e.message||e),false)}
+    $('#busy').style.width='100%';setTimeout(()=>$('#busy').style.width='0',500);
+  }).withFailureHandler(e=>{done();$('#busy').style.width='0';if(!quiet||/LOCKED/.test((e&&e.message)||''))fail(e)}).getDashboard($('#dFrom').value,$('#dTo').value,!!fresh,PIN);
+}
+function renderDash(){
+  const u=G.cfg.usageDay==='end'?'each day = previous reading → that day':'each day = that day’s reading → next reading';
+  setSub(`${G.from} → ${G.to} · updated ${G.generated} · usage from consecutive daily meter readings (${u})`);
+  rKpis();rAlerts();showDT(DT);
+}
+function showDT(t){
+  DT=t;document.querySelectorAll('#dtabs .tab').forEach(b=>b.classList.toggle('on',b.dataset.d===t));
+  document.querySelectorAll('.spane').forEach(p=>p.classList.toggle('on',p.id==='d-'+t));
+  if(G)({overview:rOverview,ht:rHT,dept:rDept,dg:rDG,eq:rEq})[t]();
+}
+function spark(a,c){const v=a.map(x=>x==null?0:x);if(v.length<2)return'';const mx=Math.max(...v),mn=Math.min(...v),w=200,h=36;
+  const d=v.map((x,i)=>(i?'L':'M')+(i/(v.length-1)*w).toFixed(1)+' '+(h-3-((x-mn)/((mx-mn)||1))*(h-8)).toFixed(1)).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${d} L${w} ${h} L0 ${h}Z" fill="${c}" opacity=".13"/><path d="${d}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round"/></svg>`}
+function kpi(o){
+  const ring=o.p!=null?`<div class="ring" style="--p:${Math.min(100,o.p)};--rc:${o.c}"><b>${Math.round(o.p)}%</b></div>`:'';
+  return `<div class="kpi ${o.crit?'crit':''}${o.go?' go':''}" style="--c:${o.c}"${o.go?` role="button" tabindex="0" title="Click to open the report behind this number" onclick="kpiGo('${o.go}')" onkeydown="if(event.key==='Enter')kpiGo('${o.go}')"`:''}><div class="k-top"><span class="k-ic">${o.ic}</span>${o.lab}</div>
+  <div class="k-row"><div class="k-val">${o.val}<small>${o.unit||''}</small></div>${ring}</div>
+  <div class="k-sub">${o.sub||''}</div><div class="k-spark">${o.spark||''}</div></div>`}
+function rKpis(){
+  const g=G.grid,dg=G.dg,eq=G.eq,c=G.cfg,out=[];
+  if(ok(g)){
+    const k=g.k,d=g.dept;
+    const L=g.lastDay;
+    out.push(L?kpi({ic:'⚡',lab:'Last day consumption',val:n0(L.total),unit:'kWh',c:COL.cyan,go:'last',sub:`Amount ${rs(L.amt)} · ${L.label} · HT ${big(L.ht)} + Solar ${big(L.sol)}`,spark:spark(g.total,COL.cyan)}):kpi({ic:'⚡',lab:'Last day consumption',val:'n/a',c:'#475569',sub:'No usage figure yet'}));
+    out.push(kpi({ic:'💰',lab:'Electricity bill',val:rs(d.totalAmt),c:COL.violet,go:'bill',sub:`${n0(d.total)} Units KWH Net @ ₹${d.rate} · ${fd(g.isos[0])} → ${fd(g.isos[g.isos.length-1])}`,spark:spark(d.dayAmt,COL.violet)}));
+    if(k.peakMdi!=null){const p=k.peakMdi/c.mdiLimit*100,col=p>=100?COL.red:p>=90?COL.amber:COL.green;
+      out.push(kpi({ic:'📊',lab:'Peak MDI',val:n0(k.peakMdi),unit:'kVA',c:col,p:p,crit:p>=100,go:'ht',sub:`Limit ${n0(c.mdiLimit)} kVA · peak on ${k.peakMdiDay}`}))}
+    {const lp=g.livePf,pf=lp?lp.val:k.avgPf;if(pf!=null){const pc=pf<c.pfTarget?COL.red:COL.green;
+      out.push(kpi({ic:'🎯',lab:lp?(lp.today?'Power factor · live today':'Power factor · last day'):'Power factor',val:n2(pf),c:pc,p:pf*100,go:'ht',sub:(lp?(lp.today?"Today's live power factor":'Last day power factor · '+fd(lp.date))+' · ':'')+`Period avg ${n2(k.avgPf)} · ${k.pfLow} day(s) < ${c.pfTarget}`}))}}
+    out.push(kpi({ic:'☀️',lab:'Solar share',val:n2(k.solarShare),unit:'%',c:COL.amber,p:k.solarShare,go:'ht',sub:`${big(k.sol)} kWh generated`,spark:spark(g.sol,COL.amber)}));
+  }else out.push(kpi({ic:'⚡',lab:'Grid & solar',val:'n/a',c:'#475569',sub:g&&g.error}));
+  if(ok(dg)){const k=dg.k;out.push(kpi({ic:'🛢️',lab:'DG running',go:'dg',val:n2(k.hrs),unit:'hrs',c:k.hrs>0?COL.red:COL.green,sub:`${k.runDays} day(s) · ${n0(k.units)} units`,spark:spark(dg.hrs,COL.red)}))}
+  if(ok(eq)){const bad=eq.filter(e=>e.last&&e.last.bad.length).length;
+    out.push(kpi({ic:'🩺',lab:'Equipment checks',go:'log',val:bad?bad+' flagged':'All OK',c:bad?COL.red:COL.green,sub:'Latest entry of Servo, UPS, Compressor, Solar cleaning'}))}
+  if(ok(G.pfp)&&G.pfp.last){const a=G.pfp.alerts;
+    out.push(kpi({ic:'🎛️',lab:'Capacitor panel',go:'log',val:a?a+' alerts':'All OK',c:a?COL.red:COL.green,crit:a>=3,sub:'Weekly inspection '+fd(G.pfp.last.date)+' · 20 capacitors'}))}
+  $('#kpis').innerHTML=out.join('');
+}
+function goReport(t){
+  goTab('rep');XT=t;const m=(G&&G.to?G.to:TODAY()).slice(0,7);$('#xMon').value=m;loadXl();
+}
+function kpiGo(k){
+  if(k==='last')return openLast();
+  if(k==='log')return goTab('log');
+  goReport(k);
+}
+function openLast(){
+  const g=G&&G.grid;if(!ok(g)||!g.lastDay)return toast('No usage figure yet',1);
+  const L=g.lastDay,P=g.period,mx=a=>Math.max(1,...a.map(x=>x.units||0));
+  const row=(x,m,i)=>`<tr><td>${esc(x.name)}</td><td class="num">${n2(x.units,2)}</td><td class="num">${rs(x.amt)}</td><td style="min-width:90px"><div class="pb"><i style="width:${(x.units||0)/m*100}%;background:${PAL[i%PAL.length]}"></i></div></td></tr>`;
+  const tbl=(list,tu,ta)=>{const m=mx(list);return `<div class="tw"><table><thead><tr><th>Department</th><th class="num">Net units KWH</th><th class="num">Amount</th><th></th></tr></thead><tbody>${list.map((x,i)=>row(x,m,i)).join('')}<tr style="font-weight:700"><td>Total (all departments)</td><td class="num">${n2(tu,2)}</td><td class="num">${rs(ta)}</td><td></td></tr></tbody></table></div>`};
+  const top=a=>a[0]&&a[0].units?`<p class="hint">Highest: <b>${esc(a[0].name)}</b> — ${n2(a[0].units,2)} units, bill ${rs(a[0].amt)}</p>`:'';
+  const pu=P.depts.reduce((s,x)=>s+(x.units||0),0);
+  const el=document.createElement('div');el.className='ovl';el.id='lastPg';
+  el.innerHTML=`<div class="in"><div class="bar"><button class="btn pri" onclick="closeLast()">✕ Close</button><button class="btn" onclick="closeLast();goReport('units')">Open full report</button></div>
+  <div class="card"><h3>⚡ Last day consumption — ${esc(L.label)}</h3>
+  <div class="tw"><table><thead><tr><th>Source</th><th class="num">Units KWH</th><th class="num">Amount</th></tr></thead><tbody>
+  <tr><td>HT meter</td><td class="num">${n2(L.ht,2)}</td><td class="num">${rs(L.htAmt)}</td></tr>
+  <tr><td>Solar</td><td class="num">${n2(L.sol,2)}</td><td class="num">${rs(L.solAmt)}</td></tr>
+  <tr style="font-weight:700"><td>Total consumption (HT + Solar)</td><td class="num">${n2(L.total,2)}</td><td class="num">${rs(L.amt)}</td></tr></tbody></table></div>
+  <p class="hint">Rate ₹${L.rate} per unit. Net units only, no meter readings.</p></div>
+  <div class="card"><h3>🏭 ${esc(L.label)} — by department (highest first)</h3>${top(L.depts)}${tbl(L.depts,L.deptUnits,L.deptAmt)}</div>
+  <div class="card"><h3>📅 ${esc(fd(P.from))} → ${esc(fd(P.to))} — by department (highest first)</h3>${top(P.depts)}${tbl(P.depts,pu,Math.round(pu*P.rate*100)/100)}
+  <div class="tw" style="margin-top:8px"><table><tbody><tr><td>HT meter</td><td class="num">${n2(P.ht,2)}</td><td class="num">${rs(P.htAmt)}</td></tr><tr><td>Solar</td><td class="num">${n2(P.sol,2)}</td><td class="num">${rs(P.solAmt)}</td></tr><tr style="font-weight:700"><td>Total consumption (HT + Solar)</td><td class="num">${n2(P.total,2)}</td><td class="num">${rs(P.amt)}</td></tr></tbody></table></div></div></div>`;
+  const old=$('#lastPg');if(old)old.remove();document.body.appendChild(el);el.scrollTop=0;
+}
+function closeLast(){const e=$('#lastPg');if(e)e.remove()}
+function rAlerts(){
+  const a=G.alerts&&!G.alerts.error?G.alerts:[],bad=a.filter(x=>x.level==='crit'||x.level==='warn').length;
+  const b=$('#alCount');b.textContent=bad?bad:'All clear';b.className='badge'+(bad?'':' g');
+  const rv=$('#tabRev');if(rv)rv.textContent='✅ Daily review'+(a.some(x=>x.key==='REV')?' •':'');
+  $('#alerts').innerHTML=a.map(x=>`<div class="al ${x.level}"><div class="ic">${x.icon}</div><div><b>${esc(x.title)}</b><span>${esc(x.text)}</span>${x.key==='REV'?'<button class="btn pri" style="margin-top:6px" onclick="goTab(\'rev\')">Start the daily review</button>':x.key==='ACT'?'<button class="btn pri" style="margin-top:6px" onclick="goTab(\'act\')">Open the Actions tab</button>':''}</div></div>`).join('')||'<div class="msg">No entries yet. Add readings in the “New entry” tab.</div>';
+}
+function rOverview(){
+  const g=G.grid;
+  if(!ok(g)){msgIn('dDaily',errTxt(g));msgIn('dShare',errTxt(g));$('#rank').innerHTML='';return}
+  mk('dDaily',{labels:g.days,series:[
+    {type:'bar',name:'Grid import',data:g.imp,color:COL.cyan,stack:1},
+    {type:'bar',name:'Solar',data:g.sol,color:COL.amber,stack:1},
+    {type:'bar',name:'Export',data:g.exp,color:COL.violet,stack:1}]});
+  const L=g.dept.depts.slice().sort((a,b)=>b.sum-a.sum);
+  if(!L.length){msgIn('dShare','No department readings yet.');$('#rank').innerHTML='';return}
+  mk('dShare',{donut:true,labels:L.map(x=>x.name),data:L.map(x=>x.sum),colors:PAL,center:{big:big(g.dept.total),sub:'units'}});
+  const mx=L[0].sum||1;
+  $('#rank').innerHTML=L.map((x,i)=>`<div class="rk" style="cursor:pointer" title="Open the electricity bill report" onclick="goReport('bill')"><div class="t"><div>${x.name}</div><span>${n0(x.sum)} units · ${rs(x.amtSum)} · ${n2(x.share,1)}%</span></div><div class="pb"><i style="width:${x.sum/mx*100}%;background:${PAL[i%PAL.length]}"></i></div></div>`).join('');
+}
+function rHT(){
+  const g=G.grid,c=G.cfg;
+  if(!ok(g)){['dMDI','dPF','dSolar'].forEach(i=>msgIn(i,errTxt(g)));$('#htTable').innerHTML='';return}
+  const lab=g.days,lim=c.mdiLimit;
+  mk('dMDI',{labels:lab,legend:false,ySug:lim*1.1,series:[
+    {type:'bar',name:'MDI (kVA)',data:g.mdi,colors:g.mdi.map(x=>x>=lim?COL.red:x>=.9*lim?COL.amber:COL.green),color:COL.green},
+    {type:'line',name:'Limit',data:lab.map(()=>lim),color:COL.red,dash:1,pts:false}]});
+  const pfs=g.pf.concat(g.apf).filter(x=>x!=null),mn=pfs.length?Math.min(.9,Math.min(...pfs)-.01):.9;
+  mk('dPF',{labels:lab,yMin:mn,yMax:1.005,series:[
+    {type:'line',name:'Meter PF',data:g.pf,color:COL.cyan},
+    {type:'line',name:'Actual PF',data:g.apf,color:COL.violet},
+    {type:'line',name:'Target',data:lab.map(()=>c.pfTarget),color:COL.red,dash:1,pts:false}]});
+  mk('dSolar',{labels:lab,series:[
+    {type:'line',name:'Solar (kWh)',data:g.sol,color:COL.amber,fill:1},
+    {type:'line',name:'Grid import (kWh)',data:g.imp,color:COL.cyan}]});
+  const pill=(t,cl)=>`<span class="pill ${cl}">${t}</span>`;
+  let t='<table><thead><tr><th>Date</th><th>Grid kWh</th><th>Export kWh</th><th>Solar kWh</th><th>Total kWh</th><th>PF</th><th>Actual PF</th><th>MDI kVA</th></tr></thead><tbody>';
+  g.days.forEach((d,i)=>{const pf=g.pf[i],m=g.mdi[i];
+    t+=`<tr><td>${d}</td><td>${n0(g.imp[i])}</td><td>${n0(g.exp[i])}</td><td>${n0(g.sol[i])}</td><td><b>${n0(g.total[i])}</b></td>
+    <td>${pf==null?'–':pill(n2(pf),pf<c.pfTarget?'r':'g')}</td><td>${n2(g.apf[i])}</td><td>${m==null?'–':pill(n0(m),m>=lim?'r':m>=.9*lim?'a':'g')}</td></tr>`});
+  t+=`<tr class="totrow"><td>Total / Avg</td><td>${n0(g.k.imp)}</td><td>${n0(g.k.exp)}</td><td>${n0(g.k.sol)}</td><td>${n0(g.k.total)}</td><td>${n2(g.k.avgPf)}</td><td>${n2(g.k.avgApf)}</td><td>${n0(g.k.peakMdi)} peak</td></tr></tbody></table>`;
+  $('#htTable').innerHTML=t;
+}
+function rDept(){
+  const g=G.grid;
+  if(!ok(g)){$('#heat').innerHTML=`<div class="msg">${errTxt(g)}</div>`;msgIn('dStack',errTxt(g));return}
+  const d=g.dept,L=d.depts;
+  if(!L.length){$('#heat').innerHTML='<div class="msg">No department readings yet.</div>';msgIn('dStack','No department readings yet.');return}
+  let h='<table class="heat"><thead><tr><th>Department</th>'+g.days.map(x=>`<th>${x.split(' ')[0]}</th>`).join('')+'<th>Total</th></tr></thead><tbody>';
+  L.forEach(r=>{const mx=Math.max(...r.units.filter(x=>x!=null),1);
+    h+=`<tr><td>${r.name}</td>`+r.units.map((v,i)=>{if(v==null)return'<td class="na">·</td>';const t=v/mx;
+      return `<td style="background:hsla(${150-t*150},75%,48%,${.12+t*.6})" title="${r.name} · ${g.days[i]}: ${n0(v)} units">${v>=1000?(v/1000).toFixed(2)+'k':n0(v)}</td>`}).join('')+`<td class="tot">${big(r.sum)}</td></tr>`});
+  h+='<tr class="totrow"><td>All departments</td>'+d.dayTotal.map(v=>`<td style="text-align:center">${v>=1000?(v/1000).toFixed(2)+'k':n0(v)}</td>`).join('')+`<td style="text-align:center">${big(d.total)}</td></tr></tbody></table>`;
+  $('#heat').innerHTML=h;
+  mk('dStack',{labels:g.days,series:L.map((r,i)=>({type:'bar',name:r.name,data:r.units,color:PAL[i%PAL.length],stack:1}))});
+}
+function rDG(){
+  const g=G.dg;if(!ok(g)){msgIn('dDG',errTxt(g));$('#dgMini').innerHTML='';$('#dgLog').innerHTML='';return}
+  const k=g.k,m=(l,v,c)=>`<div class="card"><small>${l}</small><b style="color:${c||'var(--tx)'}">${v}</b></div>`;
+  $('#dgMini').innerHTML=m('Run hours',n2(k.hrs),k.hrs>0?COL.amber:COL.green)+m('Days used',k.runDays)+m('Switched ON',k.on==null?k.runs:k.on)+m('Switched OFF',k.off==null?k.runs:k.off)+m('Units generated',n0(k.units))
+    +m('Peak coolant',k.peakCoolant==null?'–':k.peakCoolant+' °C',k.peakCoolant>=90?COL.red:k.peakCoolant>=85?COL.amber:null)
+    +(g.fuel&&g.fuel.used>0?m('Diesel used ('+g.fuel.lph+' L/h)',n2(g.fuel.used)+' L',COL.amber):'')+(g.fuel&&g.fuel.recv>0?m('Diesel received',n2(g.fuel.recv)+' L',COL.green):'')+(g.fuel?m('Diesel stock in hand',g.fuel.tracked?n2(g.fuel.stock)+' L':'not started',g.fuel.tracked&&g.fuel.stock<400?COL.red:null):'')+(k.diesel>0?m('Diesel entered',n0(k.diesel)+' L'):'')+(k.kwhPerL?m('kWh per litre',n2(k.kwhPerL)):'')+(k.cost?m('Diesel cost',rs(k.cost),COL.red):'');
+  mk('dDG',{labels:g.days,series:[
+    {type:'bar',name:'Hours',data:g.hrs,colors:g.hrs.map(x=>x>0?COL.red:'#1f2a44'),color:COL.red},
+    {type:'line',name:'Units (right axis)',data:g.units.map(x=>x||null),color:COL.amber,axis:'y1'}]});
+  $('#dgLog').innerHTML=g.log.length?'<table><thead><tr><th>Date</th><th>Start</th><th>Stop</th><th>Hours</th></tr></thead><tbody>'
+    +g.log.map(x=>`<tr><td>${x.date}</td><td>${x.start}</td><td>${x.stop}</td><td>${n2(x.hrs)}</td></tr>`).join('')+'</tbody></table>'
+    :'<div class="msg">✅ DG did not run in this period.</div>';
+}
+function pfpCard(){
+  const p=G.pfp;if(!ok(p))return'';
+  if(!p.last)return'<div class="card"><h3>🎛️ Power factor panel</h3><div class="msg">No inspection in this period.</div></div>';
+  const K=['r','y','b'];
+  const rows=p.caps.map(c=>`<tr><td>${c.no}</td><td>${c.kv} kVAr</td>${c.ph.map((x,i)=>`<td style="${x.s?`background:${PHC[K[i]]};color:#111;font-weight:700`:''}" title="${x.s}">${x.v===''?'–':x.v}${x.s?' ('+x.s+')':''}</td>`).join('')}<td class="${c.comp.length?'bad':''}">${c.comp.join(', ')||'OK'}</td><td>${c.bad?'<span class="pill r">Alert</span>':'<span class="pill g">Normal</span>'}</td><td class="l">${esc(c.rm)}</td></tr>`).join('');
+  return `<div class="card"><h3>🎛️ Power factor panel (weekly) ${p.alerts?`<span class="pill r">${p.alerts} alerts</span>`:'<span class="pill g">All OK</span>'}</h3><p class="hint">Latest inspection ${fd(p.last.date)} ${p.last.time} by ${esc(p.last.name)}. Photo: ${phLinks(p.last.ph,p.last.date)}. Red, yellow and blue cells are out-of-range R, Y and B phases.</p><div class="tw"><table><thead><tr><th>No.</th><th>Rating</th><th>R (A)</th><th>Y (A)</th><th>B (A)</th><th>Faults</th><th>Status</th><th class="l">Remarks</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function sunitCard(e){
+  const F=B.forms.SCLEAN,l=e.last,r=e.recent[0];
+  const pill=!l?'<span class="pill n">no entries</span>':l.bad.length?`<span class="pill r">⚠ ${l.bad.length} out of range</span>`:'<span class="pill g">✓ latest OK</span>';
+  let h=`<div class="card"><h3>${e.icon} ${e.title} (weekly, Wednesday) ${pill}</h3><p class="hint">${e.n} checking(s) in this period${l?` · last by ${esc(l.name)} on ${fd(l.date)} ${l.time}`:''}${r?' · Photo: '+phLinks(r.ph,r.date):''}. Earthing value must be below 2.</p>`;
+  if(!r)return h+'<div class="msg">No checking in this period.</div></div>';
+  const c=(k)=>`<td class="${r.bad.includes(k)?'bad':''}">${r.v[k]===''||r.v[k]==null?'–':esc(r.v[k])}</td>`;
+  h+='<div class="tw"><table><thead><tr><th>Inverter</th>'+Array.from({length:10},(_,i)=>`<th>S${i+1} (A)</th>`).join('')+'<th>Cleaning</th><th>Earthing</th><th>Status</th><th class="l">Remarks</th></tr></thead><tbody>';
+  for(let i=1;i<=6;i++){const p='i'+i+'_';h+=`<tr><td>INV ${i}</td>`+Array.from({length:10},(_,j)=>c(p+'s'+(j+1))).join('')+c(p+'cl')+c(p+'ea')+c(p+'st')+`<td class="l">${esc(r.v[p+'rm']||'')}</td></tr>`}
+  return h+'</tbody></table></div></div>';
+}
+function rEq(){
+  const eq=G.eq;if(!ok(eq)){$('#eqBody').innerHTML=`<div class="msg">${errTxt(eq)}</div>`;return}
+  if(!B)return;
+  $('#eqBody').innerHTML=eq.map(e=>{
+    if(e.key==='SCLEAN')return sunitCard(e);
+    const F=B.forms[e.key],l=e.last;
+    const pill=!l?'<span class="pill n">no entries</span>':l.bad.length?`<span class="pill r">⚠ ${l.bad.length} out of range</span>`:'<span class="pill g">✓ latest OK</span>';
+    let h=`<div class="card"><h3>${e.icon} ${e.title} ${pill}</h3><p class="hint">${e.n} entries in this period · ${e.badEntries} with out-of-range readings${l?` · last by ${esc(l.name)} on ${fd(l.date)} ${l.time}`:''}</p>`;
+    if(!e.recent.length)return h+'<div class="msg">No entries in this period.</div></div>';
+    h+=`<div class="tw"><table><thead><tr><th>Date</th><th>Time</th>${F.fields.map(f=>`<th>${f.n}${f.rule?`<small>${f.rule}</small>`:''}</th>`).join('')}<th class="l">Photos</th></tr></thead><tbody>`
+      +e.recent.map(r=>`<tr><td>${fd(r.date)}</td><td>${r.time}</td>${F.fields.map(f=>`<td class="${r.bad.includes(f.k)?'bad':''}">${r.v[f.k]===''?'–':esc(r.v[f.k])}</td>`).join('')}<td class="l">${phLinks(r.ph,r.date)}</td></tr>`).join('')+'</tbody></table></div></div>';
+    return h;
+  }).join('')+pfpCard();
+}
+const dHead=()=>`<h1>Plant dashboard</h1><p class="hint">${G.from} → ${G.to} · printed ${new Date().toLocaleString()}</p>`;
+function dashAll(fn){
+  const ps=[...document.querySelectorAll('#dBody .spane')],was=ps.map(p=>p.classList.contains('on'));
+  ps.forEach(p=>p.classList.add('on'));
+  [rOverview,rHT,rDept,rDG,rEq].forEach(f=>f());
+  try{return fn()}finally{ps.forEach((p,i)=>p.classList.toggle('on',was[i]));showDT(DT)}
+}
+function printDash(){if(!G)return toast('Load the dashboard first',1);dashAll(()=>fill(dHead(),snap($('#dBody'))));setTimeout(()=>window.print(),200)}
+function pdfDash(){if(!G)return toast('Load the dashboard first',1);const pa=dashAll(()=>fill(dHead(),snap($('#dBody'))));runPdf(pa,'dashboard-'+G.from+'_'+G.to+'.pdf',true)}
+
+function lateNow(F){
+  const u=F.dueRaw;if(!u||!B)return false;
+  const dt=new Date(B.today+'T00:00:00'),dw=dt.getDay();
+  const t=(u.mon&&dw===1)?u.mon:u.t;
+  if(u.dow&&dw!==u.dow)return false;
+  return nowHM()>t;
+}
+function schedule(){
+  const el=$('#sched');if(!el||!B)return;
+  const rows=Object.keys(B.forms).map(k=>{const F=B.forms[k];return F.due?`<tr><td class="l">${F.icon} ${esc(F.title)}</td><td class="l">${esc(F.due)}</td></tr>`:''}).join('');
+  const cl=B.clean?`<tr><td class="l">🧽 Solar panel cleaning</td><td class="l">every ${3} days, finish by ${esc(B.clean.by)} (next: ${fd(B.clean.due)})</td></tr>`:'';
+  el.innerHTML=`<details class="card" open><summary style="cursor:pointer;font-weight:700">⏰ Fixed fill-by times <span class="hint">· an entry saved after its time is marked LATE and Naveen is e-mailed</span></summary><div class="tw"><table><thead><tr><th class="l">Form</th><th class="l">Must be filled</th></tr></thead><tbody>${rows}${cl}</tbody></table></div></details>`;
+}
+function board(){
+  schedule();
+  $('#board').innerHTML=Object.keys(B.forms).map(k=>{
+    const F=B.forms[k],s=B.status[k],l=B.last[k],due=s.due;
+    let pill;
+    if(s.n>0)pill=s.bad?`<span class="pill r">⚠ ${s.bad} out of range</span>`:'<span class="pill g">✓ Done today</span>';
+    else if(F.every)pill=due&&due.due?`<span class="pill a">⏳ Due${due.days!=null?' · last '+due.days+'d ago':''}</span>`:`<span class="pill g">${F.weekly?'✓ Done this week':'✓ Not due yet (every '+F.every+' days)'}</span>`;
+    else pill=`<span class="pill n">${F.optional?(k==='DG'?'No run today':'No entry today'):'⏳ Not entered today'}</span>`;
+    if(k==='DG'&&B.dgOpen)pill+=` <span class="pill a">🟢 Running since ${B.dgOpen.start}</span>`;
+    if(k==='DG'&&B.dgToday&&(B.dgToday.on||B.dgToday.off))pill+=` <span class="pill a">ON ${B.dgToday.on} · OFF ${B.dgToday.off}</span>`;
+    const rq=F.slots.filter(x=>x.req).length;
+    return `<div class="tile ${FK===k?'on':''}" style="--c:${TCOL[k]}" onclick="openForm('${k}')"><div class="ic">${F.icon}</div><b>${F.title}</b>${pill}<small>📷 ${rq} compulsory${F.slots.length>rq?' + '+(F.slots.length-rq)+' optional':''} · ${l?'Last: '+fd(l.date)+' '+l.time+' · '+esc(l.name):'No entries yet'}</small></div>`}).join('');
+}
+const rawOf=k=>document.querySelector('#fields [data-k="'+k+'"]');
+const elOf=k=>{const e=rawOf(k);return e&&!e.hidden?e:null};
+/* ---- build 10: DG parts, periodic (weekly / monthly) checks, fields that only apply from a start date ---- */
+let DGP='RUN';
+const curDate=()=>($('#fDate')&&$('#fDate').value)||B.today;
+const isoU=d=>d.toISOString().slice(0,10);
+function perStartC(pi,date){
+  const d=new Date(date+'T00:00:00Z');
+  if(pi.dows){let best='';pi.dows.forEach(q=>{const w=d.getUTCDay()||7,x=isoU(new Date(d.getTime()-((w-q+7)%7)*864e5));if(x>best)best=x});return best}
+  if(pi.dow){const w=d.getUTCDay()||7;return isoU(new Date(d.getTime()-((w-pi.dow+7)%7)*864e5))}
+  const p=date.split('-');let y=+p[0],m=+p[1];const z=n=>(n<10?'0':'')+n;
+  if(+p[2]>=pi.dom)return y+'-'+z(m)+'-'+z(pi.dom);
+  m--;if(m<1){m=12;y--}return y+'-'+z(m)+'-'+z(pi.dom);
+}
+function perDueC(k,date){
+  const F=B.forms[FK],pi=F&&F.perInfo&&F.perInfo[k];if(!pi)return false;
+  date=date||curDate();const st=perStartC(pi,date);if(st<pi.eff)return false;
+  return !pi.done.some(d=>d>=st&&d<=date);
+}
+function fVis(f){
+  if(f.hid)return false;
+  if(FK==='DG'&&f.part&&f.part!==DGP)return false;
+  if(FK==='DG'&&DGP==='RUN'){if(f.k==='start'&&B.dgOpen)return false;if(f.k==='stop'&&!B.dgOpen)return false}
+  if(f.per&&!perDueC(f.k))return false;
+  return true;
+}
+function applyVis(){
+  const F=B.forms[FK];if(!F||F.table||F.byMeter)return;
+  F.fields.forEach(f=>{const e=rawOf(f.k);if(e)e.hidden=!fVis(f)});
+  document.querySelectorAll('#fields .card.grp').forEach(c=>{c.hidden=!c.querySelector('.fld:not([hidden])')});
+  const sw=$('#dgTabs');if(sw)sw.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.p===DGP));
+  const bs=$('#btnSub');if(bs&&FK==='DG'&&!SUBMITTING)bs.textContent=subLabel();
+  const ds=$('#dgState');if(ds)ds.innerHTML=dgStateHtml();
+  const a=$('#dgRunBox'),b=$('#dgPrevBox'),c=$('#dgUnitsBox');if(a){a.hidden=DGP!=='RUN';b.hidden=DGP!=='READ';c.hidden=DGP!=='READ'}
+}
+function subLabel(){return FK==='DG'&&DGP==='RUN'?(B.dgOpen?'Save STOP time':'Save START time'):'Submit entry'}
+function dgStateHtml(){
+  if(DGP!=='RUN')return'';
+  const o=B.dgOpen;
+  return o?`<div class="banner ok" style="margin-top:8px">🟢 <b>Generator is RUNNING</b> since <b>${o.start}</b>${o.date===B.today?'':' ('+fd(o.date)+')'} · started by ${o.name}.<br>When the set is OFF, enter the <b>stop time</b> below and press <b>Save STOP time</b>.</div>`
+    :`<div class="banner" style="margin-top:8px">⚪ Generator is OFF (no run is open). Enter the <b>start time</b> and press <b>Save START time</b> as soon as you start the set. You do <b>not</b> need to wait for the stop: scan this code again later to enter the stop time.</div>`;
+}
+function fuelBanner(){
+  const f=B.fuel;if(!f||(FK!=='DG'&&FK!=='DSTOCK'))return'';
+  const t=f.tracked?`⛽ <b>Diesel stock in hand: ${n2(f.stock)} L</b> (opening stock ${esc(String(f.openAt).slice(0,10))} + received − used by the DG)`:`⛽ <b>Diesel stock is not started.</b> Open <b>Diesel Stock</b> and enter the <b>Opening stock</b> first.`;
+  return `<div class="banner${f.tracked&&f.stock<400?' wait':''}" style="margin:0 0 10px">${t}<br><small>The DG burns ${f.lph} L in 1 hour of running (${n2(f.lph/60)} L per minute); every run you enter is deducted automatically.</small></div>`;
+}
+function setPart(p){DGP=p;applyVis();renderPhotos();validate(false)}
+function dgDayHtml(){
+  const d=B.dgToday;if(!d)return'';
+  const h=m=>Math.floor(m/60)+'h '+String(m%60).padStart(2,'0')+'m';
+  const run=B.dgOpen?`<p class="hint" style="margin:0 0 8px">🟢 Running now since <b>${B.dgOpen.start}</b>${B.dgOpen.date===B.today?'':' ('+B.dgOpen.date+')'}</p>`:'';
+  return `<div class="card" id="dgDay"><h3>🛢️ Today's DG ON / OFF count</h3>${run}<div class="cards" style="grid-template-columns:repeat(3,1fr)"><div class="card"><small>Switched ON</small><b>${d.on}</b></div><div class="card"><small>Switched OFF</small><b>${d.off}</b></div><div class="card"><small>Running time</small><b>${d.mins?h(d.mins):'–'}</b></div></div>${d.runs.length?'<p class="hint" style="margin-top:8px">'+d.runs.map((r,i)=>'Run '+(i+1)+': '+r.start+' → '+r.stop).join(' · ')+'</p>':''}</div>`;
+}
+function lastVal(f){
+  if(FK==='DG'&&f.k==='hwh')return B.dgPrev==null?'':B.dgPrev;
+  const l=(B.lastv||{})[FK];return l&&l[f.k]!=null?l[f.k]:'';
+}
+/* P.F.: accept "1,2" style commas, turn a missed decimal point (998 -> 0.998) and round to the allowed decimals; anything still above the maximum stays red */
+function pfFix(el,max,dec){
+  const raw=String(el.value||'').trim().replace(',','.').replace(/[^\d.]/g,'');let n=parseFloat(raw),note='';
+  if(isNaN(n)){el.value='';return}
+  if(n>max&&/^\d{2,4}$/.test(raw)){n=raw==='100'?1:n/Math.pow(10,raw.length);note='“'+raw+'” read as '+n+' (a decimal point was missing). '}
+  const r=Math.round(n*Math.pow(10,dec))/Math.pow(10,dec);
+  if(r!==n&&n<=max){note+=n+' rounded to '+r.toFixed(dec)+' (only '+dec+' decimals allowed). ';n=r}
+  el.value=String(n);
+  if(note){toast(note+'Please check it against the meter photo.',1)}
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+}
+function inputHtml(f){
+  return f.t==='sel'?`<select><option value="">Select…</option>${f.opts.map(o=>`<option${f.def!==''&&f.def!=null&&String(f.def)===String(o)?' selected':''}>${o}</option>`).join('')}</select>`
+    :f.t==='time'?`<input type="time">`
+    :f.t==='text'?`<input type="text" maxlength="200" placeholder="${f.req?'Name':'Remarks'}">`
+    :f.hard!=null?`<input type="text" inputmode="decimal" autocomplete="off" onchange="pfFix(this,${f.hard},${f.dec||2})">`
+    :`<input type="number" step="${f.step}" min="0" inputmode="decimal">`;
+}
+function fieldHtml(f,inl){
+  const lv=lastVal(f),pv=lv!==''?`<small class="pv">${FK==='DG'&&f.k==='hwh'?'KWH previous':'Last'}: ${esc(lv)}</small>`:'<small class="pv"></small>';
+  const star=((!f.opt&&f.t!=='text')||f.req||f.per||(f.rp&&f.rp===DGP))?'<b class="rq" title="Compulsory">*</b>':'';
+  const lb=`<span class="lb">${f.n}${star}${f.rule?`<em>${f.rule}</em>`:(f.req?'<em>required</em>':'')}</span>`;
+  if(inl)return `<label class="fld inl" data-k="${f.k}">${lb}${inputHtml(f)}<span class="side">${pv}<small class="mg"></small></span></label>`;
+  return `<label class="fld" data-k="${f.k}">${lb}${inputHtml(f)}${pv}<small class="mg"></small></label>`;
+}
+function cellHtml(f){return `<td class="fc" data-k="${f.k}">${inputHtml(f)}${f.dyn?'<span class="rg"></span>':''}<span class="mg"></span></td>`}
+function tableForm(F){
+  const cols=[['kv','Rating',''],['r','R phase (A)','color:#f87171'],['y','Y phase (A)','color:#fbbf24'],['b','B phase (A)','color:#60a5fa'],['ct','Contactor',''],['fu','Fuse / MCB',''],['tm','Terminal / cable',''],['ch','Capacitor health',''],['rm','Remarks','']];
+  const by={};F.fields.forEach(f=>by[f.k]=f);
+  let h=`<div class="card"><div class="tw" style="max-height:none"><table class="ftbl" style="min-width:1050px"><thead><tr><th style="text-align:center">Cap. no.</th>${cols.map(c=>`<th style="${c[2]}">${c[1]}</th>`).join('')}</tr></thead><tbody>`;
+  for(let i=1;i<=20;i++)h+=`<tr><td style="text-align:center;vertical-align:top;padding-top:12px"><b>${i}</b></td>`+cols.map(c=>cellHtml(by['c'+i+'_'+c[0]])).join('')+'</tr>';
+  return h+'</tbody></table></div></div>';
+}
+
+function sunitForm(F){
+  const by={};F.fields.forEach(f=>by[f.k]=f);
+  const hs=Array.from({length:10},(_,i)=>`<th style="text-align:center">String ${i+1}<br>AMP</th>`).join('');
+  let h=`<div class="card"><p class="hint">Enter the AMP shown for each string. Leave a string empty if that inverter does not have it. Earthing value must be <b>below 2</b>, otherwise an alert e-mail goes out.</p><div class="tw" style="max-height:none"><table class="ftbl" style="min-width:1500px"><thead><tr><th style="text-align:center">Sr.</th><th>Particulars</th>${hs}<th>Cleaning</th><th>Earthing value<small>below 2</small></th><th>Status</th><th>Remarks</th></tr></thead><tbody>`;
+  for(let i=1;i<=6;i++){
+    const p='i'+i+'_';
+    h+=`<tr><td style="text-align:center;vertical-align:top;padding-top:12px"><b>${i}</b></td><td style="vertical-align:top;padding-top:12px"><b>INVERTER ${i}</b></td>`
+      +Array.from({length:10},(_,j)=>cellHtml(by[p+'s'+(j+1)])).join('')+['cl','ea','st','rm'].map(c=>cellHtml(by[p+c])).join('')+'</tr>';
+  }
+  return h+'</tbody></table></div></div>';
+}
+
+/* solar cleaning step (Solar & Dept form, solar plant meter, only on the planned day) */
+function cleanOn(){
+  if(FK!=='SOLAR'||!B||!B.clean)return false;
+  const m=curMeter();if(!m||m.k!=='solar')return false;
+  const d=$('#fDate')?$('#fDate').value:B.today;return d>=B.clean.due;
+}
+function slotShow(i){const s=B.forms[FK].slots[i];if(FK==='DG'&&s.part&&s.part!==DGP)return false;if(s.per&&!perDueC(s.per))return false;if(s.n10&&curDate()<B.eff)return false;return !s.cond||cleanOn()}
+function slotReq(i){const s=B.forms[FK].slots[i];if(s.cond){const el=elOf('clean');return !!el&&el.querySelector('select').value==='Yes'}if(s.per)return true;return !!s.req}
+
+/* meter-wise form (Solar & Dept) */
+function curMeter(){const F=B.forms[FK],s=$('#fMeter');return F&&F.meters&&s?F.meters.find(m=>m.k===s.value):null}
+function renderMeter(){
+  const F=B.forms[FK],m=curMeter(),w=$('#fields');
+  if(!m){w.innerHTML='<div class="card"><div class="msg">Choose the meter / department above.</div></div>';renderPhotos();return}
+  const co=cleanOn(),fs=F.fields.filter(f=>m.f.includes(f.k)||(co&&(m.x||[]).includes(f.k)));
+  w.innerHTML=`<div class="card"><h3>${esc(m.n)} meter reading</h3><div class="fl inl">${fs.map(f=>fieldHtml(f,true)).join('')}</div></div>`
+    +(co?`<div class="card" style="border-color:var(--amber)"><h3>🧽 Solar panel cleaning planned for this day</h3><p class="hint">Cleaning was due on ${fd(B.clean.due)} (last cleaned ${fd(B.clean.last)}) and is to be finished by ${B.clean.by}. Choose Yes or No above, and add the cleaning photo below. If you choose No, an alert is sent and the cleaning stays due.</p></div>`:'');
+  renderPhotos();
+}
+function slotLabel(i){const F=B.forms[FK],m=F.byMeter?curMeter():null;return m&&i===0?m.n+' meter photo':F.slots[i].n}
+
+function photoCard(F){
+  const rq=F.slots.filter(x=>x.req).length;
+  return `<div class="card"><h3>📷 Photos <span class="pill n" id="phCount">0 / ${rq}</span></h3><p class="hint">Tap a box to take a photo with the camera or pick one from the gallery. ${rq} photo${rq>1?'s are':' is'} compulsory${F.slots.length>rq?', the other boxes are optional':''}. Photos are made smaller automatically and are kept for ${B.photoDays||7} days.</p><div class="phs" id="phWrap"></div></div>`;
+}
+function boxTap(b){const i=b.parentNode.querySelector('.phc input');if(i)i.click()}
+function renderPhotos(){
+  const w=$('#phWrap');if(!w)return;
+  const F=B.forms[FK];
+  w.innerHTML=F.slots.map((s,i)=>{
+    if(!slotShow(i))return'';
+    const rqd=slotReq(i),d=PHOTOS[i],st=d==='…'?'':d?'ok':(TRIED&&rqd&&B.photoReq?'miss':(rqd&&B.photoReq?'need':''));
+    const inner=d==='…'?'<span>⏳ Processing…</span>'
+      :d?`<img src="${d}" alt="${esc(slotLabel(i))}"><span class="tag">${esc(slotLabel(i))} ✓</span>`
+      :`<span>📷 ${esc(slotLabel(i))}<br><small>${rqd?(st==='miss'?'⚠ Required – cannot submit without it':'Compulsory – tap to add'):'Optional'}</small></span>`;
+    const inp=(cap)=>`<input class="phin" type="file" accept="image/&#42;"${cap?' capture="environment"':''} onchange="gotPhoto(${i},this)">`;
+    return `<div class="ph ${st}"><div class="phbox" onclick="boxTap(this)">${inner}</div><div class="phacts"><label class="btn phc">📷 ${d&&d!=='…'?'Retake':'Take photo'}${inp(1)}</label><label class="btn phc">🖼 Gallery${inp(0)}</label>${d&&d!=='…'?`<button type="button" class="btn phx" onclick="rmPhoto(${i})">✕</button>`:''}</div></div>`;
+  }).join('');
+  const pc=$('#phWrap')&&$('#phWrap').closest('.card');if(pc)pc.hidden=!F.slots.some((x,i)=>slotShow(i));
+  const rq=F.slots.filter((x,i)=>slotShow(i)&&slotReq(i)).length,have=F.slots.filter((s,i)=>slotShow(i)&&slotReq(i)&&PHOTOS[i]&&PHOTOS[i]!=='…').length,c=$('#phCount');
+  if(c){c.textContent=have+' / '+rq+' compulsory';c.className='pill '+(have>=rq?'g':TRIED?'r':'n')}
+}
+function compress(file){return new Promise((res,rej)=>{
+  const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{try{
+    const M=1280,s=Math.min(1,M/Math.max(img.naturalWidth,img.naturalHeight));
+    const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*s));c.height=Math.max(1,Math.round(img.naturalHeight*s));
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',0.72));
+  }catch(e){URL.revokeObjectURL(url);rej(e)}};
+  img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('bad image'))};
+  img.src=url;
+})}
+function gotPhoto(i,inp){
+  const file=inp.files&&inp.files[0];inp.value='';
+  if(!file)return;
+  if(file.type&&file.type.indexOf('image')!==0){toast('Please choose a photo (image file)',1);return}
+  const fk=FK;PHOTOS[i]='…';renderPhotos();
+  compress(file).then(d=>{if(FK!==fk)return;PHOTOS[i]=d;renderPhotos();validate(false)})
+    .catch(()=>{if(FK!==fk)return;PHOTOS[i]=null;renderPhotos();toast('Could not read this photo. Try another one or take it again.',1)});
+}
+function rmPhoto(i){PHOTOS[i]=null;renderPhotos();validate(false)}
+function photoMissList(){const F=B.forms[FK];if(!F||!B.photoReq)return[];return F.slots.map((s,i)=>slotShow(i)&&slotReq(i)&&!(PHOTOS[i]&&PHOTOS[i]!=='…')?slotLabel(i):null).filter(Boolean)}
+function photoMiss(){return photoMissList().length}
+
+function openForm(k){
+  if(!B){toast('Still loading, please wait a moment',1);return}
+  if(SAVING[k]){toast('This form is still saving. Please wait a moment.',1);return}
+  if(SUBMITTING)return;
+  FK=k;TRIED=false;DGP='RUN';board();const F=B.forms[k];
+  PHOTOS=new Array(F.slots.length).fill(null);
+  const rq=F.slots.filter(x=>x.req).length;
+  const lockM=FM&&F.byMeter&&MODE.m&&F.meters.some(m=>m.k===MODE.m);
+  const dueB=F.due?`<div class="banner wait" style="margin:0 0 10px">⏰ <b>Fill-by time:</b> ${esc(F.due)}.${lateNow(F)?' <b>That time has passed today, so an entry saved now will be marked LATE.</b>':''}</div>`:'';
+  let h=`<div class="card"><h2>${F.icon} ${F.title}</h2>${dueB}${fuelBanner()}<p class="hint">Every field marked <b class="rq">*</b> must be filled and every <b>COMPULSORY</b> photo box must have a photo; a blank is not accepted. Every reading and dropdown must be filled before you can submit, and ${rq} photo${rq>1?'s':''} must be added. Each box shows its allowed range; outside the range it turns red. Out-of-range readings can still be submitted after a confirmation, and an automatic alert e-mail goes to Naveen. Every entry is logged with the doer name and the time.${F.due?` Fixed time: ${F.due}. An entry saved after that time is marked LATE and Naveen is e-mailed.`:''}${k==='SCLEAN'?' Enter the AMP of every string of each inverter, tick cleaning, earthing value (must be below 2), status and remarks.':''}${k==='SOLAR'&&B.clean?` Solar cleaning is planned every ${3} days (next: ${fd(B.clean.due)}); on that day a cleaning question and photo appear in the Solar plant entry.`:''}${F.byMeter?' Pick the meter / department, then enter only that meter’s reading with its photo. Each meter is submitted separately.':''}${F.weekly?' Weekly form: submit once a week with one photo.':''}${F.every&&!F.weekly?` Needed every ${F.every} days with a photo.`:''}${F.multi?'':(F.byMeter||F.weekly?'':' If an entry for the chosen date already exists you will be asked to confirm.')}${F.optional&&k==='DG'?' KWH reading is optional; if you enter it, coolant temperature is required. Diesel is optional.':''}${k==='PFP'?' Allowed amps follow the selected rating. An out-of-range phase is outlined in its own colour (R red, Y yellow, B blue).':''}${k==='COMP'?' Enter the hours as shown on the compressor.':''}</p></div>
+  <div class="card"><div class="meta">
+   <label class="fld"><span class="lb">Date</span><input type="date" id="fDate" value="${B.today}" max="${B.today}"></label>
+   <label class="fld"><span class="lb">Time</span><input type="time" id="fTime" value="${nowHM()}"></label>
+   <label class="fld" id="fNameBox"><span class="lb">Doer name<em>required</em></span><input type="text" id="fName" maxlength="60" autocomplete="name" placeholder="Your full name" value="${esc(myName())}"><small class="mg"></small></label></div></div>`;
+  if(F.byMeter)h+=`<div class="card"><div class="meta"><label class="fld" id="fMeterBox"><span class="lb">Meter / department<em>${lockM?'fixed by this barcode':'required'}</em></span><select id="fMeter"><option value="">Select meter…</option>${F.meters.map(m=>`<option value="${m.k}">${esc(m.n)}</option>`).join('')}</select><small class="mg"></small></label></div></div>`;
+  h+=`<div class="banner" id="banner">Fill all the readings below.</div>${k==='DG'?`<div class="card"><div class="tabs" id="dgTabs" style="margin:0 0 4px"><button type="button" class="tab on" data-p="RUN" onclick="setPart('RUN')">▶ Run log (start / stop)</button><button type="button" class="tab" data-p="READ" onclick="setPart('READ')">📋 Reading &amp; checks</button></div><p class="hint"><b>Run log:</b> save the START time when you switch the set ON. Later, scan the same code again and save the STOP time when it is OFF (a new start can be saved after that, many runs a day). <b>Reading &amp; checks:</b> once a day for the meter reading, diesel stock and the checks.</p><div id="dgState"></div></div>${dgDayHtml()}<div class="card"><h3>Calculated automatically (read only)</h3><div class="fl">
+<label class="fld" id="dgRunBox"><span class="lb">Running time</span><input id="dgRun" readonly tabindex="-1" value="–"></label>
+<label class="fld" id="dgPrevBox" hidden><span class="lb">KWH previous</span><input id="dgPrev" readonly tabindex="-1" value="${B.dgPrev==null?'–':B.dgPrev}"></label>
+<label class="fld" id="dgUnitsBox" hidden><span class="lb">Total units</span><input id="dgUnits" readonly tabindex="-1" value="–"></label></div></div>`:''}<div id="fields">`;
+  if(F.byMeter)h+='';
+  else if(F.table)h+=F.tbl==='sunit'?sunitForm(F):tableForm(F);
+  else{const gs={},order=[];F.fields.filter(f=>!f.hid).forEach(f=>{if(!gs[f.g]){gs[f.g]=[];order.push(f.g)}gs[f.g].push(f)});
+    order.sort((a,b)=>(a==='Sign-off')-(b==='Sign-off'));
+    order.forEach(g=>{h+=`<div class="card grp"><h3>${g}</h3><div class="fl${F.inline?' inl':''}">${gs[g].map(f=>fieldHtml(f,F.inline)).join('')}</div></div>`})}
+  h+=`</div>${photoCard(F)}<div class="bar"><button class="btn pri" id="btnSub" onclick="submitForm()">Submit entry</button><button class="btn" id="btnClr" onclick="openForm('${k}')">Clear</button></div>`;
+  $('#form').innerHTML=h;$('#fields').oninput=()=>validate(false);$('#fields').onchange=()=>{validate(false);if(F.byMeter)renderPhotos()};
+  if(F.byMeter)$('#fDate').onchange=()=>{renderMeter();validate(false)};
+  else $('#fDate').onchange=()=>{applyVis();renderPhotos();validate(false)};
+  applyVis();
+  $('#fName').oninput=()=>validate(false);
+  if(F.byMeter){
+    const sel=$('#fMeter');if(lockM){sel.value=MODE.m;sel.disabled=true}
+    sel.onchange=()=>{renderMeter();validate(false)};renderMeter();
+  }
+  renderPhotos();
+  validate(false);
+  if(!FM||k!==MODE.f)$('#form').scrollIntoView({behavior:'smooth'});
+}
+function validate(strict){
+  const F=B.forms[FK],ctx={},miss=[],decs=[];let bad=0,roll=0,okc=0;
+  F.fields.forEach(f=>{const el=elOf(f.k);ctx[f.k]=el?el.querySelector('input,select').value.trim():''});
+  F.fields.forEach(f=>{
+    const el=elOf(f.k);if(!el)return;
+    const inp=el.querySelector('input,select'),v=ctx[f.k];let cls='',msg='';
+    const rl=el.querySelector('em,.rg');if(f.dyn&&rl)rl.textContent=ruleOf(f,ctx);
+    inp.style.boxShadow='';
+    if(f.t==='text'&&!f.req)return;
+    if(v===''){if(isReq(f,ctx)||f.cond){miss.push(f.n);if(strict||TRIED){cls='miss';msg='Required'}}}
+    else if(f.dec&&(()=>{const dp=v.split('.')[1];return dp&&dp.replace(/0+$/,'').length>f.dec})()){decs.push(f.n);cls='miss';msg='⚠ Only '+f.dec+' decimal places'}
+    else if(f.hard!=null&&+v>f.hard){decs.push(f.n);cls='miss';msg='⚠ Cannot be more than '+f.hard}
+    else{const c=chk(f,v,ctx),lv=lastVal(f);
+      if(c==='bad'){bad++;cls='bad';msg='⚠ Outside '+ruleOf(f,ctx);if(f.ph)inp.style.boxShadow='0 0 0 2px '+PHC[f.ph]}
+      else if(f.cum&&lv!==''&&+v<+lv){roll++;cls='warn';msg='⚠ Lower than last ('+lv+')'}
+      else{okc++;cls='ok';msg='✓ OK'}}
+    el.classList.remove('ok','bad','warn','miss');if(cls)el.classList.add(cls);
+    el.querySelector('.mg').textContent=msg;
+  });
+  const nb=$('#fNameBox'),nm=($('#fName')||{value:''}).value.trim();
+  const nameMiss=nm.length<2;
+  if(nb){nb.classList.remove('ok','miss');if(!nameMiss)nb.classList.add('ok');else if(strict||TRIED)nb.classList.add('miss');
+    nb.querySelector('.mg').textContent=nameMiss?((strict||TRIED)?'Required':''):'✓ OK'}
+  const meterMiss=!!F.byMeter&&!curMeter();
+  const mb=$('#fMeterBox');if(mb){mb.classList.remove('ok','miss');if(!meterMiss)mb.classList.add('ok');else if(strict||TRIED)mb.classList.add('miss');
+    mb.querySelector('.mg').textContent=meterMiss?((strict||TRIED)?'Required':''):'✓ OK'}
+  const phL=photoMissList(),phM=phL.length;
+  if(TRIED)renderPhotos();
+  const b=$('#banner'),parts=[];
+  if(meterMiss)parts.push('meter');
+  if(decs.length)parts.push(decs.join(', ')+' (max 2 decimal places)');
+  if(miss.length)parts.push(miss.length+' reading(s)');if(nameMiss)parts.push('doer name');if(phM>0)parts.push(phM+' photo(s)');
+  if(decs.length){b.className='banner bad';b.textContent='⚠ '+decs.join(', ')+': only 2 decimal places are allowed (for example 0.98).'}
+  else if(parts.length&&(strict||TRIED)){b.className='banner bad';b.textContent=`⚠ Still missing: ${parts.join(', ')}. Fill everything before submitting.`}
+  else if(bad||roll){b.className='banner bad';b.textContent=`⚠ ${bad} reading(s) out of range${roll?`, ${roll} lower than previous`:''}. Please re-check.`}
+  else if(okc){b.className='banner ok';b.textContent=`✓ ${okc} reading(s) entered and within range${parts.length?` · still to fill: ${parts.join(', ')}`:''}.`}
+  else{b.className='banner';b.textContent='Fill all the readings below.'}
+  if(FK==='DG'){
+    let run='–',un='–';
+    const st0=ctx.start||(B.dgOpen&&DGP==='RUN'?B.dgOpen.start:'');
+    if(st0&&ctx.stop){const a=st0.split(':'),e=ctx.stop.split(':');let m=(+e[0]*60+ +e[1])-(+a[0]*60+ +a[1]);if(m<0)m+=1440;run=Math.floor(m/60)+'h '+String(m%60).padStart(2,'0')+'m'}
+    if(ctx.hwh!==''&&B.dgPrev!=null){const u=+ctx.hwh-B.dgPrev;un=u<0?'Check reading':u}
+    $('#dgRun').value=run;$('#dgPrev').value=B.dgPrev==null?'–':B.dgPrev;$('#dgUnits').value=un;
+  }
+  return{bad:bad,roll:roll,miss:miss,nameMiss:nameMiss,phMiss:phM,meterMiss:meterMiss,decs:decs};
+}
+function localResult(F,p){
+  const data={},warns=[];let bad=0;
+  F.fields.forEach(f=>{let v=p.v[f.k];if(v==null)v='';
+    if(f.t==='sel'||f.t==='time'||f.t==='text')v=v||'';else v=v===''?'':+v;
+    data[f.k]=v;
+  });
+  if(F.parts&&data.part==='STOP'){data.part='RUN';data.start=B.dgOpen?B.dgOpen.start:''}
+  F.fields.forEach(f=>{const v=data[f.k];
+    if(v!==''&&chk(f,v,data)==='bad'){bad++;warns.push(f.n+' = '+v+' (allowed '+ruleOf(f,data)+')')}
+    const lv=lastVal(f);if(f.cum&&v!==''&&lv!==''&&v<lv)warns.push(f.n+' = '+v+' is lower than previous reading '+lv);
+  });
+  const th=[];(p.photos||[]).forEach((d,i)=>{if(d)th.push({src:d,cap:slotLabel(i)})});
+  const m=F.byMeter?curMeter():null;
+  return{ok:true,ts:new Date().toLocaleString(),name:p.name,bad:bad,warns:warns,date:p.date,time:p.time,data:data,photos:[],thumbs:th,meter:m?m.n:''};
+}
+async function submitForm(){
+  if(SUBMITTING||ASKING)return;
+  if(PHOTOS.includes('…')){toast('A photo is still processing, please wait a second',1);return}
+  SUBMITTING=true;
+  const btn=$('#btnSub'),clr=$('#btnClr');
+  const unlock=()=>{SUBMITTING=false;if(btn){btn.disabled=false;btn.textContent=subLabel()}if(clr)clr.disabled=false};
+  btn.disabled=true;btn.textContent='Checking…';if(clr)clr.disabled=true;
+  try{
+    const F=B.forms[FK];TRIED=true;
+    const r=validate(true);
+    if(r.decs.length){toast(r.decs.join(', ')+': value not allowed (check the decimal places and the maximum)',1);const f1=document.querySelector('#fields .miss');if(f1)f1.scrollIntoView({behavior:'smooth',block:'center'});unlock();return}
+    if(r.miss.length||r.nameMiss||r.phMiss>0||r.meterMiss){
+      const p=[];if(r.meterMiss)p.push('meter');if(r.miss.length)p.push(r.miss.length+' reading(s)');if(r.nameMiss)p.push('doer name');if(r.phMiss>0)p.push(r.phMiss+' photo(s)');
+      toast('Still missing: '+p.join(', '),1);
+      const first=document.querySelector('#form .fld.miss, #fields .miss, .ph.miss');
+      if(first){first.scrollIntoView({behavior:'smooth',block:'center'});const i=first.querySelector('input[type=text],input[type=number],input[type=time],select');if(i)i.focus({preventScroll:true})}
+      unlock();return;
+    }
+    const name=$('#fName').value.replace(/\s+/g,' ').trim(),date=$('#fDate').value;
+    if(!date){toast('Pick a date',1);unlock();return}
+    if(date>B.today){toast('The entry date cannot be in the future',1);unlock();return}
+    const v={};F.fields.forEach(f=>{const el=elOf(f.k);if(el)v[f.k]=el.querySelector('input,select').value.trim()});
+    if(FK==='DG')v.part=(DGP==='RUN'&&B.dgOpen)?'STOP':DGP;
+    if(r.bad){
+      ASKING=true;const yes=await ask('Readings out of range',r.bad+' reading(s) are outside the allowed range'+(r.roll?' and '+r.roll+' are lower than the previous reading':'')+'. Submit anyway? An alert e-mail will go to Naveen.','Submit anyway');ASKING=false;
+      if(!yes){unlock();return}
+    }
+    const m=F.byMeter?curMeter():null;
+    const payload={id:Date.now().toString(36)+Math.random().toString(36).slice(2,8),date:date,time:$('#fTime').value,name:name,v:v,meter:m?m.k:'',photos:PHOTOS.map((x,i)=>slotShow(i)&&x&&x!=='…'?x:null)};
+    const L=B.last&&B.last[FK];
+    if(!F.multi&&!F.byMeter&&!F.weekly&&!F.every&&L&&L.date&&(Date.now()-new Date(L.date+'T'+(L.time||'00:00')+':00+05:30'))<12*3600*1000){
+      toast(F.title+' was already submitted at '+L.time+' on '+fd(L.date)+'. The next entry opens 12 hours after it. Contact your manager or admin to correct it.',1);unlock();return
+    }
+    btn.textContent='Saving…';
+    setName(name);
+    const local=localResult(F,payload);
+    showReceipt(FK,local,'saving',payload.id);
+    send(FK,payload,local);
+    SUBMITTING=false;
+  }catch(e){unlock();throw e}
+}
+function live(sid){const c=$('#rcpt');return !!c&&c.dataset.sid===sid}
+function send(key,payload,local){
+  PENDING++;SAVING[key]=true;busy();
+  google.script.run.withSuccessHandler(r=>{
+    PENDING--;SAVING[key]=false;busy();
+    r.thumbs=local.thumbs;
+    B.last[key]={date:r.date,time:r.time,name:r.name,v:r.data,ts:r.ts};
+    B.lastv=B.lastv||{};const lv=B.lastv[key]=B.lastv[key]||{};Object.keys(r.data).forEach(k=>{if(r.data[k]!==''&&r.data[k]!=null)lv[k]=r.data[k]});
+    B.dates=B.dates||{};const ds=B.dates[key]=B.dates[key]||[];if(!ds.includes(r.date))ds.push(r.date);
+    const s=B.status[key];if(r.date===B.today){s.n++;s.bad+=r.bad;if(s.due)s.due={due:false,days:0}}
+    if(key==='DG'&&r.data.hwh!==''&&r.data.hwh!=null)B.dgPrev=r.data.hwh;
+    const FF=B.forms[key];
+    if(FF.perInfo)Object.keys(FF.perInfo).forEach(q=>{if(r.data[q]!==''&&r.data[q]!=null&&!FF.perInfo[q].done.includes(r.date))FF.perInfo[q].done.push(r.date)});
+    if(key==='DG'&&r.data.part==='RUN'){
+      if(r.stopped){
+        const a=r.data.start.split(':'),e=r.data.stop.split(':');let m=(+e[0]*60+ +e[1])-(+a[0]*60+ +a[1]);if(m<0)m+=1440;
+        if(B.dgToday){B.dgToday.off++;B.dgToday.mins+=m;B.dgToday.runs.push({start:r.data.start,stop:r.data.stop,mins:m})}
+        B.dgOpen=null;
+      }else{B.dgOpen={date:r.date,start:r.data.start,name:r.name};if(B.dgToday)B.dgToday.on++}
+      const dd=$('#dgDay');if(dd)dd.outerHTML=dgDayHtml();
+    }
+    if(key==='SOLAR'&&r.data.clean==='Yes'&&B.clean&&r.date>B.clean.last){const d=new Date(r.date+'T00:00:00');d.setDate(d.getDate()+3);B.clean={last:r.date,due:iso(d),by:B.clean.by}}
+    board();
+    if(live(payload.id))showReceipt(key,r,'saved',payload.id);
+    toast(key==='DG'&&r.data.part==='RUN'&&!r.stopped?'START time saved ✓ . When the DG is OFF, scan again and enter the STOP time':r.bad?'Saved, with '+r.bad+' warning(s)':'Saved ✓');
+    if(!FM){STALE=true;clearTimeout(window._rf);window._rf=setTimeout(()=>loadDash(true),4000)}
+  }).withFailureHandler(async e=>{
+    PENDING--;SAVING[key]=false;busy();
+    const msg=(e&&e.message)||String(e);
+    if(/DUPLICATE/.test(msg)){
+      const dm=msg.replace(/^.*DUPLICATE:\s?/,'');
+      if(live(payload.id))showReceipt(key,local,'failed',payload.id,null,{message:'NOT saved: '+dm});
+      toast('Not saved: already submitted. Contact your manager or admin.',1);return;
+    }
+    const clean=msg.replace(/^.*?(MISSING|INVALID):/,'$1:');
+    toast('⚠ NOT saved: '+clean,1);
+    if(live(payload.id))showReceipt(key,local,'failed',payload.id,/MISSING|INVALID|future/.test(msg)?null:()=>{showReceipt(key,local,'saving',payload.id);send(key,payload,local)},{message:clean});
+  }).submitEntry(key,payload);
+}
+function showReceipt(k,r,state,sid,retry,err){
+  const F=B.forms[k];
+  const all=F.fields.filter(f=>!f.hid&&!(F.parts&&r.data.part&&f.part&&f.part!==r.data.part)).map(f=>{const v=r.data[f.k];const c=v===''?'':chk(f,v,r.data);return{f:f,v:v,c:c}});
+  const shown=F.table?all.filter(x=>x.c==='bad'):F.byMeter?all.filter(x=>x.v!==''):all;
+  let rows=shown.map(x=>`<tr><td>${x.f.n}</td><td class="${x.c==='bad'?'bad':''}">${x.v===''?'–':esc(x.v)}</td><td>${ruleOf(x.f,r.data)}</td><td>${x.c==='bad'?'⚠ out of range':x.v===''?'empty':'OK'}</td></tr>`).join('');
+  if(F.table&&!shown.length)rows='<tr><td colspan="4" class="l">All entered readings are within range.</td></tr>';
+  const th=(r.thumbs||[]).filter(Boolean),tid=th.length?regLB(th):-1;
+  const phHtml=th.length?`<h3 style="margin-top:12px">📷 Photos (${th.length})</h3><div class="rph">${th.map((d,i)=>`<img src="${d.src}" alt="${esc(d.cap)}" title="${esc(d.cap)}" onclick="lb(${tid},${i})">`).join('')}</div><p class="hint">Tap a photo to enlarge it. Saved photos are kept for ${B.photoDays||7} days.</p>`:'';
+  receipt=`<h1>${F.icon} ${F.title}${r.meter?' – '+esc(r.meter):''}: entry receipt</h1><p class="hint">Entry date ${r.date} ${r.time} · ${state==='saved'?'saved '+r.ts:'entered '+r.ts} · by ${esc(r.name)}${F.table?' · '+all.filter(x=>x.v!=='').length+' readings entered, only out-of-range ones are listed':''}</p>
+  <div class="banner ${r.bad?'bad':'ok'}" style="margin-top:10px">${r.bad?`⚠ ${r.bad} reading(s) out of range (logged)`:'✓ All readings within range'}</div>
+  ${r.warns.length&&!F.table?`<div class="chips">${r.warns.map(w=>`<span class="cp bad">${esc(w)}</span>`).join('')}</div>`:''}
+  <div class="tw"><table><thead><tr><th>Reading</th><th>Value</th><th>Allowed</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>${phHtml}`;
+  window.RETRY=retry||null;
+  const pc=th.length;
+  const lateB=r.late?`<div class="banner wait" style="margin-top:10px">⏰ ${esc(r.late)}. This entry is marked LATE${r.mailed?' and Naveen was e-mailed':''}.</div>`:'';
+  const aidB=r.alertId?`<div class="hint" style="margin:6px 0">Alert ID <b>${esc(r.alertId)}</b>: the manager/admin will record the action taken.</div>`:'';
+  const chip=state==='saving'?`<div class="banner wait">⏳ Saving${pc?' and uploading '+pc+' photo(s)':''}… please wait, do not close this page</div>`
+    :state==='failed'?`<div class="banner bad">⚠ NOT saved: ${esc((err&&err.message)||'network error')} ${retry?'<button class="btn pri" style="margin-left:10px" onclick="RETRY()">Retry</button>':''}</div>`
+    :'<div class="banner ok">✓ Saved to the sheet'+(pc?' · '+pc+' photo(s) saved to Google Drive':'')+(r.mailed?' · ✉ alert e-mail sent to Naveen':'')+'</div>';
+  $('#form').innerHTML=`<div class="card" id="rcpt" data-sid="${sid}">${chip}${lateB}${aidB}${receipt}<div class="bar" style="margin-top:12px"><button class="btn pri" onclick="openForm('${k}')">${F.byMeter&&!(FM&&MODE.m)?'Next meter':'New entry'}</button>
+  <button class="btn" onclick="printHtml(receipt)">⎙ Print</button><button class="btn" onclick="pdfHtml(receipt,'${k}-entry-${r.date}.pdf',false)">⬇ PDF</button></div></div>`;
+}
+
+function loadLog(){
+  if(LOAD.log)return;
+  if(!B){toast('Still loading, please wait a moment',1);return}
+  if($('#lMine').checked&&!myName()){toast('Your name is not saved on this phone yet. Submit one entry first.',1);return}
+  LOAD.log=1;lockBar('#t-log .bar.f',true);
+  $('#logTbl').innerHTML='<div class="msg">Loading…</div>';
+  const done=()=>{LOAD.log=0;lockBar('#t-log .bar.f',false)};
+  google.script.run.withSuccessHandler(r=>{done();LOGROWS=r.rows;renderLog()}).withFailureHandler(e=>{done();$('#logTbl').innerHTML='<div class="msg"><b>⚠ Could not load the log.</b></div>';fail(e)})
+   .getLog({form:$('#lForm').value,from:$('#lFrom').value,to:$('#lTo').value,q:$('#lQ').value,mine:$('#lMine').checked,name:myName(),pin:PIN});
+}
+function formLbl(r){const F=B.forms[r.form];if(!F)return r.form;let m=null;if(F.byMeter)m=(F.meters||[]).find(x=>r.data[x.f[0]]!==''&&r.data[x.f[0]]!=null);return esc(F.title+(m?' ('+m.n+')':''))}
+function renderLog(){
+  if(!LOGROWS.length){$('#logTbl').innerHTML='<div class="msg">No entries found.</div>';return}
+  $('#logTbl').innerHTML='<table><thead><tr><th>Submitted</th><th class="l">Doer</th><th class="l">Form</th><th>Entry date</th><th>Time</th><th>Status</th><th class="l">Photos</th><th class="noprint">Details</th></tr></thead><tbody>'
+  +LOGROWS.map((r,i)=>`<tr><td class="l">${r.ts}</td><td class="l">${esc(r.name)}</td><td class="l">${formLbl(r)}</td><td>${fd(r.date)}</td><td>${r.time}</td>
+  <td>${r.bad?`<span class="pill r">⚠ ${r.bad} out of range</span>`:'<span class="pill g">✓ OK</span>'}${/LATE:/.test(r.warns||'')?' <span class="pill a">⏰ Late</span>':''}${/IMPORTED FROM EXCEL/.test(r.warns||'')?' <span class="pill n" title="Copied from the Excel file, not entered on the portal">📥 From Excel</span>':''}</td><td class="l">${phLinks(r.photos,r.date)}</td><td class="noprint"><button class="btn" onclick="detail(${i},this)">View</button> <button class="btn" onclick="editEntry(${i})">✎ Edit</button> <button class="btn" style="color:#fca5a5" onclick="delEntry(${i})">🗑 Delete</button></td></tr>`).join('')+'</tbody></table>';
+}
+function editEntry(i){
+  const r=LOGROWS[i],F=B.forms[r.form];if(!F)return;
+  let M=null;if(F.byMeter)M=(F.meters||[]).find(m=>r.data[m.f[0]]!==''&&r.data[m.f[0]]!=null);
+  const fs=F.fields.filter(f=>!f.hid&&!(F.parts&&r.data.part&&f.part&&f.part!==r.data.part)).filter(f=>!M||M.f.includes(f.k)||(M.x||[]).includes(f.k));
+  $('#edT').textContent='Correct entry: '+F.title+(M?' – '+M.n:'');
+  $('#edS').textContent='Entry of '+fd(r.date)+' by '+r.name+'. Change only what is wrong. The correction is recorded in the Admin audit sheet.';
+  $('#edF').innerHTML=fs.map(f=>{
+    const v=r.data[f.k]==null?'':r.data[f.k];
+    const inp=f.t==='sel'?`<select data-k="${f.k}"><option value=""></option>${f.opts.map(o=>`<option ${String(o)===String(v)?'selected':''}>${esc(o)}</option>`).join('')}</select>`
+      :`<input data-k="${f.k}" type="${f.t==='time'?'time':f.t==='text'?'text':'number'}" ${f.t==='num'||!f.t?'step="any" inputmode="decimal"':''} value="${esc(v)}">`;
+    return `<label>${esc(f.n)}</label>${inp}`}).join('');
+  $('#edOk').onclick=()=>{
+    const vals={};$('#edF').querySelectorAll('[data-k]').forEach(e=>vals[e.dataset.k]=e.value.trim());
+    const b=$('#edOk');b.disabled=true;b.textContent='Saving…';
+    google.script.run.withSuccessHandler(()=>{b.disabled=false;b.textContent='Save correction';$('#edm').classList.remove('on');toast('Entry corrected ✓');loadLog();STALE=true}).withFailureHandler(e=>{b.disabled=false;b.textContent='Save correction';fail(e)}).adminEdit(PIN,r.row,r.id,r.form,vals);
+  };
+  $('#edm').classList.add('on');
+}
+async function delEntry(i){
+  const r=LOGROWS[i],F=B.forms[r.form]||{title:r.form};
+  const yes=await ask('Delete this entry?',F.title+' · '+fd(r.date)+' · by '+r.name+'. The data and its photos are removed and a copy is kept in the Admin audit sheet. This cannot be undone.','Delete');
+  if(!yes)return;
+  google.script.run.withSuccessHandler(()=>{toast('Entry deleted');loadLog();STALE=true}).withFailureHandler(fail).adminDelete(PIN,r.row,r.id,r.form);
+}
+function detail(i,btn){
+  const tr=btn.closest('tr');if(tr.nextSibling&&tr.nextSibling.className==='dtl'){tr.nextSibling.remove();btn.textContent='View';return}
+  const r=LOGROWS[i],F=B.forms[r.form];if(!F)return;
+  const chips=F.fields.filter(f=>{const v=r.data[f.k];if(f.hid||v===''||v==null)return false;return F.table?chk(f,v,r.data)==='bad':true}).map(f=>{const v=r.data[f.k];return `<span class="cp ${chk(f,v,r.data)==='bad'?'bad':''}">${f.n}: <b>${esc(v)}</b></span>`}).join('')||'<span class="cp">All readings within range</span>';
+  const d=document.createElement('tr');d.className='dtl';d.innerHTML=`<td colspan="8" class="l"><div class="chips">${chips}</div>${r.warns?`<div class="hint" style="padding:0 4px 8px">${esc(r.warns)}</div>`:''}${r.photos&&r.photos.length?`<div class="hint" style="padding:0 4px 8px">Photos: ${phLinks(r.photos,r.date)}</div>`:''}</td>`;
+  tr.after(d);btn.textContent='Hide';
+}
+const logHead=()=>`<h1>Entry log</h1><p class="hint">${$('#lFrom').value||'start'} → ${$('#lTo').value||'today'} · ${LOGROWS.length} entries</p>`;
+function printLog(){if(!LOGROWS.length)return toast('Search first',1);printEl($('#logTbl'),logHead())}
+function pdfLog(){if(!LOGROWS.length)return toast('Search first',1);pdfEl($('#logTbl'),logHead(),'entry-log.pdf',true)}
+function csvLog(){if(!LOGROWS.length)return toast('Search first',1);
+  csv([['Submitted','Doer name','Form','Entry date','Time','Out of range','Warnings','Photos']].concat(LOGROWS.map(r=>[r.ts,r.name,r.form,r.date,r.time,r.bad,r.warns,(r.photos||[]).map(x=>x.u).join(' ')])),'entry-log.csv')}
+
+/* ---------- Reports: the three sheets of UNIT_REPORT-2026.xlsx (HT METER, ELECTRIC CONSUMPTION, DG SET). Same layout, colours and formulas ---------- */
+let XL=null,XT='ht',XBJ=false;
+const XC={y:'#FFFF00',g:'#92D050',r:'#FF0000',p:'#7030A0',o:'#C3D69B'};
+const xnum=(x,d)=>x==null||x===''||isNaN(x)?'':Number(x).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:false});
+const xdate=iso=>{const p=iso.split('-');return +p[2]+'-'+MON[p[1]-1]};
+const xhm=t=>{const m=/^(\d{1,2}):(\d{2})/.exec(t||'');return m?(+m[1])+(+m[2]/100):null};   /* 6:30 -> 6.30, as typed in the Excel TIME column */
+const xhms=s=>{if(s==null||isNaN(s))return'';s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h+':'+String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const xsec=t=>{const m=/^(\d{1,2}):(\d{2})/.exec(t||'');return m?(+m[1])*3600+(+m[2])*60:null};
+const xmon=()=>MON[XL.m-1].toUpperCase();
+const xname=()=>({ht:xmon()+'-'+String(XL.y).slice(2),dept:'ELECTRIC CONSUMPTION ('+xmon()+')',dg:'DG SET ('+xmon()+')',units:'UNITS & AMOUNT ('+xmon()+')',bill:'ELECTRICITY BILL ('+xmon()+')'});
+const xg=(o,k)=>o&&o[k]!==''&&o[k]!=null?+o[k]:null;
+const xsum=a=>{const n=a.filter(x=>x!=null&&!isNaN(x));return n.length?n.reduce((s,x)=>s+x,0):null};
+const xavg=a=>{const n=a.filter(x=>x!=null&&!isNaN(x));return n.length?n.reduce((s,x)=>s+x,0)/n.length:null};
+
+function loadXl(){
+  if(LOAD.xl)return;
+  if(!B){toast('Still loading, please wait a moment',1);return}
+  const ym=$('#xMon').value;if(!/^\d{4}-\d{2}$/.test(ym)){toast('Pick a month',1);return}
+  LOAD.xl=1;lockBar('#t-rep .bar.f',true);
+  $('#repBody').innerHTML='<div class="msg">Loading…</div>';
+  const done=()=>{LOAD.xl=0;lockBar('#t-rep .bar.f',false)};
+  google.script.run.withSuccessHandler(r=>{done();try{XL=r;showXl(XT)}catch(e){showErr('Page error while drawing: '+(e.message||e),false)}})
+    .withFailureHandler(e=>{done();$('#repBody').innerHTML='<div class="msg"><b>⚠ Could not load the report.</b></div>';fail(e)}).getXlReport(PIN,ym);
+}
+function xMonth(n){const t=new Date(TODAY()+'T00:00:00'),d=new Date(t.getFullYear(),t.getMonth()+n,1);$('#xMon').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');loadXl()}
+function showXl(t){
+  XT=t;const nm=xname();
+  $('#repBody').innerHTML=`<nav class="tabs noprint" id="xtabs">${['ht','dept','dg','units','bill'].map(k=>`<button class="tab${k===t?' on':''}" onclick="showXl('${k}')">${nm[k]}</button>`).join('')}</nav>${t==='dept'?`<label class="noprint" style="display:inline-flex;gap:6px;align-items:center;margin:0 0 8px;font-size:13px;cursor:pointer"><input type="checkbox" ${XBJ?'checked':''} onchange="XBJ=this.checked;showXl('dept')"> Show ETP + Boiler amount column (hidden by default)</label>`:''}<div class="xlw" id="xlw">${t==='ht'?xlHT():t==='dept'?xlDept(null):t==='units'?xlUnits():t==='bill'?xlBill():xlDG()}</div>`;
+}
+
+/* ----- sheet 1: HT METER ----- */
+function xhtRows(){
+  return XL.ht.map(r=>{
+    const M=r.m,S=r.s,v=M?M.v:null,n=M?M.nx:null,sv=S?S.v:null,sn=S?S.nx:null;
+    const use=(a,b,mul)=>a!=null&&b!=null?(b-a)*mul:null;
+    const kwh=xg(v,'kwh'),kx=xg(v,'kwh_x'),kv=xg(v,'kvah'),kvx=xg(v,'kvah_x'),pf=xg(v,'pf'),mdi=xg(v,'mdi');
+    const D=use(kwh,xg(n,'kwh'),1000),Fx=use(kx,xg(n,'kwh_x'),1000),I=use(kv,xg(n,'kvah'),1000),L=use(kvx,xg(n,'kvah_x'),1000);
+    const so=xg(sv,'kwh'),sq=xg(sv,'kvah'),P=use(so,xg(sn,'kwh'),160),R=use(sq,xg(sn,'kvah'),160);
+    return{date:r.date,B:M?xhm(M.time):null,C:kwh,D:D,E:kx,F:Fx,G:(kwh!=null&&kx!=null)?kwh-kx:null,GN:(kwh!=null&&kx!=null&&xg(n,'kwh')!=null&&xg(n,'kwh_x')!=null)?Math.max(0,((xg(n,'kwh')-xg(n,'kwh_x'))-(kwh-kx))*1000):null,H:kv,I:I,J:(D!=null&&I!=null)?I-D:null,K:kvx,L:L,M:pf,N:(D!=null&&I)?D/I:null,O:so,P:P,Q:sq,R:R,S:mdi,T:D!=null?D+(Fx||0)+(P||0):null};
+  });
+}
+const XHT_COLS=[['A','DATE',7.3],['B','TIME',6.1],['C','KWH',11.7],['D','UNITS KWH',12.3],['E','EXPORT KWH',10.1],['F','EXPORT UNITS IN KWH',11.7],['G','KWH NET',12],['GN','KWH NET UNITS',12.3],['H','KVAH',11.7],['I','UNITS KVAH',11.7],['J','DIFFERENCE',12.4],['K','EXPORT KVAH',12.9],['L','EXPORT UNITS IN KVAH',12.6],['M','POWR FECTOR',9.7],['N','ACTUAL POWR FECTOR',10.4],['O','KWH',12.3],['P','UNITS KWH',10.6],['Q','KVAH',11.7],['R','UNITS KVAH',10.6],['S','MDI (MAX VALUE 650 KVA)',11.4],['T','TOTAL UNIT',9.3]];
+const xw=c=>Math.round(c*7+5);
+function xhtCell(col,v,rows){
+  /* conditional formats of the Excel: J>=30 red + white text, P/R <=2300 red then <=2500 purple, MDI >=650 kVA red + white text */
+  const d=2;let bg='',fc='';
+  const def=XHT_COLS.find(c=>c[0]===col)[3];if(def)bg=XC[def];
+  if(col==='J'&&v!=null&&v>=30){bg=XC.r;fc='#fff'}
+  if(col==='P'||col==='R'){if(v!=null){if(v<=2300)bg=XC.r;else if(v<=2500)bg=XC.p}}
+  if(col==='S'&&v!=null&&v*1000>=650){bg=XC.r;fc='#fff'}
+  return `<td style="${bg?'background:'+bg+';':''}${fc?'color:'+fc:''}">${xnum(v,d)}</td>`;
+}
+function xlHT(){
+  const rows=xhtRows(),nm=xname();
+  const cols=XHT_COLS.slice(2).map(c=>c[0]);
+  let h=`<table class="xl" id="xlt"><colgroup>${XHT_COLS.map(c=>`<col style="width:${xw(c[2])}px">`).join('')}</colgroup><thead>
+  <tr style="height:28px"><th colspan="15" style="font-size:20px">HT METER</th><th colspan="4" style="font-size:18px">600 KW SOLAR UNITS</th><th style="font-size:16px">MDI</th><th class="nb"></th></tr>
+  <tr style="height:63px">${XHT_COLS.map(c=>`<th>${c[1]}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(r=>{
+    h+=`<tr><td>${xdate(r.date)}</td><td>${xnum(r.B,2)}</td>${cols.map(c=>xhtCell(c,r[c],rows)).join('')}</tr>`;
+  });
+  const T={};cols.forEach(c=>{const a=rows.map(r=>r[c]);T[c]=(c==='M'||c==='N'||c==='S')?xavg(a):xsum(a)});T.T=null;
+  h+=`<tr class="xt"><td>TOTAL</td><td></td>${cols.map(c=>{const d=2;return `<td>${xnum(T[c],d)}</td>`}).join('')}</tr>`;
+  h+=`<tr class="x35"><td colspan="10"></td><td>${xnum(T.J!=null?T.J*6.5:null,2).replace(/\.?0+$/,'')}</td><td colspan="10"></td></tr>`;
+  return h+'</tbody></table>';
+}
+
+/* ----- sheet 2: ELECTRIC CONSUMPTION ----- */
+const XD_ORDER=[['colony','COLONY'],['dvdw','D BLOCK (VDV)'],['dshare','D BLOCK (SHARING)'],['shut','SHUTLESS'],['etp','ETP'],['dying','WASHING/DYE'],['fblock','F BLOCK (VDV FINISHING)'],['boiler','BOILER'],['eblock','C & H BLOCK (PRINTING)'],['ablock','A BLCOK (CARPET)'],['hblock',"H BLOCK (MADEUPS'S)"]];
+const XD_COMB=['colony','dvdw','dshare','eblock','ablock','hblock'];
+function xdeptModel(){
+  const mf={};XL.dept.forEach(d=>mf[d.k]=d.mf);const rate=XL.rate;
+  const rows=XL.ht.map(r=>{
+    const S=r.s,v=S?S.v:null,n=S?S.nx:null,o={date:r.date,g:{}};
+    XD_ORDER.forEach(x=>{
+      const pre=xg(v,x[0]),end=xg(n,x[0]),u=(pre!=null&&end!=null)?(end-pre)*mf[x[0]]:null;
+      o.g[x[0]]={pre:pre,end:end,u:u,a:u!=null?u*rate:null};
+    });
+    let pre=0,end=0,u=0,has=false;
+    XD_COMB.forEach(k=>{const c=o.g[k];if(c.pre!=null)pre+=c.pre;if(c.end!=null)end+=c.end;if(c.u!=null){u+=c.u;has=true}});
+    o.g.comb=has?{pre:pre,end:end,u:u,a:u*rate}:{pre:null,end:null,u:null,a:null};
+    ['b1','b2','b3'].forEach(k=>o.g[k]=has?{pre:null,end:null,u:0,a:0}:{pre:null,end:null,u:null,a:null});
+    const bo=o.g.boiler.a,et=o.g.etp.a;o.bj=(bo!=null||et!=null)?(bo||0)+(et||0):null;
+    return o;
+  });
+  const groups=XD_ORDER.map(x=>({k:x[0],t:x[1]})).concat([{k:'comb',t:'COLONY,A,C,D,H BLOCK',comb:1}]);
+  const tot={},avg={};
+  groups.forEach(g=>{const us=rows.map(r=>r.g[g.k].u),as=rows.map(r=>r.g[g.k].a);tot[g.k]={u:xsum(us),a:xsum(as)};avg[g.k]={u:xavg(us),a:xavg(as)}});
+  const R1=groups.reduce((s,g)=>s+(tot[g.k].u||0),0),Z1=groups.reduce((s,g)=>s+(tot[g.k].a||0),0);
+  return{rows:rows,groups:groups,tot:tot,avg:avg,R1:R1,Z1:Z1};
+}
+function xlDept(chunk){
+  const m=xdeptModel(),nm=xname();
+  const gs=chunk?chunk.groups:m.groups,withBJ=XBJ&&(chunk?chunk.bj:true),first=chunk?chunk.first:true;
+  const colW=[[8.4,10,10],[10,9,9]];
+  const gw=g=>g.blank?[6.6,6.6,6.9,8.6]:[9.7,8.7,10.4,9.7];
+  const nc=1+gs.length*4+(withBJ?1:0);
+  let h=`<table class="xl xd" id="xlt"><colgroup><col style="width:${xw(9)}px">${gs.map(g=>gw(g).map(w=>`<col style="width:${xw(w)}px">`).join('')).join('')}${withBJ?`<col style="width:${xw(9)}px">`:''}</colgroup><thead>`;
+  /* row 1: title and the two grand totals */
+  if(first){
+    const tt='DEPT WISE ELECTRIC CONSUMPTION-('+xmon()+'-'+XL.y+')';
+    h+=`<tr style="height:29px"><th colspan="${Math.max(1,Math.min(nc,13))}" class="tl">${tt}</th>`;
+    if(!chunk){h+=`<th colspan="4" style="text-align:right">TOTAL UNIT CONSUMPTION</th><th colspan="4">${xnum(m.R1,2)}</th><th colspan="4" style="text-align:right">TOTAL AMOUNT</th><th colspan="4">${xnum(m.Z1,2)}</th>`+(nc>13+16?`<th colspan="${nc-13-16}" class="nb"></th>`:'')}
+    else h+=nc>13?`<th colspan="${nc-13}" class="nb"></th>`:'';
+    h+='</tr>';
+  }
+  h+=`<tr style="height:40px"><th rowspan="3" style="width:${xw(9)}px">DATE</th>${gs.map(g=>`<th colspan="4" class="gt">${g.t}</th>`).join('')}${withBJ?'<th rowspan="3" style="font-size:11px">ETP + BOILER AMT</th>':''}</tr>`;
+  h+=`<tr>${gs.map(g=>`<th colspan="2">READING</th><th rowspan="2">TOTAL UNITS</th><th rowspan="2">TOTAL AMT</th>`).join('')}</tr>`;
+  h+=`<tr>${gs.map(g=>`<th>PRE</th><th>END</th>`).join('')}</tr></thead><tbody>`;
+  m.rows.forEach(r=>{
+    h+=`<tr><td>${xdate(r.date)}</td>`+gs.map(g=>{
+      const c=r.g[g.k],cl='';
+      let uc='';if(g.k==='colony'&&c.u!=null){if(c.u>=120)uc=` style="background:${XC.p}"`}
+      const f=g.blank?(v=>v==null?'':String(Math.round(v*100)/100)):(v=>xnum(v,2));
+      return `<td${cl}>${xnum(c.pre,2)}</td><td${cl}>${xnum(c.end,2)}</td><td${uc||cl}>${f(c.u)}</td><td${cl}>${f(c.a)}</td>`}).join('')+(withBJ?`<td class="nbd">${xnum(r.bj,2)}</td>`:'')+'</tr>';
+  });
+  const tr=(lab,src,cls)=>`<tr class="xt"><td${cls?` class="${cls}"`:''}>${lab}</td>`+gs.map(g=>{const c='',t=src[g.k],f=g.blank?(v=>v==null?'':String(Math.round(v*100)/100)):(v=>xnum(v,2));return `<td${c}></td><td${c}></td><td${c}>${f(t.u)}</td><td${c}>${f(t.a)}</td>`}).join('')+(withBJ?'<td class="nbd"></td>':'')+'</tr>';
+  h+=tr('TOTAL',m.tot)+tr('AVG',m.avg);
+  return h+'</tbody></table>';
+}
+function xDeptChunks(){
+  const m=xdeptModel(),G=m.groups,out=[];
+  for(let i=0;i<G.length;i+=4)out.push({groups:G.slice(i,i+4),bj:i+4>=G.length,first:i===0});
+  return out;
+}
+
+/* ----- sheet 3: DG SET (BUILD 13: every run of a day is listed, then ONE total row for that day; diesel used = running time x 70 L / hour, and the stock in hand) ----- */
+function xdgRows(){
+  const fu=XL.fuel||{lph:70,rows:{},tracked:false},lph=fu.lph||70,out=[],T={run:0,units:0,diesel:0,used:0,recv:0};
+  const by={},order=[];XL.dg.forEach(r=>{(by[r.date]=by[r.date]||(order.push(r.date),[])).push(r)});
+  order.forEach(d=>{
+    const F=fu.rows[d]||{used:0,recv:0,close:null},ls=by[d],runs=ls.filter(r=>!r.none&&r.start);
+    if(ls[0].none){out.push({date:d,none:1,recv:F.recv,close:F.close});T.recv+=F.recv;return}
+    const part=[];let sr=0,su=0,sd=0,sx=0;
+    ls.forEach(r=>{
+      const a=xsec(r.start),b=xsec(r.stop);let run=null;if(a!=null&&b!=null){run=b-a;if(run<0||(run===0&&r.auto))run+=86400}
+      const units=(r.end!=null&&r.prev!=null)?r.end-r.prev:null,used=run!=null?run/3600*lph:null;
+      part.push({date:d,start:a,stop:b,run:run,prev:r.prev,end:r.end,units:units,coolant:r.coolant,diesel:r.diesel,used:used,auto:r.auto});
+      if(run!=null)sr+=run;if(units!=null)su+=units;if(r.diesel!=null)sd+=r.diesel;if(used!=null)sx+=used});
+    part.forEach(x=>out.push(x));
+    if(runs.length){out.push({date:d,day:1,n:runs.length,run:sr,units:su,diesel:sd,used:sx,recv:F.recv,close:F.close})}
+    else{const l=out[out.length-1];l.recv=F.recv;l.close=F.close}
+    T.run+=sr;T.units+=su;T.diesel+=sd;T.used+=sx;T.recv+=F.recv});
+  if(out.length){const l=[...out].reverse().find(x=>x.close!=null);out.push({tot:1,run:T.run,units:T.units,diesel:T.diesel,used:T.used,recv:T.recv,close:l?l.close:null})}
+  return out;
+}
+function xlDG(){
+  const rows=xdgRows(),fu=XL.fuel||{},lph=fu.lph||70,L=fu.tracked?1:0,sk=v=>(L&&v!=null)?xnum(v,2):'';
+  let h=`<table class="xl xg" id="xlt"><colgroup>${[80,100,100,90,115,115,110,120,150,130,120,120].map(w=>`<col style="width:${w}px">`).join('')}</colgroup><thead>
+  <tr style="height:25px"><th colspan="12" class="tl" style="font-size:19px">DG SET LOG BOOK</th></tr>
+  <tr><th rowspan="2">DATE</th><th colspan="3">TIME</th><th colspan="2">HWH METER READING</th><th rowspan="2">TOTAL UNITS</th><th rowspan="2">COOLENT TEMP</th><th rowspan="2">DISEL CONSUMPTION</th><th rowspan="2">DIESEL USED (L)<br>@ ${lph} L / HOUR</th><th rowspan="2">DIESEL RECEIVED (L)</th><th rowspan="2">DIESEL STOCK IN HAND (L)</th></tr>
+  <tr><th>START</th><th>STOP</th><th>RUNNING</th><th>PREVIOUS</th><th>END</th></tr></thead><tbody>`;
+  const fz=v=>v?xnum(v,2):'';
+  rows.forEach(r=>{
+    if(r.none){h+=`<tr><td>${xdate(r.date)}</td><td></td><td></td><td>${xhms(0)}</td><td></td><td></td><td></td><td></td><td></td><td></td><td>${fz(r.recv)}</td><td>${sk(r.close)}</td></tr>`;return}
+    if(r.day||r.tot){
+      const st=r.tot?'background:#ffe699!important;font-weight:700':'background:#dbe9ff!important;font-weight:700';
+      h+=`<tr style="${st}"><td style="${st}">${r.tot?'MONTH TOTAL':xdate(r.date)+'<br>DAY TOTAL'}</td><td style="${st}" colspan="2">${r.tot?'':r.n+' run'+(r.n>1?'s':'')}</td><td style="${st}">${xhms(r.run)}</td><td style="${st}"></td><td style="${st}"></td><td style="${st}">${xnum(r.units,0)}</td><td style="${st}"></td><td style="${st}">${xnum(r.diesel,0)}</td><td style="${st}">${xnum(r.used,2)}</td><td style="${st}">${fz(r.recv)}</td><td style="${st}">${sk(r.close)}</td></tr>`;return}
+    h+=`<tr><td>${xdate(r.date)}</td><td>${xhms(r.start)}</td><td>${xhms(r.stop)}${r.auto?'<br><small>auto (24 h)</small>':''}</td><td>${xhms(r.run)}</td><td>${xnum(r.prev,0)}</td><td>${xnum(r.end,0)}</td><td>${xnum(r.units,0)}</td><td>${xnum(r.coolant,0)}</td><td>${xnum(r.diesel,0)}</td><td>${r.used!=null?xnum(r.used,2):''}</td><td>${fz(r.recv)}</td><td>${r.close!=null?sk(r.close):''}</td></tr>`;
+  });
+  return h+'</tbody></table>'+(L?'':'<p class="hint noprint" style="margin-top:8px">⛽ Diesel stock is not started: enter the <b>Opening stock</b> in the Diesel Stock form and the stock column fills by itself.</p>');
+}
+
+/* ----- BUILD 11 sheets: UNITS & AMOUNT (day by day) and ELECTRICITY BILL (month total per department). Units are net units only, amount = units x rate ----- */
+const XU_BILL=['colony','dvdw','dshare','eblock','ablock','hblock'];   /* only these meters are counted in the totals and the bill (the others are already inside them) */
+const XU_ORDER=XD_ORDER.concat([['upsroom','U.P.S. ROOM'],['comp','COMPRESSOR']]);
+function xunitsModel(){
+  const mf={};XL.dept.forEach(d=>mf[d.k]=d.mf);const rate=XL.rate,ht=xhtRows();
+  const keys=XU_ORDER.filter(x=>mf[x[0]]!=null);
+  const rows=XL.ht.map((r,i)=>{
+    const S=r.s,v=S?S.v:null,n=S?S.nx:null,h=ht[i],o={date:r.date,d:{}};
+    keys.forEach(x=>{const a=xg(v,x[0]),b=xg(n,x[0]),u=(a!=null&&b!=null)?(b-a)*mf[x[0]]:null;o.d[x[0]]={u:u,a:u!=null?u*rate:null}});
+    o.htu=h.GN;o.htua=o.htu!=null?o.htu*rate:null;o.sol=h.P;o.sola=h.P!=null?h.P*rate:null;o.tot=(o.htu!=null)?o.htu+(h.P||0):null;
+    const bk=keys.filter(x=>XU_BILL.includes(x[0]));o.du=xsum(bk.map(x=>o.d[x[0]].u));o.da=o.du!=null?o.du*rate:null;
+    return o;
+  });
+  const tot={};keys.forEach(x=>{tot[x[0]]={u:xsum(rows.map(r=>r.d[x[0]].u)),a:xsum(rows.map(r=>r.d[x[0]].a))}});
+  const T={htu:xsum(rows.map(r=>r.htu)),htua:xsum(rows.map(r=>r.htua)),sol:xsum(rows.map(r=>r.sol)),sola:xsum(rows.map(r=>r.sola)),tot:xsum(rows.map(r=>r.tot)),du:xsum(rows.map(r=>r.du)),da:xsum(rows.map(r=>r.da))};
+  return{keys:keys,rows:rows,tot:tot,T:T,rate:rate};
+}
+function xlUnits(){
+  const m=xunitsModel(),nc=7+m.keys.length*2+2;
+  let h=`<table class="xl xd" id="xlt"><thead><tr style="height:29px"><th colspan="${nc}" class="tl">UNITS &amp; AMOUNT-(${xmon()}-${XL.y}) · net units and amount @ ₹${m.rate}/unit</th></tr>
+  <tr><th rowspan="2">DATE</th><th colspan="2">HT METER (NET)</th><th colspan="2">SOLAR</th><th rowspan="2">TOTAL CONSUMPTION (HT + SOLAR) KWH</th>${m.keys.map(x=>`<th colspan="2" class="gt">${x[1]}</th>`).join('')}<th colspan="2">ALL DEPARTMENTS</th></tr>
+  <tr><th>UNITS KWH NET</th><th>AMOUNT</th><th>UNITS KWH</th><th>AMOUNT</th>${m.keys.map(()=>'<th>UNITS</th><th>AMOUNT</th>').join('')}<th>UNITS</th><th>AMOUNT</th></tr></thead><tbody>`;
+  m.rows.forEach(r=>{h+=`<tr><td>${xdate(r.date)}</td><td>${xnum(r.htu,2)}</td><td>${xnum(r.htua,2)}</td><td>${xnum(r.sol,2)}</td><td>${xnum(r.sola,2)}</td><td>${xnum(r.tot,2)}</td>`+m.keys.map(x=>`<td>${xnum(r.d[x[0]].u,2)}</td><td>${xnum(r.d[x[0]].a,2)}</td>`).join('')+`<td>${xnum(r.du,2)}</td><td>${xnum(r.da,2)}</td></tr>`});
+  h+=`<tr class="xt"><td>TOTAL</td><td>${xnum(m.T.htu,2)}</td><td>${xnum(m.T.htua,2)}</td><td>${xnum(m.T.sol,2)}</td><td>${xnum(m.T.sola,2)}</td><td>${xnum(m.T.tot,2)}</td>`+m.keys.map(x=>`<td>${xnum(m.tot[x[0]].u,2)}</td><td>${xnum(m.tot[x[0]].a,2)}</td>`).join('')+`<td>${xnum(m.T.du,2)}</td><td>${xnum(m.T.da,2)}</td></tr>`;
+  return h+'</tbody></table>';
+}
+function xbillRows(){
+  const m=xunitsModel();
+  return{rows:m.keys.filter(x=>XU_BILL.includes(x[0])).map(x=>({n:x[1],u:m.tot[x[0]].u,a:m.tot[x[0]].a})),tu:m.T.du,ta:m.T.da,rate:m.rate};
+}
+function xlBill(){
+  const b=xbillRows();
+  let h=`<table class="xl xd" id="xlt"><colgroup><col style="width:260px"><col style="width:150px"><col style="width:150px"></colgroup><thead><tr style="height:29px"><th colspan="3" class="tl">ELECTRICITY BILL-(${xmon()}-${XL.y})</th></tr>
+  <tr><th>DEPARTMENT</th><th>UNITS KWH NET</th><th>AMOUNT</th></tr></thead><tbody>`;
+  b.rows.forEach(r=>{h+=`<tr><td style="text-align:left!important">${r.n}</td><td>${xnum(r.u,2)}</td><td>${xnum(r.a,2)}</td></tr>`});
+  return h+`<tr class="xt"><td style="text-align:left!important">TOTAL</td><td>${xnum(b.tu,2)}</td><td>${xnum(b.ta,2)}</td></tr></tbody></table>`;
+}
+
+/* ----- print / PDF / CSV of the open sheet ----- */
+function xlNode(){
+  const box=document.createElement('div');
+  if(XT==='dept')xDeptChunks().forEach((c,i)=>{const d=document.createElement('div');d.innerHTML=xlDept(c);d.className='xlw xpg';box.appendChild(d)});
+  else{const d=document.createElement('div');d.className='xlw';d.innerHTML=XT==='ht'?xlHT():XT==='units'?xlUnits():XT==='bill'?xlBill():xlDG();box.appendChild(d)}
+  return box;
+}
+function printXl(){
+  if(!XL)return toast('Load the report first',1);
+  fill('',xlNode());
+  const st=document.createElement('style');st.id='pgs';st.textContent='@page{size:A4 landscape;margin:8mm}#pa .xlw{zoom:'+(XT==='ht'?.58:XT==='dept'?.62:XT==='units'?.4:.8)+'}';document.head.appendChild(st);
+  window.addEventListener('afterprint',()=>{const e=$('#pgs');if(e)e.remove()},{once:true});
+  setTimeout(()=>window.print(),200);
+}
+function pdfXl(){
+  if(!XL)return toast('Load the report first',1);
+  runPdf(fill('',xlNode()),xname()[XT].replace(/[^\w]+/g,'_')+'.pdf',true,'auto');
+}
+function csvXl(){
+  if(!XL)return toast('Load the report first',1);
+  const nm=xname()[XT];let rows=[];
+  if(XT==='ht'){rows=[XHT_COLS.map(c=>c[1])].concat(xhtRows().map(r=>[xdate(r.date),xnum(r.B,2)].concat(XHT_COLS.slice(2).map(c=>xnum(r[c[0]],2)))))}
+  else if(XT==='dept'){
+    const m=xdeptModel(),h1=['DATE'],h2=[''];
+    m.groups.forEach(g=>{h1.push(g.t,'','','');h2.push('PRE','END','TOTAL UNITS','TOTAL AMT')});
+    rows=[h1.concat(XBJ?['ETP + BOILER AMT']:[]),h2.concat(XBJ?['']:[])].concat(m.rows.map(r=>[xdate(r.date)].concat(...m.groups.map(g=>{const c=r.g[g.k];return[xnum(c.pre,2),xnum(c.end,2),xnum(c.u,2),xnum(c.a,2)]})).concat(XBJ?[xnum(r.bj,2)]:[])));
+    rows.push(['TOTAL'].concat(...m.groups.map(g=>['','',xnum(m.tot[g.k].u,2),xnum(m.tot[g.k].a,2)])));
+    rows.push(['AVG'].concat(...m.groups.map(g=>['','',xnum(m.avg[g.k].u,2),xnum(m.avg[g.k].a,2)])));
+  }else if(XT==='units'){
+    const m=xunitsModel(),h1=['DATE','HT METER UNITS KWH NET','HT METER AMOUNT','SOLAR UNITS KWH','SOLAR AMOUNT','TOTAL CONSUMPTION (HT + SOLAR) KWH'],h2=[];
+    m.keys.forEach(x=>{h1.push(x[1]+' UNITS',x[1]+' AMOUNT')});h1.push('ALL DEPARTMENTS UNITS','ALL DEPARTMENTS AMOUNT');
+    rows=[h1].concat(m.rows.map(r=>[xdate(r.date),xnum(r.htu,2),xnum(r.htua,2),xnum(r.sol,2),xnum(r.sola,2),xnum(r.tot,2)].concat(...m.keys.map(x=>[xnum(r.d[x[0]].u,2),xnum(r.d[x[0]].a,2)])).concat([xnum(r.du,2),xnum(r.da,2)])));
+    rows.push(['TOTAL',xnum(m.T.htu,2),xnum(m.T.htua,2),xnum(m.T.sol,2),xnum(m.T.sola,2),xnum(m.T.tot,2)].concat(...m.keys.map(x=>[xnum(m.tot[x[0]].u,2),xnum(m.tot[x[0]].a,2)])).concat([xnum(m.T.du,2),xnum(m.T.da,2)]));
+  }else if(XT==='bill'){const b=xbillRows();rows=[['DEPARTMENT','UNITS KWH NET','AMOUNT']].concat(b.rows.map(r=>[r.n,xnum(r.u,2),xnum(r.a,2)]));rows.push(['TOTAL',xnum(b.tu,2),xnum(b.ta,2)])}
+  else{const L=(XL.fuel||{}).tracked;rows=[['DATE','START','STOP','RUNNING','PREVIOUS','END','TOTAL UNITS','COOLENT TEMP','DISEL CONSUMPTION','DIESEL USED (L)','DIESEL RECEIVED (L)','DIESEL STOCK IN HAND (L)']].concat(xdgRows().map(r=>{
+    if(r.none)return[xdate(r.date),'','',xhms(0),'','','','','','',r.recv?xnum(r.recv,2):'',L&&r.close!=null?xnum(r.close,2):''];
+    if(r.day||r.tot)return[r.tot?'MONTH TOTAL':xdate(r.date)+' DAY TOTAL','','',xhms(r.run),'','',xnum(r.units,0),'',xnum(r.diesel,0),xnum(r.used,2),r.recv?xnum(r.recv,2):'',L&&r.close!=null?xnum(r.close,2):''];
+    return[xdate(r.date),xhms(r.start),xhms(r.stop),xhms(r.run),xnum(r.prev,0),xnum(r.end,0),xnum(r.units,0),xnum(r.coolant,0),xnum(r.diesel,0),r.used!=null?xnum(r.used,2):'',r.recv?xnum(r.recv,2):'',L&&r.close!=null?xnum(r.close,2):'']}))}
+  csv(rows,nm.replace(/[^\w]+/g,'_')+'.csv');
+}
+
+/* ---------- Alert actions ---------- */
+let ACTS=null;
+function goTab(t){const b=document.querySelector('#main .tab[data-t="'+t+'"]');if(b)b.click()}
+function updAct(){const n=ACTS?ACTS.open:0,b=$('#tabAct');if(b)b.textContent='🛠 Actions'+(n?' ('+n+')':'')}
+function loadActs(quiet){
+  if(LOAD.act)return;if(!B||FM)return;
+  LOAD.act=1;lockBar('#t-act .bar.f',true);
+  const done=()=>{LOAD.act=0;lockBar('#t-act .bar.f',false)};
+  google.script.run.withSuccessHandler(r=>{done();ACTS=r;renderActs();updAct()}).withFailureHandler(e=>{done();if(!quiet){$('#actList').innerHTML='<div class="msg"><b>⚠ Could not load the alerts.</b></div>';fail(e)}}).getActions(PIN);
+}
+function renderActs(){
+  if(!ACTS)return;
+  const f=$('#aSel').value,L=ACTS.rows.filter(r=>f==='ALL'||r.status===f);
+  if(!L.length){$('#actList').innerHTML='<div class="msg">'+(f==='OPEN'?'✅ No alert is waiting for an action.':'No alerts found.')+'</div>';return}
+  $('#actList').innerHTML=L.map(r=>{
+    const open=r.status==='OPEN',tp=r.type==='OVERDUE'?'<span class="pill a">⏰ Not done in time</span>':'<span class="pill r">⚠ Wrong reading</span>';
+    return `<div class="card acard" data-id="${esc(r.id)}"><h3>${esc(r.form)} ${tp} ${open?'<span class="pill r">Waiting for action</span>'+(r.overdue?' <span class="pill a">⏰ Deadline passed</span>':''):'<span class="pill g">✓ Action taken</span>'}</h3>
+    <p class="hint">Alert ${esc(r.id)} · raised ${esc(r.ts)}${r.doer?' · entered by '+esc(r.doer):''} · entry date ${r.date?fd(r.date):'–'} · e-mailed to ${r.scope==='ALL'?'Naveen and the extra recipients':'Naveen'}${open&&r.dueTxt?' · <b>action by '+esc(r.dueTxt)+'</b>':''}</p>
+    <div class="chips"><span class="cp bad" style="white-space:normal">${esc(r.problem)}</span></div>
+    ${open?`<div class="fl" style="margin-top:10px"><label class="fld" style="grid-column:1/-1"><span class="lb">What action was taken to fix this?<em>required</em></span><textarea rows="2" maxlength="600" placeholder="e.g. Phase R fuse replaced, reading checked again: 233 V" style="width:100%;background:#0a1020;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;font-size:16px;font-family:inherit"></textarea></label>
+      <label class="fld"><span class="lb">Action taken by<em>required</em></span><input type="text" maxlength="60" value="${esc(myName())}" placeholder="Name"></label></div>
+      <div class="bar" style="margin-top:10px"><button class="btn pri" onclick="sendAct('${esc(r.id)}',this)">Save &amp; e-mail the action</button></div>`
+    :`<div class="hint" style="margin-top:8px">✅ <b>Action:</b> ${esc(r.action)}<br>By <b>${esc(r.by)}</b> · ${esc(r.at)}</div>`}
+    </div>`}).join('');
+}
+function sendAct(id,btn){
+  const c=btn.closest('.acard'),ta=c.querySelector('textarea'),by=c.querySelector('input');
+  if(ta.value.trim().length<5){toast('Write what action was taken',1);ta.focus();return}
+  if(by.value.trim().length<2){toast('Enter who took the action',1);by.focus();return}
+  btn.disabled=true;btn.textContent='Saving…';
+  google.script.run.withSuccessHandler(r=>{toast('Action saved'+(r.mailed?' and e-mailed ✓':' (the e-mail could not be sent)'),!r.mailed);setName(by.value.trim());LOAD.act=0;loadActs();STALE=true;clearTimeout(window._rf);window._rf=setTimeout(()=>loadDash(true,true),1500)})
+    .withFailureHandler(e=>{btn.disabled=false;btn.textContent='Save & e-mail the action';fail(e)}).saveAction(PIN,id,ta.value,by.value);
+}
+
+/* ---------- Admin daily review: open every photo of the day, then confirm ---------- */
+let REV=null,REVOPEN=[],REVLB=-1;
+function revMark(i){if(!REV||REVOPEN[i])return;REVOPEN[i]=true;revUpd();const t=document.querySelector('#rvg [data-i="'+i+'"]');if(t)t.classList.add('seen')}
+function revCount(){return REVOPEN.filter(Boolean).length}
+function revUpd(){
+  if(!REV)return;
+  const n=REV.items.length,o=revCount(),p=$('#rvProg'),b=$('#rvOk');
+  if(p)p.innerHTML=`<b>${o}</b> of <b>${n}</b> photos opened`+(o>=n?' ✓':'');
+  const bar=$('#rvBar');if(bar)bar.style.width=(n?o/n*100:100)+'%';
+  if(b)b.disabled=o<n;
+}
+function loadRev(){
+  if(LOAD.rev)return;if(!B||FM)return;
+  const d=$('#rvDate').value||B.today;
+  LOAD.rev=1;lockBar('#t-rev .bar.f',true);$('#revBody').innerHTML='<div class="msg">Loading…</div>';
+  const done=()=>{LOAD.rev=0;lockBar('#t-rev .bar.f',false)};
+  google.script.run.withSuccessHandler(r=>{done();REV=r;REVOPEN=r.items.map(()=>false);renderRev()}).withFailureHandler(e=>{done();$('#revBody').innerHTML='<div class="msg"><b>⚠ Could not load the photos.</b></div>';fail(e)}).getReview(PIN,d);
+}
+function renderRev(){
+  const r=REV,n=r.items.length;
+  const st=r.complete?`<div class="banner ok">✅ Reviewed by <b>${esc(r.review.by)}</b> on ${esc(r.review.at)} · ${r.review.photos} photo(s) opened</div>`
+    :r.review?`<div class="banner wait">⚠ Reviewed earlier by ${esc(r.review.by)} (${r.review.photos} photos), but ${n-r.review.photos} new photo(s) came in since. Open all photos again and confirm.</div>`
+    :`<div class="banner bad">⏳ Review not confirmed yet for ${fd(r.date)}. Open every photo below, then confirm at the bottom.</div>`;
+  const items=r.items.map((x,i)=>({src:thumb(x.u),cap:x.title+' · '+x.who+' · '+x.time+' · '+x.label}));
+  REVLB=n?regLB(items):-1;
+  let g='',last='';
+  r.items.forEach((x,i)=>{
+    if(x.form!==last){g+=(last?'</div>':'')+`<h3 style="margin:12px 0 6px">${B.forms[x.form]?B.forms[x.form].icon+' ':''}${esc(x.title)}</h3><div class="rvg">`;last=x.form}
+    g+=`<div class="rvt${x.bad?' bad':''}" data-i="${i}" onclick="revOpen(${i})"><img loading="lazy" src="${esc(thumb(x.u))}" alt="${esc(x.label)}" onerror="this.style.visibility='hidden'"><b>${esc(x.label)}</b><small>${esc(x.who)} · ${esc(x.time)}${x.bad?' · ⚠ '+x.bad+' out of range':''}</small><i class="ck">✓ opened</i></div>`});
+  if(last)g+='</div>';
+  $('#revBody').innerHTML=st+`<div class="card"><h3>📷 Photos of ${fd(r.date)} <span class="pill n">${r.entries} entries · ${n} photos</span></h3>
+    <p class="hint">Tap each photo to open it. It is marked ✓ when seen. Photos older than ${B.photoDays||7} days are removed from Drive.</p>
+    <div class="pbar"><i id="rvBar"></i></div><div class="hint" id="rvProg" style="margin:6px 0 4px"></div>${n?g:'<div class="msg">No photos were submitted for this day.</div>'}</div>
+    ${r.complete?'':`<div class="card"><h3>Confirm your review</h3><div class="fl"><label class="fld"><span class="lb">Your name<em>required</em></span><input type="text" id="rvName" maxlength="60" value="${esc(myName())}" placeholder="Admin name"></label>
+    <label class="fld" style="grid-column:span 2"><span class="lb">Remarks (optional)</span><input type="text" id="rvNote" maxlength="300" placeholder="e.g. all reports seen, UPS-2 photo unclear, asked to retake"></label></div>
+    <div class="bar" style="margin-top:10px"><button class="btn pri" id="rvOk" onclick="saveRev()" disabled>✅ I have opened and checked all ${n} photos${n?'':' (none today)'}</button></div></div>`}`;
+  revUpd();
+}
+function revOpen(i){revMark(i);lb(REVLB,i)}
+function saveRev(){
+  const nm=$('#rvName').value.trim();
+  if(nm.length<2){toast('Enter your name to confirm',1);return}
+  const b=$('#rvOk');b.disabled=true;b.textContent='Saving…';
+  google.script.run.withSuccessHandler(r=>{setName(nm);toast('Daily review confirmed ✓');LOAD.rev=0;loadRev();STALE=true;clearTimeout(window._rf);window._rf=setTimeout(()=>loadDash(true,true),1200)})
+    .withFailureHandler(e=>{b.disabled=false;revUpd();fail(e)}).saveReview(PIN,REV.date,nm,$('#rvNote').value,revCount());
+}
+
+/* ---------- barcodes (QR) ---------- */
+function qrItems(base){
+  const out=[];
+  Object.keys(B.forms).forEach(k=>{
+    const F=B.forms[k];
+    if(F.byMeter)F.meters.forEach(m=>out.push({t:F.icon+' '+F.title+' – '+m.n,u:base+'?f='+k+'&m='+m.k,c:m.n}));
+    else out.push({t:F.icon+' '+F.title,u:base+'?f='+k,c:''});
+  });
+  return out;
+}
+function loadQRLib(cb){
+  if(window.QRCode)return cb(true);
+  const s=document.createElement('script');s.src='https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/qrcodejs\/1.0.0\/qrcode.min.js';
+  s.onload=()=>cb(!!window.QRCode);s.onerror=()=>cb(false);document.head.appendChild(s);
+}
+function drawQR(){
+  if(!B)return toast('Still loading, please wait a moment',1);
+  const inp=$('#qUrl');
+  const okU=u=>/^https:\/\/script\.google\.com\/(a\/[^\/]+\/)?macros\/s\/[\w-]+\/exec$/.test(u)||/^https:\/\/script\.google\.com\/a\/macros\/[^\/]+\/s\/[\w-]+\/exec$/.test(u);
+  if(!inp.value){let s='';try{s=localStorage.getItem('pp_url')||''}catch(e){}inp.value=okU(s)?s:(okU(URLB)?URLB:'')}
+  const base=inp.value.trim().split('?')[0].replace(/\/a\/macros\/[^\/]+\/s\//,'/macros/s/').replace(/\/a\/[^\/]+\/macros\/s\//,'/macros/s/');inp.value=base;
+  if(!/^https?:\/\//.test(base)){toast('Paste the web-app URL (ending in /exec) first',1);return}
+  const badU=/docs\.google\.com|drive\.google\.com|googleusercontent|\/library\/|\/dev\/?$|\/edit/.test(base)||!/^https:\/\/script\.google\.com\/.+/.test(base);
+  if(badU){
+    $('#qrs').innerHTML='<div class="msg" style="grid-column:1/-1;color:#fca5a5">This address will ask people for access, so no codes were made. It must be the Web app URL (Deploy → Manage deployments → Copy), starting <b>https://script.google.com/macros/s/</b>. Not a Sheet, /dev, /edit or /library link.<br><br>You entered:<br><small style="word-break:break-all;color:#fff">'+esc(base)+'</small></div>';return}
+  try{localStorage.setItem('pp_url',base)}catch(e){}
+  const items=qrItems(base);
+  $('#qrs').innerHTML=items.map((x,i)=>`<div class="qrc"><div class="qrbox" id="qr${i}"></div><b>${esc(x.t)}</b><small title="${esc(x.u)}">📱 Scan to open this form${x.c?' · '+esc(x.c):''}</small><button type="button" class="btn noprint" style="margin-top:8px" onclick="printQR(${i})">⎙ Print this one</button></div>`).join('');
+  loadQRLib(okk=>{
+    if(!okk){$('#qrs').insertAdjacentHTML('afterbegin','<div class="msg" style="grid-column:1/-1">QR library is blocked on this network. The links below still work: open them or use any QR generator.</div>');return}
+    items.forEach((x,i)=>new QRCode(document.getElementById('qr'+i),{text:x.u,width:168,height:168,correctLevel:QRCode.CorrectLevel.M}));
+    QRDONE=true;
+  });
+}
+function printQR(i){if(!QRDONE)return toast('Create the codes first',1);
+  const all=$('#qrs'),cards=[...all.querySelectorAll('.qrc')],box=document.createElement('div');box.className='qrs big';
+  (typeof i==='number'?[cards[i]]:cards).forEach(c=>{if(!c)return;const n=c.cloneNode(true);n.querySelectorAll('.noprint').forEach(x=>x.remove());box.appendChild(n)});
+  fill('',box);setTimeout(()=>window.print(),200)}
+
+function snap(el){
+  const c=el.cloneNode(true);
+  c.querySelectorAll('details').forEach(d=>d.setAttribute('open',''));
+  c.querySelectorAll('.noprint,.dtl').forEach(x=>x.remove());
+  c.querySelectorAll('svg .ax').forEach(t=>t.setAttribute('fill','#556070'));
+  c.querySelectorAll('svg .gl').forEach(t=>t.setAttribute('stroke','#d5dbe5'));
+  c.querySelectorAll('.bar.f').forEach(x=>{const cd=x.closest('.card');if(cd&&cd.querySelector('svg'))x.remove()});
+  return c;
+}
+function fill(head,node){const pa=$('#pa');pa.innerHTML=head;if(typeof node==='string'){const d=document.createElement('div');d.innerHTML=node;pa.appendChild(d)}else pa.appendChild(node);return pa}
+function printEl(el,head){fill(head,snap(el));setTimeout(()=>window.print(),150)}
+function printHtml(html){fill('',html);setTimeout(()=>window.print(),150)}
+function runPdf(pa,name,land,w){
+  if(LOAD.pdf)return;LOAD.pdf=1;
+  pa.style.cssText='display:block;width:'+(w==='auto'?'max-content':(w||(land?1180:760))+'px');
+  if(w==='auto'){
+    /* html2pdf only captures one page-width (~1050px): measure the sheet and shrink it to fit, so no column is cut off */
+    pa.style.padding='0';const W=Math.ceil(pa.scrollWidth)+4,s=Math.min(1,1040/W);
+    const inn=document.createElement('div');while(pa.firstChild)inn.appendChild(pa.firstChild);
+    inn.style.cssText='width:'+W+'px;transform:scale('+s+');transform-origin:0 0';pa.appendChild(inn);
+    /* dept sheet: each block of columns = exactly one landscape page, so pages never split a block */
+    const ph=Math.floor(W*0.685);inn.querySelectorAll('.xpg').forEach(e=>{e.style.cssText+=';height:'+ph+'px;overflow:hidden;margin:0;'+(e.nextElementSibling?'break-after:page;page-break-after:always':'break-after:auto;page-break-after:auto')+';';if(e.scrollHeight>ph+1)console.warn('page block taller than page',e.scrollHeight,ph)});
+    const out=Math.ceil(inn.offsetHeight*s);pa.style.width=Math.ceil(W*s)+'px';pa.style.height=out+'px';pa.style.overflow='hidden';
+  }
+  toast('Preparing PDF…');
+  const fin=()=>{LOAD.pdf=0;pa.style.cssText=''};
+  const go=()=>html2pdf().set({margin:8,filename:name,image:{type:'jpeg',quality:.95},html2canvas:{scale:w==='auto'?3:2,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4',orientation:land?'landscape':'portrait'},pagebreak:{mode:['css','legacy'],avoid:'tr'}})
+    .from(pa).save().then(()=>{fin();toast('PDF downloaded ✓')}).catch(()=>{fin();toast('PDF failed. Use Print, then Save as PDF.',1)});
+  if(window.html2pdf)return go();
+  const s=document.createElement('script');s.src='https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/html2pdf.js\/0.10.1\/html2pdf.bundle.min.js';
+  s.onload=go;s.onerror=()=>{fin();toast('PDF library is blocked on this network. Use Print, then choose Save as PDF.',1)};document.head.appendChild(s);
+}
+function pdfEl(el,head,name,land){runPdf(fill(head,snap(el)),name,land)}
+function pdfHtml(html,name,land){runPdf(fill('',html),name,land)}
+function csv(rows,name){
+  const t=rows.map(r=>r.map(x=>{x=x==null?'':String(x);return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x}).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv'}));a.download=name;document.body.appendChild(a);a.click();a.remove();
+}
+init();
+</script>
+</body>
+</html>
