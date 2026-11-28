@@ -2537,13 +2537,13 @@ compose=function(o){_compose(o);const L=$('#layer'),q=x=>L.querySelector(x),ed=q
    d.remove();toast('The quoted mails were left out — press Send again (tick "Include trail" to put them back)')}};
  send.onclick=()=>{const _fl=[...(q('#cat')&&q('#cat')._olk||[])],_tot=_fl.reduce((a,x)=>a+x.size,0);
   if(_tot>MAIL_MAX){toast('Not sent — '+fsize(_tot)+' of files is too much. A mail carries about '+fsize(MAIL_MAX)+'; remove one or send a Google Drive link.');return}
-  const _w=_weigh();if(_w.total>WIRE_MAX){_tooBig(_w);return}
+  let _w=_weigh();if(_w.total>WIRE_MAX&&_w.quote&&window.slimQuoteEl){const _k=window.slimQuoteEl(ed);_w=_weigh();if(_k&&_w.total<=WIRE_MAX)toast(_k+' big picture'+(_k>1?'s':'')+' in the quoted mails left out so the mail can go - your text and the quoted words are kept')}if(_w.total>WIRE_MAX){_tooBig(_w);return}
   opts({});origSend();if(L.innerHTML)NEXT_OPTS=null};
  q('#cLater').onclick=()=>{const host=document.createElement('div');host.className='scrim';host.style.zIndex=70;const tm=new Date();tm.setDate(tm.getDate()+1);tm.setHours(9,0,0,0);
   const pre=[['In 1 hour',Date.now()+36e5],['Tomorrow 9:00 AM',+tm],['Monday 9:00 AM',(()=>{const d=new Date();d.setDate(d.getDate()+((8-d.getDay())%7||7));d.setHours(9,0,0,0);return+d})()]];
   host.innerHTML=`<div class="dlg" role="dialog" aria-modal="true" aria-label="Send later" style="width:min(400px,100%)"><header><h3>🕒 Send later</h3></header><div class="body">${pre.map(([l,v])=>`<button class="btn" data-at="${v}" style="justify-content:space-between;width:100%"><span>${l}</span><small>${tLong(v)}</small></button>`).join('')}<div class="fld"><label for="slAt">Or pick date and time</label><input type="datetime-local" id="slAt" value="${toLocalInput(+tm)}"></div><p style="margin:0;font-size:12px;color:var(--muted)">It goes out from the server even if your computer is off. Change your mind any time in ☰ → 🕒 Scheduled mail.</p></div><footer><button class="btn" data-c>Cancel</button><button class="btn pri" data-ok>Schedule</button></footer></div>`;
   document.body.appendChild(host);const done=at=>{host.remove();if(!at||at<Date.now()+60000){toast('Pick a time at least one minute from now');return}
-   const _w=_weigh();if(_w.total>WIRE_MAX){_tooBig(_w);return}
+   let _w=_weigh();if(_w.total>WIRE_MAX&&_w.quote&&window.slimQuoteEl){const _k=window.slimQuoteEl(ed);_w=_weigh();if(_k&&_w.total<=WIRE_MAX)toast(_k+' big picture'+(_k>1?'s':'')+' in the quoted mails left out so the mail can go - your text and the quoted words are kept')}if(_w.total>WIRE_MAX){_tooBig(_w);return}
    opts({sendAt:at});origSend();if(L.innerHTML)NEXT_OPTS=null};
   host.querySelectorAll('[data-at]').forEach(b=>b.onclick=()=>done(+b.dataset.at));host.querySelector('[data-c]').onclick=()=>host.remove();host.querySelector('[data-ok]').onclick=()=>done(Date.parse(host.querySelector('#slAt').value))};
 };
@@ -3933,7 +3933,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-15';
+const APP_BUILD='2026-11-28-16';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -10684,3 +10684,22 @@ function sigFinal(pid){
 try{window.sigFinal=sigFinal;sigOf=function(pid){return sigFinal(pid)}}catch(e){}
 })();
 /* __sigfinal:end */</script>
+
+<script>/* __slimquote:start 28 Nov 2026 - see server/patch-slim-quote.js */
+(function(){
+var BIG=40000;                 /* a data: picture longer than this (about 30 KB) counts as big */
+var LIMIT=15*1024*1024;        /* outgoing HTML above this gets its quoted pictures slimmed */
+var NOTE='<span style="color:#9c948e;font-size:12px">[picture]</span>';
+function slimIn(root){var k=0;
+ root.querySelectorAll('[data-trail] img,[data-qm] img').forEach(function(im){
+  var src=im.getAttribute('src')||'';
+  if(src.slice(0,5)==='data:'&&src.length>BIG){var sp=document.createElement('span');sp.innerHTML=NOTE;im.replaceWith(sp.firstChild);k++}});
+ return k}
+window.slimQuoteEl=function(ed){try{return ed?slimIn(ed):0}catch(e){return 0}};
+try{var _og=outgoingHTML;outgoingHTML=function(m){var h=_og.apply(this,arguments);
+ try{if(h&&h.length>LIMIT){var d=new DOMParser().parseFromString('<div id="__sq">'+h+'</div>','text/html');
+  if(slimIn(d))h=d.getElementById('__sq').innerHTML}}catch(e){}
+ return h}}catch(e){}
+try{var st=document.createElement('style');st.textContent='.editor [data-sig] td,.rich [data-sig] td,.editor [data-sig] table,.rich [data-sig] table{border:0}';document.head.appendChild(st)}catch(e){}
+})();
+/* __slimquote:end */</script>
