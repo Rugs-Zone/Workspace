@@ -1580,6 +1580,18 @@ async function serverStatus(p) {
       .map((r) => ({ id: String(r.key).replace(/^(job|report)_/, ""), kind: String(r.key).split("_")[0],
         at: r.updated_at, summary: scrub(String((r.value && (r.value.summary || r.value.note)) || "")).slice(0, 300) }));
   } catch {}
+  /* __jobdetail:start 28 Nov 2026: one job's own report, in full, for the admin who asks.
+     Read only - it selects three rm_settings rows by key and returns them as they are. */
+  if (p.job) {
+    const id = String(p.job).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 80);
+    try {
+      const r = await pool.query(
+        "select key, value, updated_at from public.rm_settings where key = any($1::text[])",
+        [["job_" + id, "report_" + id, "undo_" + id]]);
+      out.job = { id: id, rows: r.rows.map((x) => ({ key: x.key, at: x.updated_at, value: x.value })) };
+    } catch (e) { out.job = { id: id, error: String(e.message || e).slice(0, 200) }; }
+  }
+  /* __jobdetail:end */
   /* __findconv:start 26 Nov 2026: look a conversation up in the live database */
   if (p.look && String(p.look).trim().length >= 3) {
     const q = String(p.look).trim().slice(0, 120);
