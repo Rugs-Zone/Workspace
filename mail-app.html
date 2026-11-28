@@ -2067,8 +2067,12 @@ function withFull(t,fn){
   setTimeout(()=>{try{cidLive()}catch(e){}},0);
   return}
  toast('Getting the full mail first\u2026');
- liveOpen(t,{force:true}).then(ok=>{if(ok)fn();
-  else toast('The full mail has not arrived yet \u2014 press Retry at the top of the mail',true)})
+ /* 28 Nov 2026: Gmail sometimes sends back only part of a conversation, and Reply then never opened
+   (Ashok, EB cushion). Reply now ALWAYS opens; if the full mail did not arrive it is built from the
+   short preview, which is enough to answer. */
+ let _wf=0;const _go=(ok)=>{if(_wf)return;_wf=1;if(!ok)toast('Opened with the short preview - the quoted trail may be short');fn()};
+ try{liveOpen(t,{force:true}).then(ok=>_go(!!ok),()=>_go(false))}catch(e){_go(false)}
+ setTimeout(()=>_go(false),9000)
 }
 
 function outgoingHTML(m){const _inBody=/data-sig=/.test(m.html||'');const sig=m.sig&&!_inBody?(isHtmlSig(m.sig)?`<div style="margin-top:16px">${m.sig}</div>`:`<div style="margin-top:14px;color:#444;white-space:pre-wrap;font-size:13px">${esc(m.sig)}</div>`):'';
@@ -3933,7 +3937,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-22';
+const APP_BUILD='2026-11-28-23';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
