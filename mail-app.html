@@ -1420,6 +1420,9 @@ const _tbCid=trailBlock;trailBlock=function(){let h=_tbCid.apply(this,arguments)
    :pre+'<span data-rmcid="'+k+'" style="color:#9c948e;font-size:12px">⏳ picture loading…</span>');
  return h};
 function trailEditHTML(t){const tr=trailOf(t);return tr.map((q,i)=>trailBlock(q,i)).reverse().join('')}
+/* 28 Nov 2026: clean a To / Cc / Bcc box. People type "a@x.com; b@y.com", add a trailing comma or paste
+   "Name <a@x.com>". Gmail wants one comma list of plain addresses, so take every address out and join with ", ". */
+function normRcpt(v){try{const a=String(v||'').match(/[^\s<>,;"'()\[\]]+@[^\s<>,;"'()\[\]]+/g)||[];const seen=new Set(),o=[];a.forEach(x=>{x=x.replace(/[.]+$/,'');const k=x.toLowerCase();if(/^[^@]+@[^@]+\.[^@.]+$/.test(x)&&!seen.has(k)){seen.add(k);o.push(x)}});return o.join(', ')}catch(e){return String(v||'')}}
 function sendReply(t,txt,p,dv,fwd,noTrail,html,withSig=true){
  const tr=noTrail?[]:trailOf(t);t.msgs.push({from:who(ME).name,by:ME,email:dept(t.dept).box+'rugscreation.com',at:Date.now(),body:txt,html:html||'',sig:withSig?pickSig():'',trail:tr,fwd:!!fwd});t.last=Date.now();
  /* __noautotake:start 26 Nov 2026: REPLYING NEVER CHANGES THE OWNER. This line used to take an
@@ -1541,7 +1544,8 @@ function replyTo(t){try{const box=String(t.box||mailOf(dept(t.dept))||'').toLowe
  for(let i=ms.length-1;i>=0;i--){const m=ms[i];if(!m)continue;
   if(m.ours||m.by){const a=(String(m.to||'').match(/[^\s<>,;"']+@[^\s<>,;"']+/g)||[]).filter(x=>x.toLowerCase()!==box);if(a.length)return [...new Set(a.map(x=>x.toLowerCase()))].join(', ')}
   else if(m.email&&String(m.email).toLowerCase()!==box)return m.email}
- return t.email||''}catch(e){return t.email||''}}
+ for(let i=ms.length-1;i>=0;i--){const m=ms[i];if(m&&(m.ours||m.by)){const a=(String(m.cc||'').match(/[^\s<>,;"']+@[^\s<>,;"']+/g)||[]).filter(x=>x.toLowerCase()!==box);if(a.length)return [...new Set(a.map(x=>x.toLowerCase()))].join(', ')}}
+ return (t.email&&String(t.email).toLowerCase()!==box)?t.email:''}catch(e){return ''}}
 function compose(o){const t=o.t;const sub=o.sub??(t?(o.fwd?'Fwd: ':'Re: ')+cleanSub(t.sub):'');const to=o.to??(t&&!o.fwd?replyTo(t):'');
  const myBox=dept(t?t.dept:who(ME).dept);
  SIG_BOX=mailOf(myBox);   // the notice under the signature follows the mailbox, not the person
@@ -1665,11 +1669,12 @@ function compose(o){const t=o.t;const sub=o.sub??(t?(o.fwd?'Fwd: ':'Re: ')+clean
    if(ctr)ctr.checked=!!(trailBox()&&trailBox().querySelector('[data-qm]'));
    keep()}})}
  q('[data-dr]').onclick=()=>{const s=q('#cs').value.trim(),b=text();if(!s&&!b&&!ed.querySelector('img')){toast('Nothing to save');return}const d={to:q('#ct').value,sub:s,body:b,html:html(),at:Date.now()};draftId(o);d.id=o.did;DRAFT_GONE.delete(o.did);{const k=S.drafts.findIndex(x=>x.id===o.did);if(k>=0)S.drafts[k]=d;else S.drafts.unshift(d)}save();L.innerHTML='';toast('Draft saved');render()};
- q('[data-send]').onclick=()=>{const toV=q('#ct').value.trim();if(!toV){toast('Add who it goes to');return}
+ q('[data-send]').onclick=()=>{const toRaw=q('#ct').value.trim(),toV=normRcpt(toRaw);if(!toV){toast(toRaw?'That address does not look right - check the To box':'Add who it goes to');return}
+  {const ccRaw=q('#cc').value.trim();if(ccRaw&&!normRcpt(ccRaw)){toast('That address does not look right - check the Cc box');return}}
   if(!text()&&!ed.querySelector('img,table')){toast('Write something first');return}
   const p=q('#cp')?.value.trim(),dv=q('#cpd')?.value;if((p&&!dv)||(!p&&dv)){toast('Add both the promise and its date');return}
   {const k=o.did?S.drafts.findIndex(x=>x.id===o.did):(o.draft!=null?o.draft:-1);if(k>=0)S.drafts.splice(k,1);if(o.did)DRAFT_GONE.add(o.did)}
-  const subV=q('#cs').value.trim(),bodyV=text(),htmlV=html(),withSig=!!q('#cSig').value,ccV=q('#cc').value.trim(),q0={cf:q('#cf').value};L.innerHTML='';
+  const subV=q('#cs').value.trim(),bodyV=text(),htmlV=html(),withSig=!!q('#cSig').value,ccV=normRcpt(q('#cc').value),q0={cf:q('#cf').value};L.innerHTML='';
   if(t){t.cc=ccV;if(o.fwd)t._fwdTo=toV;else t._replyTo=toV;sendReply(t,bodyV||'(picture)',p,dv,o.fwd,true,htmlV,withSig)}else{const dId=q0.cf,nid=Math.max(0,...S.threads.map(x=>+x.id||0))+1;const nt=T(nid,dId,toV,toV,subV||'(no subject)',bodyV.slice(0,160),0,{owner:ME,status:'open'});nt.msgs=[{from:who(ME).name,by:ME,email:mailOf(dept(dId)),at:Date.now(),body:bodyV,html:htmlV,sig:withSig?pickSig():'',trail:[]}];nt.last=Date.now();nt.hist=[{t:'s',txt:`New mail sent by ${who(ME).name} from ${mailOf(dept(dId))}`,at:Date.now()}];nt.cc=ccV;nt._local=true;nt.box=mailOf(dept(dId));S.threads.push(nt);ensureLabels();save();liveSend(nt,nt.msgs[0],false,true);toast('Sent ✓ — it is in Sent');app='mail';view={type:'box',dept:dId,folder:'sent'};openId=nid;render()}};
  if(o.files&&o.files.length)try{addFiles(o.files)}catch(e){toast('The file could not be attached')}
  /* 17 Nov 2026: the original mail's files, fetched only when they are actually wanted */
@@ -2084,7 +2089,7 @@ const _ogCid=outgoingHTML;outgoingHTML=function(m){let h=_ogCid.apply(this,argum
   .replace(/<span\b[^>]*\bdata-rmcid="[^"]*"[^>]*>[\s\S]*?<\/span>/gi,'');
  return h};
 function liveSend(t,m,fwd,isNew){const box=isNew?mailOf(dept(t.dept)):t.box,localId=t.id;m.sending=true;
- api('send',{mailbox:box,threadId:isNew?'':gidOf(t),to:fwd?(t._fwdTo||''):(t._replyTo||replyTo(t)),cc:t.cc||'',subject:t.sub,html:outgoingHTML(m),text:m.body,forward:!!fwd})
+ api('send',{mailbox:box,threadId:isNew?'':gidOf(t),to:normRcpt(fwd?(t._fwdTo||''):(t._replyTo||replyTo(t))),cc:normRcpt(t.cc),subject:t.sub,html:outgoingHTML(m),text:m.body,forward:!!fwd})
  .then(async r=>{m.sending=false;m.gid=r.messageId;toast('Delivered ✓');
   if(isNew){S.threads=S.threads.filter(x=>x!==t);await loadList(false);const nid=boxDept()[box.toLowerCase()]+':'+r.threadId;if(openId===localId)openId=nid}
   else await loadList(false);render()})
@@ -2447,7 +2452,7 @@ liveSend=function(t,m,fwd,isNew){const box=isNew?mailOf(dept(t.dept)):t.box,loca
   let files=[];try{files=await Promise.all((o.fileList||[]).map(async f=>{try{return{name:f.name,type:f.type||'application/octet-stream',b64:await (PRE_B64.get(preKey(f))||fileB64(f))}}catch(e){throw new Error('"'+f.name+'" could not be read')}}))}
   catch(e){sbar.remove();m.sending=false;m.failed=true;const why=(e&&e.message)||'Could not read an attachment';toast('Not sent: '+why+' — remove it and attach again');if(isNew)t.hist.push({t:'n',txt:'Not sent: '+why,at:Date.now()});render();return}
   files=files.concat(o.extraFiles||[]);
-  const payload={mailbox:box,threadId:isNew?'':gidOf(t),to:fwd?(t._fwdTo||''):(t._replyTo||replyTo(t)),cc:t.cc||'',bcc:o.bcc||'',important:!!o.important,receipt:!!o.receipt,files,subject:t.sub,html:outgoingHTML(m),text:m.body,forward:!!fwd};
+  const payload={mailbox:box,threadId:isNew?'':gidOf(t),to:normRcpt(fwd?(t._fwdTo||''):(t._replyTo||replyTo(t))),cc:normRcpt(t.cc),bcc:normRcpt(o.bcc),important:!!o.important,receipt:!!o.receipt,files,subject:t.sub,html:outgoingHTML(m),text:m.body,forward:!!fwd};
   if(o.sendAt){sbar.remove();api('schedule',{sendAt:new Date(o.sendAt).toISOString(),payload}).then(()=>{toast('🕒 Scheduled for '+tLong(o.sendAt));dropLocal()}).catch(e=>{m.sending=false;m.failed=true;toast('Not scheduled: '+e.message);render()});return}
   api('send',payload).then(async r=>{sbar.remove();m.sending=false;m.gid=r.messageId;toast('Delivered ✓');
    if(isNew){S.threads=S.threads.filter(x=>x!==t);await loadList(false);const nid=boxDept()[box.toLowerCase()]+':'+r.threadId;if(openId===localId)openId=nid}else await loadList(false);render()})
@@ -3928,7 +3933,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-9';
+const APP_BUILD='2026-11-28-11';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
