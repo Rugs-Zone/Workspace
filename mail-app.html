@@ -690,11 +690,26 @@ const flag=c=>c&&COUNTRY[c]?`<span class="cc" style="--cc:hsl(${hue(c)*7%360} 55
 const SIGS={};
 const isInternal=e=>/@rugscreation\.com$/i.test(e)||/^(noreply|no-reply|security|deals)@/i.test(e);
 /* read a signature block into contact fields */
+/* __goodname 28 Nov 2026: does this look like a person's or a company's name? The ones that got
+   through were picture markers, Exclaimer banners, whole sentences and quoted "From:" lines. */
+function goodName(x){const v=String(x==null?'':x).trim();
+ if(!v||v.length>48)return false;
+ if(/[<>\[\]{}|@]/.test(v))return false;                       /* markup, an address, an image marker */
+ if(/https?:|cid:|www\./i.test(v))return false;                /* a link */
+ if(/^(from|to|cc|bcc|subject|sent|date|re|fw|fwd)\s*:/i.test(v))return false;   /* a quoted header */
+ if(!/[A-Za-z\u00C0-\u024F]/.test(v))return false;             /* no letters at all */
+ if(v.split(/\s+/).length>5)return false;                      /* a name is short */
+ if(/[.!?,;]$/.test(v)&&v.split(/\s+/).length>2)return false;   /* a sentence */
+ return true}
+/* a readable last resort: lily-sue.martin@x.com -> Lily Sue Martin */
+function nameFromMail(e){const l=String(e||'').split('@')[0].replace(/[._+-]+/g,' ').replace(/\d+/g,' ').trim();
+ if(!l)return String(e||'');
+ return l.split(/\s+/).filter(Boolean).slice(0,4).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ')}
 function parseSig(sig,email,fromName){const L=(sig||'').split('\n').map(x=>x.trim()).filter(Boolean);const o={email,name:fromName.split(' (')[0],title:'',company:'',city:'',country:'',code:'',phone:''};
  L.forEach((l,i)=>{const ph=l.match(/^(?:[TMP]\s*)?(\+\d[\d\s-]{6,})$/);if(ph){o.phone=ph[1];return}
   const cc=Object.entries(COUNTRY).find(([k,v])=>l.toLowerCase().endsWith(v.toLowerCase()));if(cc){o.code=cc[0];o.country=cc[1];o.city=l.split(',')[0].trim();return}
   if(/(gmbh|ltd|inc|s\.l\.|b\.v\.|pvt|co\.|homes|lifestyles|freight|retail|trading|logistics|living)/i.test(l)&&!o.company){o.company=l;return}
-  if(i===0&&!/desk|payable/i.test(l)){o.name=l;return}
+  if(i===0&&!/desk|payable/i.test(l)){if(goodName(l))o.name=l;return}   /* __goodname */
   if(!o.title)o.title=l});
  if(!o.company){const m=fromName.match(/\(([^)]+)\)/);if(m)o.company=m[1]}
  return o}
@@ -868,8 +883,12 @@ function sentTo(t){try{const ms=t.msgs||[];const m=(t._one&&ms[t._mi])||[...ms].
  if(!_sentCt.m||Date.now()-_sentCt.at>30000){_sentCt={at:Date.now(),m:new Map((contacts()||[]).map(c=>[String(c.email||'').toLowerCase(),c.name]))}}
  const skip=new Set([String(m.email||'').toLowerCase(),String(t.mailbox||'').toLowerCase()]);
  const pick=raw=>{const out=[];(String(raw||'').match(/(?:"[^"]*"|[^,;])+/g)||[]).forEach(p=>{
-   const em=((p.match(/<([^>]+)>/)||[])[1]||p).replace(/["']/g,'').trim().toLowerCase();if(!em||skip.has(em))return;
-   let nm=((p.match(/^\s*"?([^"<]+?)"?\s*</)||[])[1]||'').trim();if(!nm||nm.toLowerCase()===em)nm=_sentCt.m.get(em)||em;
+   const all=String(p).match(/[^\s<>"',;:]+@[^\s<>"',;:]+\.[A-Za-z]{2,}/g)||[];   /* __goodname: the LAST address in the part, so a link in a display name cannot be mistaken for one */
+   const em=String(all.length?all[all.length-1]:'').replace(/["']/g,'').trim().toLowerCase();
+   if(!em||skip.has(em))return;
+   let nm=((p.match(/^\s*"?([^"<]+?)"?\s*</)||[])[1]||'').trim();
+   if(nm&&!goodName(nm))nm='';                                     /* __goodname */
+   if(!nm||nm.toLowerCase()===em){const cn=_sentCt.m.get(em);nm=goodName(cn)?cn:em}
    if(!out.includes(nm))out.push(nm)});return out};
  let out=pick(m.to);if(!out.length)out=pick(m.cc);
  if(!out.length)return String(m.to||t.email||'').replace(/<[^>]*>/g,'').trim()||t.email||'';
@@ -996,8 +1015,13 @@ function contacts(){const map={};
  S.threads.forEach(t=>t.msgs.forEach(m=>{if(m.by||isInternal(m.email))return;const k=m.email.toLowerCase();
   const c=map[k]||(map[k]={...parseSig(m.sig,m.email,m.from),mails:0,last:0,depts:new Set(),owners:new Set(),fromSig:!!m.sig});
   if(m.sig&&!c.fromSig){Object.assign(c,parseSig(m.sig,m.email,m.from));c.fromSig=true}
-  c.mails++;c.last=Math.max(c.last,m.at);c.depts.add(t.dept);if(t.owner)c.owners.add(t.owner)}));
- return Object.values(map).map(c=>({...c,...(S.contactEdits?.[c.email]||{}),depts:[...c.depts],owners:[...c.owners]})).sort((a,b)=>b.last-a.last)}
+  c.mails++;c.last=Math.max(c.last,m.at);c.depts.add(t.dept);if(t.owner)c.owners.add(t.owner);
+  if(m.from&&!goodName(c.fromName)&&goodName(String(m.from).split(' (')[0]))c.fromName=String(m.from).split(' (')[0];   /* __goodname */}));
+ return Object.values(map).map(c=>{const o={...c,...(S.contactEdits?.[c.email]||{}),depts:[...c.depts],owners:[...c.owners]};
+  /* __goodname: a name somebody typed is kept as typed; a harvested one has to look like a name */
+  const typed=S.contactEdits?.[o.email]?.name;
+  if(!typed&&!goodName(o.name))o.name=goodName(o.fromName)?o.fromName:nameFromMail(o.email);
+  return o}).sort((a,b)=>b.last-a.last)}
 function contactRows(){const q=ctQ.toLowerCase();const rows=contacts().filter(c=>(!ctC||c.code===ctC)&&(!q||[c.name,c.email,c.company,c.country,c.title,c.phone].join(' ').toLowerCase().includes(q)));
  if(!rows.length)return'<div class="empty"><b>No contacts match</b></div>';
  return rows.map(c=>`<button class="ct" data-contact="${esc(c.email)}">${av(c.name)}<div class="w"><b>${esc(c.name)}</b><span>${esc(c.title||'—')}</span></div><div class="w hide"><b style="font-weight:600">${esc(c.company||'—')}</b><span>${esc(c.email)}</span></div><div class="w hide"><b style="font-weight:600"><span class="flag">${flag(c.code)}</span> ${esc(c.country||'Unknown')}</b><span>${esc(c.phone||'')}</span></div><div class="n">${c.mails} mail${c.mails>1?'s':''}<br>${tShort(c.last)}</div></button>`).join('')}
@@ -3894,7 +3918,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-3';
+const APP_BUILD='2026-11-28-4';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
