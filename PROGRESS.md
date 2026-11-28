@@ -25,3 +25,4 @@ Older history moved unchanged to `docs/PROGRESS-ARCHIVE.md` (last move: 27 Nov 2
 - 28 Nov 2026: Rugs Email reply fix - a reply on a mail we wrote goes to the real other party (not our own shared mailbox), and the To you type in Reply is now used, also on Try again. Build 2026-11-28-4.
 
 - 28 Nov 2026: Rugs Email reply fix - reply on our own sent mail goes to the real other party (not our own shared mailbox); the To typed in Reply is used, also on Try again. Build 2026-11-28-6.
+- 28 Nov 2026 (2026-11-28-5): Ashish Sent fixed - own-login mail counted as sent (sentByUs), job fixed 322 rows, and the To: column no longer prints junk. docs/ASHISH-SENT-2026-11-28.md

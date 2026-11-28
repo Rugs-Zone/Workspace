@@ -48,7 +48,7 @@ const boot = await page.evaluate(() => ({
   loginVisible: !!document.querySelector("#login:not([hidden])")
 }));
 console.log("  the real app: build " + boot.build + " | signed in as " + boot.me + " | conversations " + boot.threads);
-ck("the published app is the new build", boot.build, "2026-11-28-4");
+ck("the published app is the new build", boot.build, "2026-11-28-5");
 ck("it has the new Sent rule", boot.helper, true);
 ck("it signed in as him", boot.me, "Ashish Deshwal");
 
@@ -62,7 +62,7 @@ const sent = await page.evaluate(async () => {
   const b = document.querySelector('.fi[data-box][data-f="sent"]');
   if (b) b.click();
   await new Promise(r => setTimeout(r, 3000));
-  const rows = [].slice.call(document.querySelectorAll("#list .m"));
+  const rows = [].slice.call(document.querySelectorAll("[data-open]"));   /* the row the v2 list draws */
   return {
     clicked: !!b,
     folder: (typeof view !== "undefined") ? (view.folder || "") + "/" + (view.dept || "") : "?",
@@ -70,8 +70,12 @@ const sent = await page.evaluate(async () => {
     listRows: (typeof listRows === "function") ? listRows().length : -1,
     first: rows.slice(0, 8).map(el => (el.textContent || "").replace(/\s+/g, " ").slice(0, 80)),
     toColumn: (typeof listRows === "function" && typeof sentTo === "function") ? listRows().slice(0, 8).map(r => String(sentTo(r)).slice(0, 44)) : [],
+    /* junk = a picture marker, a link, a bracket or nothing at all. A long string is NOT junk:
+       "Lisa MARIE, Selver EMSEN, Enora GUEGUEN +1" is simply several recipients. */
     junkTo: (typeof listRows === "function" && typeof sentTo === "function")
-      ? listRows().filter(r => { const v = String(sentTo(r)); return /cid:|https?:|\[|^\s*$/.test(v) || v.split(/\s+/).length > 6 }).length : -1,
+      ? listRows().filter(r => { const v = String(sentTo(r)); return !v.trim() || /cid:|https?:|[\[\]<>]/.test(v) }).length : -1,
+    manyTo: (typeof listRows === "function" && typeof sentTo === "function")
+      ? listRows().filter(r => String(sentTo(r)).split(/\s+/).length > 6).length : -1,
     mine: (typeof rzSentCheck === "function") ? rzSentCheck() : null,
     /* what the Sent list really holds, by the app's own listRows */
     sentConversations: (typeof listRows === "function") ? [...new Set(listRows().map(r => r.id))].length : -1,
@@ -85,6 +89,7 @@ console.log("   view " + sent.folder + " | rows on screen " + sent.rowsOnScreen 
 sent.first.forEach(t => console.log("     " + t));
 if (sent.empty) console.log("   the empty message says: " + sent.empty.replace(/\s+/g, " ").slice(0, 120));
 console.log("   rzSentCheck(): " + JSON.stringify(sent.mine));
+console.log("   rows whose To: names several people (not junk): " + sent.manyTo);
 
 ck("the Sent folder was reachable", sent.clicked, true);
 ck("he is in Sent", /^sent/.test(sent.folder), true);
