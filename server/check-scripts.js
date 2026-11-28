@@ -28,8 +28,7 @@ const idx = fs.readFileSync('index.html', 'utf8');
 run(idx, 'index.html');
 console.log(n + ' inline scripts in index.html, ' + bad + ' failed');
 
-for (const [name, re] of [['mail app', /var EMAIL_HTML_B64 = "([A-Za-z0-9+/=]+)"/],
-                          ['courier module', /var COURIER_HTML_B64 = "([A-Za-z0-9+/=]+)"/]]) {
+for (const [name, re] of [['courier module', /var COURIER_HTML_B64 = "([A-Za-z0-9+/=]+)"/]]) {
   const m = re.exec(idx);
   if (!m) { console.log(name + ': NOT FOUND'); bad++; continue; }
   const before = n, bb = bad;

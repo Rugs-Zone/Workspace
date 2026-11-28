@@ -4,7 +4,7 @@
 - Ignore old copies such as `index (1).html`.
 - After every finished task, update `PROGRESS.md` with a short line about what changed.
 - Changes upload to GitHub automatically (a Stop hook in `.claude/settings.json` commits and pushes after every reply). Never tell the user to upload index.html or any file by hand; just say it is live after this reply.
-- Rugs Email app: edit it only with `node server/mailapp-b64.js decode` → patch `.tmp/email.html` → `node server/mailapp-b64.js encode`. Encode also writes `mail-app.html` (the small copy `mail.html` opens). Bump APP_BUILD and `mail-version.txt` together.
+- Rugs Email app (since 28 Nov 2026 it is its own file `mail-app.html`, NOT inside index.html any more): edit it only with `node server/mailapp-b64.js decode` → patch `.tmp/email.html` → `node server/mailapp-b64.js encode` (encode writes `mail-app.html`; `mail.html` opens it). Bump APP_BUILD and `mail-version.txt` together.
 - If the hook says "UPLOAD FAILED", run `git status` and fix it before doing anything else (on 18 Nov a stuck rebase silently kept updates off GitHub for a day).
 - The written record lives in **`docs/`** (`docs/README.md` is the index). Before changing anything in Rugs Email, read **`docs/MAIL-RULES-LIVE.md`** — it is the list of rules that are actually live, and a bug should be filed against a rule number from it. Only `CLAUDE.md` and `PROGRESS.md` stay in the root folder, because this file loads PROGRESS.md below.
 - Speed rules (27 Nov 2026): read only the last 40 lines of `PROGRESS.md` unless asked; older history is in `docs/PROGRESS-ARCHIVE.md` (open it only when asked). Keep `PROGRESS.md` under 200 KB: when it grows past that, move the oldest days to the archive.

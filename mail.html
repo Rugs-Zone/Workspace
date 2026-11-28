@@ -26,8 +26,7 @@
 <body>
 <div class="ld" id="ld"><div class="sp" aria-hidden="true"></div><b>Rugs Email</b><span>Opening your mailbox…</span></div>
 <script>
-// Rugs Email on its own page (Nov 2026). The mail app itself lives inside the Workspace file (index.html,
-// EMAIL_HTML_B64), so this page always runs the same, latest version — only the look is Outlook-style.
+// Rugs Email on its own page (Nov 2026). The mail app itself is the file mail-app.html, so this page always runs the same, latest version — only the look is Outlook-style.
 /* 24 Nov 2026: when Windows starts the installed app WITH a .eml file, the file arrives
    before the mail app has loaded. It is kept here and the app picks it up when it is ready. */
 (function () {
@@ -101,27 +100,12 @@
     document.getElementById("ld").innerHTML = '<b>Rugs Email</b><span>' + msg + '</span><a href="mail.html">Try again</a> · <a href="./">Open the Workspace</a>';
   }
 
-  // "no-cache" = ask GitHub each time, but it answers "not changed" (no download) when the Workspace file is the same
-  // 19 Nov 2026: open the small mail-app.html (about 0.5 MB) instead of the whole 9 MB Workspace file. It is used
-  // only when its APP_BUILD matches mail-version.txt, so it can never be an older app; otherwise (or on any error)
-  // the page falls back to the Workspace file exactly as before. mail-app.html is written by server/mailapp-b64.js encode.
-  function fromWorkspace() {
-    return fetch("index.html", { cache: "no-cache" }).then(function (r) {
-      if (!r.ok) throw new Error("Server error " + r.status);
-      return r.text();
-    }).then(function (s) {
-      var m = s.match(/var EMAIL_HTML_B64 = "([^"]+)"/);
-      if (!m) throw new Error("Mail app not found");
-      var bytes = Uint8Array.from(atob(m[1]), function (c) { return c.charCodeAt(0); });
-      return new TextDecoder("utf-8").decode(bytes);
-    });
-  }
-  function getText(u) { return fetch(u, { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); }); }
-  Promise.all([getText("mail-version.txt?t=" + Date.now()), getText("mail-app.html")]).then(function (a) {
-    var want = String(a[0] || "").trim(), m = a[1].match(/const APP_BUILD='([^']*)'/);
-    if (!want || !m || m[1] !== want) throw new Error("mail-app.html is not the current version");
-    return a[1];
-  }).catch(function () { return fromWorkspace(); }).then(function (html) {
+  // 28 Nov 2026: the mail app is its own file, mail-app.html (written by server/mailapp-b64.js encode).
+  // "no-cache" = ask GitHub each time; it answers "not changed" (no download) when the file is the same.
+  fetch("mail-app.html", { cache: "no-cache" }).then(function (r) {
+    if (!r.ok) throw new Error("Server error " + r.status);
+    return r.text();
+  }).then(function (html) {
     // the Outlook theme is added after the app has loaded (last style on the page), so it wins over the app's own colours.
     // It goes right after the app's <title> (the word </head> also appears inside the app's own code, so not there).
     var extra = '<meta name="theme-color" content="#0f6cbd"><link rel="manifest" href="mail-manifest.json"><link rel="icon" href="icons/icon-192.png">' +
