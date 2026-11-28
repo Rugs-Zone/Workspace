@@ -380,3 +380,25 @@ of an error. A transient failure (502/timeout) still comes back as a summary so 
 - [ ] `rzMemCap()` stays under 250 MB.
 - [ ] Admin → 🖥 Server → log: look for `thread msg rescued` (the original was found under a new id)
       vs `Gmail does not have this id (404), not retried`.
+
+## 28 Nov 2026 — console error on a Gmail signature logo (build 2026-11-28-2)
+
+`GET work.fife.usercontent.google.com/rd-mail-sig/… net::ERR_BLOCKED_BY_RESPONSE.NotSameSite 302`
+
+That address is a colleague's **Gmail signature picture**, kept inside their own Google account.
+Google refuses to let any other site show it, and **our own server is refused too — measured: a
+plain fetch of that exact address answers 403** (those are the "REFUSED img → 404 Picture not
+reachable" lines in the office log). So it cannot be shown by us or anyone outside Google.
+The address is now taken out of the mail **before it is drawn**: no request, no red console line,
+nothing reported back to the sender each time the mail is opened, and the pane says once, in plain
+words, that a signature picture cannot be shown and why. Only session-private Google addresses are
+touched (`*.usercontent.google.com`, `ci*.googleusercontent.com/proxy/`, `mail.google.com/mail/…`,
+anything with `/rd-mail-sig/`) — an ordinary internet picture, a Drive picture and an attached
+(`cid:`) picture are untouched. `server/patch-private-pics.js`, `server/test-private-pics.mjs` (29 checks).
+
+**Tester checklist**
+- [ ] Open a colleague's mail that had the broken logo: no red line in the console (F12), no gap-with-icon.
+- [ ] The line under the mail reads "A picture in this mail (a Gmail signature logo) cannot be shown…".
+- [ ] A buyer's mail with a real logo on the internet still shows it (Show pictures where asked).
+- [ ] An attached picture and a Drive picture still show.
+- [ ] `rzPrivPics()` in the console lists which mail had how many hidden.

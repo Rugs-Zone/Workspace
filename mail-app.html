@@ -973,7 +973,7 @@ function _renderRead(){const el=$('#read');if(!el)return;const t=S.threads.find(
  ${!priv&&t.label&&s!=='done'?(()=>{const L=LB(t.label),tgt=null;return `<div class="aihint"><span>✦</span><b>${esc(L.hint)}<small>${t.ai?`AI tagged this conversation as <span style="color:color-mix(in srgb,${L.c} 62%,var(--fg));font-weight:700">${L.name}</span> · ${t.conf}% sure — it only describes the topic, it doesn't move the mail`:`Topic set to ${L.name} by the team`}</small></b>${tgt?`<button class="btn vio" data-xferto="${t.id}" data-dto="${tgt.id}">↪ Send to ${esc(tgt.name)}</button>`:''}</div>`})():''}
  ${priv?'<p style="color:var(--muted);margin:0">This email holds a login code. Rugs Email keeps it hidden from the team and shows it only to the account owner.</p>':`
  ${t.promise&&s!=='done'?`<div class="promise ${s==='late'?'late':''}"><span>${s==='late'?ico('clock'):ico('promise')}</span><b>${esc(t.promise)}<br><span class="sub">${esc(who(t.owner)?.name||'')} · ${dueTxt(t)}</span></b><button class="btn" data-promise="${t.id}">Edit</button></div>`:s!=='done'?`<button class="btn" style="width:fit-content" data-promise="${t.id}">${ico('promise')} Add a promise + due date</button>`:''}
- ${t.msgs.map((m,mi)=>({m,mi})).reverse().map(({m,mi})=>`<article class="mail ${os.has(mi)?'':'collapsed'}" id="msg-${t.id}-${mi}" data-mtog="${mi}"><header>${av(m.from)}<div class="w"><b>${esc(m.from)}${m.by?`<span class="via">via ${esc(m.email.split('@')[0])}@</span>`:''}</b><span>${m.by?esc(m.email)+' → '+esc(t.email):esc(m.email)+' → '+esc(d.box)+'rugscreation.com'}</span></div><time>${tLong(m.at)}</time></header><div class="msnip">${esc(pvClean(m.body).slice(0,140))||(m.light?'Click to read this mail':'(no text)')}</div>${m.failed?`<div class="notsent"><b>\u26a0 Not sent</b> \u2014 this mail is still only on your screen.${m.failErr?` <span class="sub">${esc(m.failErr)}</span>`:''}${m.hadFiles?' Write it again and attach the files, they are not kept here.':''}<span class="sp"></span>${m.hadFiles?'':`<button class="btn" data-resend="${t.id}|${mi}">\u21bb Try again</button>`}<button class="btn" data-dropmsg="${t.id}|${mi}">Remove</button></div>`:m.sending?'<div class="notsent snd">\u23f3 Sending\u2026</div>':''}<div class="mbody">${os.has(mi)&&m.saved?`<div class="rawnote" style="margin:0 0 6px">\u26a0 ${esc(m.savedWhy||'Google Mail no longer has the original of this mail, so this is the copy Rugs Email saved.')} Pictures and the exact layout are not in it.</div>`:''}${!os.has(mi)?'':m.light?`${pvClean(m.body)?`<p style="white-space:pre-wrap">${esc(pvClean(m.body).slice(0,1200))}</p>`:''}${m.lfail&&!m.loading?`<p style="color:var(--muted)">\u26a0 Couldn\u2019t load \u2014 <button class="btn" data-lretry="${mi}">\u21bb Retry</button></p>`:`<p style="color:var(--muted)">\u23f3 Opening this mail\u2026</p>`}`:(!m.by&&!isInternal(m.email))||m.raw?`${inviteBar(m,mi,t)}${picBar(m,mi)}<div class="raw"><iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" title="Original email from ${esc(m.from)}" data-pics="${picsOk(m)?1:0}" srcdoc="${esc(picHTML(m,m.raw||originalHTML(m)))}"></iframe></div>${m.saved?'':`<span class="rawnote">${ico('mail')} Shown exactly as received — formatting, logo, signature and banners untouched</span>`}${attHTML(m,t)}`:`${m.html?`<div class="rich">${m.html}</div>`:`<p>${esc(m.body)}</p>`}${m.sig&&!/data-sig=/.test(m.html||'')?`<div class="sig ${m.by?'ours':''}"><small>${m.by?'Signature · '+esc(who(m.by).name.split(' ')[0]):'Signature'}</small>${sigView(m.sig)}</div>`:''}${trailHTML(m.trail)}${attHTML(m,t)}`}</div></article>`).join('')}
+ ${t.msgs.map((m,mi)=>({m,mi})).reverse().map(({m,mi})=>`<article class="mail ${os.has(mi)?'':'collapsed'}" id="msg-${t.id}-${mi}" data-mtog="${mi}"><header>${av(m.from)}<div class="w"><b>${esc(m.from)}${m.by?`<span class="via">via ${esc(m.email.split('@')[0])}@</span>`:''}</b><span>${m.by?esc(m.email)+' → '+esc(t.email):esc(m.email)+' → '+esc(d.box)+'rugscreation.com'}</span></div><time>${tLong(m.at)}</time></header><div class="msnip">${esc(pvClean(m.body).slice(0,140))||(m.light?'Click to read this mail':'(no text)')}</div>${m.failed?`<div class="notsent"><b>\u26a0 Not sent</b> \u2014 this mail is still only on your screen.${m.failErr?` <span class="sub">${esc(m.failErr)}</span>`:''}${m.hadFiles?' Write it again and attach the files, they are not kept here.':''}<span class="sp"></span>${m.hadFiles?'':`<button class="btn" data-resend="${t.id}|${mi}">\u21bb Try again</button>`}<button class="btn" data-dropmsg="${t.id}|${mi}">Remove</button></div>`:m.sending?'<div class="notsent snd">\u23f3 Sending\u2026</div>':''}<div class="mbody">${os.has(mi)&&m.saved?`<div class="rawnote" style="margin:0 0 6px">\u26a0 ${esc(m.savedWhy||'Google Mail no longer has the original of this mail, so this is the copy Rugs Email saved.')} Pictures and the exact layout are not in it.</div>`:''}${!os.has(mi)?'':m.light?`${pvClean(m.body)?`<p style="white-space:pre-wrap">${esc(pvClean(m.body).slice(0,1200))}</p>`:''}${m.lfail&&!m.loading?`<p style="color:var(--muted)">\u26a0 Couldn\u2019t load \u2014 <button class="btn" data-lretry="${mi}">\u21bb Retry</button></p>`:`<p style="color:var(--muted)">\u23f3 Opening this mail\u2026</p>`}`:(!m.by&&!isInternal(m.email))||m.raw?`${inviteBar(m,mi,t)}${picBar(m,mi)}<div class="raw"><iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" title="Original email from ${esc(m.from)}" data-pics="${picsOk(m)?1:0}" srcdoc="${esc(picHTML(m,m.raw||originalHTML(m)))}"></iframe></div>${m.privPics?`<span class="rawnote">\ud83d\uddbc ${m.privPics>1?m.privPics+' pictures':'A picture'} in this mail (a Gmail signature logo) cannot be shown \u2014 Google keeps it inside the sender\u2019s own account</span>`:''}${m.saved?'':`<span class="rawnote">${ico('mail')} Shown exactly as received — formatting, logo, signature and banners untouched</span>`}${attHTML(m,t)}`:`${m.html?`<div class="rich">${noPriv(m.html)}</div>`:`<p>${esc(m.body)}</p>`}${m.sig&&!/data-sig=/.test(m.html||'')?`<div class="sig ${m.by?'ours':''}"><small>${m.by?'Signature · '+esc(who(m.by).name.split(' ')[0]):'Signature'}</small>${sigView(m.sig)}</div>`:''}${trailHTML(m.trail)}${attHTML(m,t)}`}</div></article>`).join('')}
  ${ro?'':`<div class="inline"><div class="to">Quick reply to ${esc(t.email)}</div><textarea id="qr" placeholder="Write a reply…" aria-label="Quick reply"></textarea><footer><input type="text" id="qrP" placeholder="Promise (optional)" aria-label="Promise"><input type="date" id="qrD" aria-label="Due date"><span class="grow"></span><button class="btn" data-full="${t.id}" title="Open the full editor with fonts, colours, pictures">⤢ Full editor</button><button class="btn pri" data-qsend="${t.id}">Send</button></footer></div>`}
  ${atrailHTML(t)}`}
  </div>`}
@@ -3894,7 +3894,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-1';
+const APP_BUILD='2026-11-28-2';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -10313,3 +10313,55 @@ if(typeof stbarPaint==="function"){
  };
 })();
 /* __openmail19:end */</script>
+<script>/* __privpic:start  28 Nov 2026 - a picture that can never be shown is not asked for.
+   server/patch-private-pics.js. Reported from a staff screen as
+   "GET work.fife.usercontent.google.com/rd-mail-sig/... ERR_BLOCKED_BY_RESPONSE.NotSameSite".
+   Measured: that address answers 403 to our own server too, so it is unreachable, not slow. */
+(function(){
+ /* every one of these needs the SENDER's own Google session, so no other site can show them */
+ var PRIV=/^(?:https?:)?\/\/(?:[a-z0-9-]+\.)*usercontent\.google\.com\/|^(?:https?:)?\/\/ci[0-9]*\.googleusercontent\.com\/proxy\/|^(?:https?:)?\/\/mail\.google\.com\/mail\/|rd-mail-sig\//i;
+ var DOT="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+ var LAST=0;
+ /* Takes the address out of the picture tag and leaves a hidden, empty one in its place, so the
+    mail's own HTML is otherwise untouched and nothing is requested. */
+ window.noPriv=function(h){
+  LAST=0;
+  if(!h)return h;
+  var str=String(h);
+  if(str.indexOf("google")<0)return h;        /* almost every mail: nothing to do */
+  return str.replace(/<img\b[^>]*>/gi,function(tag){
+   var m=/\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s">]+))/i.exec(tag);
+   var u=m?(m[1]!==undefined?m[1]:(m[2]!==undefined?m[2]:m[3])):"";
+   if(!u||!PRIV.test(u))return tag;
+   LAST++;
+   return '<img data-rzpriv="1" alt="" aria-hidden="true" style="display:none" src="'+DOT+'">';
+  });
+ };
+ window.noPrivN=function(){return LAST};
+
+ /* the "exactly as received" frame - and it remembers how many were taken out, for the line
+    the reading pane prints under the mail */
+ try{if(typeof picHTML==="function"){var _ph=picHTML;
+  picHTML=function(m,h){var fixed=window.noPriv(h),n=window.noPrivN();
+   try{if(m)m.privPics=n}catch(e){}
+   return _ph.call(this,m,fixed)}}}catch(e){}
+
+ /* the Mail trail, and the quoted trail inside the editor */
+ try{if(typeof trailHTML==="function"){var _th=trailHTML;
+  trailHTML=function(){return window.noPriv(_th.apply(this,arguments))}}}catch(e){}
+ try{if(typeof trailBlock==="function"){var _tb=trailBlock;
+  trailBlock=function(){return window.noPriv(_tb.apply(this,arguments))}}}catch(e){}
+
+ /* belt: anything drawn in the page itself (not in a frame) stays hidden */
+ try{var st=document.createElement("style");st.id="privpiccss";
+  st.textContent="img[data-rzpriv]{display:none!important}";
+  document.head.appendChild(st)}catch(e){}
+
+ /* paste  rzPrivPics()  into the console to see what was taken out of the mail on screen */
+ window.rzPrivPics=function(){
+  try{var t=(typeof openId!=="undefined"&&openId)?T_(openId):null;if(!t)return "no conversation open";
+   return (t.msgs||[]).map(function(m,i){return {mail:i+1,from:m.from,hidden:m.privPics||0}})
+    .filter(function(x){return x.hidden})}catch(e){return String(e.message||e)}
+ };
+})();
+/* __privpic:end */</script>
