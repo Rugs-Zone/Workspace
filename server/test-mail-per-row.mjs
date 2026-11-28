@@ -59,6 +59,28 @@ const isOtp=()=>false;
 const hasAtt=()=>false, sizeOf=()=>0, mentionsMe=()=>false, toMe=()=>false;
 const cleanSub=x=>String(x||'');
 const lastOut=t=>{const m=[...(t.msgs||[])].reverse().find(x=>x.by||x.ours);return m?m.at:t.last};
+/* 28 Nov 2026: the Sent rule now asks ONE helper, sentByUs() - a mail whose From is a person's
+   own login or alias was sent by that person (server/patch-sent-by-login.js). This harness lifts
+   the explode block out of the app, so it needs the helper and the two it leans on. */
+const PEOPLE=[{id:'ashok',name:'Ashok',login:'teampulse@rugscreation.com',dept:'tp',active:true,perm:{}}];
+const nmKey=s=>String(s||'').toLowerCase().replace(/[^a-z ]+/g,' ').split(/\s+/).filter(Boolean);
+function sentWho(m,t){
+ if(!m)return null;
+ if(m.by)return m.by;
+ if(!m.ours)return null;
+ const e=String(m.email||'').toLowerCase();
+ if(e){const byMail=PEOPLE.find(p=>p.active!==false&&(String(p.login||'').toLowerCase()===e||
+   String((p.perm&&p.perm.aliases)||'').toLowerCase().split(/[\s,;]+/).includes(e)));
+  if(byMail)return byMail.id}
+ return null;
+}
+function sentByUs(m,t){
+ if(!m)return false;
+ if(m.by)return true;
+ if(!m.ours)return false;
+ try{if(typeof colleagueIn!=='function'||!colleagueIn(m,t))return true}catch(e){return true}
+ try{return !!(typeof sentWho==='function'&&sentWho(m,t))}catch(e){return false}
+}
 ${srcToThis}
 ${srcColl}
 ${srcRecv}

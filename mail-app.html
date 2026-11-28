@@ -3894,7 +3894,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-2';
+const APP_BUILD='2026-11-28-3';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -3958,7 +3958,7 @@ function mentionsMe(t){const first=(who(ME)?.name||'').split(' ')[0].toLowerCase
 function toMe(t){const mine=myAddrs();if(!mine.length)return false;return (t.to||[]).some(a=>mine.includes(String(a).toLowerCase()))||t.msgs.some(m=>{const x=(String(m.to||'')+' '+String(m.cc||'')).toLowerCase();return mine.some(a=>x.includes(a))})}
 // conversations off: one row per mail (the row still opens its conversation)
 function explode(rows){const sent=view.type==='box'&&view.folder==='sent',inb=view.type==='all'||(view.type==='box'&&view.folder==='inbox');const out=[];
- rows.forEach(t=>{const mine=m=>!!(m.by||(m.ours&&!colleagueIn(m,t)));   /* what WE sent, as the Sent folder counts it */
+ rows.forEach(t=>{const mine=m=>sentByUs(m,t);   /* __sentmine */   /* what WE sent, as the Sent folder counts it */
   const ms=t.msgs.filter(m=>sent?mine(m):inb?recvMsg(m,t):true);const lastIn=[...t.msgs].reverse().find(m=>recvMsg(m,t));
   if(!ms.length){out.push(t);return}
   ms.forEach(m=>{const p=Object.create(t);p.last=m.at;p.from=m.from||t.from;p.email=m.email||t.email;p.pre=String(m.body||'').replace(/\s+/g,' ').slice(0,200);p.unread=!!t.unread&&m===lastIn;p.att=(m.atts&&m.atts.length)||(m.files&&m.files.length)?'1':'';p._one=true;p._mi=t.msgs.indexOf(m);out.push(p)})});
@@ -4291,7 +4291,7 @@ const _ivC=inView;inView=function(t){
  if(view.type==='box'&&t.dept===view.dept&&view.folder==='inbox')return t.folder==='inbox'&&in60(t)&&(t.msgs.some(m=>recvMsg(m,t))||mgrHasSent(t));   /* __r8m: ...and, for a manager, mail his own team members sent */   /* 23 Nov 2026: anything somebody sent us stays in the Inbox, answered or not */
  /* 20 Nov 2026: Sent = what we sent and nobody has answered yet. The moment a mail comes in, the
     conversation belongs to the Inbox (it is the same conversation, with our mail inside it). */
- if(view.type==='box'&&t.dept===view.dept&&view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>m.by||(m.ours&&!colleagueIn(m,t)));   /* 23 Nov 2026: Sent = anything we wrote in; the Inbox keeps its own copy of the conversation */
+ if(view.type==='box'&&t.dept===view.dept&&view.folder==='sent')return t.folder!=='deleted'&&t.msgs.some(m=>sentByUs(m,t));   /* __sentmine */   /* 23 Nov 2026: Sent = anything we wrote in; the Inbox keeps its own copy of the conversation */
  if(view.type==='all')return inScope(t)&&t.folder==='inbox'&&in60(t)&&(t.msgs.some(m=>recvMsg(m,t))||mgrHasSent(t));   /* __r8m: ...and, for a manager, mail his own team members sent */   /* 23 Nov 2026: same rule for All inboxes */
  return _ivC(t)};
 // a conversation with only colleague mail is shown under the colleague's name (not "(unknown)")
@@ -5034,7 +5034,7 @@ function msgMine(m,t){return !!m&&(m.by?m.by===ME:sentWho(m,t)===ME)}
 function sentSeen(t){const p=who(ME);
  if(!p||!t)return true;
  if(p.role==='Admin'||['Manager','Lead','CRM'].includes(p.role))return true;
- const out=(t.msgs||[]).filter(m=>m.by||(m.ours&&!colleagueIn(m,t)));
+ const out=(t.msgs||[]).filter(m=>sentByUs(m,t));   /* __sentmine */
  if(!out.length)return true;             /* nothing was sent from this mailbox */
  if(out.some(m=>msgMine(m,t)))return true;  /* I sent one of them */
  return !out.some(m=>sentWho(m,t))}      /* nobody can be named: leave it with the whole team */
@@ -10365,3 +10365,36 @@ if(typeof stbarPaint==="function"){
  };
 })();
 /* __privpic:end */</script>
+<script>/* __sentmine:start  28 Nov 2026 - mail you send from your own login shows in YOUR Sent,
+   in whatever mailbox it lands. server/patch-sent-by-login.js
+   Measured on the live server before writing a line: 262 mails from merchandiser9@ in the
+   database, 261 already direction=out, sent_by NULL on all of them (he writes them in Gmail),
+   and colleagueIn() was therefore calling his own mail "a colleague wrote in". */
+function sentByUs(m,t){
+ if(!m)return false;
+ if(m.by)return true;                 /* sent through Rugs Email - it already names the person */
+ if(!m.ours)return false;             /* it came from outside: never Sent */
+ try{
+  if(typeof colleagueIn!=="function"||!colleagueIn(m,t))return true;   /* sent from the mailbox itself */
+ }catch(e){return true}
+ /* It came from one of OUR OWN addresses. If that address is a person's login or alias, that
+    person sent it - so it is sent mail, and R15 (sentSeen) decides who may see it. */
+ try{return !!(typeof sentWho==="function"&&sentWho(m,t))}catch(e){return false}
+}
+try{window.sentByUs=sentByUs}catch(e){}
+/* paste  rzSentCheck()  into the console: what YOUR Sent counts in the mailbox on screen */
+window.rzSentCheck=function(){
+ try{
+  var n=0,mine=0,hid=0;
+  (S.threads||[]).forEach(function(t){
+   if(!t||t.dept!==view.dept)return;
+   var o=(t.msgs||[]).filter(function(m){return sentByUs(m,t)});
+   if(!o.length)return;
+   n++;
+   if(o.some(function(m){return typeof msgMine==="function"&&msgMine(m,t)}))mine++;
+   if(typeof sentSeen==="function"&&!sentSeen(t))hid++;
+  });
+  return {mailbox:view.dept,conversationsWithSentMail:n,onesISent:mine,hiddenFromMeByR15:hid};
+ }catch(e){return String(e.message||e)}
+};
+/* __sentmine:end */</script>
