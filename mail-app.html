@@ -3933,7 +3933,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-16';
+const APP_BUILD='2026-11-28-17';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -10703,3 +10703,21 @@ try{var _og=outgoingHTML;outgoingHTML=function(m){var h=_og.apply(this,arguments
 try{var st=document.createElement('style');st.textContent='.editor [data-sig] td,.rich [data-sig] td,.editor [data-sig] table,.rich [data-sig] table{border:0}';document.head.appendChild(st)}catch(e){}
 })();
 /* __slimquote:end */</script>
+
+<script>/* __sentkeepsdel:start 28 Nov 2026 - see server/patch-sent-keeps-deleted.js */
+(function(){
+var _iv=inView;
+inView=function(t){
+ try{
+  if(t&&view&&view.type==='box'&&view.folder==='sent'&&t.dept===view.dept&&t.folder==='deleted'){
+   var ok=(t.msgs||[]).some(function(m){return sentByUs(m,t)});
+   if(!ok)return false;
+   if(typeof seeMine==='function'&&!seeMine(t))return false;
+   if(typeof critOnly==='function'&&critOnly(t))return false;
+   if(typeof sentSeen==='function'&&!sentSeen(t))return false;
+   if(typeof beforeLive==='function'&&beforeLive(t)&&!(document.getElementById('q')&&document.getElementById('q').value.trim()))return false;
+   return true}
+ }catch(e){}
+ return _iv.apply(this,arguments)};
+})();
+/* __sentkeepsdel:end */</script>

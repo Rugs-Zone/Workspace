@@ -37,3 +37,5 @@ Older history moved unchanged to `docs/PROGRESS-ARCHIVE.md` (last move: 27 Nov 2
 - 28 Nov 2026: build -14 kept; M1 holds - 54+27+30 checks, tab 16.3 MB of 250, worst case 64 MB. The 1500 cap drops OLDEST first, so Arun's mails of today survive 25 trims on 15,004 conversations; cause was the sender name, not the cap. server/test-arun-sent-cap.mjs, 37 checks.
 
 - 28 Nov 2026 (app 2026-11-28-16): reply too big (24 MB) / No internet connection - big pictures inside the QUOTED mails are replaced by [picture] when a mail is over the limit, so it sends; own text, own pictures, quoted words and signature kept. Signature no longer gets table boxes in the editor. server/patch-slim-quote.js
+
+- 28 Nov 2026 (app 2026-11-28-17): Arun Sent empty - his conversations of today were in Deleted (done), and Deleted hid them from Sent too. Now, like Gmail/Outlook, your sent mail stays in Sent when the conversation is deleted; Empty Deleted (purged) still removes it; seeMine/R15 unchanged. server/patch-sent-keeps-deleted.js
