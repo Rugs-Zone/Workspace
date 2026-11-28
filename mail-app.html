@@ -3933,7 +3933,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-17';
+const APP_BUILD='2026-11-28-18';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -10688,17 +10688,22 @@ try{window.sigFinal=sigFinal;sigOf=function(pid){return sigFinal(pid)}}catch(e){
 <script>/* __slimquote:start 28 Nov 2026 - see server/patch-slim-quote.js */
 (function(){
 var BIG=40000;                 /* a data: picture longer than this (about 30 KB) counts as big */
-var LIMIT=15*1024*1024;        /* outgoing HTML above this gets its quoted pictures slimmed */
+var LIMIT=12*1024*1024;        /* outgoing HTML above this gets its quoted pictures slimmed */
 var NOTE='<span style="color:#9c948e;font-size:12px">[picture]</span>';
-function slimIn(root){var k=0;
- root.querySelectorAll('[data-trail] img,[data-qm] img').forEach(function(im){
-  var src=im.getAttribute('src')||'';
-  if(src.slice(0,5)==='data:'&&src.length>BIG){var sp=document.createElement('span');sp.innerHTML=NOTE;im.replaceWith(sp.firstChild);k++}});
+function swap(im){var sp=document.createElement('span');sp.innerHTML=NOTE;im.replaceWith(sp.firstChild)}
+function bigData(im){var src=im.getAttribute('src')||'';return src.slice(0,5)==='data:'&&src.length>BIG}
+function slimIn(root,all){var k=0,sig=root.querySelector('[data-sig]');
+ root.querySelectorAll('img').forEach(function(im){if(!bigData(im))return;
+  var quoted=!!im.closest('[data-trail],[data-qm],blockquote,.gmail_quote,[data-mailquote]')||
+   (sig&&!sig.contains(im)&&(sig.compareDocumentPosition(im)&Node.DOCUMENT_POSITION_FOLLOWING));
+  if(quoted||all){swap(im);k++}});
  return k}
-window.slimQuoteEl=function(ed){try{return ed?slimIn(ed):0}catch(e){return 0}};
+window.slimQuoteEl=function(ed){try{return ed?slimIn(ed,false):0}catch(e){return 0}};
 try{var _og=outgoingHTML;outgoingHTML=function(m){var h=_og.apply(this,arguments);
  try{if(h&&h.length>LIMIT){var d=new DOMParser().parseFromString('<div id="__sq">'+h+'</div>','text/html');
-  if(slimIn(d))h=d.getElementById('__sq').innerHTML}}catch(e){}
+  var root=d.getElementById('__sq'),k=slimIn(root,false);
+  if(root.innerHTML.length>LIMIT)k+=slimIn(root,true);   /* still too big: every big picture goes */
+  if(k)h=root.innerHTML}}catch(e){}
  return h}}catch(e){}
 try{var st=document.createElement('style');st.textContent='.editor [data-sig] td,.rich [data-sig] td,.editor [data-sig] table,.rich [data-sig] table{border:0}';document.head.appendChild(st)}catch(e){}
 })();
