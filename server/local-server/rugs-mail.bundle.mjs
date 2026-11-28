@@ -581,8 +581,8 @@ async function deletedUsers() {
   const { data } = await sb.from("rm_settings").select("value").eq("key", "deleted_users").maybeSingle();
   return data?.value && typeof data.value === "object" ? data.value : {};
 }
-var SHARED_KEYS = ["circulars", "folders", "alerts", "templates", "cats", "rules", "blocked", "contacts_extra", "mgr_first_boxes", "mail_rules"];
-var ADMIN_KEYS = ["rules", "blocked", "cats", "folders", "templates", "circulars", "mgr_first_boxes", "mail_rules"];
+var SHARED_KEYS = ["circulars", "folders", "alerts", "templates", "cats", "rules", "blocked", "contacts_extra", "mgr_first_boxes", "mail_rules", "hidden_msgs"];
+var ADMIN_KEYS = ["rules", "blocked", "cats", "folders", "templates", "circulars", "mgr_first_boxes", "mail_rules", "hidden_msgs"];
 async function log(box, tid, uid, kind, text) {
   await sb.from("rm_activity").insert({ mailbox: box, gmail_thread_id: tid, user_id: uid, kind, text });
 }
@@ -1746,6 +1746,18 @@ ${String(p.thread.body || "").slice(0, 3e3)}
       else await sb.from("rm_presence").delete().eq("mailbox", p.mailbox).eq("gmail_thread_id", p.threadId).eq("user_id", u.id);
       const { data } = await sb.from("rm_presence").select("user_id,at").eq("mailbox", p.mailbox).eq("gmail_thread_id", p.threadId).neq("user_id", u.id).gt("at", new Date(Date.now() - 12e4).toISOString());
       return { others: (data || []).map((x) => x.user_id) };
+    }
+    case "hideMsg": {
+      /* __hidemsg 28 Nov 2026 */
+      if (!p.mailbox || !p.threadId || !p.gmailId) throw new E("Which mail?", 400);
+      await threadAccess(u, p.mailbox, p.threadId, "full");
+      const key = String(p.mailbox).toLowerCase() + "|" + String(p.gmailId);
+      const { data: cur } = await sb.from("rm_settings").select("value").eq("key", "hidden_msgs").maybeSingle();
+      const v = cur && cur.value && typeof cur.value === "object" && !Array.isArray(cur.value) ? cur.value : {};
+      if (p.undo) delete v[key]; else v[key] = { by: u.id, at: (/* @__PURE__ */ new Date()).toISOString(), t: String(p.threadId) };
+      await sb.from("rm_settings").upsert({ key: "hidden_msgs", value: v, updated_at: (/* @__PURE__ */ new Date()).toISOString() });
+      try { await log(p.mailbox, p.threadId, u.id, "note", (p.undo ? "A deleted mail was brought back by " : "One mail was deleted from this conversation (Rugs Email only) by ") + u.name); } catch (e) { }
+      return { ok: true, hidden: v };
     }
     case "getSetting": {
       if (!SHARED_KEYS.includes(p.key)) throw new E("Unknown setting");

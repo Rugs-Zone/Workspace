@@ -47,3 +47,5 @@ Older history moved unchanged to `docs/PROGRESS-ARCHIVE.md` (last move: 27 Nov 2
 - 28 Nov 2026 (app 2026-11-28-20): reply stuck on Sending... after the server self-updated mid-send (mark kept even after refresh) - a sending mail with no live request, or no answer in 2 min, now becomes Not sent + Try again (check Gmail Sent first). Signature HALL/STAND numbers no longer wrap. server/patch-stuck-sending.js
 
 - 28 Nov 2026 (app 2026-11-28-21): Robin reply delivered but one Cc bounced (Outlook hidden id ...@shadow.outlook.com) - such routing ids are now dropped from Reply-all. server/patch-cc-clean.js
+
+- 28 Nov 2026 (app 2026-11-28-22, server 2026-11-28-f): Delete this mail only - new item in a mail ... menu; any team member with full access; Rugs Email only (Gmail keeps it); Undo 10 s; stored in rm_settings.hidden_msgs via new server action hideMsg. server/patch-hidemsg-app.js, server/patch-server-hidemsg.js
