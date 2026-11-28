@@ -45,3 +45,5 @@ Older history moved unchanged to `docs/PROGRESS-ARCHIVE.md` (last move: 27 Nov 2
 - 28 Nov 2026 (app 2026-11-28-19, server 2026-11-28-e): Ashish reply to Robin failed 10x with Gmail 400 Invalid Cc header. Reply-all Cc now keeps only real addresses (no [cid:image001.jpg@01DD..] picture ids, letters-only TLD, max 40); server folds long To/Cc/Bcc header lines. server/patch-cc-clean.js, server/patch-server-fold.js
 
 - 28 Nov 2026 (app 2026-11-28-20): reply stuck on Sending... after the server self-updated mid-send (mark kept even after refresh) - a sending mail with no live request, or no answer in 2 min, now becomes Not sent + Try again (check Gmail Sent first). Signature HALL/STAND numbers no longer wrap. server/patch-stuck-sending.js
+
+- 28 Nov 2026 (app 2026-11-28-21): Robin reply delivered but one Cc bounced (Outlook hidden id ...@shadow.outlook.com) - such routing ids are now dropped from Reply-all. server/patch-cc-clean.js
