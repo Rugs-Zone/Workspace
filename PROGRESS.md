@@ -23,3 +23,5 @@ Older history moved unchanged to `docs/PROGRESS-ARCHIVE.md` (last move: 27 Nov 2
 - 28 Nov 2026 (app 2026-11-28-3, server 2026-11-28-b/c): Ashish Deshwal’s Sent was empty - a mail from his own login into a shared mailbox counted as a colleague writing in; new rule sentByUs. 4,888 sent since 11 Mar; job fixed 322 not-out + 1 has_out; Robin 7/7. docs/BUGS-TONIGHT.md
 
 - 28 Nov 2026: Rugs Email reply fix - a reply on a mail we wrote goes to the real other party (not our own shared mailbox), and the To you type in Reply is now used, also on Try again. Build 2026-11-28-4.
+
+- 28 Nov 2026: Rugs Email reply fix - reply on our own sent mail goes to the real other party (not our own shared mailbox); the To typed in Reply is used, also on Try again. Build 2026-11-28-6.
