@@ -29,6 +29,7 @@
  *   2. contacts()- anything already stored that fails the guard falls back to the sender's own
  *                  display name, and failing that to a readable form of the address itself.
  *   3. sentTo()  - the Sent row never prints a name that fails the guard.
+ * (the last fallback inside sentTo is fixed by server/patch-sent-to-fallback.js)
  * A name a person TYPED themselves (S.contactEdits) is always kept, guard or no guard.
  *
  * Nothing is written to the server and no rule changes: this is what the screen reads.

@@ -48,15 +48,18 @@ const boot = await page.evaluate(() => ({
   loginVisible: !!document.querySelector("#login:not([hidden])")
 }));
 console.log("  the real app: build " + boot.build + " | signed in as " + boot.me + " | conversations " + boot.threads);
-ck("the published app is build 2026-11-28-3", boot.build, "2026-11-28-3");
+ck("the published app is the new build", boot.build, "2026-11-28-4");
 ck("it has the new Sent rule", boot.helper, true);
 ck("it signed in as him", boot.me, "Ashish Deshwal");
 
 /* click Sent, the way he does */
 const sent = await page.evaluate(async () => {
-  /* the folder row the app draws: .fi with data-box + data-f */
-  let b = document.querySelector('.fi[data-box][data-f="sent"]');
-  if (!b) b = [].slice.call(document.querySelectorAll("[data-f]")).find(x => x.getAttribute("data-f") === "sent");
+  /* the app opens on Home: click the mailbox first (that is what puts him on the mail screen
+     and draws its folders), then the Sent row - exactly the two clicks he makes. */
+  const mb = document.querySelector('.fi[data-box][data-f="inbox"]');
+  if (mb) mb.click();
+  await new Promise(r => setTimeout(r, 2500));
+  const b = document.querySelector('.fi[data-box][data-f="sent"]');
   if (b) b.click();
   await new Promise(r => setTimeout(r, 3000));
   const rows = [].slice.call(document.querySelectorAll("#list .m"));
@@ -65,7 +68,10 @@ const sent = await page.evaluate(async () => {
     folder: (typeof view !== "undefined") ? (view.folder || "") + "/" + (view.dept || "") : "?",
     rowsOnScreen: rows.length,
     listRows: (typeof listRows === "function") ? listRows().length : -1,
-    first: rows.slice(0, 6).map(el => (el.textContent || "").replace(/\s+/g, " ").slice(0, 70)),
+    first: rows.slice(0, 8).map(el => (el.textContent || "").replace(/\s+/g, " ").slice(0, 80)),
+    toColumn: (typeof listRows === "function" && typeof sentTo === "function") ? listRows().slice(0, 8).map(r => String(sentTo(r)).slice(0, 44)) : [],
+    junkTo: (typeof listRows === "function" && typeof sentTo === "function")
+      ? listRows().filter(r => { const v = String(sentTo(r)); return /cid:|https?:|\[|^\s*$/.test(v) || v.split(/\s+/).length > 6 }).length : -1,
     mine: (typeof rzSentCheck === "function") ? rzSentCheck() : null,
     /* what the Sent list really holds, by the app's own listRows */
     sentConversations: (typeof listRows === "function") ? [...new Set(listRows().map(r => r.id))].length : -1,
@@ -84,6 +90,7 @@ ck("the Sent folder was reachable", sent.clicked, true);
 ck("he is in Sent", /^sent/.test(sent.folder), true);
 ck("his Sent is not empty", sent.rowsOnScreen > 0, true);
 ck("and it holds mail he himself sent", sent.mine && sent.mine.onesISent > 0, true);
+ck("no junk in the To: column", sent.junkTo, 0);
 ck("no page errors", errs.filter(e => !/ResizeObserver|Script error/.test(e)), []);
 
 await browser.close();

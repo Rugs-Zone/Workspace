@@ -891,7 +891,8 @@ function sentTo(t){try{const ms=t.msgs||[];const m=(t._one&&ms[t._mi])||[...ms].
    if(!nm||nm.toLowerCase()===em){const cn=_sentCt.m.get(em);nm=goodName(cn)?cn:em}
    if(!out.includes(nm))out.push(nm)});return out};
  let out=pick(m.to);if(!out.length)out=pick(m.cc);
- if(!out.length)return String(m.to||t.email||'').replace(/<[^>]*>/g,'').trim()||t.email||'';
+ if(!out.length){const a=String(m.to||'').match(/[^\s<>"',;:]+@[^\s<>"',;:]+\.[A-Za-z]{2,}/);   /* __tofallback */
+  return (a&&a[0])||t.email||'';}
  return out.slice(0,3).join(', ')+(out.length>3?' +'+(out.length-3):'')}catch(e){return t.email||''}}
 function rowHTML(t){const s=st(t),[l,c]=TAG[s],o=who(t.owner),priv=isPrivate(t),x=t.hist.find(h=>h.t==='x');
  return `<div draggable="true" class="m ${/*__mr35row*/mrUnread(t)?'unread':''} ${openId===t.id?'open':''}" data-open="${t.id}" role="button" tabindex="0">
@@ -3918,7 +3919,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-4';
+const APP_BUILD='2026-11-28-5';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
