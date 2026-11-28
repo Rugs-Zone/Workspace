@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rugs Email v2 (preview)</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn" id="menuBtn" aria-label="Show folders">☰</button>
+  <div class="brand">Rugs Email <span class="badge">v2 preview</span></div>
+  <div class="search"><input type="search" placeholder="Search" aria-label="Search mail"></div>
+  <button class="icon-btn" id="themeBtn" aria-label="Switch light / dark">🌙</button>
+  <div class="me" title="Signed in">PT</div>
+</header>
+
+<main class="panes" id="panes">
+  <nav class="pane folders" id="folders" aria-label="Folders">
+    <button class="new-mail">✉ New mail</button>
+    <div class="group">Favourites</div>
+    <ul id="folderList"></ul>
+  </nav>
+  <div class="splitter" data-left="folders" role="separator" aria-label="Resize folders" tabindex="0"></div>
+
+  <section class="pane list" id="list" aria-label="Messages">
+    <div class="list-head">
+      <div class="tabs"><button class="tab on">Focused</button><button class="tab">Other</button></div>
+      <span class="folder-name" id="folderName">Inbox</span>
+    </div>
+    <ul id="rows"></ul>
+  </section>
+  <div class="splitter" data-left="list" role="separator" aria-label="Resize message list" tabindex="0"></div>
+
+  <section class="pane reading" id="reading" aria-label="Reading pane">
+    <div class="empty">Select a mail to read it</div>
+  </section>
+</main>
+
+<footer class="status">
+  <span>● Preview with sample mail - not connected yet</span>
+  <span>Day 1 · Shell</span>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

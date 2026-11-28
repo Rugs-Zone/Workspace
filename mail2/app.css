@@ -1,0 +1,82 @@
+/* Rugs Email v2 - Shell. Outlook blue, light + dark. */
+:root{
+  --blue:#0F6CBD; --blue-dark:#115EA3; --on-blue:#fff;
+  --bg:#ffffff; --pane:#f5f5f5; --line:#e0e0e0; --fg:#242424; --muted:#5c5c5c;
+  --hover:#ebf3fc; --sel:#cfe4fa; --unread:#0F6CBD;
+  --folders-w:220px; --list-w:380px;
+  font-family:"Segoe UI","Plus Jakarta Sans",Arial,sans-serif;
+}
+[data-theme="dark"]{
+  --blue:#115EA3; --blue-dark:#0c3b5e;
+  --bg:#1f1f1f; --pane:#292929; --line:#3d3d3d; --fg:#f0f0f0; --muted:#adadad;
+  --hover:#2b3a4a; --sel:#1e4466; --unread:#62abf5;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{display:flex;flex-direction:column;background:var(--bg);color:var(--fg);font-size:14px}
+button{font:inherit;color:inherit;cursor:pointer}
+
+.topbar{display:flex;align-items:center;gap:12px;height:48px;padding:0 12px;background:var(--blue);color:var(--on-blue);flex:none}
+.brand{font-weight:600;font-size:16px;white-space:nowrap}
+.badge{font-size:12px;font-weight:600;background:rgba(255,255,255,.2);padding:2px 6px;border-radius:4px;margin-left:6px}
+.search{flex:1;max-width:560px;margin:0 auto}
+.search input{width:100%;height:32px;border:0;border-radius:4px;padding:0 12px;font:inherit;background:#fff;color:#242424}
+.icon-btn{background:none;border:0;color:var(--on-blue);min-width:40px;height:40px;border-radius:4px;font-size:18px}
+.icon-btn:hover{background:var(--blue-dark)}
+#menuBtn{display:none}
+.me{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--blue);display:grid;place-items:center;font-weight:700;font-size:13px}
+
+.panes{flex:1;display:flex;min-height:0}
+.pane{overflow:auto;min-width:0}
+.folders{width:var(--folders-w);background:var(--pane);padding:8px;flex:none}
+.list{width:var(--list-w);flex:none;border-right:1px solid var(--line)}
+.reading{flex:1;padding:20px 24px}
+.splitter{width:5px;cursor:col-resize;background:transparent;flex:none;margin:0 -2px;z-index:1}
+.splitter:hover,.splitter:focus-visible,.splitter.drag{background:var(--blue);outline:none}
+
+.new-mail{width:100%;height:36px;border:0;border-radius:4px;background:var(--blue);color:#fff;font-weight:600;margin-bottom:12px}
+.group{font-size:12px;font-weight:600;color:var(--muted);padding:8px 8px 4px}
+#folderList{list-style:none;margin:0;padding:0}
+#folderList li{display:flex;justify-content:space-between;align-items:center;height:36px;padding:0 10px;border-radius:4px;cursor:pointer;border-left:3px solid transparent}
+#folderList li:hover{background:var(--hover)}
+#folderList li.on{background:var(--sel);border-left-color:var(--blue);font-weight:600}
+#folderList .n{font-weight:700;color:var(--unread);font-size:13px}
+
+.list-head{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg)}
+.tab{background:none;border:0;padding:6px 8px;border-bottom:2px solid transparent;color:var(--muted)}
+.tab.on{color:var(--fg);border-bottom-color:var(--blue);font-weight:600}
+.folder-name{font-weight:600}
+#rows{list-style:none;margin:0;padding:0}
+.row{padding:10px 12px 10px 14px;border-bottom:1px solid var(--line);cursor:pointer;border-left:3px solid transparent}
+.row:hover{background:var(--hover)}
+.row.sel{background:var(--sel)}
+.row.unread{border-left-color:var(--unread)}
+.row.unread .from,.row.unread .subj{font-weight:700}
+.row .top{display:flex;justify-content:space-between;gap:8px}
+.row .from{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .time{color:var(--muted);font-size:12px;white-space:nowrap}
+.row .subj{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.row.unread .subj{color:var(--unread)}
+.row .pre{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.reading h1{font-size:20px;font-weight:600;margin:0 0 12px}
+.reading .meta{color:var(--muted);font-size:13px;margin-bottom:16px}
+.reading .actions{display:flex;gap:8px;margin-bottom:16px}
+.reading .actions button{height:32px;padding:0 12px;border:1px solid var(--line);border-radius:4px;background:var(--bg)}
+.reading .actions button:hover{background:var(--hover)}
+.reading .body{line-height:1.55;font-size:14.5px;white-space:pre-wrap}
+.empty{color:var(--muted);text-align:center;margin-top:30vh}
+
+.status{display:flex;justify-content:space-between;height:28px;align-items:center;padding:0 12px;background:var(--pane);border-top:1px solid var(--line);font-size:12px;color:var(--muted);flex:none}
+
+/* Phone: one pane at a time */
+@media (max-width:760px){
+  #menuBtn{display:inline-block}
+  .brand .badge,.me{display:none}
+  .splitter{display:none}
+  .folders{position:fixed;top:48px;bottom:28px;left:0;z-index:5;width:260px;transform:translateX(-100%);transition:transform .2s}
+  .folders.open{transform:none;box-shadow:2px 0 12px rgba(0,0,0,.25)}
+  .list{width:100%;border:0}
+  .reading{display:none;position:fixed;inset:48px 0 28px 0;background:var(--bg);z-index:4}
+  body.reading-open .reading{display:block}
+}

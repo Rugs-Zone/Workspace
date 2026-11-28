@@ -1,6 +1,8 @@
 # Rugs Email v2 — rebuild plan (Outlook look, built to last)
 
-Status: **DRAFT — waiting for Priyanshu's approval.** Nothing is built until this is approved.
+Status: **STARTED 28 Nov 2026 (Day 1 done: folder `mail2/`, rm2_ SQL written but NOT run, tests + push gate, Shell screen).** Open: backup check, section 8 points 2-4.
+Decision (Priyanshu, 28 Nov): build and test on the EXISTING data, read only - test mailbox **marketing@rugscreation.com**. The rm2_ tables are made only on launch day and filled from the existing data then (backup check moves to launch day).
+Note: staging is `www.rugserp.com/mail2/` (the old `mail2.html` is a live redirect to v1). Database is the office Postgres, not Supabase.
 Written 28 Nov 2026.
 
 ---
