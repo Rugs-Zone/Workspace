@@ -786,6 +786,9 @@ async function syncBox(box, t0, force = false, budget = 25) {
   await sb.from("rm_mailboxes").upsert({ mailbox: box, cursor_s: cursor, back_s: back, last_sync: (/* @__PURE__ */ new Date()).toISOString(), status: live ? "live" : "backfilling", note: `scanned ${scanned}, saved ${saved}${skipped ? stalled ? `, Gmail could not list the latest mail (${skipped}x) - retrying` : `, skipped ${skipped} day(s) Gmail could not list` : ""}${live ? histDone ? " \xB7 history complete" : " \xB7 loading history to " + new Date(target * 1e3).toISOString().slice(0, 10) + ", now at " + new Date(back * 1e3).toISOString().slice(0, 10) : ""}` }, { onConflict: "mailbox" });
   return { mailbox: box, scanned, saved, live, history: histDone ? "complete" : new Date(back * 1e3).toISOString().slice(0, 10) };
 }
+function foldAddr(v) {
+  return String(v || "").split(/\s*,\s*/).filter(Boolean).join(",\r\n ");
+}
 function mime(o) {
   const images = [];
   let n = 0;
@@ -798,9 +801,9 @@ function mime(o) {
   const B = "rm" + crypto.randomUUID().replace(/-/g, "");
   const htmlB64 = btoa(unescape(encodeURIComponent(html))).replace(/(.{76})/g, "$1\r\n");
   let s = `From: ${o.from}\r
-To: ${o.to}\r
-${o.cc ? `Cc: ${o.cc}\r
-` : ""}${o.bcc ? `Bcc: ${o.bcc}\r
+To: ${foldAddr(o.to)}\r
+${o.cc ? `Cc: ${foldAddr(o.cc)}\r
+` : ""}${o.bcc ? `Bcc: ${foldAddr(o.bcc)}\r
 ` : ""}Subject: ${enc(o.subject)}\r
 MIME-Version: 1.0\r
 `;

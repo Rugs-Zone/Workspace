@@ -3933,7 +3933,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-18';
+const APP_BUILD='2026-11-28-19';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -10726,3 +10726,16 @@ inView=function(t){
  return _iv.apply(this,arguments)};
 })();
 /* __sentkeepsdel:end */</script>
+
+<script>/* __ccclean:start 28 Nov 2026 - see server/patch-cc-clean.js */
+(function(){
+var _n=normRcpt;
+function good(x){x=String(x||'').trim();var at=x.lastIndexOf('@');if(at<1)return false;
+ var loc=x.slice(0,at),dom=x.slice(at+1).toLowerCase();
+ if(/^image\d*\.(png|jpe?g|gif|bmp)$/i.test(loc)||/\.(png|jpe?g|gif|bmp)$/i.test(loc))return false;   /* [cid:image001.jpg@01DD...] */
+ if(!/^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,24}$/.test(dom))return false;                                  /* real domain, letters-only ending */
+ if(/^[0-9a-f]{6,}$/i.test(dom.split('.')[0]))return false;                                                /* 01DD4CD7.xxx ids */
+ return loc.length<=64&&dom.length<=190}
+normRcpt=function(v){var out=String(_n(v)||'').split(/,\s*/).filter(good);return out.slice(0,40).join(', ')};
+})();
+/* __ccclean:end */</script>
