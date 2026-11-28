@@ -3933,7 +3933,7 @@ const MDB_V=2;
    is writing (a compose window or dialog open, or text in quick reply): then a bar offers Refresh,
    and it reloads by itself as soon as they are done. To refresh everyone: change mail-version.txt
    and APP_BUILD together (pushing a new app with a new APP_BUILD does it automatically). */
-const APP_BUILD='2026-11-28-13';
+const APP_BUILD='2026-11-28-14';
 (function(){
  let pending=false,bar=null;
  const busy=()=>{const L=document.getElementById('layer');const qr=document.getElementById('qr');
@@ -5050,6 +5050,11 @@ setTimeout(deskBtn,0);const _rtB4=renderTop;renderTop=function(){_rtB4();deskBtn
    A mail sent from the mailbox under a name that belongs to nobody (e.g. "team alpha") cannot
    be traced to a person, so it stays visible to the whole team - nothing goes missing.
    This is the LAST layer over inView on purpose; an earlier layer would be bypassed. */
+/* __sendersuffix 28 Nov 2026: "Arun – Rugs Creation", "Ashok | Team Pulse", "Arun (Rugs Creation)" -> "Arun" */
+function cleanSender(x){const raw=String(x||'');
+ let s=raw.split(/\s+[\u2013\u2014\-|]\s*|\s*\|\s*|\s*\(/)[0];
+ s=s.replace(/\brugs?\s*creations?\b/ig,' ').replace(/\bteam\s*(pulse|alpha)\b/ig,' ').replace(/\s+/g,' ').trim();
+ return s}
 function nmKey(s){return String(s||'').toLowerCase().replace(/[^a-z\s]+/g,' ').trim().split(/\s+/)
  .filter(Boolean).map(w=>{const y=w.replace(/(.)\1+/g,'$1');return y[0]+y.slice(1).replace(/[aeiou]/g,'')})
  .filter(Boolean)}                      /* Jagjeet = Jagjit, Gulaab = Gulab, GULAB TYAGI = Gulab Tyagi */
@@ -5061,7 +5066,7 @@ function sentWho(m,t){                   /* which person sent this message, or n
  if(e){const byMail=PEOPLE.find(p=>p.active!==false&&(String(p.login||'').toLowerCase()===e||
    String((p.perm&&p.perm.aliases)||'').toLowerCase().split(/[\s,;]+/).includes(e)));
   if(byMail)return byMail.id}
- const k=nmKey(m.fname||m.from);if(!k.length)return null;
+ const k=nmKey(cleanSender(m.fname||m.from));if(!k.length)return null;
  const pool=PEOPLE.filter(p=>p.active!==false&&(!t||!t.dept||p.dept===t.dept));
  let hit=pool.filter(p=>nmKey(p.name).join(' ')===k.join(' '));
  if(hit.length===1)return hit[0].id;
