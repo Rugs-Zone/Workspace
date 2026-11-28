@@ -87,3 +87,64 @@ Tests: `test-sent-by-login.mjs` (23) · `test-sent-before-after.mjs` (14) ·
 `measure-ashish-sent.mjs` (measurement only).
 
 Never touched: `deleg_private_details`, `deleg_google_tokens`, `dev_secrets`, `pass_hash`.
+
+---
+
+# Part 2 — 28 Nov, afternoon: "he sent a mail to a buyer and it is not in Sent"
+
+## 4 · The mail in the screenshot IS in his Sent — measured
+
+Gmail search `in:sent robin` in **teampulse@**, the open mail "Re: New order", Fri 27 Nov 4:05 pm,
+to Maud Wedman, Robin Vos, Priya, Noorul. In the live database that is the teampulse@ conversation
+"New order", last mail **2026-11-27 10:35 UTC = 16:05 IST**, 7 mails, owner Ashish. Driven as him
+(a real Switch ID session, the shipped build, read only): that conversation **is in his Sent** —
+`sentByUs` true, `msgMine` true, R15 `sentSeen` true, R3 `seeMine` true — and the mail was sent
+**through Rugs Email** (`sent_by` = his id), from the shared address teampulse@.
+
+## 5 · What really is missing — and it is R15, working as written
+
+All Loods 5 mail his session can reach (two searches, `to:loods5.nl` and `from:loods5.nl`,
+428 conversations in memory):
+
+| | |
+|---|---|
+| conversations with Loods 5 in them | 93 |
+| of those, ones we wrote in | 67 |
+| **shown in his Sent** | **42** |
+| **not shown** | **25** — every one of them `sentSeen` = false |
+
+The 25 hold **no mail of his at all**. Every mail we sent in them was written by
+**Shubham Aneja (dmm1@)** — 71 mails — or **Vinay Chugh (vinay@)** — 7 mails — from their own
+logins. **R15** keeps a colleague's sent mail out of your Sent, so they are hidden from him by
+design, and would be hidden from Shubham's colleagues in the same way.
+
+**So the difference he is seeing is Gmail vs Rugs Email, not lost mail:** Gmail's Sent in
+teampulse@ is the **whole team's** sent mail; Rugs Email's Sent is **yours** (plus, for a
+manager / lead / CRM / admin, everyone's). Nothing is missing from the database.
+
+**If the team wants Gmail's behaviour** that is a change to R15 — e.g. a "Team" switch on the
+Sent folder that shows everything the shared mailbox sent, with who sent it on each row. It was
+not built, because R15 is a locked rule and that is the user's decision.
+
+## 6 · What WAS built: rule R36 — your own sent mail, wherever it landed (app 2026-11-28-7, server 2026-11-28-d)
+
+The gap that IS real: of his 4,888 sent mails, **1,317 landed in mailboxes his session is never
+given** (vinay@ 605, shipping@ 390, designer@ 253, teamalpha@ 40, dmm3@ 13, merchandiser1@ 8,
+neetu@ 6, mis@ 1, marketing@ 1) and he cannot open those mailboxes at all.
+
+R36: your **own** sent mail is shown in your Sent whatever mailbox it landed in — **read only,
+your mail and nothing else from that mailbox**. New server action `mysent`
+(`server/patch-mysent-server.js`): only messages whose From is **your own login or alias**, only
+out of mailboxes you may **not** open, and only the ones with **no copy in a mailbox you can
+open**, so Sent is never doubled. The app (`server/patch-mysent-app.js`) keeps the answer in its
+own list, **outside `S.threads`** — so no Inbox, no folder count, no Needs owner, no My work and
+no rule can see it — and draws it as its own group at the end of Sent
+("📤 Also sent by you · in mailboxes you cannot open"), each row naming the mailbox and marked
+read only; a click or Enter opens a read-only reader (no Reply, Forward, Done, owner or move).
+Escape or ✕ closes it. An admin, who may open every mailbox, gets nothing — by construction.
+
+Tested: `server/test-mysent-36.mjs` — **55 checks, 0 failed, no page errors** (group and counts,
+the To: column out of a junk header, the read-only reader, keyboard, chips, search, redraw,
+Switch ID, a refusal said in words, an empty answer staying silent, phone width, light and dark,
+and the mail list proved unchanged). Regression `test-sent-by-login.mjs` 23/23, all 127 scripts
+parse, both patch scripts are proved to leave their file identical when run twice.

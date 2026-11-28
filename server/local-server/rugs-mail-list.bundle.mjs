@@ -553,6 +553,48 @@ Deno.serve(async (req) => {
       }
     }
     // __rzreport:end
+    /* __mysent:start  28 Nov 2026 - rule R36: YOUR OWN sent mail, wherever it landed.
+       Read only, and deliberately narrow: only messages FROM this person's own login or alias,
+       only out of mailboxes this person may NOT open, and only the ones with no copy in a
+       mailbox he CAN open. Nothing else from those mailboxes is read or returned. */
+    if (p.action === "mysent") {
+      const { data: me36 } = await sb.from("rm_users").select("login,perm").eq("id", u.id).maybeSingle();
+      const mine36 = [String((me36 && me36.login) || "").toLowerCase()]
+        .concat(String(((me36 && me36.perm) || {}).aliases || "").toLowerCase().split(/[^a-z0-9@._+-]+/))
+        .map((x) => x.trim()).filter((x) => x.includes("@"));
+      const shut36 = (all || []).filter((d) => !access(u, d.id)).map((d) => d.mailbox);
+      const open36 = (all || []).filter((d) => access(u, d.id)).map((d) => d.mailbox);
+      if (!mine36.length || !shut36.length) return out({ mails: [], closed: shut36, addresses: mine36.length, now: Date.now() });
+      const lim36 = Math.min(Math.max(Number(p.limit) || 300, 1), 400);
+      const days36 = Math.min(Math.max(Number(p.days) || 400, 1), 2000);
+      const c36 = await pool.connect();
+      try {
+        await c36.query("set statement_timeout = '25s'");
+        const r36 = await c36.query(
+          `with mine as (
+             select m.mailbox, m.gmail_id, m.gmail_thread_id, coalesce(m.subject,'') subject,
+                    coalesce(m.to_text,'') to_text, coalesce(m.cc_text,'') cc_text, m.sent_at,
+                    coalesce(m.has_attachments,false) has_attachments,
+                    left(coalesce(m.body_text,''), 4000) body
+               from public.rm_messages m
+              where m.mailbox = any($1::text[])
+                and lower(coalesce(m.from_email,'')) = any($2::text[])
+                and m.sent_at > now() - ($4::int || ' days')::interval)
+           select distinct on (x.sent_at, x.subject) x.*
+             from mine x
+            where not exists (select 1 from public.rm_messages o
+                               where o.mailbox = any($5::text[])
+                                 and lower(coalesce(o.from_email,'')) = any($2::text[])
+                                 and o.sent_at = x.sent_at
+                                 and coalesce(o.subject,'') = x.subject)
+            order by x.sent_at desc, x.subject, x.mailbox
+            limit $3`, [shut36, mine36, lim36, days36, open36]);
+        return out({ mails: r36.rows, closed: shut36, days: days36, now: Date.now() });
+      } catch (e) {
+        return out({ error: "Could not look in the other mailboxes: " + String(e.message || e).slice(0, 160) }, 500);
+      } finally { c36.release(); }
+    }
+    /* __mysent:end */
     if (p.action === "find") {
       const ds2 = (all || []).filter((d) => access(u, d.id));
       const boxes2 = ds2.map((d) => d.mailbox);

@@ -444,3 +444,34 @@ in 7 conversations, newest 13 Nov. In a search session: **7 of 7 now in his Sent
 - [ ] A colleague's Sent did NOT gain his mail; the manager sees everything.
 - [ ] The team Inbox, Needs owner and My work are unchanged.
 - [ ] `rzSentCheck()` in the console reports his counts.
+
+## 28 Nov 2026 — R36: your own sent mail, wherever it landed (app 2026-11-28-7, server 2026-11-28-d)
+
+**The report:** "he sent a mail to a buyer and it is not showing in Sent."
+
+**Measured first, read only.** The mail in the screenshot (Gmail `in:sent robin`, "Re: New order",
+27 Nov 4:05 pm to Maud/Robin) **is** in his Rugs Email Sent — it was sent through Rugs Email from
+teampulse@ and every rule says yes. Of all 93 Loods 5 conversations, 67 have mail we sent, 42 are
+in his Sent and **25 are not — and all 25 hold no mail of his at all**: 71 mails by Shubham Aneja
+and 7 by Vinay Chugh, from their own logins. **R15** hides a colleague's sent mail, so Gmail's
+Sent (the whole shared mailbox) and Rugs Email's Sent (yours) will never match. Changing that is
+a change to R15 — ask for it if the team wants it.
+
+**The real gap, now fixed — R36.** 1,317 of his 4,888 sent mails landed in mailboxes he may not
+open (vinay@ 605, shipping@ 390, designer@ 253, teamalpha@ 40, dmm3@ 13, merchandiser1@ 8,
+neetu@ 6, mis@ 1, marketing@ 1). His own mail in them is now shown in his Sent as its own group,
+read only. The server returns only his own From, only from mailboxes he may not open, and only
+mails with no copy in a mailbox he can open; nothing else from those mailboxes is read, and the
+answer never enters `S.threads`.
+
+**Tester checklist**
+- [ ] As Ashish (or his ID through Switch ID) → Sent → scroll to the end: a group
+      "📤 Also sent by you · in mailboxes you cannot open · N", each row naming the mailbox.
+- [ ] Click one: the reader opens with his own mail, says which mailbox it is in, and has
+      **no** Reply / Forward / Done / move — only ✕. Escape closes it.
+- [ ] Inbox, Needs owner, My work, the folder counts and the Sent rows above the group are all
+      exactly as before.
+- [ ] As the admin: the group is not there at all (an admin may open every mailbox).
+- [ ] `rzMySent()` in the console reports how many were found and for whom.
+- [ ] The server must be on 2026-11-28-d (Admin → 🖥 Server); before that the group simply
+      stays empty and nothing breaks.
